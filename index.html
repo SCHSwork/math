@@ -1462,6 +1462,28 @@ async function saveData() {
   }
 
 const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
+const TAB_CLOAK_STORAGE_KEYS = {
+    title: "gnmath-tab-cloak-title",
+    icon: "gnmath-tab-cloak-icon",
+    initialized: "gnmath-tab-cloak-initialized"
+};
+const TAB_CLOAK_PRESETS = {
+    canvas: {
+        label: "Canvas",
+        title: "Dashboard",
+        icon: "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico"
+    },
+    googleClassroom: {
+        label: "Google Classroom",
+        title: "Classes",
+        icon: "https://ssl.gstatic.com/classroom/favicon.png"
+    },
+    googleDrive: {
+        label: "Google Drive",
+        title: "My Drive - Google Drive",
+        icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_32dp.png"
+    }
+};
 
 function applySavedSettings() {
     const savedMode = localStorage.getItem("gnmath-mode");
@@ -1473,6 +1495,8 @@ function applySavedSettings() {
 
     const savedTheme = localStorage.getItem("gnmath-theme") || "red";
     setTheme(savedTheme);
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
 }
 
 function darkMode() {
@@ -1498,36 +1522,100 @@ function updateThemeButtons() {
     });
 }
 
-function cloakIcon(url) {
-    const link = document.querySelector("link[rel~='icon']");
-    link.rel = "icon";
-    if ((url+"").trim().length === 0) {
-        link.href = "favicon.png";
-    } else {
-        link.href = url;
-    }
-    document.head.appendChild(link);
-}
-function cloakName(string) {
-    if ((string+"").trim().length === 0) {
-        document.title = "gn-math";
+function initializeDefaultTabCloak() {
+    if (localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.initialized)) {
         return;
     }
-    document.title = string;
+
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, TAB_CLOAK_PRESETS.canvas.title);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, TAB_CLOAK_PRESETS.canvas.icon);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.initialized, "true");
+}
+
+function getStoredTabCloak() {
+    return {
+        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
+        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
+    };
+}
+
+function applyStoredTabCloak() {
+    const storedCloak = getStoredTabCloak();
+    cloakName(storedCloak.title, { persist: false });
+    cloakIcon(storedCloak.icon, { persist: false });
+}
+
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
+    link.rel = "icon";
+    link.href = iconUrl;
+    document.head.appendChild(link);
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
+    }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
+function applyTabCloakPreset(presetKey) {
+    const preset = TAB_CLOAK_PRESETS[presetKey];
+    if (!preset) {
+        return;
+    }
+
+    cloakName(preset.title);
+    cloakIcon(preset.icon);
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = preset.title;
+    if (iconInput) iconInput.value = preset.icon;
+}
+
+function resetTabCloak() {
+    cloakName("gn-math");
+    cloakIcon("favicon.png");
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = "";
+    if (iconInput) iconInput.value = "";
 }
 
 function tabCloak() {
     closePopup();
     document.getElementById('popupTitle').textContent = "Tab Cloak";
     const popupBody = document.getElementById('popupBody');
+    const storedCloak = getStoredTabCloak();
+
     popupBody.innerHTML = `
+        <p style="margin-top: 0;">Tab cloak is set to <b>Canvas</b> by default on first load. You can customize it below.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="settings-button" onclick="applyTabCloakPreset('canvas')">Canvas</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleClassroom')">Classroom</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleDrive')">Drive</button>
+            <button class="settings-button" onclick="resetTabCloak()">Reset</button>
+        </div>
         <label for="tab-cloak-title-input" style="font-weight: bold;">Set Tab Title:</label><br>
         <input type="text" id="tab-cloak-title-input" placeholder="Enter new tab name..." oninput="cloakName(this.value)">
-        <br><br><br><br>
+        <br><br>
         <label for="tab-cloak-icon-input" style="font-weight: bold;">Set Tab Icon:</label><br>
         <input type="text" id="tab-cloak-icon-input" placeholder="Enter new tab icon URL..." oninput='cloakIcon(this.value)'>
-        <br><br><br>
     `;
+    document.getElementById('tab-cloak-title-input').value = storedCloak.title;
+    document.getElementById('tab-cloak-icon-input').value = storedCloak.icon;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
 }
