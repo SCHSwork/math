@@ -1555,6 +1555,8 @@ function applySavedSettings() {
     applyStoredTabCloak();
     applyBehaviorSettings();
     setupTabPreviewCloak();
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
 }
 
 function darkMode() {
@@ -1713,6 +1715,7 @@ function applyBehaviorSettings() {
 
 function getPreviewCloakEnabled() {
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
 }
 
 function setPreviewCloakEnabled(isEnabled) {
@@ -1794,6 +1797,101 @@ function cloakIcon(url, { persist = true } = {}) {
     if (!link) {
         link = document.createElement("link");
     }
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "lowMed";
+    }
+    return sensitivity;
+}
+
+function setPreviewCloakSensitivity(sensitivity) {
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "lowMed";
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+}
+
+function ensureTabPreviewOverlay() {
+    let overlay = document.getElementById("tab-preview-cloak-overlay");
+    if (overlay) {
+        return overlay;
+    }
+
+    overlay = document.createElement("div");
+    overlay.id = "tab-preview-cloak-overlay";
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function setTabPreviewCloak(enabled) {
+    const overlay = ensureTabPreviewOverlay();
+    const shouldShow = enabled && getPreviewCloakEnabled();
+    overlay.style.display = shouldShow ? "block" : "none";
+}
+
+function handlePreviewCloakTrigger(reason) {
+    if (!getPreviewCloakEnabled()) {
+        setTabPreviewCloak(false);
+        return;
+    }
+
+    const sensitivity = getPreviewCloakSensitivity();
+
+    if (document.hidden) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "mouseleave" && ["medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "windowmouseout" && sensitivity === "high") {
+        setTabPreviewCloak(true);
+    }
+}
+
+function setupTabPreviewCloak() {
+    ensureTabPreviewOverlay();
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            setTabPreviewCloak(true);
+        } else {
+            setTabPreviewCloak(false);
+        }
+    });
+
+    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    window.addEventListener("focus", () => setTabPreviewCloak(false));
+
+    document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
+    window.addEventListener("mouseout", event => {
+        if (!event.relatedTarget && !event.toElement) {
+            handlePreviewCloakTrigger("windowmouseout");
+        }
+    });
+    window.addEventListener("mouseenter", () => {
+        if (!document.hidden) {
+            setTabPreviewCloak(false);
+        }
+    });
+}
+
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
     link.rel = "icon";
     link.href = iconUrl;
     document.head.appendChild(link);
@@ -1801,6 +1899,17 @@ function cloakIcon(url, { persist = true } = {}) {
     if (persist) {
         localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
     }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
 }
 
 function cloakName(title, { persist = true } = {}) {
@@ -1926,6 +2035,9 @@ settings.addEventListener('click', () => {
             <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (hidden + blur)</option>
             <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (hidden + blur)</option>
             <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (hidden + blur)</option>
+            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (default, hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (also on mouse leave)</option>
+            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (aggressive)</option>
         </select>
         <br>
         <button class="settings-button" onclick="tabCloak()">Open Tab Cloak</button>
