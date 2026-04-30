@@ -1714,6 +1714,7 @@ function applyBehaviorSettings() {
 }
 
 function getPreviewCloakEnabled() {
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
 }
 
@@ -1721,6 +1722,81 @@ function setPreviewCloakEnabled(isEnabled) {
     localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
     if (!isEnabled) {
         setTabPreviewCloak(false);
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "lowMed";
+    }
+    return sensitivity;
+}
+
+function setPreviewCloakSensitivity(sensitivity) {
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "lowMed";
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+}
+
+function ensureTabPreviewOverlay() {
+    let overlay = document.getElementById("tab-preview-cloak-overlay");
+    if (overlay) {
+        return overlay;
+    }
+
+    overlay = document.createElement("div");
+    overlay.id = "tab-preview-cloak-overlay";
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function setTabPreviewCloak(enabled) {
+    const overlay = ensureTabPreviewOverlay();
+    const shouldShow = enabled && getPreviewCloakEnabled();
+    overlay.style.display = shouldShow ? "block" : "none";
+}
+
+function handlePreviewCloakTrigger(reason) {
+    if (!getPreviewCloakEnabled()) {
+        setTabPreviewCloak(false);
+        return;
+    }
+
+    const sensitivity = getPreviewCloakSensitivity();
+
+    if (document.hidden) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+    }
+}
+
+function setupTabPreviewCloak() {
+    ensureTabPreviewOverlay();
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            setTabPreviewCloak(true);
+        } else {
+            setTabPreviewCloak(false);
+        }
+    });
+
+    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    window.addEventListener("focus", () => setTabPreviewCloak(false));
+
+    // Intentionally avoid hover/mouse-leave based cloaking to prevent tab-hover preview disruptions.
+}
+
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
     }
 }
 
@@ -1823,6 +1899,17 @@ function cloakIcon(url, { persist = true } = {}) {
     if (persist) {
         localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
     }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
 }
 
 function cloakName(title, { persist = true } = {}) {
@@ -1945,6 +2032,9 @@ settings.addEventListener('click', () => {
         <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
         <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
             <option value="low" ${previewCloakSensitivity === "low" ? "selected" : ""}>Low (hidden tabs only)</option>
+            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (hidden + blur)</option>
+            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (hidden + blur)</option>
             <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (default, hidden + blur)</option>
             <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (also on mouse leave)</option>
             <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (aggressive)</option>
