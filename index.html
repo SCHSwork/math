@@ -8,11 +8,11 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
     <script>
-        window.addEventListener('beforeunload', function (event) {
+        function gnmathBeforeUnloadHandler(event) {
             event.preventDefault();
             event.returnValue = '';
             return 'Are you sure you want to leave? Any unsaved changes will be lost.';
-        });
+        }
     </script>
     <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WX5VS54ZDW"></script>
     <script>
@@ -259,6 +259,15 @@ header {
     transform: translateY(-1px);
     box-shadow: var(--shadow);
     color: var(--glass);
+}
+
+#tab-preview-cloak-overlay {
+    position: fixed;
+    inset: 0;
+    background: #8a8a8a;
+    z-index: 999999;
+    display: none;
+    pointer-events: none;
 }
 
 .control-buttons {
@@ -655,13 +664,15 @@ footer {
     }
 
 }
-.control-button img {
+.control-button img,
+.control-button .control-icon {
     transition: transform 0.4s ease;
     width: 24px;
     height: 24px;
 }
 
-.control-button:hover img {
+.control-button:hover img,
+.control-button:hover .control-icon {
     transform: rotate(40deg);
 }
 
@@ -747,6 +758,42 @@ footer {
     box-shadow: var(--shadow-glow);
 }
 
+.settings-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+}
+
+.settings-section h4 {
+    margin: 0 0 0.5rem;
+}
+
+.settings-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
 .info-button {
     background: none;
     border: none;
@@ -800,12 +847,11 @@ footer {
                 </select>
             </div>
             <div class="control-buttons">
-                <button id="refresh" class="control-button" title="Refresh all the zones" onclick="listZones()">
-                    <img src="refresh-icon.png" alt="refresh">
-                </button>
-
-                <button id="settings" class="control-button" title="Settings!">
-                    <img src="setting.png" alt="settings">
+                <button id="settings" class="control-button" title="Settings!" aria-label="Open settings">
+                    <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -1462,6 +1508,37 @@ async function saveData() {
   }
 
 const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
+const TAB_CLOAK_STORAGE_KEYS = {
+    title: "gnmath-tab-cloak-title",
+    icon: "gnmath-tab-cloak-icon",
+    initialized: "gnmath-tab-cloak-initialized"
+};
+const PREVIEW_CLOAK_STORAGE_KEYS = {
+    enabled: "gnmath-preview-cloak-enabled",
+    sensitivity: "gnmath-preview-cloak-sensitivity"
+};
+const APP_SETTINGS_STORAGE_KEYS = {
+    warnBeforeUnload: "gnmath-warn-before-unload",
+    reducedMotion: "gnmath-reduced-motion",
+    customPrimaryColor: "gnmath-custom-primary-color"
+};
+const TAB_CLOAK_PRESETS = {
+    canvas: {
+        label: "Canvas",
+        title: "Dashboard",
+        icon: "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico"
+    },
+    googleClassroom: {
+        label: "Google Classroom",
+        title: "Classes",
+        icon: "https://ssl.gstatic.com/classroom/favicon.png"
+    },
+    googleDrive: {
+        label: "Google Drive",
+        title: "My Drive - Google Drive",
+        icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_32dp.png"
+    }
+};
 
 function applySavedSettings() {
     const savedMode = localStorage.getItem("gnmath-mode");
@@ -1473,6 +1550,11 @@ function applySavedSettings() {
 
     const savedTheme = localStorage.getItem("gnmath-theme") || "red";
     setTheme(savedTheme);
+    applyStoredCustomPrimaryColor();
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
+    applyBehaviorSettings();
+    setupTabPreviewCloak();
 }
 
 function darkMode() {
@@ -1486,6 +1568,7 @@ function setTheme(themeName) {
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
     document.body.classList.add(`theme-${safeTheme}`);
     localStorage.setItem("gnmath-theme", safeTheme);
+    clearCustomPrimaryColor();
     updateThemeButtons();
 }
 
@@ -1498,36 +1581,299 @@ function updateThemeButtons() {
     });
 }
 
-function cloakIcon(url) {
-    const link = document.querySelector("link[rel~='icon']");
-    link.rel = "icon";
-    if ((url+"").trim().length === 0) {
-        link.href = "favicon.png";
-    } else {
-        link.href = url;
-    }
-    document.head.appendChild(link);
+function clampColor(value) {
+    return Math.max(0, Math.min(255, value));
 }
-function cloakName(string) {
-    if ((string+"").trim().length === 0) {
-        document.title = "gn-math";
+
+function adjustHexColor(hexColor, adjustment) {
+    const normalizedHex = (hexColor || "").replace("#", "");
+    if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+        return "#fc2651";
+    }
+
+    const r = clampColor(parseInt(normalizedHex.slice(0, 2), 16) + adjustment);
+    const g = clampColor(parseInt(normalizedHex.slice(2, 4), 16) + adjustment);
+    const b = clampColor(parseInt(normalizedHex.slice(4, 6), 16) + adjustment);
+
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+function hexToRgb(hexColor) {
+    const normalizedHex = (hexColor || "").replace("#", "");
+    if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+        return { r: 252, g: 38, b: 81 };
+    }
+
+    return {
+        r: parseInt(normalizedHex.slice(0, 2), 16),
+        g: parseInt(normalizedHex.slice(2, 4), 16),
+        b: parseInt(normalizedHex.slice(4, 6), 16)
+    };
+}
+
+function getCustomPrimaryColor() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+}
+
+function clearCustomPrimaryColorStyles() {
+    const style = document.body.style;
+    style.removeProperty("--primary");
+    style.removeProperty("--primary-hover");
+    style.removeProperty("--primary-light");
+    style.removeProperty("--primary-lighter");
+    style.removeProperty("--shadow-glow");
+    style.removeProperty("--gradient-primary");
+}
+
+function applyCustomPrimaryColor(hexColor) {
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(hexColor || "") ? hexColor : "#fc2651";
+    const hoverColor = adjustHexColor(safeColor, -20);
+    const rgb = hexToRgb(safeColor);
+    const style = document.body.style;
+
+    style.setProperty("--primary", safeColor);
+    style.setProperty("--primary-hover", hoverColor);
+    style.setProperty("--primary-light", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`);
+    style.setProperty("--primary-lighter", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`);
+    style.setProperty("--shadow-glow", `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
+    style.setProperty("--gradient-primary", `linear-gradient(135deg, ${safeColor} 0%, ${hoverColor} 100%)`);
+}
+
+function setCustomPrimaryColor(hexColor) {
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(hexColor || "") ? hexColor : "#fc2651";
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor, safeColor);
+    applyCustomPrimaryColor(safeColor);
+}
+
+function clearCustomPrimaryColor() {
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+    clearCustomPrimaryColorStyles();
+}
+
+function applyStoredCustomPrimaryColor() {
+    const customColor = getCustomPrimaryColor();
+    clearCustomPrimaryColorStyles();
+    if (customColor) {
+        applyCustomPrimaryColor(customColor);
+    }
+}
+
+function initializeDefaultTabCloak() {
+    if (localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.initialized)) {
         return;
     }
-    document.title = string;
+
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, TAB_CLOAK_PRESETS.canvas.title);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, TAB_CLOAK_PRESETS.canvas.icon);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.initialized, "true");
+}
+
+function getStoredTabCloak() {
+    return {
+        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
+        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
+    };
+}
+
+function applyStoredTabCloak() {
+    const storedCloak = getStoredTabCloak();
+    cloakName(storedCloak.title, { persist: false });
+    cloakIcon(storedCloak.icon, { persist: false });
+}
+
+function getWarnBeforeUnloadEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+}
+
+function setWarnBeforeUnloadEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, isEnabled ? "true" : "false");
+    updateBeforeUnloadProtection();
+}
+
+function updateBeforeUnloadProtection() {
+    window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    if (getWarnBeforeUnloadEnabled()) {
+        window.addEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    }
+}
+
+function getReducedMotionEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+}
+
+function setReducedMotionEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion, isEnabled ? "true" : "false");
+    document.body.classList.toggle("reduced-motion", isEnabled);
+}
+
+function applyBehaviorSettings() {
+    updateBeforeUnloadProtection();
+    document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
+}
+
+function getPreviewCloakEnabled() {
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
+}
+
+function setPreviewCloakEnabled(isEnabled) {
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
+    if (!isEnabled) {
+        setTabPreviewCloak(false);
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "lowMed";
+    }
+    return sensitivity;
+}
+
+function setPreviewCloakSensitivity(sensitivity) {
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "lowMed";
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+}
+
+function ensureTabPreviewOverlay() {
+    let overlay = document.getElementById("tab-preview-cloak-overlay");
+    if (overlay) {
+        return overlay;
+    }
+
+    overlay = document.createElement("div");
+    overlay.id = "tab-preview-cloak-overlay";
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function setTabPreviewCloak(enabled) {
+    const overlay = ensureTabPreviewOverlay();
+    const shouldShow = enabled && getPreviewCloakEnabled();
+    overlay.style.display = shouldShow ? "block" : "none";
+}
+
+function handlePreviewCloakTrigger(reason) {
+    if (!getPreviewCloakEnabled()) {
+        setTabPreviewCloak(false);
+        return;
+    }
+
+    const sensitivity = getPreviewCloakSensitivity();
+
+    if (document.hidden) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+    }
+}
+
+function setupTabPreviewCloak() {
+    ensureTabPreviewOverlay();
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            setTabPreviewCloak(true);
+        } else {
+            setTabPreviewCloak(false);
+        }
+    });
+
+    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    window.addEventListener("focus", () => setTabPreviewCloak(false));
+
+    // Intentionally avoid hover/mouse-leave based cloaking to prevent tab-hover preview disruptions.
+}
+
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
+    link.rel = "icon";
+    link.href = iconUrl;
+    document.head.appendChild(link);
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
+    }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
+function applyTabCloakPreset(presetKey) {
+    const preset = TAB_CLOAK_PRESETS[presetKey];
+    if (!preset) {
+        return;
+    }
+
+    cloakName(preset.title);
+    cloakIcon(preset.icon);
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = preset.title;
+    if (iconInput) iconInput.value = preset.icon;
+}
+
+function resetTabCloak() {
+    cloakName("gn-math");
+    cloakIcon("favicon.png");
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = "";
+    if (iconInput) iconInput.value = "";
+}
+
+function resetAppearanceSettings() {
+    localStorage.removeItem("gnmath-mode");
+    localStorage.removeItem("gnmath-theme");
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.title);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.icon);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.initialized);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+    clearCustomPrimaryColorStyles();
+    location.reload();
 }
 
 function tabCloak() {
     closePopup();
     document.getElementById('popupTitle').textContent = "Tab Cloak";
     const popupBody = document.getElementById('popupBody');
+    const storedCloak = getStoredTabCloak();
+
     popupBody.innerHTML = `
+        <p style="margin-top: 0;">Tab cloak is set to <b>Canvas</b> by default on first load. You can customize it below.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="settings-button" onclick="applyTabCloakPreset('canvas')">Canvas</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleClassroom')">Classroom</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleDrive')">Drive</button>
+            <button class="settings-button" onclick="resetTabCloak()">Reset</button>
+        </div>
         <label for="tab-cloak-title-input" style="font-weight: bold;">Set Tab Title:</label><br>
         <input type="text" id="tab-cloak-title-input" placeholder="Enter new tab name..." oninput="cloakName(this.value)">
-        <br><br><br><br>
+        <br><br>
         <label for="tab-cloak-icon-input" style="font-weight: bold;">Set Tab Icon:</label><br>
         <input type="text" id="tab-cloak-icon-input" placeholder="Enter new tab icon URL..." oninput='cloakIcon(this.value)'>
-        <br><br><br>
     `;
+    document.getElementById('tab-cloak-title-input').value = storedCloak.title;
+    document.getElementById('tab-cloak-icon-input').value = storedCloak.icon;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
 }
@@ -1536,19 +1882,69 @@ const settings = document.getElementById('settings');
 settings.addEventListener('click', () => {
     document.getElementById('popupTitle').textContent = "Settings";
     const popupBody = document.getElementById('popupBody');
+    const previewCloakEnabled = getPreviewCloakEnabled();
+    const previewCloakSensitivity = getPreviewCloakSensitivity();
+    const warnBeforeUnload = getWarnBeforeUnloadEnabled();
+    const reducedMotion = getReducedMotionEnabled();
+    const customPrimaryColor = getCustomPrimaryColor() || "#fc2651";
+
     popupBody.innerHTML = `
-    <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
-    <br><br>
-    <div style="font-weight: 700; margin-bottom: 0.5rem;">Theme Color</div>
-    <div class="theme-options">
-        <button class="theme-button" data-theme-option="red" onclick="setTheme('red')">Red</button>
-        <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
-        <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
-        <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
+    <div class="settings-section">
+        <h4>Appearance</h4>
+        <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
+        <br><br>
+        <div style="font-weight: 700; margin-bottom: 0.5rem;">Theme Color</div>
+        <div class="theme-options">
+            <button class="theme-button" data-theme-option="red" onclick="setTheme('red')">Red</button>
+            <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
+            <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
+            <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
+        </div>
+        <br>
+        <label for="custom-theme-color" style="display:block; margin-bottom: 0.4rem;">Custom primary color</label>
+        <div class="settings-inline">
+            <input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)">
+            <button class="theme-button" type="button" onclick="clearCustomPrimaryColor()">Clear Custom</button>
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label for="reduced-motion-enabled">Reduce motion effects</label>
+            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? "checked" : ""} onchange="setReducedMotionEnabled(this.checked)">
+        </div>
     </div>
-    <br>
-    <button class="settings-button" onclick="tabCloak()">Tab Cloak</button>
-    <br>
+
+    <div class="settings-section">
+        <h4>Privacy Cloak</h4>
+        <div class="settings-inline">
+            <label for="preview-cloak-enabled">Preview cloak enabled</label>
+            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? "checked" : ""} onchange="setPreviewCloakEnabled(this.checked)">
+        </div>
+        <br>
+        <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
+        <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
+            <option value="low" ${previewCloakSensitivity === "low" ? "selected" : ""}>Low (hidden tabs only)</option>
+            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (hidden + blur)</option>
+            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (hidden + blur)</option>
+        </select>
+        <br>
+        <button class="settings-button" onclick="tabCloak()">Open Tab Cloak</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Behavior</h4>
+        <div class="settings-inline">
+            <label for="warn-before-unload">Warn before leaving page</label>
+            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? "checked" : ""} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Quick Actions</h4>
+        <button class="settings-button" onclick="listZones()">Refresh Zones</button>
+        <br><br>
+        <button class="settings-button" onclick="resetAppearanceSettings()">Reset Appearance + Cloak Settings</button>
+    </div>
     `;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
