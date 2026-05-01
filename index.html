@@ -1714,7 +1714,7 @@ function applyBehaviorSettings() {
 }
 
 function getPreviewCloakEnabled() {
-    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
 }
 
 function setPreviewCloakEnabled(isEnabled) {
@@ -1725,15 +1725,15 @@ function setPreviewCloakEnabled(isEnabled) {
 }
 
 function getPreviewCloakSensitivity() {
-    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "lowMed";
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "low";
     if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
-        return "lowMed";
+        return "low";
     }
     return sensitivity;
 }
 
 function setPreviewCloakSensitivity(sensitivity) {
-    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "lowMed";
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "low";
     localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
 }
 
@@ -1797,17 +1797,6 @@ function setupTabPreviewCloak() {
     window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
     window.addEventListener("focus", () => setTabPreviewCloak(false));
 
-    document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
-    window.addEventListener("mouseout", event => {
-        if (!event.relatedTarget && !event.toElement) {
-            handlePreviewCloakTrigger("windowmouseout");
-        }
-    });
-    window.addEventListener("mouseenter", () => {
-        if (!document.hidden) {
-            setTabPreviewCloak(false);
-        }
-    });
 }
 
 function cloakIcon(url, { persist = true } = {}) {
@@ -1945,7 +1934,7 @@ settings.addEventListener('click', () => {
         <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
         <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
             <option value="low" ${previewCloakSensitivity === "low" ? "selected" : ""}>Low (hidden tabs only)</option>
-            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (default, hidden + blur)</option>
+            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (hidden + blur)</option>
             <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (also on mouse leave)</option>
             <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (aggressive)</option>
         </select>
