@@ -933,6 +933,11 @@ const zonesurls = [
 let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
 const coverURL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
 const htmlURL = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
+const htmlURLFallbacks = [
+    "https://cdn.jsdelivr.net/gh/freebuisness/html@latest",
+    "https://cdn.jsdelivr.net/gh/freebuisness/html",
+    "https://raw.githubusercontent.com/freebuisness/html/main"
+];
 let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
@@ -986,8 +991,7 @@ async function listZones() {
                     if (zone.url.startsWith("http")) {
                         window.open(zone.url, "_blank");
                     } else {
-                        const url = zone.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-                        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
+                        fetchWithFallback(zone.url).then(html => {
                             document.documentElement.innerHTML = html;
                             const popup = document.createElement("div");
                             popup.style.position = "fixed";
@@ -1220,12 +1224,54 @@ function filterZones() {
     displayZones(filteredZones);
 }
 
+async function fetchWithFallback(rawUrl) {
+    // Build a list of candidate URLs: primary htmlURL first, then each fallback
+    const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "");
+    const isHtml = rawUrl.includes("{HTML_URL}");
+    const candidates = isHtml
+        ? [htmlURL, ...htmlURLFallbacks].map(base => base + suffix)
+        : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
+
+    let lastError;
+    for (const url of candidates) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.text();
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    throw lastError;
+}
+
 function openZone(file) {
     if (file.url.startsWith("http")) {
         window.open(file.url, "_blank");
     } else {
-        const url = file.url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        fetch(url+"?t="+Date.now()).then(response => response.text()).then(html => {
+        // Show viewer immediately with a loading indicator
+        document.getElementById('zoneName').textContent = file.name;
+        document.getElementById('zoneId').textContent = file.id;
+        document.getElementById('zoneAuthor').textContent = "by " + file.author;
+        if (file.authorLink) {
+            document.getElementById('zoneAuthor').href = file.authorLink;
+        } else {
+            document.getElementById('zoneAuthor').removeAttribute('href');
+        }
+        zoneViewer.style.display = "flex";
+        zoneViewer.hidden = false;
+        if (zoneFrame.contentDocument !== null) {
+            zoneFrame.contentDocument.open();
+            zoneFrame.contentDocument.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#94a3b8;font-family:sans-serif;font-size:1.2rem;">Loading...</body></html>');
+            zoneFrame.contentDocument.close();
+        }
+        try {
+            const locUrl = new URL(window.location);
+            locUrl.searchParams.set('id', file.id);
+            history.pushState(null, '', locUrl.toString());
+        } catch(e){}
+
+        fetchWithFallback(file.url).then(html => {
             if (zoneFrame.contentDocument === null) {
                 zoneFrame = document.createElement("iframe");
                 zoneFrame.id = "zoneFrame";
@@ -1234,33 +1280,23 @@ function openZone(file) {
             zoneFrame.contentDocument.open();
             zoneFrame.contentDocument.write(html);
             zoneFrame.contentDocument.close();
-            document.getElementById('zoneName').textContent = file.name;
-            document.getElementById('zoneId').textContent = file.id;
-            document.getElementById('zoneAuthor').textContent = "by " + file.author;
-            if (file.authorLink) {
-                document.getElementById('zoneAuthor').href = file.authorLink;
-            }
-            zoneViewer.style.display = "block";
-            try {
-                const url = new URL(window.location);
-                url.searchParams.set('id', file.id);
-                history.pushState(null, '', url.toString());
-            } catch(error){}
-            zoneViewer.hidden = true;
-        }).catch(error => alert("Failed to load zone: " + error));
+        }).catch(error => {
+            closeZone();
+            alert("Failed to load zone: " + error);
+        });
     }
 }
 
 function aboutBlank() {
     const newWindow = window.open("about:blank", "_blank");
-    let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent).url.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-    fetch(zone+"?t="+Date.now()).then(response => response.text()).then(html => {
+    let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    fetchWithFallback(zone.url).then(html => {
         if (newWindow) {
             newWindow.document.open();
             newWindow.document.write(html);
             newWindow.document.close();
         }
-    })
+    }).catch(error => alert("Failed to open zone in new tab: " + error));
 }
 
 function closeZone() {
@@ -1276,7 +1312,7 @@ function closeZone() {
 
 function downloadZone() {
     let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
-    fetch(zone.url.replace("{HTML_URL}", htmlURL)+"?t="+Date.now()).then(res => res.text()).then(text => {
+    fetchWithFallback(zone.url).then(text => {
         const blob = new Blob([text], {
             type: "text/plain;charset=utf-8"
         });
