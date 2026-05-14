@@ -2100,6 +2100,16 @@ function applyStoredTabCloak() {
     cloakIcon(storedCloak.icon, { persist: false });
 }
 
+function initializePrivacyDefaults() {
+    if (localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === null) {
+        localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, "false");
+    }
+
+    if (localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) === null) {
+        localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, "true");
+    }
+}
+
 function getWarnBeforeUnloadEnabled() {
     return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
 }
@@ -2126,6 +2136,7 @@ function setReducedMotionEnabled(isEnabled) {
 }
 
 function applyBehaviorSettings() {
+    initializePrivacyDefaults();
     updateBeforeUnloadProtection();
     document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
 }
@@ -2357,6 +2368,7 @@ settings.addEventListener('click', () => {
     <div class="settings-section">
         <h4>Privacy Cloak</h4>
         <div class="settings-inline">
+            <label for="preview-cloak-enabled">Hide page in tab hover previews (off by default)</label>
             <label for="preview-cloak-enabled">Hide page in tab hover previews</label>
             <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? "checked" : ""} onchange="setPreviewCloakEnabled(this.checked)">
         </div>
@@ -2375,7 +2387,7 @@ settings.addEventListener('click', () => {
     <div class="settings-section">
         <h4>Behavior</h4>
         <div class="settings-inline">
-            <label for="warn-before-unload">Warn before leaving page</label>
+            <label for="warn-before-unload">Warn before leaving page (on by default)</label>
             <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? "checked" : ""} onchange="setWarnBeforeUnloadEnabled(this.checked)">
         </div>
     </div>
