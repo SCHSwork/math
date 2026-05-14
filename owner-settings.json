@@ -2,13 +2,13 @@
   "siteMode": "open",
   "disabledZones": [],
   "announcement": {
-    "text": "",
-    "enabled": false
+    "text": "Test",
+    "enabled": true
   },
   "motd": {
     "text": "",
     "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-14T23:03:42.721Z"
+  "updatedAt": "2026-05-14T23:26:51.307Z"
 }
