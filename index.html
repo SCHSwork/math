@@ -1224,38 +1224,6 @@ function createZoneCard(file) {
     return zoneItem;
 }
 
-
-    const img = document.createElement("img");
-    img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-    img.alt = file.name;
-    img.loading = "lazy";
-    img.className = "lazy-zone-img";
-    zoneItem.appendChild(img);
-
-    const button = document.createElement("button");
-    button.textContent = file.name;
-    button.onclick = (event) => {
-        event.stopPropagation();
-        openZone(file);
-    };
-    zoneItem.appendChild(button);
-
-    const actions = document.createElement("div");
-    actions.className = "zone-actions";
-    const reportButton = document.createElement("button");
-    reportButton.type = "button";
-    reportButton.className = "report-broken-button";
-    reportButton.textContent = "Report Broken";
-    reportButton.onclick = (event) => {
-        event.stopPropagation();
-        reportBrokenZone(file);
-    };
-    actions.appendChild(reportButton);
-    zoneItem.appendChild(actions);
-
-    return zoneItem;
-}
-
 function observeLazyZoneImages(selector) {
     const lazyImages = document.querySelectorAll(selector);
     const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -1890,8 +1858,7 @@ const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
 const TAB_CLOAK_STORAGE_KEYS = {
     title: "gnmath-tab-cloak-title",
     icon: "gnmath-tab-cloak-icon",
-    initialized: "gnmath-tab-cloak-initialized",
-    defaultOffMigrated: "gnmath-tab-cloak-default-off-migrated"
+    initialized: "gnmath-tab-cloak-initialized"
 };
 const PREVIEW_CLOAK_STORAGE_KEYS = {
     enabled: "gnmath-preview-cloak-enabled",
@@ -1909,7 +1876,6 @@ const OWNER_STORAGE_KEYS = {
     brokenReports: "gnmath-broken-zone-reports"
 };
 const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
-const PANIC_REDIRECT_URL = "https://washk12.instructure.com/";
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -1944,7 +1910,8 @@ function applySavedSettings() {
     applyBehaviorSettings();
     applyOwnerSiteMode();
     setupTabPreviewCloak();
-    setupPanicButton();
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
 }
 
 function darkMode() {
@@ -2049,28 +2016,13 @@ function applyStoredCustomPrimaryColor() {
 }
 
 function initializeDefaultTabCloak() {
-    migrateDefaultTabCloakOff();
-
     if (localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.initialized)) {
         return;
     }
 
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, TAB_CLOAK_PRESETS.canvas.title);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, TAB_CLOAK_PRESETS.canvas.icon);
     localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.initialized, "true");
-}
-
-function migrateDefaultTabCloakOff() {
-    if (localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.defaultOffMigrated)) {
-        return;
-    }
-
-    const storedTitle = localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title);
-    const storedIcon = localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon);
-    if (storedTitle === TAB_CLOAK_PRESETS.canvas.title && storedIcon === TAB_CLOAK_PRESETS.canvas.icon) {
-        localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.title);
-        localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.icon);
-    }
-
-    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.defaultOffMigrated, "true");
 }
 
 function getStoredTabCloak() {
@@ -2078,20 +2030,6 @@ function getStoredTabCloak() {
         title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
         icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
     };
-}
-
-function setupPanicButton() {
-    if (window.gnmathPanicButtonInitialized) {
-        return;
-    }
-
-    window.gnmathPanicButtonInitialized = true;
-    document.addEventListener("keydown", event => {
-        if (event.ctrlKey && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k") {
-            event.preventDefault();
-            window.location.href = PANIC_REDIRECT_URL;
-        }
-    });
 }
 
 function applyStoredTabCloak() {
@@ -2283,7 +2221,6 @@ function resetAppearanceSettings() {
     localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.title);
     localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.icon);
     localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.initialized);
-    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.defaultOffMigrated);
     localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled);
     localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity);
     localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload);
@@ -2300,7 +2237,7 @@ function tabCloak() {
     const storedCloak = getStoredTabCloak();
 
     popupBody.innerHTML = `
-        <p style="margin-top: 0;">Tab cloak is off by default. Choose a preset or enter your own title and icon to enable it.</p>
+        <p style="margin-top: 0;">Tab cloak is set to <b>Canvas</b> by default on first load. You can customize it below.</p>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             <button class="settings-button" onclick="applyTabCloakPreset('canvas')">Canvas</button>
             <button class="settings-button" onclick="applyTabCloakPreset('googleClassroom')">Classroom</button>
