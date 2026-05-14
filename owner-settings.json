@@ -3,12 +3,12 @@
   "disabledZones": [],
   "announcement": {
     "text": "Test",
-    "enabled": true
+    "enabled": false
   },
   "motd": {
     "text": "",
     "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-14T23:31:12.942Z"
+  "updatedAt": "2026-05-14T23:32:47.595Z"
 }
