@@ -1656,6 +1656,7 @@ function setZoneDisabled(zoneId, isDisabled) {
     setDisabledZoneIds(disabledIds);
     featuredContainer.innerHTML = "";
     sortZones();
+    githubAutoSync();
 }
 
 function getBrokenReports() {
@@ -1731,6 +1732,7 @@ function setOwnerSiteMode(mode) {
     const safeMode = OWNER_SITE_MODES.includes(mode) ? mode : "open";
     localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, safeMode);
     applyOwnerSiteMode();
+    githubAutoSync();
 }
 
 function promptOwnerPassword() {
@@ -1800,8 +1802,34 @@ function renderOwnerPanel() {
 
     const announcement = getAnnouncement();
     const disabledCount = getDisabledZoneIds().size;
+    const storedPat = getGithubPat();
+    const maskedPat = storedPat ? storedPat.slice(0, 10) + "•".repeat(12) + storedPat.slice(-4) : "";
 
     popupBody.innerHTML = `
+    <div class="settings-section">
+        <h4>☁️ GitHub Sync</h4>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted);font-size:13px;">
+            Settings are automatically loaded from GitHub on every page load for all visitors.
+            Only you (the owner) can push changes using your token.
+        </p>
+        <label style="display:block;margin-bottom:0.4rem;font-weight:600;">GitHub Token (PAT)</label>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+            <input type="password" id="owner-pat-input"
+                placeholder="github_pat_…"
+                value="${maskedPat}"
+                style="flex:1;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:13px;font-family:monospace;">
+            <button class="settings-button" type="button" style="min-width:0;white-space:nowrap;"
+                onclick="ownerSavePat()">Save Token</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button id="owner-sync-btn" class="settings-button" type="button" style="flex:1;"
+                onclick="ownerSyncSave()">Save &amp; Sync to GitHub</button>
+            <button class="settings-button" type="button" style="flex:1;"
+                onclick="ownerSyncPullManual()">Pull from GitHub</button>
+        </div>
+        <p id="owner-sync-status" style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);min-height:1.2em;"></p>
+    </div>
+
     <div class="settings-section">
         <h4>Website Status</h4>
         <label for="owner-site-mode" style="display:block; margin-bottom: 0.4rem;">Mode</label>
@@ -1906,6 +1934,7 @@ function setAnnouncement(text, enabled) {
     localStorage.setItem(OWNER_STORAGE_KEYS.announcement, text);
     localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, enabled ? "true" : "false");
     applyAnnouncement();
+    githubAutoSync();
 }
 
 function applyAnnouncement() {
@@ -1966,6 +1995,7 @@ function importDisabledZones(event) {
 function enableAllZones() {
     if (!confirm("Re-enable all disabled games?")) return;
     setDisabledZoneIds(new Set());
+    githubAutoSync();
     renderOwnerPanel();
 }
 
@@ -2019,9 +2049,171 @@ const OWNER_STORAGE_KEYS = {
     disabledZones: "gnmath-owner-disabled-zones",
     brokenReports: "gnmath-broken-zone-reports",
     announcement: "gnmath-owner-announcement",
-    announcementEnabled: "gnmath-owner-announcement-enabled"
+    announcementEnabled: "gnmath-owner-announcement-enabled",
+    githubPat: "gnmath-owner-github-pat"
 };
 const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
+
+// ── GitHub Sync ──────────────────────────────────────────────────────────────
+const GITHUB_SYNC_REPO  = "paxtolins/Gn-2.0";
+const GITHUB_SYNC_FILE  = "owner-settings.json";
+const GITHUB_SYNC_URL   = `https://api.github.com/repos/${GITHUB_SYNC_REPO}/contents/${GITHUB_SYNC_FILE}`;
+// Public CDN URL — readable by ALL visitors (no token needed)
+const GITHUB_SYNC_CDN   = `https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/${GITHUB_SYNC_FILE}`;
+
+function getGithubPat() {
+    return localStorage.getItem(OWNER_STORAGE_KEYS.githubPat) || "";
+}
+function setGithubPat(pat) {
+    localStorage.setItem(OWNER_STORAGE_KEYS.githubPat, pat.trim());
+}
+
+/** Collect all current owner settings into one object */
+function buildOwnerSettingsObject() {
+    return {
+        siteMode:      getOwnerSiteMode(),
+        disabledZones: Array.from(getDisabledZoneIds()),
+        announcement: {
+            text:    getAnnouncement().text,
+            enabled: getAnnouncement().enabled
+        },
+        updatedAt: new Date().toISOString()
+    };
+}
+
+/** Apply a settings object that was loaded from GitHub */
+function applyOwnerSettingsObject(settings) {
+    if (!settings || typeof settings !== "object") return;
+
+    if (typeof settings.siteMode === "string") {
+        localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, settings.siteMode);
+        applyOwnerSiteMode();
+    }
+    if (Array.isArray(settings.disabledZones)) {
+        setDisabledZoneIds(new Set(settings.disabledZones.map(String)));
+        featuredContainer.innerHTML = "";
+        sortZones();
+    }
+    if (settings.announcement && typeof settings.announcement === "object") {
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcement,        settings.announcement.text    ?? "");
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled,  settings.announcement.enabled ? "true" : "false");
+        applyAnnouncement();
+    }
+}
+
+/** Debounced auto-sync — waits 1.5 s after the last change before pushing */
+let _autoSyncTimer = null;
+function githubAutoSync() {
+    if (!getGithubPat()) return;          // no token stored → skip silently
+    clearTimeout(_autoSyncTimer);
+    _autoSyncTimer = setTimeout(async () => {
+        const ok = await githubSyncPush();
+        const status = document.getElementById("owner-sync-status");
+        if (status) {
+            status.textContent = ok
+                ? "✓ Auto-saved to GitHub — " + new Date().toLocaleTimeString()
+                : "✗ Auto-save failed – check your token";
+            status.style.color = ok ? "var(--success)" : "#ef4444";
+        }
+    }, 1500);
+}
+
+/** Push current settings to GitHub. Returns true on success. */
+async function githubSyncPush() {
+    const pat = getGithubPat();
+    if (!pat) return false;
+
+    const content = btoa(unescape(encodeURIComponent(
+        JSON.stringify(buildOwnerSettingsObject(), null, 2)
+    )));
+
+    // Fetch current SHA (needed for updates)
+    let sha;
+    try {
+        const res = await fetch(GITHUB_SYNC_URL, {
+            headers: { Authorization: `token ${pat}`, Accept: "application/vnd.github+json" }
+        });
+        if (res.ok) {
+            const json = await res.json();
+            sha = json.sha;
+        }
+    } catch (_) {}
+
+    const body = { message: "chore: update owner-settings", content };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(GITHUB_SYNC_URL, {
+        method:  "PUT",
+        headers: {
+            Authorization: `token ${pat}`,
+            Accept:        "application/vnd.github+json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return putRes.ok;
+}
+
+/** Pull settings from the public CDN (works for all visitors, no token). */
+async function githubSyncPull() {
+    try {
+        const res = await fetch(GITHUB_SYNC_CDN + "?t=" + Date.now());
+        if (!res.ok) return;
+        const settings = await res.json();
+        applyOwnerSettingsObject(settings);
+    } catch (_) {}
+}
+
+/** Save settings then immediately push to GitHub. Shows status in panel. */
+async function ownerSyncSave() {
+    const btn    = document.getElementById("owner-sync-btn");
+    const status = document.getElementById("owner-sync-status");
+    if (btn) { btn.textContent = "Saving…"; btn.disabled = true; }
+    if (status) status.textContent = "";
+    try {
+        const ok = await githubSyncPush();
+        if (btn)    { btn.textContent = "Save & Sync to GitHub"; btn.disabled = false; }
+        if (status) {
+            status.textContent = ok
+                ? "✓ Saved to GitHub — all devices will pick this up on next load."
+                : "✗ Save failed. Check your token has repo write access.";
+            status.style.color = ok ? "var(--success)" : "#ef4444";
+        }
+    } catch(e) {
+        if (btn)    { btn.textContent = "Save & Sync to GitHub"; btn.disabled = false; }
+        if (status) { status.textContent = "✗ Error: " + e.message; status.style.color = "#ef4444"; }
+    }
+}
+
+/** Save the PAT entered in the input field. */
+function ownerSavePat() {
+    const input = document.getElementById("owner-pat-input");
+    if (!input) return;
+    const val = input.value.trim();
+    // If it's the masked display value, do nothing
+    if (val.includes("•")) return;
+    setGithubPat(val);
+    const status = document.getElementById("owner-sync-status");
+    if (status) {
+        status.textContent = val ? "✓ Token saved locally." : "Token cleared.";
+        status.style.color = "var(--success)";
+    }
+}
+
+/** Manual pull — fetch latest settings from GitHub and apply. */
+async function ownerSyncPullManual() {
+    const status = document.getElementById("owner-sync-status");
+    if (status) { status.textContent = "Pulling…"; status.style.color = "var(--text-muted)"; }
+    try {
+        await githubSyncPull();
+        renderOwnerPanel();
+        const s = document.getElementById("owner-sync-status");
+        if (s) { s.textContent = "✓ Pulled latest settings from GitHub."; s.style.color = "var(--success)"; }
+    } catch(e) {
+        if (status) { status.textContent = "✗ Pull failed: " + e.message; status.style.color = "#ef4444"; }
+    }
+}
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -2664,6 +2856,8 @@ function closePopup() {
 }
 applySavedSettings();
 listZones();
+// Pull owner settings from GitHub on every page load so all devices stay in sync
+githubSyncPull();
 
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
