@@ -1,6 +1,8 @@
 {
   "siteMode": "open",
-  "disabledZones": [],
+  "disabledZones": [
+    "653"
+  ],
   "announcement": {
     "text": "Test",
     "enabled": false
@@ -10,5 +12,5 @@
     "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-14T23:34:49.370Z"
+  "updatedAt": "2026-05-14T23:34:59.496Z"
 }
