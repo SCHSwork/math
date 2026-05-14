@@ -1845,13 +1845,13 @@ function renderOwnerPanel() {
         <div class="settings-inline" style="margin-bottom:0.75rem;">
             <label for="owner-announcement-enabled">Show announcement bar</label>
             <input id="owner-announcement-enabled" type="checkbox" ${announcement.enabled ? "checked" : ""}
-                onchange="setAnnouncement(document.getElementById('owner-announcement-text').value, this.checked)">
+                onchange="saveAnnouncementFromPanel()">
         </div>
         <input type="text" id="owner-announcement-text"
             placeholder="Announcement message…"
             value="${announcement.text.replace(/"/g, '&quot;')}"
-            oninput="setAnnouncement(this.value, document.getElementById('owner-announcement-enabled').checked)"
-            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;">
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;">
+        <button class="settings-button" type="button" onclick="saveAnnouncementFromPanel()">Apply Banner</button>
     </div>
 
     <div class="settings-section">
@@ -1937,6 +1937,12 @@ function setAnnouncement(text, enabled) {
     githubAutoSync();
 }
 
+function saveAnnouncementFromPanel() {
+    const text    = document.getElementById('owner-announcement-text')?.value ?? "";
+    const enabled = document.getElementById('owner-announcement-enabled')?.checked ?? false;
+    setAnnouncement(text, enabled);
+}
+
 function applyAnnouncement() {
     const existing = document.getElementById("owner-announcement-bar");
     const { text, enabled } = getAnnouncement();
@@ -1948,8 +1954,11 @@ function applyAnnouncement() {
 
     const bar = existing || document.createElement("div");
     bar.id = "owner-announcement-bar";
+    // Use a real color value — CSS variables don't work in element.style
+    const primary = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#fc2651';
+    const primaryHover = getComputedStyle(document.body).getPropertyValue('--primary-hover').trim() || '#e91e47';
     bar.style.cssText = `
-        background: var(--gradient-primary);
+        background: linear-gradient(135deg, ${primary} 0%, ${primaryHover} 100%);
         color: #fff;
         text-align: center;
         padding: 0.6rem 2.5rem;
