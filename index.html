@@ -2069,7 +2069,7 @@ function applyBehaviorSettings() {
 }
 
 function getPreviewCloakEnabled() {
-    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
 }
 
 function setPreviewCloakEnabled(isEnabled) {
