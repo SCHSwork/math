@@ -2082,7 +2082,7 @@ function buildOwnerSettingsObject() {
 }
 
 /** Apply a settings object that was loaded from GitHub */
-function applyOwnerSettingsObject(settings) {
+function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (!settings || typeof settings !== "object") return;
 
     if (typeof settings.siteMode === "string") {
@@ -2090,13 +2090,16 @@ function applyOwnerSettingsObject(settings) {
         applyOwnerSiteMode();
     }
     if (Array.isArray(settings.disabledZones)) {
+        // Write to localStorage only — let listZones() handle the render on startup
         setDisabledZoneIds(new Set(settings.disabledZones.map(String)));
-        featuredContainer.innerHTML = "";
-        sortZones();
+        if (rerender) {
+            featuredContainer.innerHTML = "";
+            sortZones();
+        }
     }
     if (settings.announcement && typeof settings.announcement === "object") {
-        localStorage.setItem(OWNER_STORAGE_KEYS.announcement,        settings.announcement.text    ?? "");
-        localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled,  settings.announcement.enabled ? "true" : "false");
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcement, settings.announcement.text ?? "");
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, settings.announcement.enabled ? "true" : "false");
         applyAnnouncement();
     }
 }
@@ -2156,12 +2159,12 @@ async function githubSyncPush() {
 }
 
 /** Pull settings from the public CDN (works for all visitors, no token). */
-async function githubSyncPull() {
+async function githubSyncPull({ rerender = false } = {}) {
     try {
         const res = await fetch(GITHUB_SYNC_CDN + "?t=" + Date.now());
         if (!res.ok) return;
         const settings = await res.json();
-        applyOwnerSettingsObject(settings);
+        applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
 }
 
@@ -2206,7 +2209,7 @@ async function ownerSyncPullManual() {
     const status = document.getElementById("owner-sync-status");
     if (status) { status.textContent = "Pulling…"; status.style.color = "var(--text-muted)"; }
     try {
-        await githubSyncPull();
+        await githubSyncPull({ rerender: true });
         renderOwnerPanel();
         const s = document.getElementById("owner-sync-status");
         if (s) { s.textContent = "✓ Pulled latest settings from GitHub."; s.style.color = "var(--success)"; }
@@ -2855,9 +2858,8 @@ function closePopup() {
     document.getElementById('popupOverlay').style.display = "none";
 }
 applySavedSettings();
-listZones();
-// Pull owner settings from GitHub on every page load so all devices stay in sync
-githubSyncPull();
+// Pull owner settings from GitHub FIRST, then render zones so disabled list is correct
+githubSyncPull().finally(() => listZones());
 
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
