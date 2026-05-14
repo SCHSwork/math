@@ -377,6 +377,84 @@ main {
     background: rgba(252, 38, 81, 0.05);
 }
 
+.zone-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.zone-actions .report-broken-button {
+    min-height: auto;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.zone-actions .report-broken-button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-lighter);
+}
+
+#owner-site-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.owner-site-message {
+    max-width: 520px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-xl);
+    padding: 2rem;
+}
+
+.owner-site-message h1 {
+    margin: 0 0 0.75rem;
+}
+
+.owner-panel-list {
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+}
+
+.owner-game-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.owner-game-toggle:last-child {
+    border-bottom: 0;
+}
+
+.owner-game-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 #zoneViewer {
     position: fixed;
     inset: 0;
@@ -888,6 +966,7 @@ footer {
                 <button onclick="fullscreenZone()">Fullscreen</button>
                 <button onclick="aboutBlank()">Open in New Tab</button>
                 <button onclick="downloadZone()">Download</button>
+                <button onclick="reportCurrentZone()">Report Broken</button>
                 <button onclick="closeZone()">Close</button>
             </div>
         </div>
@@ -1109,34 +1188,44 @@ function sortZones() {
     displayZones(zones);
 }
 
-function displayFeaturedZones(featuredZones) {
-    featuredContainer.innerHTML = "";
-    featuredZones.forEach((file, index) => {
-        const zoneItem = document.createElement("div");
-        zoneItem.className = "zone-item";
-        zoneItem.onclick = () => openZone(file);
-        const img = document.createElement("img");
-        img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        img.alt = file.name;
-        img.loading = "lazy";
-        img.className = "lazy-zone-img";
-        zoneItem.appendChild(img);
-        const button = document.createElement("button");
-        button.textContent = file.name;
-        button.onclick = (event) => {
-            event.stopPropagation();
-            openZone(file);
-        };
-        zoneItem.appendChild(button);
-        featuredContainer.appendChild(zoneItem);
-    });
-    if (featuredContainer.innerHTML === "") {
-        featuredContainer.innerHTML = "No featured zones found.";
-    } else {
-        document.getElementById("allZonesSummary").textContent = `Featured Zones (${featuredZones.length})`;
-    }
+function createZoneCard(file) {
+    const zoneItem = document.createElement("div");
+    zoneItem.className = "zone-item";
+    zoneItem.onclick = () => openZone(file);
 
-    const lazyImages = document.querySelectorAll('#featuredZones img.lazy-zone-img');
+    const img = document.createElement("img");
+    img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    img.alt = file.name;
+    img.loading = "lazy";
+    img.className = "lazy-zone-img";
+    zoneItem.appendChild(img);
+
+    const button = document.createElement("button");
+    button.textContent = file.name;
+    button.onclick = (event) => {
+        event.stopPropagation();
+        openZone(file);
+    };
+    zoneItem.appendChild(button);
+
+    const actions = document.createElement("div");
+    actions.className = "zone-actions";
+    const reportButton = document.createElement("button");
+    reportButton.type = "button";
+    reportButton.className = "report-broken-button";
+    reportButton.textContent = "Report Broken";
+    reportButton.onclick = (event) => {
+        event.stopPropagation();
+        reportBrokenZone(file);
+    };
+    actions.appendChild(reportButton);
+    zoneItem.appendChild(actions);
+
+    return zoneItem;
+}
+
+function observeLazyZoneImages(selector) {
+    const lazyImages = document.querySelectorAll(selector);
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !zoneViewer.hidden) {
@@ -1155,51 +1244,34 @@ function displayFeaturedZones(featuredZones) {
         imageObserver.observe(img);
     });
 }
+
+function displayFeaturedZones(featuredZones) {
+    featuredContainer.innerHTML = "";
+    const visibleFeaturedZones = featuredZones.filter(file => !isZoneDisabled(file.id));
+    visibleFeaturedZones.forEach(file => {
+        featuredContainer.appendChild(createZoneCard(file));
+    });
+    if (featuredContainer.innerHTML === "") {
+        featuredContainer.innerHTML = "No featured zones found.";
+    } else {
+        document.getElementById("allZonesSummary").textContent = `Featured Zones (${visibleFeaturedZones.length})`;
+    }
+
+    observeLazyZoneImages('#featuredZones img.lazy-zone-img');
+}
 function displayZones(zones) {
     container.innerHTML = "";
-    zones.forEach((file, index) => {
-        const zoneItem = document.createElement("div");
-        zoneItem.className = "zone-item";
-        zoneItem.onclick = () => openZone(file);
-        const img = document.createElement("img");
-        img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
-        img.alt = file.name;
-        img.loading = "lazy";
-        img.className = "lazy-zone-img";
-        zoneItem.appendChild(img);
-        const button = document.createElement("button");
-        button.textContent = file.name;
-        button.onclick = (event) => {
-            event.stopPropagation();
-            openZone(file);
-        };
-        zoneItem.appendChild(button);
-        container.appendChild(zoneItem);   
+    const visibleZones = zones.filter(file => !isZoneDisabled(file.id));
+    visibleZones.forEach(file => {
+        container.appendChild(createZoneCard(file));
     });
     if (container.innerHTML === "") {
         container.innerHTML = "No zones found.";
     } else {
-        document.getElementById("allSummary").textContent = `All Zones (${zones.length})`;
+        document.getElementById("allSummary").textContent = `All Zones (${visibleZones.length})`;
     }
 
-    const lazyImages = document.querySelectorAll('img.lazy-zone-img');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !zoneViewer.hidden) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy-zone-img");
-                observer.unobserve(img);
-            }
-        });
-    }, {
-        rootMargin: "100px", 
-        threshold: 0.1
-    });
-
-    lazyImages.forEach(img => {
-        imageObserver.observe(img);
-    });
+    observeLazyZoneImages('img.lazy-zone-img');
 }
 
 function filterZones2() {
@@ -1246,6 +1318,11 @@ async function fetchWithFallback(rawUrl) {
 }
 
 function openZone(file) {
+    if (isZoneDisabled(file.id)) {
+        alert("This game is disabled by the owner.");
+        return;
+    }
+
     if (file.url.startsWith("http")) {
         window.open(file.url, "_blank");
     } else {
@@ -1543,6 +1620,240 @@ async function saveData() {
     reader.readAsText(file);
   }
 
+
+function getJsonStorage(key, fallback) {
+    try {
+        const storedValue = localStorage.getItem(key);
+        return storedValue ? JSON.parse(storedValue) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function setJsonStorage(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getDisabledZoneIds() {
+    return new Set(getJsonStorage(OWNER_STORAGE_KEYS.disabledZones, []));
+}
+
+function setDisabledZoneIds(disabledIds) {
+    setJsonStorage(OWNER_STORAGE_KEYS.disabledZones, Array.from(disabledIds));
+}
+
+function isZoneDisabled(zoneId) {
+    return getDisabledZoneIds().has(String(zoneId));
+}
+
+function setZoneDisabled(zoneId, isDisabled) {
+    const disabledIds = getDisabledZoneIds();
+    if (isDisabled) {
+        disabledIds.add(String(zoneId));
+    } else {
+        disabledIds.delete(String(zoneId));
+    }
+    setDisabledZoneIds(disabledIds);
+    featuredContainer.innerHTML = "";
+    sortZones();
+}
+
+function getBrokenReports() {
+    return getJsonStorage(OWNER_STORAGE_KEYS.brokenReports, {});
+}
+
+function setBrokenReports(reports) {
+    setJsonStorage(OWNER_STORAGE_KEYS.brokenReports, reports);
+}
+
+function buildBrokenReportsFile() {
+    const reports = getBrokenReports();
+    const games = Object.values(reports).sort((a, b) => b.reports - a.reports || a.name.localeCompare(b.name));
+    return {
+        totalReports: games.reduce((total, game) => total + game.reports, 0),
+        games,
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function downloadJsonFile(fileName, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function saveBrokenReportsFile() {
+    downloadJsonFile("broken-reports.json", buildBrokenReportsFile());
+}
+
+function reportBrokenZone(file) {
+    const zoneId = String(file.id);
+    const reports = getBrokenReports();
+    const currentReport = reports[zoneId] || {
+        id: zoneId,
+        name: file.name,
+        url: file.url,
+        reports: 0,
+        firstReportedAt: new Date().toISOString()
+    };
+
+    currentReport.name = file.name;
+    currentReport.url = file.url;
+    currentReport.reports += 1;
+    currentReport.lastReportedAt = new Date().toISOString();
+    reports[zoneId] = currentReport;
+    setBrokenReports(reports);
+    saveBrokenReportsFile();
+    alert(`${file.name} was reported broken. Total reports: ${currentReport.reports}. A broken-reports.json file was saved.`);
+}
+
+function reportCurrentZone() {
+    const zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    if (!zone) {
+        alert("No game is currently open.");
+        return;
+    }
+    reportBrokenZone(zone);
+}
+
+function getOwnerSiteMode() {
+    const mode = localStorage.getItem(OWNER_STORAGE_KEYS.siteMode) || "open";
+    return OWNER_SITE_MODES.includes(mode) ? mode : "open";
+}
+
+function setOwnerSiteMode(mode) {
+    const safeMode = OWNER_SITE_MODES.includes(mode) ? mode : "open";
+    localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, safeMode);
+    applyOwnerSiteMode();
+}
+
+function promptOwnerPassword() {
+    return window.prompt("Owner password:") === OWNER_PASSWORD;
+}
+
+function applyOwnerSiteMode() {
+    const existingOverlay = document.getElementById("owner-site-overlay");
+    const mode = getOwnerSiteMode();
+
+    if (mode === "open") {
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        return;
+    }
+
+    const overlay = existingOverlay || document.createElement("div");
+    overlay.id = "owner-site-overlay";
+    overlay.innerHTML = "";
+
+    const message = document.createElement("div");
+    message.className = "owner-site-message";
+
+    const title = document.createElement("h1");
+    title.textContent = mode === "shutdown" ? "Website shut down" : "Website locked";
+    message.appendChild(title);
+
+    const description = document.createElement("p");
+    description.textContent = mode === "shutdown"
+        ? "The owner has temporarily shut down this website."
+        : "The owner has temporarily locked this website.";
+    message.appendChild(description);
+
+    const unlockButton = document.createElement("button");
+    unlockButton.className = "settings-button";
+    unlockButton.type = "button";
+    unlockButton.textContent = "Owner Unlock";
+    unlockButton.onclick = () => {
+        if (promptOwnerPassword()) {
+            setOwnerSiteMode("open");
+        } else {
+            alert("Incorrect password.");
+        }
+    };
+    message.appendChild(unlockButton);
+
+    overlay.appendChild(message);
+    if (!existingOverlay) {
+        document.body.appendChild(overlay);
+    }
+}
+
+function showOwnerPanel() {
+    if (!promptOwnerPassword()) {
+        alert("Incorrect password.");
+        return;
+    }
+    renderOwnerPanel();
+}
+
+function renderOwnerPanel() {
+    document.getElementById('popupTitle').textContent = "Owner Panel";
+    const popupBody = document.getElementById('popupBody');
+    const mode = getOwnerSiteMode();
+    const reportsFile = buildBrokenReportsFile();
+
+    popupBody.innerHTML = `
+    <div class="settings-section">
+        <h4>Website Status</h4>
+        <label for="owner-site-mode" style="display:block; margin-bottom: 0.4rem;">Mode</label>
+        <select id="owner-site-mode" class="settings-select" onchange="setOwnerSiteMode(this.value)">
+            <option value="open" ${mode === "open" ? "selected" : ""}>Open</option>
+            <option value="locked" ${mode === "locked" ? "selected" : ""}>Locked</option>
+            <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>Shut down</option>
+        </select>
+    </div>
+    <div class="settings-section">
+        <h4>Broken Reports</h4>
+        <p>Total reports: ${reportsFile.totalReports}</p>
+        <button class="settings-button" type="button" onclick="saveBrokenReportsFile()">Export broken-reports.json</button>
+        <br><br>
+        <button class="settings-button" type="button" onclick="clearBrokenReports()">Clear Reports</button>
+    </div>
+    <div class="settings-section">
+        <h4>Disable Games</h4>
+        <p>Checked games are disabled and hidden from the game lists.</p>
+        <div id="owner-game-list" class="owner-panel-list"></div>
+    </div>
+    `;
+
+    const ownerGameList = document.getElementById("owner-game-list");
+    const disabledIds = getDisabledZoneIds();
+    zones.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(zone => {
+        const row = document.createElement("label");
+        row.className = "owner-game-toggle";
+
+        const name = document.createElement("span");
+        name.className = "owner-game-name";
+        name.textContent = `${zone.name} (#${zone.id})`;
+        row.appendChild(name);
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = disabledIds.has(String(zone.id));
+        checkbox.onchange = () => setZoneDisabled(zone.id, checkbox.checked);
+        row.appendChild(checkbox);
+
+        ownerGameList.appendChild(row);
+    });
+
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+function clearBrokenReports() {
+    if (!confirm("Clear all broken game reports?")) {
+        return;
+    }
+    setBrokenReports({});
+    renderOwnerPanel();
+}
+
 const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
 const TAB_CLOAK_STORAGE_KEYS = {
     title: "gnmath-tab-cloak-title",
@@ -1558,6 +1869,13 @@ const APP_SETTINGS_STORAGE_KEYS = {
     reducedMotion: "gnmath-reduced-motion",
     customPrimaryColor: "gnmath-custom-primary-color"
 };
+const OWNER_PASSWORD = "1345";
+const OWNER_STORAGE_KEYS = {
+    siteMode: "gnmath-owner-site-mode",
+    disabledZones: "gnmath-owner-disabled-zones",
+    brokenReports: "gnmath-broken-zone-reports"
+};
+const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
 const TAB_CLOAK_PRESETS = {
     canvas: {
         label: "Canvas",
@@ -1590,6 +1908,7 @@ function applySavedSettings() {
     initializeDefaultTabCloak();
     applyStoredTabCloak();
     applyBehaviorSettings();
+    applyOwnerSiteMode();
     setupTabPreviewCloak();
     initializeDefaultTabCloak();
     applyStoredTabCloak();
@@ -2001,6 +2320,8 @@ settings.addEventListener('click', () => {
     <div class="settings-section">
         <h4>Quick Actions</h4>
         <button class="settings-button" onclick="listZones()">Refresh Zones</button>
+        <br><br>
+        <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
         <br><br>
         <button class="settings-button" onclick="resetAppearanceSettings()">Reset Appearance + Cloak Settings</button>
     </div>
