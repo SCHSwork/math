@@ -1224,6 +1224,38 @@ function createZoneCard(file) {
     return zoneItem;
 }
 
+
+    const img = document.createElement("img");
+    img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    img.alt = file.name;
+    img.loading = "lazy";
+    img.className = "lazy-zone-img";
+    zoneItem.appendChild(img);
+
+    const button = document.createElement("button");
+    button.textContent = file.name;
+    button.onclick = (event) => {
+        event.stopPropagation();
+        openZone(file);
+    };
+    zoneItem.appendChild(button);
+
+    const actions = document.createElement("div");
+    actions.className = "zone-actions";
+    const reportButton = document.createElement("button");
+    reportButton.type = "button";
+    reportButton.className = "report-broken-button";
+    reportButton.textContent = "Report Broken";
+    reportButton.onclick = (event) => {
+        event.stopPropagation();
+        reportBrokenZone(file);
+    };
+    actions.appendChild(reportButton);
+    zoneItem.appendChild(actions);
+
+    return zoneItem;
+}
+
 function observeLazyZoneImages(selector) {
     const lazyImages = document.querySelectorAll(selector);
     const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -2099,7 +2131,7 @@ function applyBehaviorSettings() {
 }
 
 function getPreviewCloakEnabled() {
-    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) !== "false";
 }
 
 function setPreviewCloakEnabled(isEnabled) {
