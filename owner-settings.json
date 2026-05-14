@@ -5,12 +5,12 @@
   ],
   "announcement": {
     "text": "Test",
-    "enabled": true
+    "enabled": false
   },
   "motd": {
     "text": "",
     "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-14T23:39:07.939Z"
+  "updatedAt": "2026-05-14T23:39:15.731Z"
 }
