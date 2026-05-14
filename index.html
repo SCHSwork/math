@@ -1798,6 +1798,9 @@ function renderOwnerPanel() {
     const mode = getOwnerSiteMode();
     const reportsFile = buildBrokenReportsFile();
 
+    const announcement = getAnnouncement();
+    const disabledCount = getDisabledZoneIds().size;
+
     popupBody.innerHTML = `
     <div class="settings-section">
         <h4>Website Status</h4>
@@ -1808,17 +1811,53 @@ function renderOwnerPanel() {
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>Shut down</option>
         </select>
     </div>
+
+    <div class="settings-section">
+        <h4>Announcement Banner</h4>
+        <div class="settings-inline" style="margin-bottom:0.75rem;">
+            <label for="owner-announcement-enabled">Show announcement bar</label>
+            <input id="owner-announcement-enabled" type="checkbox" ${announcement.enabled ? "checked" : ""}
+                onchange="setAnnouncement(document.getElementById('owner-announcement-text').value, this.checked)">
+        </div>
+        <input type="text" id="owner-announcement-text"
+            placeholder="Announcement message…"
+            value="${announcement.text.replace(/"/g, '&quot;')}"
+            oninput="setAnnouncement(this.value, document.getElementById('owner-announcement-enabled').checked)"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;">
+    </div>
+
     <div class="settings-section">
         <h4>Broken Reports</h4>
-        <p>Total reports: ${reportsFile.totalReports}</p>
+        <p style="margin:0 0 0.75rem;">Total reports: <strong>${reportsFile.totalReports}</strong></p>
         <button class="settings-button" type="button" onclick="saveBrokenReportsFile()">Export broken-reports.json</button>
         <br><br>
         <button class="settings-button" type="button" onclick="clearBrokenReports()">Clear Reports</button>
     </div>
+
     <div class="settings-section">
-        <h4>Disable Games</h4>
-        <p>Checked games are disabled and hidden from the game lists.</p>
+        <h4>Disable Games <span style="font-weight:400;font-size:13px;color:var(--text-muted);">(${disabledCount} disabled)</span></h4>
+        <p style="margin:0 0 0.75rem;">Checked games are disabled and hidden from the game lists.</p>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="exportDisabledZones()">Export List</button>
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="document.getElementById('owner-import-disabled').click()">Import List</button>
+            <input type="file" id="owner-import-disabled" accept=".json" style="display:none;" onchange="importDisabledZones(event)">
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="enableAllZones()">Enable All</button>
+        </div>
         <div id="owner-game-list" class="owner-panel-list"></div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Zone Cache</h4>
+        <p style="margin:0 0 0.75rem;">Force a fresh fetch of all zones and popularity stats.</p>
+        <button class="settings-button" type="button" onclick="forceRefreshZones()">Force Refresh Zones</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Danger Zone</h4>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted);">These actions affect all local owner data.</p>
+        <button class="settings-button" type="button"
+            style="background:linear-gradient(135deg,#ef4444,#dc2626);"
+            onclick="ownerResetAll()">Reset All Owner Data</button>
     </div>
     `;
 
@@ -1854,6 +1893,111 @@ function clearBrokenReports() {
     renderOwnerPanel();
 }
 
+// ── Announcement banner ──────────────────────────────────────────────────────
+
+function getAnnouncement() {
+    return {
+        text: localStorage.getItem(OWNER_STORAGE_KEYS.announcement) || "",
+        enabled: localStorage.getItem(OWNER_STORAGE_KEYS.announcementEnabled) === "true"
+    };
+}
+
+function setAnnouncement(text, enabled) {
+    localStorage.setItem(OWNER_STORAGE_KEYS.announcement, text);
+    localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, enabled ? "true" : "false");
+    applyAnnouncement();
+}
+
+function applyAnnouncement() {
+    const existing = document.getElementById("owner-announcement-bar");
+    const { text, enabled } = getAnnouncement();
+
+    if (!enabled || !text.trim()) {
+        if (existing) existing.remove();
+        return;
+    }
+
+    const bar = existing || document.createElement("div");
+    bar.id = "owner-announcement-bar";
+    bar.style.cssText = `
+        background: var(--gradient-primary);
+        color: #fff;
+        text-align: center;
+        padding: 0.6rem 2.5rem;
+        font-size: 14px;
+        font-weight: 600;
+        position: relative;
+        z-index: 99;
+        letter-spacing: 0.01em;
+    `;
+    bar.textContent = text;
+
+    if (!existing) {
+        const header = document.querySelector("header");
+        header.insertAdjacentElement("afterend", bar);
+    }
+}
+
+// ── Disabled zones export / import ──────────────────────────────────────────
+
+function exportDisabledZones() {
+    const disabledIds = Array.from(getDisabledZoneIds());
+    downloadJsonFile("disabled-zones.json", { disabledZoneIds: disabledIds, exportedAt: new Date().toISOString() });
+}
+
+function importDisabledZones(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data.disabledZoneIds)) throw new Error("Invalid format");
+            setDisabledZoneIds(new Set(data.disabledZoneIds.map(String)));
+            alert(`Imported ${data.disabledZoneIds.length} disabled zone(s).`);
+            renderOwnerPanel();
+        } catch (err) {
+            alert("Failed to import: " + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function enableAllZones() {
+    if (!confirm("Re-enable all disabled games?")) return;
+    setDisabledZoneIds(new Set());
+    renderOwnerPanel();
+}
+
+// ── Force zone cache refresh ─────────────────────────────────────────────────
+
+async function forceRefreshZones() {
+    featuredContainer.innerHTML = "";
+    container.innerHTML = "Refreshing…";
+    _allStatsCache = null;
+    popularityData = {};
+    await listZones();
+    alert("Zones refreshed!");
+    renderOwnerPanel();
+}
+
+// ── Reset all owner data ─────────────────────────────────────────────────────
+
+function ownerResetAll() {
+    if (!confirm("This will clear ALL owner data: site mode, disabled zones, broken reports, and announcement. Are you sure?")) return;
+    localStorage.removeItem(OWNER_STORAGE_KEYS.siteMode);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.disabledZones);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.announcement);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.announcementEnabled);
+    applyOwnerSiteMode();
+    applyAnnouncement();
+    featuredContainer.innerHTML = "";
+    sortZones();
+    alert("All owner data has been reset.");
+    renderOwnerPanel();
+}
+
 const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
 const TAB_CLOAK_STORAGE_KEYS = {
     title: "gnmath-tab-cloak-title",
@@ -1873,7 +2017,9 @@ const OWNER_PASSWORD = "1345";
 const OWNER_STORAGE_KEYS = {
     siteMode: "gnmath-owner-site-mode",
     disabledZones: "gnmath-owner-disabled-zones",
-    brokenReports: "gnmath-broken-zone-reports"
+    brokenReports: "gnmath-broken-zone-reports",
+    announcement: "gnmath-owner-announcement",
+    announcementEnabled: "gnmath-owner-announcement-enabled"
 };
 const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
 const TAB_CLOAK_PRESETS = {
@@ -1909,6 +2055,7 @@ function applySavedSettings() {
     applyStoredTabCloak();
     applyBehaviorSettings();
     applyOwnerSiteMode();
+    applyAnnouncement();
     setupTabPreviewCloak();
     initializeDefaultTabCloak();
     applyStoredTabCloak();
