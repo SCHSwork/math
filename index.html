@@ -433,22 +433,7 @@ main {
     z-index: 2;
 }
 
-.zone-actions .report-broken-button {
-    min-height: auto;
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-secondary);
-    color: var(--text-muted);
-    font-size: 13px;
-}
 
-.zone-actions .report-broken-button:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: var(--primary-lighter);
-}
 
 #owner-site-overlay {
     position: fixed;
@@ -1266,19 +1251,6 @@ function createZoneCard(file) {
             zoneItem.appendChild(badge);
         }
     }
-
-    const actions = document.createElement("div");
-    actions.className = "zone-actions";
-    const reportButton = document.createElement("button");
-    reportButton.type = "button";
-    reportButton.className = "report-broken-button";
-    reportButton.textContent = "Report Broken";
-    reportButton.onclick = (event) => {
-        event.stopPropagation();
-        reportBrokenZone(file);
-    };
-    actions.appendChild(reportButton);
-    zoneItem.appendChild(actions);
 
     return zoneItem;
 }
