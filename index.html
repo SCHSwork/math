@@ -1741,8 +1741,7 @@ function reportBrokenZone(file) {
     currentReport.lastReportedAt = new Date().toISOString();
     reports[zoneId] = currentReport;
     setBrokenReports(reports);
-    saveBrokenReportsFile();
-    alert(`${file.name} was reported broken. Total reports: ${currentReport.reports}. A broken-reports.json file was saved.`);
+    alert(`${file.name} reported as broken. Total reports: ${currentReport.reports}.`);
 }
 
 function reportCurrentZone() {
