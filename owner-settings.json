@@ -1,1 +1,11 @@
-{"siteMode":"open","disabledZones":[],"announcement":{"text":"","enabled":false},"updatedAt":"2026-05-14T00:00:00.000Z"}
+{
+  "siteMode": "open",
+  "disabledZones": [
+    "653"
+  ],
+  "announcement": {
+    "text": "",
+    "enabled": false
+  },
+  "updatedAt": "2026-05-14T22:30:48.592Z"
+}
