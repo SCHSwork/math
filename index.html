@@ -448,6 +448,18 @@ main {
     text-align: center;
 }
 
+#owner-site-overlay.shutdown-mode {
+    background: #0a0a0a;
+    background-image:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 40px,
+            rgba(180,0,0,0.04) 40px,
+            rgba(180,0,0,0.04) 80px
+        );
+}
+
 .owner-site-message {
     max-width: 520px;
     border: 1px solid var(--border);
@@ -455,6 +467,75 @@ main {
     background: var(--surface);
     box-shadow: var(--shadow-xl);
     padding: 2rem;
+}
+
+.owner-site-message.shutdown-message {
+    background: #111;
+    border: 2px solid #8b0000;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #8b0000, 0 0 40px rgba(180,0,0,0.3), 0 8px 40px rgba(0,0,0,0.9);
+    padding: 2.5rem 2rem;
+}
+
+.shutdown-badge {
+    display: inline-block;
+    background: #8b0000;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 1.25rem;
+}
+
+.shutdown-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(200,0,0,0.6));
+}
+
+.owner-site-message.shutdown-message h1 {
+    color: #ff2222;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 0.75rem;
+    text-shadow: 0 0 20px rgba(255,30,30,0.5);
+}
+
+.owner-site-message.shutdown-message p {
+    color: #999;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+.shutdown-divider {
+    border: none;
+    border-top: 1px solid #2a0000;
+    margin: 1.25rem 0;
+}
+
+.shutdown-unlock {
+    background: transparent !important;
+    border: 1px solid #444 !important;
+    color: #555 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.1em;
+    padding: 6px 14px !important;
+    border-radius: 2px !important;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.shutdown-unlock:hover {
+    border-color: #8b0000 !important;
+    color: #aaa !important;
 }
 
 .owner-site-message h1 {
@@ -1779,32 +1860,72 @@ function applyOwnerSiteMode() {
     const overlay = existingOverlay || document.createElement("div");
     overlay.id = "owner-site-overlay";
     overlay.innerHTML = "";
+    overlay.className = mode === "shutdown" ? "shutdown-mode" : "";
 
     const message = document.createElement("div");
-    message.className = "owner-site-message";
 
-    const title = document.createElement("h1");
-    title.textContent = mode === "shutdown" ? "Website shut down" : "Website locked";
-    message.appendChild(title);
+    if (mode === "shutdown") {
+        message.className = "owner-site-message shutdown-message";
 
-    const description = document.createElement("p");
-    description.textContent = mode === "shutdown"
-        ? "The owner has temporarily shut down this website."
-        : "The owner has temporarily locked this website.";
-    message.appendChild(description);
+        const badge = document.createElement("div");
+        badge.className = "shutdown-badge";
+        badge.textContent = "Service Unavailable";
+        message.appendChild(badge);
 
-    const unlockButton = document.createElement("button");
-    unlockButton.className = "settings-button";
-    unlockButton.type = "button";
-    unlockButton.textContent = "Owner Unlock";
-    unlockButton.onclick = () => {
-        if (promptOwnerPassword()) {
-            setOwnerSiteMode("open");
-        } else {
-            alert("Incorrect password.");
-        }
-    };
-    message.appendChild(unlockButton);
+        const icon = document.createElement("span");
+        icon.className = "shutdown-icon";
+        icon.textContent = "⛔";
+        message.appendChild(icon);
+
+        const title = document.createElement("h1");
+        title.textContent = "Site Shutdown";
+        message.appendChild(title);
+
+        const description = document.createElement("p");
+        description.textContent = "This website has been shut down by the owner. It is not available at this time.";
+        message.appendChild(description);
+
+        const divider = document.createElement("hr");
+        divider.className = "shutdown-divider";
+        message.appendChild(divider);
+
+        const unlockButton = document.createElement("button");
+        unlockButton.className = "shutdown-unlock";
+        unlockButton.type = "button";
+        unlockButton.textContent = "owner access";
+        unlockButton.onclick = () => {
+            if (promptOwnerPassword()) {
+                setOwnerSiteMode("open");
+            } else {
+                alert("Incorrect password.");
+            }
+        };
+        message.appendChild(unlockButton);
+
+    } else {
+        message.className = "owner-site-message";
+
+        const title = document.createElement("h1");
+        title.textContent = "Website Locked";
+        message.appendChild(title);
+
+        const description = document.createElement("p");
+        description.textContent = "The owner has temporarily locked this website.";
+        message.appendChild(description);
+
+        const unlockButton = document.createElement("button");
+        unlockButton.className = "settings-button";
+        unlockButton.type = "button";
+        unlockButton.textContent = "Owner Unlock";
+        unlockButton.onclick = () => {
+            if (promptOwnerPassword()) {
+                setOwnerSiteMode("open");
+            } else {
+                alert("Incorrect password.");
+            }
+        };
+        message.appendChild(unlockButton);
+    }
 
     overlay.appendChild(message);
     if (!existingOverlay) {
