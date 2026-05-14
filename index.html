@@ -138,6 +138,54 @@
     --gradient-primary: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
+.theme-purple {
+    --primary: #a855f7;
+    --primary-hover: #9333ea;
+    --primary-light: rgba(168, 85, 247, 0.15);
+    --primary-lighter: rgba(168, 85, 247, 0.08);
+    --shadow-glow: 0 0 20px rgba(168, 85, 247, 0.3);
+    --gradient-primary: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.theme-pink {
+    --primary: #ec4899;
+    --primary-hover: #db2777;
+    --primary-light: rgba(236, 72, 153, 0.15);
+    --primary-lighter: rgba(236, 72, 153, 0.08);
+    --shadow-glow: 0 0 20px rgba(236, 72, 153, 0.3);
+    --gradient-primary: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.theme-cyan {
+    --primary: #06b6d4;
+    --primary-hover: #0891b2;
+    --primary-light: rgba(6, 182, 212, 0.15);
+    --primary-lighter: rgba(6, 182, 212, 0.08);
+    --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.3);
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+/* Card size variants */
+body.cards-small  #container, body.cards-small  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+body.cards-large  #container, body.cards-large  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+body.cards-list   #container, body.cards-list   #featuredZones {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+body.cards-list .zone-item { flex-direction: row; align-items: center; }
+body.cards-list .zone-item img { width: 64px; height: 64px; aspect-ratio: 1; flex-shrink: 0; }
+body.cards-list .zone-item button { flex: 1; text-align: left; padding: 0.75rem 1rem; min-height: unset; }
+body.cards-list .zone-actions { padding: 0 0.75rem 0 0; flex-shrink: 0; }
+
+/* Font size */
+body.font-small { font-size: 13px; }
+body.font-large { font-size: 17px; }
+
+/* Compact header */
+body.compact-mode header .header-content { padding: 0.6rem 1rem; }
+body.compact-mode .logo { font-size: 1.3rem; }
+body.compact-mode main { padding-top: 1rem; }
+
 * {
     box-sizing: border-box;
 }
@@ -1208,6 +1256,17 @@ function createZoneCard(file) {
     };
     zoneItem.appendChild(button);
 
+    // Play count badge
+    if (getShowPlayCount()) {
+        const plays = (popularityData['year']?.[file.id]) ?? 0;
+        if (plays > 0) {
+            const badge = document.createElement("div");
+            badge.style.cssText = "font-size:11px;color:var(--text-muted);text-align:center;padding:0 0.75rem 0.4rem;";
+            badge.textContent = "▶ " + plays.toLocaleString() + " plays";
+            zoneItem.appendChild(badge);
+        }
+    }
+
     const actions = document.createElement("div");
     actions.className = "zone-actions";
     const reportButton = document.createElement("button");
@@ -1735,10 +1794,6 @@ function setOwnerSiteMode(mode) {
     githubAutoSync();
 }
 
-function promptOwnerPassword() {
-    return window.prompt("Owner password:") === OWNER_PASSWORD;
-}
-
 function applyOwnerSiteMode() {
     const existingOverlay = document.getElementById("owner-site-overlay");
     const mode = getOwnerSiteMode();
@@ -1797,77 +1852,107 @@ function showOwnerPanel() {
 function renderOwnerPanel() {
     document.getElementById('popupTitle').textContent = "Owner Panel";
     const popupBody = document.getElementById('popupBody');
-    const mode = getOwnerSiteMode();
-    const reportsFile = buildBrokenReportsFile();
-
+    const mode         = getOwnerSiteMode();
+    const reportsFile  = buildBrokenReportsFile();
     const announcement = getAnnouncement();
+    const motd         = getMotd();
     const disabledCount = getDisabledZoneIds().size;
-    const storedPat = getGithubPat();
-    const maskedPat = storedPat ? storedPat.slice(0, 10) + "•".repeat(12) + storedPat.slice(-4) : "";
+    const storedPat    = getGithubPat();
+    const maskedPat    = storedPat ? storedPat.slice(0, 10) + "•".repeat(12) + storedPat.slice(-4) : "";
+    const footerLinks  = getFooterLinks() || [];
+    const footerLinksJson = JSON.stringify(footerLinks, null, 2).replace(/"/g, '&quot;');
 
     popupBody.innerHTML = `
     <div class="settings-section">
         <h4>☁️ GitHub Sync</h4>
         <p style="margin:0 0 0.75rem;color:var(--text-muted);font-size:13px;">
-            Settings are automatically loaded from GitHub on every page load for all visitors.
-            Only you (the owner) can push changes using your token.
+            Settings load from GitHub on every page load for all visitors.
+            Only the owner can push changes using their token.
         </p>
         <label style="display:block;margin-bottom:0.4rem;font-weight:600;">GitHub Token (PAT)</label>
         <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
-            <input type="password" id="owner-pat-input"
-                placeholder="github_pat_…"
-                value="${maskedPat}"
+            <input type="password" id="owner-pat-input" placeholder="ghp_…" value="${maskedPat}"
                 style="flex:1;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:13px;font-family:monospace;">
-            <button class="settings-button" type="button" style="min-width:0;white-space:nowrap;"
-                onclick="ownerSavePat()">Save Token</button>
+            <button class="settings-button" type="button" style="min-width:0;white-space:nowrap;" onclick="ownerSavePat()">Save Token</button>
         </div>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button id="owner-sync-btn" class="settings-button" type="button" style="flex:1;"
-                onclick="ownerSyncSave()">Save &amp; Sync to GitHub</button>
-            <button class="settings-button" type="button" style="flex:1;"
-                onclick="ownerSyncPullManual()">Pull from GitHub</button>
+            <button id="owner-sync-btn" class="settings-button" type="button" style="flex:1;" onclick="ownerSyncSave()">Save &amp; Sync to GitHub</button>
+            <button class="settings-button" type="button" style="flex:1;" onclick="ownerSyncPullManual()">Pull from GitHub</button>
         </div>
         <p id="owner-sync-status" style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);min-height:1.2em;"></p>
     </div>
 
     <div class="settings-section">
         <h4>Website Status</h4>
-        <label for="owner-site-mode" style="display:block; margin-bottom: 0.4rem;">Mode</label>
+        <label style="display:block;margin-bottom:0.4rem;">Site mode</label>
         <select id="owner-site-mode" class="settings-select" onchange="setOwnerSiteMode(this.value)">
-            <option value="open" ${mode === "open" ? "selected" : ""}>Open</option>
-            <option value="locked" ${mode === "locked" ? "selected" : ""}>Locked</option>
-            <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>Shut down</option>
+            <option value="open"     ${mode === "open"     ? "selected" : ""}>🟢 Open — everyone can access</option>
+            <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
+            <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
     </div>
 
     <div class="settings-section">
         <h4>Announcement Banner</h4>
-        <div class="settings-inline" style="margin-bottom:0.75rem;">
-            <label for="owner-announcement-enabled">Show announcement bar</label>
-            <input id="owner-announcement-enabled" type="checkbox" ${announcement.enabled ? "checked" : ""}
-                onchange="saveAnnouncementFromPanel()">
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Shown as a coloured bar below the header for all visitors.</p>
+        <div class="settings-inline" style="margin-bottom:0.5rem;">
+            <label>Show banner</label>
+            <input id="owner-announcement-enabled" type="checkbox" ${announcement.enabled ? "checked" : ""} onchange="saveAnnouncementFromPanel()">
         </div>
-        <input type="text" id="owner-announcement-text"
-            placeholder="Announcement message…"
+        <input type="text" id="owner-announcement-text" placeholder="Announcement message…"
             value="${announcement.text.replace(/"/g, '&quot;')}"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;">
         <button class="settings-button" type="button" onclick="saveAnnouncementFromPanel()">Apply Banner</button>
     </div>
 
     <div class="settings-section">
+        <h4>Message of the Day (MOTD)</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Shown once per day as a popup when a visitor opens the site.</p>
+        <div class="settings-inline" style="margin-bottom:0.5rem;">
+            <label>Enable MOTD</label>
+            <input id="owner-motd-enabled" type="checkbox" ${motd.enabled ? "checked" : ""} onchange="saveMotdFromPanel()">
+        </div>
+        <textarea id="owner-motd-text" rows="3" placeholder="Today's message…"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;resize:vertical;margin-bottom:0.5rem;font-family:inherit;">${motd.text.replace(/</g,'&lt;')}</textarea>
+        <button class="settings-button" type="button" onclick="saveMotdFromPanel()">Apply MOTD</button>
+        <button class="settings-button" type="button" style="margin-top:0.4rem;" onclick="resetMotdLastSeen()">Reset "seen" (re-show today)</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Custom Footer Links</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Add extra links to the footer. One per line as <code>Label | https://url</code></p>
+        <textarea id="owner-footer-links-text" rows="4" placeholder="Discord | https://discord.gg/yourserver&#10;Blog | https://yourblog.com"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:13px;resize:vertical;margin-bottom:0.5rem;font-family:monospace;">${footerLinks.map(l => l.label + ' | ' + l.url).join('\n')}</textarea>
+        <button class="settings-button" type="button" onclick="saveFooterLinksFromPanel()">Apply Footer Links</button>
+        <button class="settings-button" type="button" style="margin-top:0.4rem;" onclick="clearFooterLinks()">Clear All</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Change Owner Password</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Stored locally on this device only.</p>
+        <input type="password" id="owner-new-pw" placeholder="New password…"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;">
+        <input type="password" id="owner-new-pw2" placeholder="Confirm new password…"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;">
+        <button class="settings-button" type="button" onclick="changeOwnerPassword()">Change Password</button>
+        <p id="owner-pw-status" style="margin:0.4rem 0 0;font-size:12px;min-height:1.2em;"></p>
+    </div>
+
+    <div class="settings-section">
         <h4>Broken Reports</h4>
-        <p style="margin:0 0 0.75rem;">Total reports: <strong>${reportsFile.totalReports}</strong></p>
-        <button class="settings-button" type="button" onclick="saveBrokenReportsFile()">Export broken-reports.json</button>
-        <br><br>
-        <button class="settings-button" type="button" onclick="clearBrokenReports()">Clear Reports</button>
+        <p style="margin:0 0 0.5rem;">Total reports: <strong>${reportsFile.totalReports}</strong></p>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="settings-button" type="button" style="flex:1;" onclick="saveBrokenReportsFile()">Export JSON</button>
+            <button class="settings-button" type="button" style="flex:1;" onclick="clearBrokenReports()">Clear All</button>
+        </div>
     </div>
 
     <div class="settings-section">
         <h4>Disable Games <span style="font-weight:400;font-size:13px;color:var(--text-muted);">(${disabledCount} disabled)</span></h4>
-        <p style="margin:0 0 0.75rem;">Checked games are disabled and hidden from the game lists.</p>
+        <p style="margin:0 0 0.5rem;font-size:13px;">Checked games are hidden from all visitors.</p>
         <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="exportDisabledZones()">Export List</button>
-            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="document.getElementById('owner-import-disabled').click()">Import List</button>
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="exportDisabledZones()">Export</button>
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="document.getElementById('owner-import-disabled').click()">Import</button>
             <input type="file" id="owner-import-disabled" accept=".json" style="display:none;" onchange="importDisabledZones(event)">
             <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="enableAllZones()">Enable All</button>
         </div>
@@ -1876,13 +1961,11 @@ function renderOwnerPanel() {
 
     <div class="settings-section">
         <h4>Zone Cache</h4>
-        <p style="margin:0 0 0.75rem;">Force a fresh fetch of all zones and popularity stats.</p>
         <button class="settings-button" type="button" onclick="forceRefreshZones()">Force Refresh Zones</button>
     </div>
 
     <div class="settings-section">
         <h4>Danger Zone</h4>
-        <p style="margin:0 0 0.75rem;color:var(--text-muted);">These actions affect all local owner data.</p>
         <button class="settings-button" type="button"
             style="background:linear-gradient(135deg,#ef4444,#dc2626);"
             onclick="ownerResetAll()">Reset All Owner Data</button>
@@ -2023,21 +2106,26 @@ async function forceRefreshZones() {
 // ── Reset all owner data ─────────────────────────────────────────────────────
 
 function ownerResetAll() {
-    if (!confirm("This will clear ALL owner data: site mode, disabled zones, broken reports, and announcement. Are you sure?")) return;
+    if (!confirm("This will clear ALL owner data: site mode, disabled zones, broken reports, announcement, MOTD, and footer links. Are you sure?")) return;
     localStorage.removeItem(OWNER_STORAGE_KEYS.siteMode);
     localStorage.removeItem(OWNER_STORAGE_KEYS.disabledZones);
     localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcement);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcementEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motd);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks);
     applyOwnerSiteMode();
     applyAnnouncement();
+    applyFooterLinks();
     featuredContainer.innerHTML = "";
     sortZones();
     alert("All owner data has been reset.");
     renderOwnerPanel();
 }
 
-const AVAILABLE_THEMES = ["red", "orange", "blue", "green"];
+const AVAILABLE_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
 const TAB_CLOAK_STORAGE_KEYS = {
     title: "gnmath-tab-cloak-title",
     icon: "gnmath-tab-cloak-icon",
@@ -2050,7 +2138,21 @@ const PREVIEW_CLOAK_STORAGE_KEYS = {
 const APP_SETTINGS_STORAGE_KEYS = {
     warnBeforeUnload: "gnmath-warn-before-unload",
     reducedMotion: "gnmath-reduced-motion",
-    customPrimaryColor: "gnmath-custom-primary-color"
+    customPrimaryColor: "gnmath-custom-primary-color",
+    cardSize: "gnmath-card-size",
+    fontSize: "gnmath-font-size",
+    defaultSort: "gnmath-default-sort",
+    hideFeatured: "gnmath-hide-featured",
+    compactMode: "gnmath-compact-mode",
+    autofocusSearch: "gnmath-autofocus-search",
+    showPlayCount: "gnmath-show-play-count"
+};
+const OWNER_EXTRA_STORAGE_KEYS = {
+    motd: "gnmath-owner-motd",
+    motdEnabled: "gnmath-owner-motd-enabled",
+    motdLastSeen: "gnmath-owner-motd-lastseen",
+    customPassword: "gnmath-owner-custom-password",
+    footerLinks: "gnmath-owner-footer-links"
 };
 const OWNER_PASSWORD = "1345";
 const OWNER_STORAGE_KEYS = {
@@ -2086,6 +2188,11 @@ function buildOwnerSettingsObject() {
             text:    getAnnouncement().text,
             enabled: getAnnouncement().enabled
         },
+        motd: {
+            text:    getMotd().text,
+            enabled: getMotd().enabled
+        },
+        footerLinks: getFooterLinks() || [],
         updatedAt: new Date().toISOString()
     };
 }
@@ -2099,17 +2206,21 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
         applyOwnerSiteMode();
     }
     if (Array.isArray(settings.disabledZones)) {
-        // Write to localStorage only — let listZones() handle the render on startup
         setDisabledZoneIds(new Set(settings.disabledZones.map(String)));
-        if (rerender) {
-            featuredContainer.innerHTML = "";
-            sortZones();
-        }
+        if (rerender) { featuredContainer.innerHTML = ""; sortZones(); }
     }
     if (settings.announcement && typeof settings.announcement === "object") {
         localStorage.setItem(OWNER_STORAGE_KEYS.announcement, settings.announcement.text ?? "");
         localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, settings.announcement.enabled ? "true" : "false");
         applyAnnouncement();
+    }
+    if (settings.motd && typeof settings.motd === "object") {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, settings.motd.text ?? "");
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, settings.motd.enabled ? "true" : "false");
+    }
+    if (Array.isArray(settings.footerLinks)) {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));
+        applyFooterLinks();
     }
 }
 
@@ -2263,6 +2374,191 @@ function applySavedSettings() {
     setupTabPreviewCloak();
     initializeDefaultTabCloak();
     applyStoredTabCloak();
+    applyCardSize();
+    applyFontSize();
+    applyCompactMode();
+    applyHideFeatured();
+    applyDefaultSort();
+    applyFooterLinks();
+}
+
+// ── Card size ────────────────────────────────────────────────────────────────
+function getCardSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.cardSize) || "medium"; }
+function setCardSize(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.cardSize, val);
+    applyCardSize();
+}
+function applyCardSize() {
+    document.body.classList.remove("cards-small", "cards-large", "cards-list");
+    const v = getCardSize();
+    if (v !== "medium") document.body.classList.add(`cards-${v}`);
+}
+
+// ── Font size ────────────────────────────────────────────────────────────────
+function getFontSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.fontSize) || "medium"; }
+function setFontSize(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.fontSize, val);
+    applyFontSize();
+}
+function applyFontSize() {
+    document.body.classList.remove("font-small", "font-large");
+    const v = getFontSize();
+    if (v !== "medium") document.body.classList.add(`font-${v}`);
+}
+
+// ── Compact mode ─────────────────────────────────────────────────────────────
+function getCompactMode() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.compactMode) === "true"; }
+function setCompactMode(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.compactMode, val ? "true" : "false");
+    applyCompactMode();
+}
+function applyCompactMode() {
+    document.body.classList.toggle("compact-mode", getCompactMode());
+}
+
+// ── Hide featured ─────────────────────────────────────────────────────────────
+function getHideFeatured() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured) === "true"; }
+function setHideFeatured(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured, val ? "true" : "false");
+    applyHideFeatured();
+}
+function applyHideFeatured() {
+    const wrapper = document.getElementById("featuredZonesWrapper");
+    if (wrapper) wrapper.style.display = getHideFeatured() ? "none" : "";
+}
+
+// ── Default sort ──────────────────────────────────────────────────────────────
+function getDefaultSort() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.defaultSort) || "name"; }
+function setDefaultSort(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.defaultSort, val);
+}
+function applyDefaultSort() {
+    const s = getDefaultSort();
+    const el = document.getElementById("sortOptions");
+    if (el && el.value !== s) { el.value = s; sortZones(); }
+}
+
+// ── Autofocus search ──────────────────────────────────────────────────────────
+function getAutofocusSearch() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch) !== "false"; }
+function setAutofocusSearch(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, val ? "true" : "false");
+}
+
+// ── Show play count on cards ──────────────────────────────────────────────────
+function getShowPlayCount() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount) === "true"; }
+function setShowPlayCount(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount, val ? "true" : "false");
+    featuredContainer.innerHTML = "";
+    sortZones();
+}
+
+// ── MOTD (owner, synced) ──────────────────────────────────────────────────────
+function getMotd() {
+    return {
+        text: localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motd) || "",
+        enabled: localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled) === "true"
+    };
+}
+function setMotd(text, enabled) {
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, text);
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, enabled ? "true" : "false");
+    githubAutoSync();
+}
+function maybeShowMotd() {
+    const { text, enabled } = getMotd();
+    if (!enabled || !text.trim()) return;
+    const last = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen) || "";
+    const today = new Date().toDateString();
+    if (last === today) return;
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen, today);
+    // show as a popup
+    document.getElementById('popupTitle').textContent = "📢 Notice";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `<p style="white-space:pre-wrap;">${text.replace(/</g,'&lt;')}</p>
+        <button class="settings-button" onclick="closePopup()">Got it</button>`;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+// ── Owner password change ─────────────────────────────────────────────────────
+function getOwnerPassword() {
+    return localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.customPassword) || OWNER_PASSWORD;
+}
+function promptOwnerPassword() {
+    return window.prompt("Owner password:") === getOwnerPassword();
+}
+function changeOwnerPassword() {
+    const pw1 = document.getElementById("owner-new-pw")?.value || "";
+    const pw2 = document.getElementById("owner-new-pw2")?.value || "";
+    const status = document.getElementById("owner-pw-status");
+    if (!pw1) { if (status) { status.textContent = "✗ Password cannot be empty."; status.style.color = "#ef4444"; } return; }
+    if (pw1 !== pw2) { if (status) { status.textContent = "✗ Passwords do not match."; status.style.color = "#ef4444"; } return; }
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.customPassword, pw1);
+    if (status) { status.textContent = "✓ Password changed (this device only)."; status.style.color = "var(--success)"; }
+    document.getElementById("owner-new-pw").value = "";
+    document.getElementById("owner-new-pw2").value = "";
+}
+
+// ── MOTD panel helpers ────────────────────────────────────────────────────────
+function saveMotdFromPanel() {
+    const text    = document.getElementById("owner-motd-text")?.value ?? "";
+    const enabled = document.getElementById("owner-motd-enabled")?.checked ?? false;
+    setMotd(text, enabled);
+}
+function resetMotdLastSeen() {
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
+    alert("MOTD 'seen' flag cleared — it will show again on next load.");
+}
+
+// ── Footer links panel helpers ────────────────────────────────────────────────
+function saveFooterLinksFromPanel() {
+    const raw = document.getElementById("owner-footer-links-text")?.value ?? "";
+    const links = raw.split("\n")
+        .map(line => line.trim())
+        .filter(line => line.includes("|"))
+        .map(line => {
+            const idx = line.indexOf("|");
+            return { label: line.slice(0, idx).trim(), url: line.slice(idx + 1).trim() };
+        })
+        .filter(({ label, url }) => label && url);
+    setFooterLinks(links);
+    alert(`Applied ${links.length} footer link(s).`);
+}
+function clearFooterLinks() {
+    if (!confirm("Remove all custom footer links?")) return;
+    setFooterLinks([]);
+    renderOwnerPanel();
+}
+
+// ── Custom footer links (owner, synced) ───────────────────────────────────────
+function getFooterLinks() {
+    try {
+        const stored = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks);
+        return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+}
+function setFooterLinks(links) {
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(links));
+    applyFooterLinks();
+    githubAutoSync();
+}
+function applyFooterLinks() {
+    const links = getFooterLinks();
+    if (!links || !Array.isArray(links)) return;
+    const footer = document.querySelector('.footer-links');
+    if (!footer) return;
+    // keep the built-in links, append custom ones (avoid duplicates by data attr)
+    footer.querySelectorAll('[data-owner-link]').forEach(el => el.remove());
+    links.forEach(({ label, url }) => {
+        if (!label || !url) return;
+        const a = document.createElement('a');
+        a.href = url;
+        a.textContent = label;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.dataset.ownerLink = '1';
+        footer.appendChild(a);
+    });
 }
 
 function darkMode() {
@@ -2577,6 +2873,13 @@ function resetAppearanceSettings() {
     localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload);
     localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion);
     localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.cardSize);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.fontSize);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.defaultSort);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.compactMode);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount);
     clearCustomPrimaryColorStyles();
     location.reload();
 }
@@ -2608,63 +2911,123 @@ function tabCloak() {
 }
 
 const settings = document.getElementById('settings');
-settings.addEventListener('click', () => {
+settings.addEventListener('click', () => openSettingsPanel());
+
+function openSettingsPanel() {
     document.getElementById('popupTitle').textContent = "Settings";
     const popupBody = document.getElementById('popupBody');
-    const previewCloakEnabled = getPreviewCloakEnabled();
+    const previewCloakEnabled    = getPreviewCloakEnabled();
     const previewCloakSensitivity = getPreviewCloakSensitivity();
-    const warnBeforeUnload = getWarnBeforeUnloadEnabled();
-    const reducedMotion = getReducedMotionEnabled();
-    const customPrimaryColor = getCustomPrimaryColor() || "#fc2651";
+    const warnBeforeUnload       = getWarnBeforeUnloadEnabled();
+    const reducedMotion          = getReducedMotionEnabled();
+    const customPrimaryColor     = getCustomPrimaryColor() || "#fc2651";
+    const cardSize               = getCardSize();
+    const fontSize               = getFontSize();
+    const defaultSort            = getDefaultSort();
+    const hideFeatured           = getHideFeatured();
+    const compactMode            = getCompactMode();
+    const autofocusSearch        = getAutofocusSearch();
+    const showPlayCount          = getShowPlayCount();
 
     popupBody.innerHTML = `
     <div class="settings-section">
         <h4>Appearance</h4>
-        <button class="settings-button" onclick="darkMode()">Toggle Dark Mode</button>
+        <button class="settings-button" onclick="darkMode()">Toggle Dark/Light Mode</button>
         <br><br>
-        <div style="font-weight: 700; margin-bottom: 0.5rem;">Theme Color</div>
-        <div class="theme-options">
-            <button class="theme-button" data-theme-option="red" onclick="setTheme('red')">Red</button>
+        <div style="font-weight:700;margin-bottom:0.5rem;">Theme Color</div>
+        <div class="theme-options" style="grid-template-columns:repeat(4,1fr);">
+            <button class="theme-button" data-theme-option="red"    onclick="setTheme('red')">Red</button>
             <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
-            <button class="theme-button" data-theme-option="blue" onclick="setTheme('blue')">Blue</button>
-            <button class="theme-button" data-theme-option="green" onclick="setTheme('green')">Green</button>
+            <button class="theme-button" data-theme-option="blue"   onclick="setTheme('blue')">Blue</button>
+            <button class="theme-button" data-theme-option="green"  onclick="setTheme('green')">Green</button>
+            <button class="theme-button" data-theme-option="purple" onclick="setTheme('purple')">Purple</button>
+            <button class="theme-button" data-theme-option="pink"   onclick="setTheme('pink')">Pink</button>
+            <button class="theme-button" data-theme-option="cyan"   onclick="setTheme('cyan')">Cyan</button>
         </div>
         <br>
-        <label for="custom-theme-color" style="display:block; margin-bottom: 0.4rem;">Custom primary color</label>
+        <label for="custom-theme-color" style="display:block;margin-bottom:0.4rem;">Custom primary color</label>
         <div class="settings-inline">
             <input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)">
             <button class="theme-button" type="button" onclick="clearCustomPrimaryColor()">Clear Custom</button>
         </div>
         <br>
+        <label style="display:block;margin-bottom:0.4rem;">Font size</label>
+        <select class="settings-select" onchange="setFontSize(this.value)">
+            <option value="small"  ${fontSize === 'small'  ? 'selected' : ''}>Small</option>
+            <option value="medium" ${fontSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
+            <option value="large"  ${fontSize === 'large'  ? 'selected' : ''}>Large</option>
+        </select>
+        <br><br>
         <div class="settings-inline">
-            <label for="reduced-motion-enabled">Reduce motion effects</label>
-            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? "checked" : ""} onchange="setReducedMotionEnabled(this.checked)">
+            <label>Compact header</label>
+            <input type="checkbox" ${compactMode ? 'checked' : ''} onchange="setCompactMode(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Reduce motion effects</label>
+            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? 'checked' : ''} onchange="setReducedMotionEnabled(this.checked)">
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Game Grid</h4>
+        <label style="display:block;margin-bottom:0.4rem;">Card size</label>
+        <select class="settings-select" onchange="setCardSize(this.value)">
+            <option value="small"  ${cardSize === 'small'  ? 'selected' : ''}>Small</option>
+            <option value="medium" ${cardSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
+            <option value="large"  ${cardSize === 'large'  ? 'selected' : ''}>Large</option>
+            <option value="list"   ${cardSize === 'list'   ? 'selected' : ''}>List view</option>
+        </select>
+        <br><br>
+        <label style="display:block;margin-bottom:0.4rem;">Default sort</label>
+        <select class="settings-select" onchange="setDefaultSort(this.value)">
+            <option value="name"          ${defaultSort === 'name'          ? 'selected' : ''}>Name</option>
+            <option value="id"            ${defaultSort === 'id'            ? 'selected' : ''}>ID (Date added)</option>
+            <option value="popular"       ${defaultSort === 'popular'       ? 'selected' : ''}>Most popular</option>
+            <option value="trendingDay"   ${defaultSort === 'trendingDay'   ? 'selected' : ''}>Trending today</option>
+            <option value="trendingWeek"  ${defaultSort === 'trendingWeek'  ? 'selected' : ''}>Trending this week</option>
+            <option value="trendingMonth" ${defaultSort === 'trendingMonth' ? 'selected' : ''}>Trending this month</option>
+        </select>
+        <br><br>
+        <div class="settings-inline">
+            <label>Hide Featured section</label>
+            <input type="checkbox" ${hideFeatured ? 'checked' : ''} onchange="setHideFeatured(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Show play count on cards</label>
+            <input type="checkbox" ${showPlayCount ? 'checked' : ''} onchange="setShowPlayCount(this.checked)">
         </div>
     </div>
 
     <div class="settings-section">
         <h4>Privacy Cloak</h4>
         <div class="settings-inline">
-            <label for="preview-cloak-enabled">Hide page in tab hover previews</label>
-            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? "checked" : ""} onchange="setPreviewCloakEnabled(this.checked)">
+            <label>Hide page in tab previews</label>
+            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? 'checked' : ''} onchange="setPreviewCloakEnabled(this.checked)">
         </div>
         <br>
-        <label for="preview-cloak-sensitivity" style="display:block; margin-bottom: 0.4rem;">Cloak sensitivity</label>
+        <label style="display:block;margin-bottom:0.4rem;">Cloak sensitivity</label>
         <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
-            <option value="low" ${previewCloakSensitivity === "low" ? "selected" : ""}>Low (hidden tabs only)</option>
-            <option value="lowMed" ${previewCloakSensitivity === "lowMed" ? "selected" : ""}>Low-Med (hidden + blur)</option>
-            <option value="medium" ${previewCloakSensitivity === "medium" ? "selected" : ""}>Medium (recommended for tab hover)</option>
-            <option value="high" ${previewCloakSensitivity === "high" ? "selected" : ""}>High (aggressive)</option>
+            <option value="low"    ${previewCloakSensitivity === 'low'    ? 'selected' : ''}>Low (hidden tabs only)</option>
+            <option value="lowMed" ${previewCloakSensitivity === 'lowMed' ? 'selected' : ''}>Low-Med (hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === 'medium' ? 'selected' : ''}>Medium (recommended)</option>
+            <option value="high"   ${previewCloakSensitivity === 'high'   ? 'selected' : ''}>High (aggressive)</option>
         </select>
         <br>
-        <button class="settings-button" onclick="tabCloak()">Open Tab Cloak</button>
+        <button class="settings-button" onclick="tabCloak()">Tab Cloak Settings</button>
     </div>
 
     <div class="settings-section">
         <h4>Behavior</h4>
         <div class="settings-inline">
-            <label for="warn-before-unload">Warn before leaving page</label>
-            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? "checked" : ""} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+            <label>Warn before leaving page</label>
+            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? 'checked' : ''} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Autofocus search bar on load</label>
+            <input type="checkbox" ${autofocusSearch ? 'checked' : ''} onchange="setAutofocusSearch(this.checked)">
         </div>
     </div>
 
@@ -2674,13 +3037,13 @@ settings.addEventListener('click', () => {
         <br><br>
         <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
         <br><br>
-        <button class="settings-button" onclick="resetAppearanceSettings()">Reset Appearance + Cloak Settings</button>
+        <button class="settings-button" onclick="resetAppearanceSettings()">Reset All Appearance Settings</button>
     </div>
     `;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
     updateThemeButtons();
-});
+}
 
 
 function showContact() {
@@ -2868,7 +3231,14 @@ function closePopup() {
 }
 applySavedSettings();
 // Pull owner settings from GitHub FIRST, then render zones so disabled list is correct
-githubSyncPull().finally(() => listZones());
+githubSyncPull().finally(() => {
+    listZones();
+    // After zones + settings are loaded, show MOTD and autofocus search if enabled
+    if (getAutofocusSearch()) {
+        setTimeout(() => document.getElementById('searchBar')?.focus(), 300);
+    }
+    setTimeout(maybeShowMotd, 800);
+});
 
 HTMLCanvasElement.prototype.toDataURL = function (...args) {
     return "";
