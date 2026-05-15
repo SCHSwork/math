@@ -2373,9 +2373,22 @@ async function githubSyncPush() {
 /** Pull settings from the public CDN (works for all visitors, no token). */
 async function githubSyncPull({ rerender = false } = {}) {
     try {
-        const res = await fetch(GITHUB_SYNC_CDN + "?t=" + Date.now());
+        // Use the GitHub API endpoint instead of raw CDN — CDN caches for up to
+        // 5 minutes which means lock/shutdown/open changes don't propagate fast.
+        // The API endpoint is always fresh (no CDN cache). No token needed for
+        // public repos — it just returns slightly less data per minute on the
+        // unauthenticated rate limit (60 req/hr), which is fine for a settings pull.
+        const pat = getGithubPat();
+        const headers = { Accept: "application/vnd.github+json" };
+        if (pat) headers.Authorization = `token ${pat}`;
+
+        const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), { headers });
         if (!res.ok) return;
-        const settings = await res.json();
+        const json = await res.json();
+
+        // API returns base64-encoded content — decode it
+        const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ""))));
+        const settings = JSON.parse(decoded);
         applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
 }
