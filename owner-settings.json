@@ -1,5 +1,5 @@
 {
-  "siteMode": "shutdown",
+  "siteMode": "open",
   "disabledZones": [
     "653"
   ],
@@ -12,5 +12,5 @@
     "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-15T00:48:13.718Z"
+  "updatedAt": "2026-05-15T00:48:33.247Z"
 }
