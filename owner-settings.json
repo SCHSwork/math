@@ -8,9 +8,9 @@
     "enabled": false
   },
   "motd": {
-    "text": "Testing",
+    "text": "Test",
     "enabled": true
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-15T16:17:48.868Z"
+  "updatedAt": "2026-05-15T16:19:07.444Z"
 }
