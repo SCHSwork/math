@@ -9,8 +9,8 @@
   },
   "motd": {
     "text": "Test",
-    "enabled": true
+    "enabled": false
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-15T16:19:09.088Z"
+  "updatedAt": "2026-05-18T17:08:17.616Z"
 }
