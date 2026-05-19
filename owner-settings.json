@@ -8,9 +8,9 @@
     "enabled": false
   },
   "motd": {
-    "text": "Test",
-    "enabled": false
+    "text": "Have a awesome summer!",
+    "enabled": true
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-19T22:36:38.382Z"
+  "updatedAt": "2026-05-19T22:37:05.768Z"
 }
