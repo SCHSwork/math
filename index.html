@@ -365,6 +365,16 @@ main {
     flex-direction: column;
     position: relative;
     box-shadow: var(--shadow-sm);
+    animation: cardEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#container .zone-item:nth-child(2n), #featuredZones .zone-item:nth-child(2n) { animation-delay: 40ms; }
+#container .zone-item:nth-child(3n), #featuredZones .zone-item:nth-child(3n) { animation-delay: 80ms; }
+#container .zone-item:nth-child(5n), #featuredZones .zone-item:nth-child(5n) { animation-delay: 120ms; }
+
+@keyframes cardEnter {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .zone-item:hover {
@@ -704,6 +714,16 @@ main {
         transform: scale(1) translateY(0);
         opacity: 1;
     }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
 }
 
 .popup-header {
@@ -1981,6 +2001,7 @@ function renderOwnerPanel() {
     const storedPat    = getGithubPat();
     const maskedPat    = storedPat ? storedPat.slice(0, 10) + "•".repeat(12) + storedPat.slice(-4) : "";
     const footerLinks  = getFooterLinks() || [];
+    const visitorDefaults = getOwnerVisitorDefaults();
     const footerLinksJson = JSON.stringify(footerLinks, null, 2).replace(/"/g, '&quot;');
 
     popupBody.innerHTML = `
@@ -2011,6 +2032,28 @@ function renderOwnerPanel() {
             <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
+    </div>
+
+    <div class="settings-section">
+        <h4>New Visitor Defaults</h4>
+        <p style="margin:0 0 0.75rem;font-size:13px;color:var(--text-muted);">Applied only when a visitor has not chosen their own setting. Existing preferences are never overwritten.</p>
+        <label style="display:block;margin-bottom:0.35rem;">Color mode</label>
+        <select id="owner-default-mode" class="settings-select"><option value="dark" ${visitorDefaults.mode === "dark" ? "selected" : ""}>Dark</option><option value="light" ${visitorDefaults.mode === "light" ? "selected" : ""}>Light</option></select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Theme</label>
+        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${theme[0].toUpperCase() + theme.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Font size</label>
+        <select id="owner-default-font-size" class="settings-select">${["small", "medium", "large"].map(size => `<option value="${size}" ${visitorDefaults.fontSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Card size</label>
+        <select id="owner-default-card-size" class="settings-select">${["small", "medium", "large", "list"].map(size => `<option value="${size}" ${visitorDefaults.cardSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Default sort</label>
+        <select id="owner-default-sort" class="settings-select">${[["name","Name"],["id","Date added"],["popular","Most popular"],["trendingDay","Trending today"],["trendingWeek","Trending this week"],["trendingMonth","Trending this month"]].map(([value,label]) => `<option value="${value}" ${visitorDefaults.defaultSort === value ? "selected" : ""}>${label}</option>`).join("")}</select>
+        <br><br><div class="settings-inline"><label>Compact header</label><input id="owner-default-compact" type="checkbox" ${visitorDefaults.compactMode ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Hide Featured section</label><input id="owner-default-hide-featured" type="checkbox" ${visitorDefaults.hideFeatured ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Autofocus search</label><input id="owner-default-autofocus" type="checkbox" ${visitorDefaults.autofocusSearch ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Show play count</label><input id="owner-default-play-count" type="checkbox" ${visitorDefaults.showPlayCount ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Warn before leaving</label><input id="owner-default-warn" type="checkbox" ${visitorDefaults.warnBeforeUnload ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Reduce motion</label><input id="owner-default-reduced-motion" type="checkbox" ${visitorDefaults.reducedMotion ? "checked" : ""}></div>
+        <button class="settings-button" type="button" style="margin-top:0.75rem;" onclick="saveOwnerVisitorDefaults()">Save New Visitor Defaults</button>
     </div>
 
     <div class="settings-section">
@@ -2125,6 +2168,18 @@ function clearBrokenReports() {
     renderOwnerPanel();
 }
 
+function saveOwnerVisitorDefaults() {
+    const value = id => document.getElementById(id);
+    setOwnerVisitorDefaults({
+        mode: value("owner-default-mode").value, theme: value("owner-default-theme").value,
+        cardSize: value("owner-default-card-size").value, fontSize: value("owner-default-font-size").value, defaultSort: value("owner-default-sort").value,
+        compactMode: value("owner-default-compact").checked, hideFeatured: value("owner-default-hide-featured").checked,
+        autofocusSearch: value("owner-default-autofocus").checked, showPlayCount: value("owner-default-play-count").checked,
+        warnBeforeUnload: value("owner-default-warn").checked, reducedMotion: value("owner-default-reduced-motion").checked
+    });
+    alert("New visitor defaults saved. Existing visitor preferences are unchanged.");
+}
+
 // ── Announcement banner ──────────────────────────────────────────────────────
 
 function getAnnouncement() {
@@ -2233,6 +2288,7 @@ function ownerResetAll() {
     localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcement);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcementEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motd);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
@@ -2269,6 +2325,7 @@ const APP_SETTINGS_STORAGE_KEYS = {
     showPlayCount: "gnmath-show-play-count"
 };
 const OWNER_EXTRA_STORAGE_KEYS = {
+    visitorDefaults: "gnmath-owner-visitor-defaults",
     motd: "gnmath-owner-motd",
     motdEnabled: "gnmath-owner-motd-enabled",
     motdLastSeen: "gnmath-owner-motd-lastseen",
@@ -2285,6 +2342,36 @@ const OWNER_STORAGE_KEYS = {
     githubPat: "gnmath-owner-github-pat"
 };
 const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
+const VISITOR_DEFAULTS = {
+    mode: "dark", theme: "red", cardSize: "medium", fontSize: "medium", defaultSort: "name",
+    compactMode: false, hideFeatured: false, autofocusSearch: true, showPlayCount: false,
+    warnBeforeUnload: true, reducedMotion: false
+};
+
+function getOwnerVisitorDefaults() {
+    const stored = getJsonStorage(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults, {});
+    return { ...VISITOR_DEFAULTS, ...(stored && typeof stored === "object" ? stored : {}) };
+}
+
+function setOwnerVisitorDefaults(defaults, { sync = true } = {}) {
+    const safe = {
+        mode: defaults.mode === "light" ? "light" : "dark",
+        theme: AVAILABLE_THEMES.includes(defaults.theme) ? defaults.theme : "red",
+        cardSize: ["small", "medium", "large", "list"].includes(defaults.cardSize) ? defaults.cardSize : "medium",
+        fontSize: ["small", "medium", "large"].includes(defaults.fontSize) ? defaults.fontSize : "medium",
+        defaultSort: ["name", "id", "popular", "trendingDay", "trendingWeek", "trendingMonth"].includes(defaults.defaultSort) ? defaults.defaultSort : "name",
+        compactMode: Boolean(defaults.compactMode), hideFeatured: Boolean(defaults.hideFeatured),
+        autofocusSearch: Boolean(defaults.autofocusSearch), showPlayCount: Boolean(defaults.showPlayCount),
+        warnBeforeUnload: Boolean(defaults.warnBeforeUnload), reducedMotion: Boolean(defaults.reducedMotion)
+    };
+    setJsonStorage(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults, safe);
+    if (sync) githubAutoSync();
+}
+
+function getVisitorSetting(storageKey, defaultKey) {
+    const saved = localStorage.getItem(storageKey);
+    return saved === null ? getOwnerVisitorDefaults()[defaultKey] : saved;
+}
 
 // ── GitHub Sync ──────────────────────────────────────────────────────────────
 const GITHUB_SYNC_REPO  = "paxtolins/Gn-2.0";
@@ -2314,6 +2401,7 @@ function buildOwnerSettingsObject() {
             enabled: getMotd().enabled
         },
         footerLinks: getFooterLinks() || [],
+        visitorDefaults: getOwnerVisitorDefaults(),
         updatedAt: new Date().toISOString()
     };
 }
@@ -2338,6 +2426,10 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (settings.motd && typeof settings.motd === "object") {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, settings.motd.text ?? "");
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, settings.motd.enabled ? "true" : "false");
+    }
+    if (settings.visitorDefaults && typeof settings.visitorDefaults === "object") {
+        setOwnerVisitorDefaults(settings.visitorDefaults, { sync: false });
+        applySavedSettings();
     }
     if (Array.isArray(settings.footerLinks)) {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));
@@ -2490,15 +2582,15 @@ const TAB_CLOAK_PRESETS = {
 };
 
 function applySavedSettings() {
-    const savedMode = localStorage.getItem("gnmath-mode");
+    const savedMode = getVisitorSetting("gnmath-mode", "mode");
     if (savedMode === "light") {
         document.body.classList.remove("dark-mode");
     } else {
         document.body.classList.add("dark-mode");
     }
 
-    const savedTheme = localStorage.getItem("gnmath-theme") || "red";
-    setTheme(savedTheme);
+    const savedTheme = getVisitorSetting("gnmath-theme", "theme");
+    setTheme(savedTheme, { persist: false });
     applyStoredCustomPrimaryColor();
     initializeDefaultTabCloak();
     applyStoredTabCloak();
@@ -2517,7 +2609,7 @@ function applySavedSettings() {
 }
 
 // ── Card size ────────────────────────────────────────────────────────────────
-function getCardSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.cardSize) || "medium"; }
+function getCardSize() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.cardSize, "cardSize"); }
 function setCardSize(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.cardSize, val);
     applyCardSize();
@@ -2529,7 +2621,7 @@ function applyCardSize() {
 }
 
 // ── Font size ────────────────────────────────────────────────────────────────
-function getFontSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.fontSize) || "medium"; }
+function getFontSize() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.fontSize, "fontSize"); }
 function setFontSize(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.fontSize, val);
     applyFontSize();
@@ -2541,7 +2633,7 @@ function applyFontSize() {
 }
 
 // ── Compact mode ─────────────────────────────────────────────────────────────
-function getCompactMode() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.compactMode) === "true"; }
+function getCompactMode() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.compactMode, "compactMode") === true || getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.compactMode, "compactMode") === "true"; }
 function setCompactMode(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.compactMode, val ? "true" : "false");
     applyCompactMode();
@@ -2551,7 +2643,7 @@ function applyCompactMode() {
 }
 
 // ── Hide featured ─────────────────────────────────────────────────────────────
-function getHideFeatured() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured) === "true"; }
+function getHideFeatured() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.hideFeatured, "hideFeatured") === true || getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.hideFeatured, "hideFeatured") === "true"; }
 function setHideFeatured(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured, val ? "true" : "false");
     applyHideFeatured();
@@ -2562,7 +2654,7 @@ function applyHideFeatured() {
 }
 
 // ── Default sort ──────────────────────────────────────────────────────────────
-function getDefaultSort() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.defaultSort) || "name"; }
+function getDefaultSort() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.defaultSort, "defaultSort"); }
 function setDefaultSort(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.defaultSort, val);
 }
@@ -2573,13 +2665,13 @@ function applyDefaultSort() {
 }
 
 // ── Autofocus search ──────────────────────────────────────────────────────────
-function getAutofocusSearch() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch) !== "false"; }
+function getAutofocusSearch() { const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, "autofocusSearch"); return value === true || value === "true"; }
 function setAutofocusSearch(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, val ? "true" : "false");
 }
 
 // ── Show play count on cards ──────────────────────────────────────────────────
-function getShowPlayCount() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount) === "true"; }
+function getShowPlayCount() { const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.showPlayCount, "showPlayCount"); return value === true || value === "true"; }
 function setShowPlayCount(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount, val ? "true" : "false");
     featuredContainer.innerHTML = "";
@@ -2701,17 +2793,17 @@ function darkMode() {
     localStorage.setItem("gnmath-mode", mode);
 }
 
-function setTheme(themeName) {
+function setTheme(themeName, { persist = true } = {}) {
     const safeTheme = AVAILABLE_THEMES.includes(themeName) ? themeName : "red";
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
     document.body.classList.add(`theme-${safeTheme}`);
-    localStorage.setItem("gnmath-theme", safeTheme);
-    clearCustomPrimaryColor();
+    if (persist) localStorage.setItem("gnmath-theme", safeTheme);
+    if (persist) clearCustomPrimaryColor();
     updateThemeButtons();
 }
 
 function updateThemeButtons() {
-    const activeTheme = localStorage.getItem("gnmath-theme") || "red";
+    const activeTheme = getVisitorSetting("gnmath-theme", "theme");
     const buttons = document.querySelectorAll("[data-theme-option]");
     buttons.forEach(button => {
         const isActive = button.dataset.themeOption === activeTheme;
@@ -2820,7 +2912,8 @@ function applyStoredTabCloak() {
 }
 
 function getWarnBeforeUnloadEnabled() {
-    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+    const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, "warnBeforeUnload");
+    return value === true || value === "true";
 }
 
 function setWarnBeforeUnloadEnabled(isEnabled) {
@@ -2836,7 +2929,8 @@ function updateBeforeUnloadProtection() {
 }
 
 function getReducedMotionEnabled() {
-    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+    const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.reducedMotion, "reducedMotion");
+    return value === true || value === "true";
 }
 
 function setReducedMotionEnabled(isEnabled) {
