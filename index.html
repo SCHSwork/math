@@ -1,0 +1,4890 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <base href="https://cdn.jsdelivr.net/gh/freebuisness/gn-math-DONTDMCA@main/">
+
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <script>
+        function gnmathBeforeUnloadHandler(event) {
+            event.preventDefault();
+            event.returnValue = '';
+            return 'Are you sure you want to leave? Any unsaved changes will be lost.';
+        }
+    </script>
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WX5VS54ZDW"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-WX5VS54ZDW');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gn-math</title>
+    <meta name="title" content="GN-Math">
+    <meta name="description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gn-math.github.io/">
+    <meta property="og:title" content="GN-Math">
+    <meta property="og:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://gn-math.github.io/">
+    <meta name="twitter:title" content="GN-Math">
+    <meta name="twitter:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <style>
+        :root {
+    --primary: #fc2651;
+    --primary-hover: #e91e47;
+    --primary-light: rgba(252, 38, 81, 0.1);
+    --primary-lighter: rgba(252, 38, 81, 0.05);
+    --accent: #8b5cf6;
+    --accent-light: rgba(139, 92, 246, 0.1);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --text: #1a1a1a;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg: #ffffff;
+    --bg-secondary: #f8fafc;
+    --surface: #ffffff;
+    --surface-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --glass: rgba(255, 255, 255, 0.8);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 20px rgba(252, 38, 81, 0.3);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --gradient-primary: linear-gradient(135deg, #fc2651 0%, #e91e47 100%);
+    --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --gradient-surface: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.dark-mode {
+    --primary: #fc2651;
+    --primary-hover: #ff4d75;
+    --primary-light: rgba(252, 38, 81, 0.15);
+    --primary-lighter: rgba(252, 38, 81, 0.08);
+    --accent: #a855f7;
+    --accent-light: rgba(168, 85, 247, 0.15);
+    --success: #34d399;
+    --warning: #fbbf24;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-light: #64748b;
+    --bg: #0f172a;
+    --bg-secondary: #1e293b;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --border: #334155;
+    --border-light: #475569;
+    --glass: rgba(30, 41, 59, 0.8);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
+    --shadow-glow: 0 0 20px rgba(252, 38, 81, 0.4);
+    --gradient-primary: linear-gradient(135deg, #fc2651 0%, #ff4d75 100%);
+    --gradient-accent: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    --gradient-surface: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.theme-red {
+    --primary: #fc2651;
+    --primary-hover: #e91e47;
+    --primary-light: rgba(252, 38, 81, 0.1);
+    --primary-lighter: rgba(252, 38, 81, 0.05);
+    --shadow-glow: 0 0 20px rgba(252, 38, 81, 0.3);
+    --gradient-primary: linear-gradient(135deg, #fc2651 0%, #e91e47 100%);
+}
+
+.theme-orange {
+    --primary: #f97316;
+    --primary-hover: #ea580c;
+    --primary-light: rgba(249, 115, 22, 0.15);
+    --primary-lighter: rgba(249, 115, 22, 0.08);
+    --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.3);
+    --gradient-primary: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.theme-blue {
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-light: rgba(59, 130, 246, 0.15);
+    --primary-lighter: rgba(59, 130, 246, 0.08);
+    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.theme-green {
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
+    --primary-light: rgba(34, 197, 94, 0.15);
+    --primary-lighter: rgba(34, 197, 94, 0.08);
+    --shadow-glow: 0 0 20px rgba(34, 197, 94, 0.3);
+    --gradient-primary: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.theme-purple {
+    --primary: #a855f7;
+    --primary-hover: #9333ea;
+    --primary-light: rgba(168, 85, 247, 0.15);
+    --primary-lighter: rgba(168, 85, 247, 0.08);
+    --shadow-glow: 0 0 20px rgba(168, 85, 247, 0.3);
+    --gradient-primary: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.theme-pink {
+    --primary: #ec4899;
+    --primary-hover: #db2777;
+    --primary-light: rgba(236, 72, 153, 0.15);
+    --primary-lighter: rgba(236, 72, 153, 0.08);
+    --shadow-glow: 0 0 20px rgba(236, 72, 153, 0.3);
+    --gradient-primary: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.theme-cyan {
+    --primary: #06b6d4;
+    --primary-hover: #0891b2;
+    --primary-light: rgba(6, 182, 212, 0.15);
+    --primary-lighter: rgba(6, 182, 212, 0.08);
+    --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.3);
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+/* Card size variants */
+body.cards-small  #container, body.cards-small  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+body.cards-large  #container, body.cards-large  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+body.cards-list   #container, body.cards-list   #featuredZones {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+body.cards-list .zone-item { flex-direction: row; align-items: center; }
+body.cards-list .zone-item img { width: 64px; height: 64px; aspect-ratio: 1; flex-shrink: 0; }
+body.cards-list .zone-item button { flex: 1; text-align: left; padding: 0.75rem 1rem; min-height: unset; }
+body.cards-list .zone-actions { padding: 0 0.75rem 0 0; flex-shrink: 0; }
+
+/* Font size */
+body.font-small { font-size: 13px; }
+body.font-large { font-size: 17px; }
+
+/* Compact header */
+body.compact-mode header .header-content { padding: 0.6rem 1rem; }
+body.compact-mode .logo { font-size: 1.3rem; }
+body.compact-mode main { padding-top: 1rem; }
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+    background: var(--gradient-primary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.logo {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.search-container {
+    display: flex;
+    flex: 1;
+    max-width: 500px;
+    gap: 0.75rem;
+}
+
+#searchBar {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+#searchBar:focus {
+    background: var(--text);
+    box-shadow: 0 0 0 3px rgba(252, 38, 81, 0.25), var(--shadow);
+    transform: translateY(-1px);
+    color: var(--glass);
+}
+
+#searchBar::placeholder {
+    color: var(--text-muted);
+}
+
+#sortOptions {
+    padding: 0.875rem 1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 130px;
+    box-shadow: var(--shadow-sm);
+}
+
+#sortOptions:hover {
+    background: var(--text);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    color: var(--glass);
+}
+
+#filterOptions {
+    padding: 0.875rem 1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 130px;
+    box-shadow: var(--shadow-sm);
+}
+
+#filterOptions:hover {
+    background: var(--text);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+    color: var(--glass);
+}
+
+#tab-preview-cloak-overlay {
+    position: fixed;
+    inset: 0;
+    background: #8a8a8a;
+    z-index: 999999;
+    display: none;
+    pointer-events: none;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+main {
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    padding-bottom: 6rem;
+}
+
+#zoneCount {
+    margin: 0 0 1.5rem;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#zoneCount::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--primary);
+}
+
+#container,
+#featuredZones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.zone-item {
+    background: var(--gradient-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+}
+
+.zone-item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary);
+}
+
+.zone-item:hover::before {
+    opacity: 1;
+}
+
+.zone-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary-light);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.zone-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    background: var(--border-light);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zone-item:hover img {
+    transform: scale(1.05);
+}
+
+.zone-item button {
+    background: transparent;
+    color: var(--text);
+    border: 0;
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.zone-item:hover button {
+    color: var(--primary);
+    background: rgba(252, 38, 81, 0.05);
+}
+
+.zone-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+
+
+#owner-site-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+#owner-site-overlay.shutdown-mode {
+    background: #0a0a0a;
+    background-image:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 40px,
+            rgba(180,0,0,0.04) 40px,
+            rgba(180,0,0,0.04) 80px
+        );
+}
+
+.owner-site-message {
+    max-width: 520px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-xl);
+    padding: 2rem;
+}
+
+.owner-site-message.shutdown-message {
+    background: #111;
+    border: 2px solid #8b0000;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #8b0000, 0 0 40px rgba(180,0,0,0.3), 0 8px 40px rgba(0,0,0,0.9);
+    padding: 2.5rem 2rem;
+}
+
+.shutdown-badge {
+    display: inline-block;
+    background: #8b0000;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 1.25rem;
+}
+
+.shutdown-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(200,0,0,0.6));
+}
+
+.owner-site-message.shutdown-message h1 {
+    color: #ff2222;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 0.75rem;
+    text-shadow: 0 0 20px rgba(255,30,30,0.5);
+}
+
+.owner-site-message.shutdown-message p {
+    color: #999;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+.shutdown-divider {
+    border: none;
+    border-top: 1px solid #2a0000;
+    margin: 1.25rem 0;
+}
+
+.shutdown-unlock {
+    background: transparent !important;
+    border: 1px solid #444 !important;
+    color: #555 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.1em;
+    padding: 6px 14px !important;
+    border-radius: 2px !important;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.shutdown-unlock:hover {
+    border-color: #8b0000 !important;
+    color: #aaa !important;
+}
+
+.owner-site-message h1 {
+    margin: 0 0 0.75rem;
+}
+
+.owner-panel-list {
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+}
+
+.owner-game-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.owner-game-toggle:last-child {
+    border-bottom: 0;
+}
+
+.owner-game-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#zoneViewer {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.zone-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.4rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-lg);
+}
+
+.zone-title {
+    flex: 1;
+    min-width: 0;
+}
+
+#zoneName {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    line-height: 1.3;
+}
+
+#zoneId {
+    display: none;
+}
+
+#zoneAuthor {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+#zoneAuthor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.zone-controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.zone-controls button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(20px);
+}
+
+.zone-controls button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+#zoneFrame {
+    flex-grow: 1;
+    border: none;
+    width: 90%;
+    height: 90%;
+}
+
+#popupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.popup {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: 100%;
+    max-width: 520px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    animation: slideInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInScale {
+    from {
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.popup-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#popupTitle {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+#popupClose {
+    background: rgba(255, 255, 255, 0.1);
+    border: 0;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(20px);
+}
+
+#popupClose:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+#popupBody {
+    padding: 1.5rem;
+    overflow-y: auto;
+    color: var(--text);
+}
+
+#popupBody input[type="text"],
+#popupBody input[type="file"] {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+#popupBody input[type="text"]:focus,
+#popupBody input[type="file"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(252, 38, 81, 0.1);
+    transform: translateY(-1px);
+}
+
+footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1rem;
+    text-align: center;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+}
+
+.footer-links a:hover {
+    color: var(--primary-hover);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .search-container {
+        width: 100%;
+        max-width: none;
+    }
+
+    main {
+        padding: 1.5rem 1rem;
+    }
+
+    #container,
+    #featuredZones {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .zone-item button {
+        padding: 1rem 0.75rem;
+        min-height: 65px;
+        font-size: 13px;
+    }
+
+    .footer-links {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #container,
+    #featuredZones {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+
+    .popup {
+        margin: 0.5rem;
+    }
+
+    .zone-item:hover {
+        transform: translateY(-10px) scale(1.01);
+    }
+
+}
+.control-button img,
+.control-button .control-icon {
+    transition: transform 0.4s ease;
+    width: 24px;
+    height: 24px;
+}
+
+.control-button:hover img,
+.control-button:hover .control-icon {
+    transform: rotate(40deg);
+}
+
+.control-button,
+.control-button:hover {
+    box-shadow: none;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+.control-button:active {
+    transform: translateY(0);
+}
+
+.control-buttons button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 0;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(20px);
+}
+.control-buttons button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.settings-button {
+    background: var(--gradient-primary);
+    color: white;
+    border: 0;
+    padding: 0.875rem 1.5rem;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    min-width: 200px;
+    width: 100%;
+    text-align: center;
+}
+
+.settings-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.settings-button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.theme-button {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.theme-button:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.theme-button.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: var(--shadow-glow);
+}
+
+.settings-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    margin-bottom: 0.75rem;
+    background: var(--surface);
+}
+
+.settings-section h4 {
+    margin: 0 0 0.5rem;
+}
+
+.settings-inline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+.info-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: background-color 0.2s, transform 0.2s;
+    color: inherit;
+    vertical-align: middle;
+}
+
+.info-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.info-button:active {
+    transform: scale(0.95);
+}
+
+.info-button svg {
+    display: block;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Polish layer — overrides for the main site
+   ════════════════════════════════════════════════════════════════════════ */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::selection { background: var(--primary); color: #fff; }
+
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-light); background-clip: padding-box; }
+
+/* Header */
+.header-content {
+    max-width: 1400px;
+    padding: 0.9rem 1.25rem;
+}
+
+.search-container {
+    max-width: 640px;
+    gap: 0.5rem;
+}
+
+.search-wrap {
+    position: relative;
+    flex: 1;
+    display: flex;
+    min-width: 0;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.search-kbd {
+    z-index: 1;
+    position: absolute;
+    right: 0.7rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 6px;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.search-wrap:focus-within .search-kbd { opacity: 0; }
+
+#searchBar {
+    width: 100%;
+    padding: 0.75rem 2.25rem 0.75rem 2.5rem;
+    border: 1px solid transparent;
+    background: var(--glass);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#searchBar::-webkit-search-cancel-button { cursor: pointer; }
+
+#searchBar:focus {
+    background: var(--surface);
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18), var(--shadow);
+    transform: none;
+}
+
+#sortOptions,
+#filterOptions {
+    padding: 0.75rem 2rem 0.75rem 0.85rem;
+    min-width: 0;
+    max-width: 170px;
+    color: var(--text);
+    border: 1px solid transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 14px;
+    background-color: var(--glass);
+    font-size: 14px;
+}
+
+#sortOptions:hover,
+#filterOptions:hover,
+#sortOptions:focus,
+#filterOptions:focus {
+    background-color: var(--surface);
+    color: var(--text);
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+#sortOptions option,
+#filterOptions option {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.control-button,
+.control-button:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Announcement banner */
+#owner-announcement-bar {
+    background: var(--primary-light);
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 14px;
+    font-weight: 600;
+    position: relative;
+    z-index: 99;
+}
+
+/* Main layout */
+main {
+    max-width: 1400px;
+    padding: 1.5rem 1.25rem 7rem;
+}
+
+.zone-section {
+    margin-bottom: 1.75rem;
+}
+
+.zone-section > summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.4rem 0;
+    margin-bottom: 1rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.zone-section > summary::-webkit-details-marker { display: none; }
+
+.zone-section > summary::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-muted);
+    border-bottom: 2px solid var(--text-muted);
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+    margin-left: 0.15rem;
+}
+
+.zone-section[open] > summary::after { transform: rotate(45deg); }
+
+.count-pill {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-light);
+    border-radius: 999px;
+    padding: 2px 9px;
+}
+
+.count-pill:empty { display: none; }
+
+#container,
+#featuredZones {
+    gap: 1.1rem;
+}
+
+/* Game cards */
+.zone-item {
+    background: var(--surface);
+    border-radius: var(--radius);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.zone-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.zone-item::before { display: none; }
+
+.zone-item img {
+    background: linear-gradient(110deg, var(--bg-secondary) 30%, var(--surface-hover) 50%, var(--bg-secondary) 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+
+.zone-item img[src] { animation: none; }
+
+.zone-item button {
+    padding: 0.75rem 0.85rem;
+    min-height: 56px;
+    font-size: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    padding-top: 0.85rem;
+}
+
+.zone-item:hover button {
+    background: transparent;
+}
+
+/* Loading skeletons */
+@keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+.zone-skeleton {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.zone-skeleton div,
+.zone-skeleton span {
+    display: block;
+    background: linear-gradient(110deg, var(--bg-secondary) 30%, var(--surface-hover) 50%, var(--bg-secondary) 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+
+.zone-skeleton div { aspect-ratio: 1; }
+.zone-skeleton span { height: 12px; margin: 1.1rem auto; width: 60%; border-radius: 6px; }
+
+/* Empty / error states */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.empty-state p { margin: 0.5rem 0 0; font-weight: 600; }
+.empty-icon { font-size: 2rem; }
+
+.empty-clear {
+    margin-top: 1rem;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.empty-clear:hover { background: var(--primary); color: #fff; }
+
+/* Game viewer */
+body.zone-open { overflow: hidden; }
+
+.zone-header {
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+}
+
+.zone-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    column-gap: 0.4rem;
+}
+
+#zoneName {
+    font-size: 1.1rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.info-button { margin-left: 0; color: #fff; }
+
+#zoneAuthor {
+    flex-basis: 100%;
+    font-size: 12.5px;
+}
+
+.zone-controls {
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.zone-controls button {
+    padding: 0.5rem 0.8rem;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.zone-controls button:hover { transform: none; }
+
+.zone-controls .zone-close {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+#zoneFrame {
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+/* Popups */
+#popupOverlay {
+    background: rgba(2, 6, 23, 0.65);
+    backdrop-filter: blur(6px);
+}
+
+.popup {
+    max-height: 86vh;
+    max-width: 540px;
+}
+
+.popup-header {
+    padding: 1rem 1.25rem;
+}
+
+#popupTitle { font-size: 1.1rem; }
+
+#popupClose:hover { transform: none; background: rgba(255, 255, 255, 0.25); }
+
+#popupBody { padding: 1.25rem; }
+
+/* Settings panel tidy-up */
+.settings-section {
+    padding: 1rem;
+    margin-bottom: 0.85rem;
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+}
+
+.settings-section h4 {
+    margin: 0 0 0.75rem;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.settings-button {
+    min-width: 0;
+    padding: 0.7rem 1.1rem;
+    font-size: 14px;
+}
+
+.settings-button:hover { transform: none; filter: brightness(1.08); }
+
+input[type="checkbox"] { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+
+/* Footer */
+footer {
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 0.35rem 1rem;
+}
+
+.footer-links { gap: 0.25rem 0.5rem; }
+
+.footer-links a {
+    font-size: 13px;
+    padding: 0.4rem 0.75rem;
+    color: var(--text-muted);
+}
+
+.footer-links a:hover {
+    color: var(--primary);
+    transform: none;
+}
+
+/* Toasts */
+#toast-host {
+    position: fixed;
+    left: 50%;
+    bottom: 4.5rem;
+    transform: translateX(-50%);
+    z-index: 1000005;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+}
+
+.toast {
+    background: var(--text);
+    color: var(--bg);
+    padding: 0.65rem 1.05rem;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-xl);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    text-align: center;
+}
+
+.toast.show { opacity: 1; transform: none; }
+.toast--success { background: #059669; color: #fff; }
+.toast--error { background: #dc2626; color: #fff; }
+
+/* Lock screen */
+.lock-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.owner-site-message p { color: var(--text-muted); margin: 0 0 1.25rem; }
+
+/* Owner "you're viewing a locked site" notice */
+#owner-mode-notice {
+    position: fixed;
+    bottom: 4rem;
+    left: 1rem;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #111827;
+    color: #f9fafb;
+    border: 1px solid #f59e0b;
+    border-radius: 999px;
+    padding: 0.4rem 0.45rem 0.4rem 1rem;
+    font-size: 13px;
+    box-shadow: var(--shadow-xl);
+    max-width: calc(100vw - 1.5rem);
+}
+
+#owner-mode-notice span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#owner-mode-notice button {
+    background: #f59e0b;
+    color: #111827;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#owner-mode-notice button + button { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Owner password dialog
+   ════════════════════════════════════════════════════════════════════════ */
+#owner-auth {
+    position: fixed;
+    inset: 0;
+    z-index: 1000003;
+    background: rgba(2, 6, 23, 0.7);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+.owner-auth-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 1.75rem 1.5rem 1.25rem;
+    text-align: center;
+    animation: slideInScale 0.25s ease;
+}
+
+.owner-auth-icon { font-size: 2rem; }
+.owner-auth-card h3 { margin: 0.4rem 0 0.25rem; font-size: 1.2rem; }
+.owner-auth-card p { margin: 0 0 1rem; font-size: 13px; color: var(--text-muted); }
+
+.owner-auth-card input {
+    width: 100%;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 0.1em;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text);
+    outline: none;
+}
+
+.owner-auth-card input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+.owner-auth-error { color: #ef4444 !important; min-height: 1.2em; margin: 0.5rem 0 0.75rem !important; font-weight: 600; }
+
+.owner-auth-actions { display: flex; gap: 0.5rem; }
+.owner-auth-actions .op-btn { flex: 1; justify-content: center; }
+
+@keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    20%, 80% { transform: translateX(4px); }
+    30%, 50%, 70% { transform: translateX(-6px); }
+    40%, 60% { transform: translateX(6px); }
+}
+
+.owner-auth-card.shake { animation: shake 0.4s ease; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Owner panel
+   ════════════════════════════════════════════════════════════════════════ */
+.popup:has(.op) {
+    max-width: 720px;
+    height: min(86vh, 820px);
+}
+
+.op { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.op-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.op-stat {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.op-stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.op-stat-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.op-sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 13px;
+    padding: 0.5rem 0.5rem 0.5rem 0.85rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+}
+
+.op-sync-bar #op-sync-text { flex: 1; min-width: 0; }
+
+.op-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-light);
+    flex-shrink: 0;
+}
+
+.op-sync-bar.is-on .op-dot { background: var(--success); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+.op-sync-bar.is-off { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.08); }
+.op-sync-bar.is-off .op-dot { background: var(--warning); }
+.op-sync-bar.is-busy .op-dot { background: var(--accent); animation: pulse 1s ease infinite; }
+.op-sync-bar.is-error { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.08); }
+.op-sync-bar.is-error .op-dot { background: #ef4444; }
+
+@keyframes pulse { 50% { opacity: 0.3; } }
+
+.op-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    position: sticky;
+    top: -1.25rem;
+    z-index: 2;
+}
+
+.op-tab {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0.55rem 0.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.op-tab:hover { color: var(--text); }
+
+.op-tab.is-active {
+    background: var(--surface);
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.op-pane { display: flex; flex-direction: column; gap: 0.85rem; animation: fadeIn 0.2s ease; }
+.op-pane[hidden] { display: none; }
+
+.op-h {
+    margin: 0.25rem 0 -0.25rem;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.op-hint { margin: -0.25rem 0 0; font-size: 12.5px; color: var(--text-muted); }
+
+.op-modes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+}
+
+.op-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    text-align: left;
+    padding: 0.85rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.op-mode:hover { border-color: var(--text-light); }
+.op-mode-icon { font-size: 1.3rem; }
+.op-mode-label { font-weight: 800; font-size: 15px; }
+.op-mode-desc { font-size: 12px; color: var(--text-muted); }
+
+.op-mode--open.is-active { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+.op-mode--locked.is-active { border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+.op-mode--shutdown.is-active { border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+.op-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.op-action {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.op-action:hover { border-color: var(--primary); background: var(--primary-lighter); }
+.op-action span { font-size: 1.1rem; }
+
+.op-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.op-card--danger { border-color: rgba(239, 68, 68, 0.4); }
+
+.op-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.op-card-head h4 { margin: 0; font-size: 15px; }
+.op-card-head p { margin: 0.15rem 0 0; font-size: 12.5px; color: var(--text-muted); }
+.op-card-head code { font-size: 12px; background: var(--surface-hover); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
+
+.op-card-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.op-card-foot--split { justify-content: space-between; align-items: center; }
+.op-btn-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.op-label { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 0.4rem; }
+
+.op-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.op-tag--ok { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+#popupBody input.op-input,
+#popupBody textarea.op-input,
+.op-input {
+    width: 100%;
+    margin: 0;
+    padding: 0.65rem 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#popupBody input.op-input:focus,
+#popupBody textarea.op-input:focus,
+.op-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    transform: none;
+}
+
+textarea.op-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+.op-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+
+.op-inline { display: flex; gap: 0.5rem; }
+.op-inline .op-input { flex: 1; min-width: 0; }
+
+.op-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 0.55rem 0.95rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.op-btn:hover { border-color: var(--text-light); }
+.op-btn:disabled { opacity: 0.6; cursor: wait; }
+.op-btn--small { padding: 0.35rem 0.7rem; font-size: 12.5px; }
+.op-btn--ghost { background: transparent; }
+.op-btn--primary { background: var(--gradient-primary); border-color: transparent; color: #fff; }
+.op-btn--primary:hover { filter: brightness(1.1); border-color: transparent; }
+.op-btn--danger { background: #dc2626; border-color: transparent; color: #fff; }
+.op-btn--danger:hover { filter: brightness(1.1); border-color: transparent; }
+.op-btn--danger-ghost { background: transparent; color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
+.op-btn--danger-ghost:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+
+/* Unsaved-change dot on save buttons */
+.op-btn.is-dirty::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fde047;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+}
+
+/* Toggle switch */
+.op-switch {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.op-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+.op-switch > span {
+    width: 42px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--text-light);
+    position: relative;
+    transition: background 0.2s;
+}
+
+.op-switch > span::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.op-switch input:checked + span { background: var(--success); }
+.op-switch input:checked + span::after { transform: translateX(18px); }
+.op-switch input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* Banner preview */
+.op-preview-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: -0.35rem; }
+
+.op-banner-preview {
+    background: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    padding: 0.55rem 0.75rem;
+    font-size: 13.5px;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.op-banner-preview::before { content: "📢 "; }
+.op-banner-preview.is-empty { color: var(--text-muted); font-style: italic; font-weight: 500; }
+.op-banner-preview.is-off { opacity: 0.45; }
+.op-banner-preview.is-off::after { content: " (off)"; font-weight: 500; font-style: italic; }
+
+/* Footer link editor */
+.op-link-rows { display: flex; flex-direction: column; gap: 0.4rem; }
+.op-link-row { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 0.4rem; }
+
+.op-icon-btn {
+    width: 38px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.op-icon-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+/* Games list */
+.op-toolbar { display: flex; flex-direction: column; gap: 0.5rem; }
+.op-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.op-chip {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.op-chip b { margin-left: 0.2rem; font-weight: 800; }
+.op-chip.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.op-game-list {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    max-height: 46vh;
+    overflow-y: auto;
+}
+
+.op-game {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s, opacity 0.15s;
+}
+
+.op-game:last-child { border-bottom: 0; }
+.op-game:hover { background: var(--surface-hover); }
+
+.op-game img {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.op-game-info { flex: 1; min-width: 0; }
+.op-game-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.op-game-meta { font-size: 12px; color: var(--text-muted); }
+.op-game.is-hidden .op-game-name { color: var(--text-muted); text-decoration: line-through; }
+.op-game.is-hidden img { filter: grayscale(1); opacity: 0.5; }
+
+.op-empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-weight: 600; }
+
+/* Message-of-the-day preview */
+#op-motd-preview {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.55);
+    padding: 1rem;
+}
+
+.op-motd-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+.op-motd-head { background: var(--gradient-primary); color: #fff; padding: 0.9rem 1.25rem; font-weight: 700; }
+.op-motd-head small { opacity: 0.7; font-weight: 500; margin-left: 0.4rem; }
+.op-motd-card p { white-space: pre-wrap; padding: 0 1.25rem; margin: 1.1rem 0; }
+.op-motd-card .settings-button { margin: 0 1.25rem 1.25rem; width: calc(100% - 2.5rem); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content { padding: 0.75rem; gap: 0.6rem; }
+    .search-container { flex-wrap: wrap; }
+    .search-wrap { flex-basis: 100%; }
+    #sortOptions, #filterOptions { flex: 1; max-width: none; }
+    .control-buttons { position: absolute; top: 0.7rem; right: 0.75rem; }
+    .header-content { align-items: stretch; position: relative; }
+    .logo { padding-right: 52px; }
+    .search-kbd { display: none; }
+    main { padding: 1rem 0.75rem 7rem; }
+    .zone-controls button span { display: none; }
+    .zone-controls button { padding: 0.5rem 0.65rem; font-size: 15px; }
+    #zoneAuthor { display: none; }
+    #owner-mode-notice { left: 0.5rem; right: 0.5rem; bottom: 5.5rem; }
+    #owner-mode-notice span { white-space: normal; }
+    #toast-host { bottom: 9rem; }
+}
+
+@media (max-width: 560px) {
+    .popup { max-height: 92vh; }
+    .popup:has(.op) { height: 92vh; }
+    .op-stats { grid-template-columns: repeat(2, 1fr); }
+    .op-modes { grid-template-columns: 1fr; }
+    .op-mode { flex-direction: row; align-items: center; gap: 0.6rem; }
+    .op-mode-desc { margin-left: auto; }
+    .op-actions { grid-template-columns: 1fr; }
+    .op-link-row { grid-template-columns: 1fr auto; }
+    .op-link-row [data-link-url] { grid-column: 1 / 2; }
+    .op-link-row .op-icon-btn { grid-row: 1 / 3; grid-column: 2; }
+    .op-inline { flex-direction: column; }
+    .op-tab { font-size: 13px; padding: 0.5rem 0.25rem; }
+}
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fb2651">
+</head>
+<body class="dark-mode">
+
+    <header>
+        <div class="header-content">
+            <div class="logo">gn-math</div>
+            <div class="search-container">
+                <div class="search-wrap">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                    <input type="search" id="searchBar" placeholder="Search games…" aria-label="Search games" autocomplete="off" oninput="filterZones()">
+                    <kbd class="search-kbd" aria-hidden="true">/</kbd>
+                </div>
+                <select id="sortOptions" onchange="sortZones()" aria-label="Sort games">
+                    <option value="name">Name</option>
+                    <option value="id">ID (Date)</option>
+                    <option value="popular">Popular</option>
+                    <option value="trendingDay">Trending (Day)</option>
+                    <option value="trendingWeek">Trending (Week)</option>
+                    <option value="trendingMonth">Trending (Month)</option>
+                </select>
+                <select id="filterOptions" onchange="filterZones2()" aria-label="Filter by tag">
+                    <option value="none">All tags</option>
+                </select>
+            </div>
+            <div class="control-buttons">
+                <button id="settings" class="control-button" title="Settings!" aria-label="Open settings">
+                    <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <details id="featuredZonesWrapper" class="zone-section" open>
+            <summary id="allZonesSummary"><span class="section-title">⭐ Featured</span><span class="count-pill" id="featuredCount"></span></summary>
+            <div id="featuredZones" class="zone-container"></div>
+        </details>
+        <details id="allZonesWrapper" class="zone-section" open>
+            <summary id="allSummary"><span class="section-title">🎮 All Games</span><span class="count-pill" id="allCount"></span></summary>
+            <div id="container"></div>
+        </details>
+    </main>
+
+     <div id="zoneViewer">
+        <div class="zone-header">
+            <div class="zone-title">
+                <h2 id="zoneName">zone</h2>
+                <button class="info-button" onclick="showZoneInfo()" title="Zone Information">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </button>
+                <span id="zoneId" style="display: none;"></span>
+                <a id="zoneAuthor" href="#" target="_blank">by Author</a>
+            </div>
+            <div class="zone-controls">
+                <button onclick="fullscreenZone()" title="Fullscreen">⛶ <span>Fullscreen</span></button>
+                <button onclick="aboutBlank()" title="Open in new tab">↗ <span>New Tab</span></button>
+                <button onclick="downloadZone()" title="Download">⤓ <span>Download</span></button>
+                <button onclick="reportCurrentZone()" title="Report broken">⚠ <span>Report</span></button>
+                <button class="zone-close" onclick="closeZone()" title="Close (Esc)">✕ <span>Close</span></button>
+            </div>
+        </div>
+        <iframe id="zoneFrame"></iframe>
+    </div>
+
+    <div id="popupOverlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h3 id="popupTitle">Title</h3>
+                <button id="popupClose" onclick="closePopup()" aria-label="Close">×</button>
+            </div>
+            <div id="popupBody">
+                Content will be here
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-links">
+            <a href="#" onclick="loadDMCA(); return false;">DMCA</a>
+            <a href="#" onclick="showContact(); return false;">Contact</a>
+            <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>
+            <a href="#" onclick="saveData(); return false;">Export Data</a>
+            <a href="#" onclick="document.getElementById('importData').click(); return false;">Import Data</a>
+            <input type="file" id="importData" style="display: none;" onchange="loadData(event)">
+        </div>
+    </footer>
+
+    <script>
+const container = document.getElementById('container');
+const zoneViewer = document.getElementById('zoneViewer');
+let zoneFrame = document.getElementById('zoneFrame');
+const searchBar = document.getElementById('searchBar');
+const sortOptions = document.getElementById('sortOptions');
+const filterOptions = document.getElementById('filterOptions');
+// https://www.jsdelivr.com/tools/purge
+const zonesurls = [
+    "https://cdn.jsdelivr.net/gh/freebuisness/assets@main/zones.json",
+    "https://cdn.jsdelivr.net/gh/freebuisness/assets@latest/zones.json",
+    "https://cdn.jsdelivr.net/gh/freebuisness/assets@master/zones.json",
+    "https://cdn.jsdelivr.net/gh/freebuisness/assets/zones.json"
+];
+let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
+const coverURL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
+const htmlURL = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
+const htmlURLFallbacks = [
+    "https://cdn.jsdelivr.net/gh/freebuisness/html@latest",
+    "https://cdn.jsdelivr.net/gh/freebuisness/html",
+    "https://raw.githubusercontent.com/freebuisness/html/main"
+];
+let zones = [];
+let popularityData = {};
+const featuredContainer = document.getElementById('featuredZones');
+function toTitleCase(str) {
+  return str.replace(
+    /\w\S*/g,
+    text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+  );
+}
+async function listZones() {
+    try {
+      let sharesponse;
+      let shajson;
+      let sha;
+        try {
+          sharesponse = await fetch("https://api.github.com/repos/freebuisness/assets/commits?t="+Date.now());
+        } catch (error) {}
+        if (sharesponse && sharesponse.status === 200) {
+          try {
+            shajson = await sharesponse.json();
+            sha = shajson[0]['sha'];
+            if (sha) {
+                zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
+            }
+          } catch (error) {
+            try {
+                let secondarysharesponse = await fetch("https://raw.githubusercontent.com/freebuisness/xml/refs/heads/main/sha.txt?t="+Date.now());
+                if (secondarysharesponse && secondarysharesponse.status === 200) {
+                    sha = (await secondarysharesponse.text()).trim();
+                    if (sha) {
+                        zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
+                    }
+                }
+            } catch(error) {}
+          }
+        }
+        const response = await fetch(zonesURL+"?t="+Date.now());
+        const json = await response.json();
+        zones = json;
+        zones[0].featured = true; // always gonna be the discord
+        await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
+        sortZones();
+        try {
+        const search = new URLSearchParams(window.location.search);
+        const id = search.get('id');
+        const embed = window.location.hash.includes("embed");
+        if (id) {
+            const zone = zones.find(zone => zone.id + '' == id + '');
+            if (zone) {
+                if (embed) {
+                    if (zone.url.startsWith("http")) {
+                        window.open(zone.url, "_blank");
+                    } else {
+                        fetchWithFallback(zone.url).then(html => {
+                            document.documentElement.innerHTML = html;
+                            const popup = document.createElement("div");
+                            popup.style.position = "fixed";
+                            popup.style.bottom = "20px";
+                            popup.style.right = "20px";
+                            popup.style.backgroundColor = "#cce5ff";
+                            popup.style.color = "#004085";
+                            popup.style.padding = "10px";
+                            popup.style.border = "1px solid #b8daff";
+                            popup.style.borderRadius = "5px";
+                            popup.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
+                            popup.style.fontFamily = "Arial, sans-serif";
+                            
+                            popup.innerHTML = `Play more games at <a href="https://gn-math.dev" target="_blank" style="color:#004085; font-weight:bold;">https://gn-math.dev</a>!`;
+                            
+                            const closeBtn = document.createElement("button");
+                            closeBtn.innerText = "?";
+                            closeBtn.style.marginLeft = "10px";
+                            closeBtn.style.background = "none";
+                            closeBtn.style.border = "none";
+                            closeBtn.style.cursor = "pointer";
+                            closeBtn.style.color = "#004085";
+                            closeBtn.style.fontWeight = "bold";
+                            
+                            closeBtn.onclick = () => popup.remove();
+                            popup.appendChild(closeBtn);
+                            document.body.appendChild(popup);
+                            document.documentElement.querySelectorAll('script').forEach(oldScript => {
+                                const newScript = document.createElement('script');
+                                if (oldScript.src) {
+                                    newScript.src = oldScript.src;
+                                } else {
+                                    newScript.textContent = oldScript.textContent;
+                                }
+                                document.body.appendChild(newScript);
+                            });
+                        }).catch(error => alert("Failed to load zone: " + error));
+                    }
+                } else {
+                    openZone(zone);
+                }
+            }
+        }
+        } catch(error){}
+        let alltags = [];
+        for (const obj of json) {
+            if (Array.isArray(obj.special)) {
+                alltags.push(...obj.special);
+            }
+        }
+
+        alltags = [...new Set(alltags)];
+        let filteroption = document.getElementById("filterOptions");
+        if (filteroption && filteroption.children.length > 1) {
+            while (filteroption.children.length > 1) {
+                filteroption.removeChild(filteroption.lastElementChild);
+            }
+        }
+        for (const tag of alltags) {
+            const opt = document.createElement("option");
+            opt.value = tag;
+            opt.textContent = toTitleCase(tag);
+            filteroption.appendChild(opt);
+        }
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = "";
+        const box = emptyState("Couldn't load the games. Check your connection and try again.");
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "empty-clear";
+        retry.textContent = "Try again";
+        retry.onclick = () => { showZoneSkeletons(); listZones(); };
+        box.appendChild(retry);
+        container.appendChild(box);
+    }
+}
+async function fetchPopularity(duration) {
+    try {
+        if (!popularityData[duration]) {
+            popularityData[duration] = {};
+        }
+        const response = await fetch(
+            "https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files?period=" + duration
+        );
+        const data = await response.json();
+        data.forEach(file => {
+            const idMatch = file.name.match(/\/(\d+)\.html$/);
+            if (idMatch) {
+                const id = parseInt(idMatch[1]);
+                popularityData[duration][id] = file.hits?.total ?? 0;
+            }
+        });
+    } catch (error) {
+        if (!popularityData[duration]) {
+            popularityData[duration] = {};
+        }
+        popularityData[duration][0] = 0;
+    }
+}
+
+
+function sortZones() {
+    const sortBy = sortOptions.value;
+    if (sortBy === 'name') {
+        zones.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'id') {
+        zones.sort((a, b) => a.id - b.id);
+    } else if (sortBy === 'popular') {
+        zones.sort((a, b) => ((popularityData['year']?.[b.id]) ?? 0) - ((popularityData['year']?.[a.id]) ?? 0));
+    } else if (sortBy === 'trendingMonth') {
+        zones.sort((a, b) => ((popularityData['month']?.[b.id]) ?? 0) - ((popularityData['month']?.[a.id]) ?? 0));
+    } else if (sortBy === 'trendingWeek') {
+        zones.sort((a, b) => ((popularityData['week']?.[b.id]) ?? 0) - ((popularityData['week']?.[a.id]) ?? 0));
+    } else if (sortBy === 'trendingDay') {
+        zones.sort((a, b) => ((popularityData['day']?.[b.id]) ?? 0) - ((popularityData['day']?.[a.id]) ?? 0));
+    }
+    zones.sort((a, b) => (a.id === -1 ? -1 : b.id === -1 ? 1 : 0));
+    if (featuredContainer.innerHTML === "") {
+        const featured = zones.filter(z => z.featured);
+        displayFeaturedZones(featured);
+    }
+    if (searchBar.value.trim() || filterOptions.value !== "none") applyZoneFilters();
+    else displayZones(zones);
+}
+
+function createZoneCard(file) {
+    const zoneItem = document.createElement("div");
+    zoneItem.className = "zone-item";
+    zoneItem.onclick = () => openZone(file);
+
+    const img = document.createElement("img");
+    img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    img.alt = file.name;
+    img.loading = "lazy";
+    img.className = "lazy-zone-img";
+    zoneItem.appendChild(img);
+
+    const button = document.createElement("button");
+    button.textContent = file.name;
+    button.onclick = (event) => {
+        event.stopPropagation();
+        openZone(file);
+    };
+    zoneItem.appendChild(button);
+
+    // Play count badge
+    if (getShowPlayCount()) {
+        const plays = (popularityData['year']?.[file.id]) ?? 0;
+        if (plays > 0) {
+            const badge = document.createElement("div");
+            badge.style.cssText = "font-size:11px;color:var(--text-muted);text-align:center;padding:0 0.75rem 0.4rem;";
+            badge.textContent = "▶ " + plays.toLocaleString() + " plays";
+            zoneItem.appendChild(badge);
+        }
+    }
+
+    return zoneItem;
+}
+
+function observeLazyZoneImages(selector) {
+    const lazyImages = document.querySelectorAll(selector);
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !zoneViewer.hidden) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.remove("lazy-zone-img");
+                observer.unobserve(img);
+            }
+        });
+    }, {
+        rootMargin: "100px", 
+        threshold: 0.1
+    });
+
+    lazyImages.forEach(img => {
+        imageObserver.observe(img);
+    });
+}
+
+function showZoneSkeletons(count = 12) {
+    container.innerHTML = Array.from({ length: count }, () =>
+        `<div class="zone-skeleton" aria-hidden="true"><div></div><span></span></div>`).join("");
+}
+
+function emptyState(message, withClear = false) {
+    const box = document.createElement("div");
+    box.className = "empty-state";
+    box.innerHTML = `<div class="empty-icon">🕹️</div><p></p>`;
+    box.querySelector("p").textContent = message;
+    if (withClear) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "empty-clear";
+        btn.textContent = "Clear search";
+        btn.onclick = () => {
+            searchBar.value = "";
+            filterOptions.value = "none";
+            applyZoneFilters();
+            searchBar.focus();
+        };
+        box.appendChild(btn);
+    }
+    return box;
+}
+
+function displayFeaturedZones(featuredZones) {
+    featuredContainer.innerHTML = "";
+    const visibleFeaturedZones = featuredZones.filter(file => !isZoneDisabled(file.id));
+    visibleFeaturedZones.forEach(file => {
+        featuredContainer.appendChild(createZoneCard(file));
+    });
+    document.getElementById("featuredCount").textContent = visibleFeaturedZones.length || "";
+    if (!visibleFeaturedZones.length) {
+        featuredContainer.appendChild(emptyState("No featured games right now."));
+    }
+
+    observeLazyZoneImages('#featuredZones img.lazy-zone-img');
+}
+function displayZones(zones) {
+    container.innerHTML = "";
+    const visibleZones = zones.filter(file => !isZoneDisabled(file.id));
+    visibleZones.forEach(file => {
+        container.appendChild(createZoneCard(file));
+    });
+    document.getElementById("allCount").textContent = visibleZones.length.toLocaleString();
+    if (!visibleZones.length) {
+        const searching = searchBar.value.trim() || filterOptions.value !== "none";
+        container.appendChild(emptyState(
+            searching ? `No games match “${searchBar.value.trim() || toTitleCase(filterOptions.value)}”.` : "No games available right now.",
+            !!searching));
+    }
+
+    observeLazyZoneImages('img.lazy-zone-img');
+}
+
+// Search text and tag filter now work together.
+function applyZoneFilters() {
+    const query = searchBar.value.trim().toLowerCase();
+    const tag = filterOptions.value;
+    const filtered = zones.filter(zone =>
+        (!query || zone.name.toLowerCase().includes(query)) &&
+        (tag === "none" || zone.special?.includes(tag)));
+    const featuredWrapper = document.getElementById("featuredZonesWrapper");
+    if (query || tag !== "none") featuredWrapper.removeAttribute("open");
+    else featuredWrapper.setAttribute("open", "");
+    displayZones(filtered);
+}
+
+function filterZones2() { applyZoneFilters(); }
+
+let _filterTimer = null;
+function filterZones() {
+    clearTimeout(_filterTimer);
+    _filterTimer = setTimeout(applyZoneFilters, 80);
+}
+
+async function fetchWithFallback(rawUrl) {
+    // Build a list of candidate URLs: primary htmlURL first, then each fallback
+    const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "");
+    const isHtml = rawUrl.includes("{HTML_URL}");
+    const candidates = isHtml
+        ? [htmlURL, ...htmlURLFallbacks].map(base => base + suffix)
+        : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
+
+    let lastError;
+    for (const url of candidates) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.text();
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    throw lastError;
+}
+
+function openZone(file) {
+    if (isZoneDisabled(file.id)) {
+        showToast("This game is currently unavailable.", "error");
+        return;
+    }
+
+    if (file.url.startsWith("http")) {
+        window.open(file.url, "_blank");
+    } else {
+        // Show viewer immediately with a loading indicator
+        document.getElementById('zoneName').textContent = file.name;
+        document.getElementById('zoneId').textContent = file.id;
+        document.getElementById('zoneAuthor').textContent = "by " + file.author;
+        if (file.authorLink) {
+            document.getElementById('zoneAuthor').href = file.authorLink;
+        } else {
+            document.getElementById('zoneAuthor').removeAttribute('href');
+        }
+        zoneViewer.style.display = "flex";
+        zoneViewer.hidden = false;
+        document.body.classList.add("zone-open");
+        if (!zoneFrame.isConnected) {
+            zoneFrame = document.createElement("iframe");
+            zoneFrame.id = "zoneFrame";
+            zoneViewer.appendChild(zoneFrame);
+        }
+        if (zoneFrame.contentDocument !== null) {
+            zoneFrame.contentDocument.open();
+            zoneFrame.contentDocument.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#94a3b8;font-family:sans-serif;font-size:1.2rem;">Loading...</body></html>');
+            zoneFrame.contentDocument.close();
+        }
+        try {
+            const locUrl = new URL(window.location);
+            locUrl.searchParams.set('id', file.id);
+            history.pushState(null, '', locUrl.toString());
+        } catch(e){}
+
+        fetchWithFallback(file.url).then(html => {
+            if (zoneFrame.contentDocument === null) {
+                zoneFrame = document.createElement("iframe");
+                zoneFrame.id = "zoneFrame";
+                zoneViewer.appendChild(zoneFrame);
+            }
+            zoneFrame.contentDocument.open();
+            zoneFrame.contentDocument.write(html);
+            zoneFrame.contentDocument.close();
+        }).catch(error => {
+            closeZone();
+            showToast("Couldn't load that game — try again or report it.", "error");
+        });
+    }
+}
+
+function aboutBlank() {
+    const newWindow = window.open("about:blank", "_blank");
+    let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    fetchWithFallback(zone.url).then(html => {
+        if (newWindow) {
+            newWindow.document.open();
+            newWindow.document.write(html);
+            newWindow.document.close();
+        }
+    }).catch(() => showToast("Couldn't open that game in a new tab.", "error"));
+}
+
+function closeZone() {
+    zoneViewer.hidden = false;
+    zoneViewer.style.display = "none";
+    document.body.classList.remove("zone-open");
+    if (zoneFrame.parentNode === zoneViewer) zoneViewer.removeChild(zoneFrame);
+    try {
+    const url = new URL(window.location);
+    url.searchParams.delete('id');
+    history.pushState(null, '', url.toString());
+    } catch(error){}
+}
+
+function downloadZone() {
+    let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    fetchWithFallback(zone.url).then(text => {
+        const blob = new Blob([text], {
+            type: "text/plain;charset=utf-8"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = zone.name + ".html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+}
+
+function fullscreenZone() {
+    if (zoneFrame.requestFullscreen) {
+        zoneFrame.requestFullscreen();
+    } else if (zoneFrame.mozRequestFullScreen) {
+        zoneFrame.mozRequestFullScreen();
+    } else if (zoneFrame.webkitRequestFullscreen) {
+        zoneFrame.webkitRequestFullscreen();
+    } else if (zoneFrame.msRequestFullscreen) {
+        zoneFrame.msRequestFullscreen();
+    }
+}
+
+function sanitizeData(obj, maxStringLen = 1000, maxArrayLen = 10000) {
+    if (typeof obj === 'string') {
+      return obj.length > maxStringLen ? obj.slice(0, maxStringLen) + '...[truncated]' : obj;
+    }
+    
+    if (obj instanceof Uint8Array) {
+      if (obj.length > maxArrayLen) {
+        return `[Uint8Array too large (${obj.length} bytes), truncated]`;
+      }
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => sanitizeData(item, maxStringLen, maxArrayLen));
+    }
+    
+    if (obj && typeof obj === 'object') {
+      const newObj = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          newObj[key] = sanitizeData(obj[key], maxStringLen, maxArrayLen);
+        }
+      }
+      return newObj;
+    }
+    
+    return obj;
+  }
+
+async function saveData() {
+    showToast("Preparing your save file… this can take a moment.");
+    const result = {};
+    result.cookies = document.cookie;
+    result.localStorage = {...localStorage};
+    result.sessionStorage = {...sessionStorage};
+    result.indexedDB = {};
+    const dbs = await indexedDB.databases();
+    for (const dbInfo of dbs) {
+      if (!dbInfo.name) continue;
+      result.indexedDB[dbInfo.name] = {};
+      await new Promise((resolve, reject) => {
+        const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
+        openRequest.onerror = () => reject(openRequest.error);
+        openRequest.onsuccess = () => {
+          const db = openRequest.result;
+          const storeNames = Array.from(db.objectStoreNames);
+          if (storeNames.length === 0) {
+            resolve();
+            return;
+          }
+          const transaction = db.transaction(storeNames, "readonly");
+          const storePromises = [];
+          for (const storeName of storeNames) {
+            result.indexedDB[dbInfo.name][storeName] = [];
+            const store = transaction.objectStore(storeName);
+            const getAllRequest = store.getAll();
+            const p = new Promise((res, rej) => {
+              getAllRequest.onsuccess = () => {
+                result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result, 1000, 100);
+                res();
+              };
+              getAllRequest.onerror = () => rej(getAllRequest.error);
+            });
+            storePromises.push(p);
+          }
+          Promise.all(storePromises).then(() => resolve());
+        };
+      });
+    }
+
+    result.caches = {};
+    const cacheNames = await caches.keys();
+    for (const cacheName of cacheNames) {
+      const cache = await caches.open(cacheName);
+      const requests = await cache.keys();
+      result.caches[cacheName] = [];
+      for (const req of requests) {
+        const response = await cache.match(req);
+        if (!response) continue;
+        const cloned = response.clone();
+        const contentType = cloned.headers.get('content-type') || '';
+        let body;
+        try {
+          if (contentType.includes('application/json')) {
+            body = await cloned.json();
+          } else if (contentType.includes('text') || contentType.includes('javascript')) {
+            body = await cloned.text();
+          } else {
+            const buffer = await cloned.arrayBuffer();
+            body = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+          }
+        } catch (e) {
+          body = '[Unable to read body]';
+        }
+        result.caches[cacheName].push({
+          url: req.url,
+          body,
+          contentType
+        });
+      }
+    }
+  
+    showToast("Save file ready — check your downloads.", "success");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], {
+        type: "application/octet-stream"
+    }));
+    link.download = `${Date.now()}.data`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  
+  async function loadData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function (e) {
+        const data = JSON.parse(e.target.result);
+        if (data.cookies) {
+            data.cookies.split(';').forEach(cookie => {
+              document.cookie = cookie.trim();
+            });
+          }
+        
+          if (data.localStorage) {
+            for (const key in data.localStorage) {
+              localStorage.setItem(key, data.localStorage[key]);
+            }
+          }
+        
+          if (data.sessionStorage) {
+            for (const key in data.sessionStorage) {
+              sessionStorage.setItem(key, data.sessionStorage[key]);
+            }
+          }
+        
+          if (data.indexedDB) {
+            for (const dbName in data.indexedDB) {
+              const stores = data.indexedDB[dbName];
+              await new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = e => {
+                  const db = e.target.result;
+                  for (const storeName in stores) {
+                    if (!db.objectStoreNames.contains(storeName)) {
+                      db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+                    }
+                  }
+                };
+                request.onsuccess = e => {
+                  const db = e.target.result;
+                  const transaction = db.transaction(Object.keys(stores), 'readwrite');
+                  transaction.onerror = () => reject(transaction.error);
+                  let pendingStores = Object.keys(stores).length;
+        
+                  for (const storeName in stores) {
+                    const objectStore = transaction.objectStore(storeName);
+                    objectStore.clear().onsuccess = () => {
+                      for (const item of stores[storeName]) {
+                        objectStore.put(item);
+                      }
+                      pendingStores--;
+                      if (pendingStores === 0) resolve();
+                    };
+                  }
+                };
+                request.onerror = () => reject(request.error);
+              });
+            }
+          }
+        
+          if (data.caches) {
+            for (const cacheName in data.caches) {
+              const cache = await caches.open(cacheName);
+              await cache.keys().then(keys => Promise.all(keys.map(k => cache.delete(k)))); // clear existing
+        
+              for (const entry of data.caches[cacheName]) {
+                let responseBody;
+                if (entry.contentType.includes('application/json')) {
+                  responseBody = JSON.stringify(entry.body);
+                } else if (entry.contentType.includes('text') || entry.contentType.includes('javascript')) {
+                  responseBody = entry.body;
+                } else {
+                  const binaryStr = atob(entry.body);
+                  const len = binaryStr.length;
+                  const bytes = new Uint8Array(len);
+                  for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                  }
+                  responseBody = bytes.buffer;
+                }
+                const headers = new Headers({ 'content-type': entry.contentType });
+                const response = new Response(responseBody, { headers });
+                await cache.put(entry.url, response);
+              }
+            }
+          }
+        showToast("Data imported! Reload the page to see it.", "success");
+    };
+    showToast("Importing your data… don't close the page.");
+    reader.readAsText(file);
+  }
+
+
+function getJsonStorage(key, fallback) {
+    try {
+        const storedValue = localStorage.getItem(key);
+        return storedValue ? JSON.parse(storedValue) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function setJsonStorage(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getDisabledZoneIds() {
+    return new Set(getJsonStorage(OWNER_STORAGE_KEYS.disabledZones, []));
+}
+
+function setDisabledZoneIds(disabledIds) {
+    setJsonStorage(OWNER_STORAGE_KEYS.disabledZones, Array.from(disabledIds));
+}
+
+function isZoneDisabled(zoneId) {
+    return getDisabledZoneIds().has(String(zoneId));
+}
+
+function setZoneDisabled(zoneId, isDisabled) {
+    const disabledIds = getDisabledZoneIds();
+    if (isDisabled) {
+        disabledIds.add(String(zoneId));
+    } else {
+        disabledIds.delete(String(zoneId));
+    }
+    setDisabledZoneIds(disabledIds);
+    featuredContainer.innerHTML = "";
+    sortZones();
+    githubAutoSync();
+}
+
+function getBrokenReports() {
+    return getJsonStorage(OWNER_STORAGE_KEYS.brokenReports, {});
+}
+
+function setBrokenReports(reports) {
+    setJsonStorage(OWNER_STORAGE_KEYS.brokenReports, reports);
+}
+
+function buildBrokenReportsFile() {
+    const reports = getBrokenReports();
+    const games = Object.values(reports).sort((a, b) => b.reports - a.reports || a.name.localeCompare(b.name));
+    return {
+        totalReports: games.reduce((total, game) => total + game.reports, 0),
+        games,
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function downloadJsonFile(fileName, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function saveBrokenReportsFile() {
+    downloadJsonFile("broken-reports.json", buildBrokenReportsFile());
+}
+
+function reportBrokenZone(file) {
+    const zoneId = String(file.id);
+    const reports = getBrokenReports();
+    const currentReport = reports[zoneId] || {
+        id: zoneId,
+        name: file.name,
+        url: file.url,
+        reports: 0,
+        firstReportedAt: new Date().toISOString()
+    };
+
+    currentReport.name = file.name;
+    currentReport.url = file.url;
+    currentReport.reports += 1;
+    currentReport.lastReportedAt = new Date().toISOString();
+    reports[zoneId] = currentReport;
+    setBrokenReports(reports);
+    showToast(`Thanks! ${file.name} was reported as broken.`, "success");
+}
+
+function reportCurrentZone() {
+    const zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    if (!zone) {
+        showToast("No game is open.", "error");
+        return;
+    }
+    reportBrokenZone(zone);
+}
+
+function getOwnerSiteMode() {
+    const mode = localStorage.getItem(OWNER_STORAGE_KEYS.siteMode) || "open";
+    return OWNER_SITE_MODES.includes(mode) ? mode : "open";
+}
+
+function setOwnerSiteMode(mode) {
+    const safeMode = OWNER_SITE_MODES.includes(mode) ? mode : "open";
+    localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, safeMode);
+    applyOwnerSiteMode();
+    githubAutoSync();
+}
+
+// ── Toasts (small, non-blocking notifications) ───────────────────────────────
+function showToast(message, type = "info") {
+    let host = document.getElementById("toast-host");
+    if (!host) {
+        host = document.createElement("div");
+        host.id = "toast-host";
+        host.setAttribute("aria-live", "polite");
+        document.body.appendChild(host);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type}`;
+    toast.textContent = message;
+    host.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    }, type === "error" ? 5000 : 2800);
+}
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[ch]));
+}
+
+// ── Owner session (stay signed in until the tab is closed) ──────────────────
+const OWNER_SESSION_KEY = "gnmath-owner-session";
+const OWNER_LAST_SYNC_KEY = "gnmath-owner-last-sync";
+const ownerPanelState = { tab: "overview", gameQuery: "", gameFilter: "all" };
+
+function hasOwnerSession() {
+    try { return sessionStorage.getItem(OWNER_SESSION_KEY) === "1"; } catch (_) { return false; }
+}
+
+function setOwnerSession(isOn) {
+    try {
+        if (isOn) sessionStorage.setItem(OWNER_SESSION_KEY, "1");
+        else sessionStorage.removeItem(OWNER_SESSION_KEY);
+    } catch (_) {}
+}
+
+/** Shows a password dialog. Resolves true when the owner signs in. */
+function requestOwnerAccess({ forcePrompt = false } = {}) {
+    if (!forcePrompt && hasOwnerSession()) return Promise.resolve(true);
+    return new Promise(resolve => {
+        document.getElementById("owner-auth")?.remove();
+        const wrap = document.createElement("div");
+        wrap.id = "owner-auth";
+        wrap.innerHTML = `
+            <form class="owner-auth-card" autocomplete="off">
+                <div class="owner-auth-icon" aria-hidden="true">🔑</div>
+                <h3>Owner access</h3>
+                <p>Enter the owner password. You'll stay signed in until you close this tab.</p>
+                <input type="password" placeholder="Password" aria-label="Owner password">
+                <p class="owner-auth-error" role="alert"></p>
+                <div class="owner-auth-actions">
+                    <button type="button" class="op-btn op-btn--ghost" data-cancel>Cancel</button>
+                    <button type="submit" class="op-btn op-btn--primary">Unlock</button>
+                </div>
+            </form>`;
+        document.body.appendChild(wrap);
+
+        const form = wrap.querySelector("form");
+        const input = wrap.querySelector("input");
+        const error = wrap.querySelector(".owner-auth-error");
+        const onKey = event => {
+            if (event.key === "Escape") { event.stopPropagation(); finish(false); }
+        };
+        function finish(ok) {
+            wrap.remove();
+            document.removeEventListener("keydown", onKey, true);
+            resolve(ok);
+        }
+        document.addEventListener("keydown", onKey, true);
+        wrap.addEventListener("mousedown", event => { if (event.target === wrap) finish(false); });
+        wrap.querySelector("[data-cancel]").onclick = () => finish(false);
+        form.onsubmit = event => {
+            event.preventDefault();
+            if (input.value === getOwnerPassword()) {
+                setOwnerSession(true);
+                finish(true);
+                applyOwnerSiteMode();
+            } else {
+                error.textContent = "Wrong password — try again.";
+                form.classList.remove("shake");
+                void form.offsetWidth;
+                form.classList.add("shake");
+                input.select();
+            }
+        };
+        setTimeout(() => input.focus(), 30);
+    });
+}
+
+// ── Site mode (open / locked / shutdown) ─────────────────────────────────────
+function applyOwnerSiteMode() {
+    const existingOverlay = document.getElementById("owner-site-overlay");
+    const mode = getOwnerSiteMode();
+    applyOwnerModeNotice(mode);
+
+    // The signed-in owner can still see and use the site while it's locked.
+    if (mode === "open" || hasOwnerSession()) {
+        if (existingOverlay) existingOverlay.remove();
+        return;
+    }
+
+    const overlay = existingOverlay || document.createElement("div");
+    overlay.id = "owner-site-overlay";
+    overlay.innerHTML = "";
+    overlay.className = mode === "shutdown" ? "shutdown-mode" : "";
+
+    const message = document.createElement("div");
+    const unlockButton = document.createElement("button");
+    unlockButton.type = "button";
+    unlockButton.onclick = async () => {
+        if (await requestOwnerAccess()) {
+            applyOwnerSiteMode();
+            renderOwnerPanel();
+        }
+    };
+
+    if (mode === "shutdown") {
+        message.className = "owner-site-message shutdown-message";
+
+        const badge = document.createElement("div");
+        badge.className = "shutdown-badge";
+        badge.textContent = "Service Unavailable";
+        message.appendChild(badge);
+
+        const icon = document.createElement("span");
+        icon.className = "shutdown-icon";
+        icon.textContent = "⛔";
+        message.appendChild(icon);
+
+        const title = document.createElement("h1");
+        title.textContent = "Site Shutdown";
+        message.appendChild(title);
+
+        const description = document.createElement("p");
+        description.textContent = "This website has been shut down by the owner. It is not available at this time.";
+        message.appendChild(description);
+
+        const divider = document.createElement("hr");
+        divider.className = "shutdown-divider";
+        message.appendChild(divider);
+
+        unlockButton.className = "shutdown-unlock";
+        unlockButton.textContent = "owner access";
+    } else {
+        message.className = "owner-site-message";
+
+        const icon = document.createElement("div");
+        icon.className = "lock-icon";
+        icon.textContent = "🔒";
+        message.appendChild(icon);
+
+        const title = document.createElement("h1");
+        title.textContent = "Website Locked";
+        message.appendChild(title);
+
+        const description = document.createElement("p");
+        description.textContent = "The owner has temporarily locked this website. Check back soon.";
+        message.appendChild(description);
+
+        unlockButton.className = "settings-button";
+        unlockButton.textContent = "Owner access";
+    }
+
+    message.appendChild(unlockButton);
+    overlay.appendChild(message);
+    if (!existingOverlay) document.body.appendChild(overlay);
+}
+
+/** Floating reminder for the owner when the site is locked/shut down for visitors. */
+function applyOwnerModeNotice(mode) {
+    const existing = document.getElementById("owner-mode-notice");
+    if (mode === "open" || !hasOwnerSession()) {
+        if (existing) existing.remove();
+        return;
+    }
+    const notice = existing || document.createElement("div");
+    notice.id = "owner-mode-notice";
+    notice.innerHTML = `
+        <span>${mode === "shutdown" ? "⛔" : "🔒"} Site is <b>${mode === "shutdown" ? "shut down" : "locked"}</b> for visitors — you're seeing it as the owner.</span>
+        <button type="button" onclick="ownerSetMode('open')">Open site</button>
+        <button type="button" onclick="showOwnerPanel()">Panel</button>`;
+    if (!existing) document.body.appendChild(notice);
+}
+
+function ownerSetMode(mode) {
+    if (mode === getOwnerSiteMode()) return;
+    if (mode === "shutdown" && !confirm("Shut the site down for every visitor?")) return;
+    setOwnerSiteMode(mode);
+    const labels = { open: "Site is open 🟢", locked: "Site locked for visitors 🔒", shutdown: "Site shut down ⛔" };
+    showToast(labels[mode] || "Site mode updated", mode === "open" ? "success" : "info");
+    document.querySelectorAll(".op-mode").forEach(btn => {
+        const active = btn.dataset.mode === mode;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", active);
+    });
+    updateOwnerStats();
+}
+
+// ── Owner panel ──────────────────────────────────────────────────────────────
+async function showOwnerPanel() {
+    if (!(await requestOwnerAccess())) return;
+    renderOwnerPanel();
+}
+
+function ownerSignOut() {
+    setOwnerSession(false);
+    closePopup();
+    applyOwnerSiteMode();
+    showToast("Signed out of the owner panel.");
+}
+
+function formatSyncTime(iso) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    if (isNaN(date)) return "";
+    const sameDay = date.toDateString() === new Date().toDateString();
+    return sameDay
+        ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        : date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function ownerSyncText() {
+    if (!getGithubPat()) {
+        return "Not connected — changes won't reach visitors until you add a GitHub token.";
+    }
+    const last = formatSyncTime(localStorage.getItem(OWNER_LAST_SYNC_KEY));
+    return last ? `Auto-sync on · last saved ${last}` : "Auto-sync on · changes save to GitHub automatically";
+}
+
+function updateOwnerSyncBar(state) {
+    const bar = document.getElementById("op-sync-bar");
+    const text = document.getElementById("op-sync-text");
+    if (!bar || !text) return;
+    bar.classList.remove("is-on", "is-off", "is-busy", "is-error");
+    if (state === "busy") { bar.classList.add("is-busy"); text.textContent = "Saving to GitHub…"; return; }
+    if (state === "error") { bar.classList.add("is-error"); text.textContent = "Last save failed — check your token in Settings."; return; }
+    bar.classList.add(getGithubPat() ? "is-on" : "is-off");
+    text.textContent = ownerSyncText();
+}
+
+function ownerSwitchTab(tab) {
+    ownerPanelState.tab = tab;
+    document.querySelectorAll(".op-tab").forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-selected", active);
+    });
+    document.querySelectorAll(".op-pane").forEach(pane => {
+        pane.hidden = pane.dataset.pane !== tab;
+    });
+    if (tab === "games") renderOwnerGameList();
+}
+
+function updateOwnerStats() {
+    const disabled = getDisabledZoneIds();
+    const total = zones.length;
+    const hidden = zones.filter(z => disabled.has(String(z.id))).length;
+    const reports = getBrokenReports();
+    const mode = getOwnerSiteMode();
+    const modeLabels = { open: "🟢 Open", locked: "🔒 Locked", shutdown: "⛔ Down" };
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    set("op-stat-mode", modeLabels[mode]);
+    set("op-stat-live", total ? (total - hidden).toLocaleString() : "…");
+    set("op-stat-hidden", hidden.toLocaleString());
+    set("op-stat-reports", Object.values(reports).reduce((n, r) => n + (r.reports || 0), 0).toLocaleString());
+    set("op-chip-all", total.toLocaleString());
+    set("op-chip-hidden", hidden.toLocaleString());
+    set("op-chip-reported", zones.filter(z => reports[String(z.id)]).length.toLocaleString());
+}
+
+function renderOwnerPanel() {
+    document.getElementById('popupTitle').textContent = "Owner Panel";
+    const popupBody = document.getElementById('popupBody');
+    const mode = getOwnerSiteMode();
+    const reportsFile = buildBrokenReportsFile();
+    const announcement = getAnnouncement();
+    const motd = getMotd();
+    const storedPat = getGithubPat();
+    const footerLinks = getFooterLinks() || [];
+    const tabs = [
+        { id: "overview", label: "Overview" },
+        { id: "messages", label: "Messages" },
+        { id: "games",    label: "Games" },
+        { id: "settings", label: "Settings" }
+    ];
+    const modes = [
+        { id: "open",     icon: "🟢", label: "Open",      desc: "Everyone can play" },
+        { id: "locked",   icon: "🔒", label: "Locked",    desc: "Show a lock screen" },
+        { id: "shutdown", icon: "⛔", label: "Shut down", desc: "Show a shutdown screen" }
+    ];
+
+    popupBody.innerHTML = `
+    <div class="op">
+        <div class="op-stats">
+            <div class="op-stat"><span class="op-stat-label">Site</span><span class="op-stat-value" id="op-stat-mode"></span></div>
+            <div class="op-stat"><span class="op-stat-label">Games live</span><span class="op-stat-value" id="op-stat-live"></span></div>
+            <div class="op-stat"><span class="op-stat-label">Hidden</span><span class="op-stat-value" id="op-stat-hidden"></span></div>
+            <div class="op-stat"><span class="op-stat-label">Reports</span><span class="op-stat-value" id="op-stat-reports"></span></div>
+        </div>
+
+        <div id="op-sync-bar" class="op-sync-bar">
+            <span class="op-dot" aria-hidden="true"></span>
+            <span id="op-sync-text"></span>
+            ${storedPat
+                ? `<button type="button" class="op-btn op-btn--small" onclick="ownerSyncSave()">Sync now</button>`
+                : `<button type="button" class="op-btn op-btn--small" onclick="ownerSwitchTab('settings')">Set up</button>`}
+        </div>
+
+        <div class="op-tabs" role="tablist">
+            ${tabs.map(t => `<button type="button" role="tab" class="op-tab" data-tab="${t.id}" onclick="ownerSwitchTab('${t.id}')">${t.label}</button>`).join("")}
+        </div>
+
+        <!-- Overview -->
+        <section class="op-pane" data-pane="overview">
+            <h4 class="op-h">Site status</h4>
+            <div class="op-modes">
+                ${modes.map(m => `
+                    <button type="button" class="op-mode op-mode--${m.id} ${mode === m.id ? "is-active" : ""}" data-mode="${m.id}"
+                        aria-pressed="${mode === m.id}" onclick="ownerSetMode('${m.id}')">
+                        <span class="op-mode-icon">${m.icon}</span>
+                        <span class="op-mode-label">${m.label}</span>
+                        <span class="op-mode-desc">${m.desc}</span>
+                    </button>`).join("")}
+            </div>
+            <p class="op-hint">While you're signed in, you can still browse the site even when it's locked.</p>
+
+            <h4 class="op-h">Quick actions</h4>
+            <div class="op-actions">
+                <button type="button" class="op-action" onclick="ownerSwitchTab('messages')"><span>📢</span>Edit banner &amp; messages</button>
+                <button type="button" class="op-action" onclick="ownerSwitchTab('games')"><span>🎮</span>Hide or show games</button>
+                <button type="button" class="op-action" onclick="ownerSyncPullManual()"><span>⬇️</span>Pull latest from GitHub</button>
+                <button type="button" class="op-action" onclick="forceRefreshZones()"><span>🔄</span>Refresh game list</button>
+            </div>
+        </section>
+
+        <!-- Messages -->
+        <section class="op-pane" data-pane="messages" hidden>
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Announcement banner</h4>
+                        <p>A colored bar under the header that every visitor sees.</p>
+                    </div>
+                    <label class="op-switch" title="Show banner">
+                        <input type="checkbox" id="owner-announcement-enabled" ${announcement.enabled ? "checked" : ""} data-dirty="banner">
+                        <span aria-hidden="true"></span><em class="sr-only">Show banner</em>
+                    </label>
+                </div>
+                <input type="text" class="op-input" id="owner-announcement-text" maxlength="200" placeholder="e.g. New games added every Friday!"
+                    value="${escapeHtml(announcement.text)}" data-dirty="banner">
+                <div class="op-preview-label">Preview</div>
+                <div class="op-banner-preview" id="op-banner-preview"></div>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--primary" data-save="banner" onclick="saveAnnouncementFromPanel()">Save banner</button>
+                </div>
+            </div>
+
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Message of the day</h4>
+                        <p>Pops up once a day when someone opens the site.</p>
+                    </div>
+                    <label class="op-switch" title="Show message of the day">
+                        <input type="checkbox" id="owner-motd-enabled" ${motd.enabled ? "checked" : ""} data-dirty="motd">
+                        <span aria-hidden="true"></span><em class="sr-only">Show message of the day</em>
+                    </label>
+                </div>
+                <textarea class="op-input" id="owner-motd-text" rows="3" maxlength="1000" placeholder="Write today's message…" data-dirty="motd">${escapeHtml(motd.text)}</textarea>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--ghost" onclick="previewMotd()">Preview</button>
+                    <button type="button" class="op-btn op-btn--ghost" onclick="resetMotdLastSeen()">Show it to me again</button>
+                    <button type="button" class="op-btn op-btn--primary" data-save="motd" onclick="saveMotdFromPanel()">Save message</button>
+                </div>
+            </div>
+
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Footer links</h4>
+                        <p>Extra links shown at the bottom of the page (Discord, socials, etc.).</p>
+                    </div>
+                </div>
+                <div id="op-link-rows" class="op-link-rows"></div>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--ghost" onclick="ownerAddLinkRow()">+ Add link</button>
+                    <button type="button" class="op-btn op-btn--primary" data-save="links" onclick="saveFooterLinksFromPanel()">Save links</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Games -->
+        <section class="op-pane" data-pane="games" hidden>
+            <div class="op-toolbar">
+                <input type="search" class="op-input" id="op-game-search" placeholder="Search by name or #id…"
+                    value="${escapeHtml(ownerPanelState.gameQuery)}" aria-label="Search games">
+                <div class="op-chips" role="group" aria-label="Filter games">
+                    <button type="button" class="op-chip" data-filter="all">All <b id="op-chip-all"></b></button>
+                    <button type="button" class="op-chip" data-filter="hidden">Hidden <b id="op-chip-hidden"></b></button>
+                    <button type="button" class="op-chip" data-filter="reported">Reported <b id="op-chip-reported"></b></button>
+                </div>
+            </div>
+            <p class="op-hint">Flip the switch off to hide a game from every visitor.</p>
+            <div id="owner-game-list" class="op-game-list"></div>
+            <div class="op-card-foot op-card-foot--split">
+                <div class="op-btn-group">
+                    <button type="button" class="op-btn op-btn--ghost op-btn--small" onclick="exportDisabledZones()">Export hidden list</button>
+                    <button type="button" class="op-btn op-btn--ghost op-btn--small" onclick="document.getElementById('owner-import-disabled').click()">Import</button>
+                    <input type="file" id="owner-import-disabled" accept=".json" hidden onchange="importDisabledZones(event)">
+                </div>
+                <button type="button" class="op-btn op-btn--small" onclick="enableAllZones()">Show all games</button>
+            </div>
+
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Broken reports · ${reportsFile.totalReports}</h4>
+                        <p>Reports made with the "Report Broken" button on this device.</p>
+                    </div>
+                </div>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--ghost" onclick="saveBrokenReportsFile()">Export JSON</button>
+                    <button type="button" class="op-btn op-btn--danger-ghost" onclick="clearBrokenReports()">Clear reports</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="op-pane" data-pane="settings" hidden>
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>☁️ GitHub sync</h4>
+                        <p>Your settings are saved to <code>${escapeHtml(GITHUB_SYNC_REPO)}/${escapeHtml(GITHUB_SYNC_FILE)}</code>, and every visitor loads them from there.</p>
+                    </div>
+                </div>
+                <label class="op-label" for="owner-pat-input">GitHub token ${storedPat ? `<span class="op-tag op-tag--ok">saved</span>` : `<span class="op-tag">not set</span>`}</label>
+                <div class="op-inline">
+                    <input type="password" class="op-input op-mono" id="owner-pat-input" autocomplete="off"
+                        placeholder="${storedPat ? "Paste a new token to replace the saved one" : "ghp_… or github_pat_…"}">
+                    <button type="button" class="op-btn op-btn--ghost" onclick="ownerTogglePatVisibility(this)">Show</button>
+                </div>
+                <div class="op-card-foot">
+                    ${storedPat ? `<button type="button" class="op-btn op-btn--danger-ghost" onclick="ownerRemovePat()">Remove token</button>` : ""}
+                    <button type="button" class="op-btn op-btn--primary" onclick="ownerSavePat()">Save token</button>
+                </div>
+            </div>
+
+            <div class="op-card">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Owner password</h4>
+                        <p>Changes the password on this device only.</p>
+                    </div>
+                </div>
+                <div class="op-inline">
+                    <input type="password" class="op-input" id="owner-new-pw" placeholder="New password" autocomplete="new-password">
+                    <input type="password" class="op-input" id="owner-new-pw2" placeholder="Confirm" autocomplete="new-password">
+                </div>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--primary" onclick="changeOwnerPassword()">Change password</button>
+                </div>
+            </div>
+
+            <div class="op-card op-card--danger">
+                <div class="op-card-head">
+                    <div>
+                        <h4>Danger zone</h4>
+                        <p>Reset clears site mode, hidden games, reports, banner, message and links on this device (and syncs if a token is set).</p>
+                    </div>
+                </div>
+                <div class="op-card-foot">
+                    <button type="button" class="op-btn op-btn--ghost" onclick="ownerSignOut()">Sign out</button>
+                    <button type="button" class="op-btn op-btn--danger" onclick="ownerResetAll()">Reset all owner data</button>
+                </div>
+            </div>
+        </section>
+    </div>`;
+
+    // Live banner preview
+    const bannerInput = document.getElementById("owner-announcement-text");
+    const bannerToggle = document.getElementById("owner-announcement-enabled");
+    const updateBannerPreview = () => {
+        const preview = document.getElementById("op-banner-preview");
+        const text = bannerInput.value.trim();
+        preview.textContent = text || "Your banner text will appear here";
+        preview.classList.toggle("is-empty", !text);
+        preview.classList.toggle("is-off", !bannerToggle.checked);
+    };
+    bannerInput.addEventListener("input", updateBannerPreview);
+    bannerToggle.addEventListener("change", updateBannerPreview);
+    updateBannerPreview();
+
+    // Mark save buttons when there are unsaved edits
+    popupBody.querySelectorAll("[data-dirty]").forEach(el => {
+        const markDirty = () => popupBody.querySelector(`[data-save="${el.dataset.dirty}"]`)?.classList.add("is-dirty");
+        el.addEventListener("input", markDirty);
+        el.addEventListener("change", markDirty);
+    });
+    bannerInput.addEventListener("keydown", e => { if (e.key === "Enter") saveAnnouncementFromPanel(); });
+
+    // Footer link rows
+    footerLinks.forEach(link => ownerAddLinkRow(link.label, link.url, { focus: false }));
+    if (!footerLinks.length) ownerAddLinkRow("", "", { focus: false });
+
+    // Games tab: search + filter chips
+    let searchTimer;
+    document.getElementById("op-game-search").addEventListener("input", e => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            ownerPanelState.gameQuery = e.target.value;
+            renderOwnerGameList();
+        }, 120);
+    });
+    popupBody.querySelectorAll(".op-chip").forEach(chip => {
+        chip.onclick = () => {
+            ownerPanelState.gameFilter = chip.dataset.filter;
+            renderOwnerGameList();
+        };
+    });
+
+    updateOwnerSyncBar();
+    updateOwnerStats();
+    ownerSwitchTab(ownerPanelState.tab);
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+function renderOwnerGameList() {
+    const list = document.getElementById("owner-game-list");
+    if (!list) return;
+    document.querySelectorAll(".op-chip").forEach(chip => {
+        chip.classList.toggle("is-active", chip.dataset.filter === ownerPanelState.gameFilter);
+    });
+
+    if (!zones.length) {
+        list.innerHTML = `<div class="op-empty">Games are still loading…</div>`;
+        return;
+    }
+
+    const disabled = getDisabledZoneIds();
+    const reports = getBrokenReports();
+    const query = ownerPanelState.gameQuery.trim().toLowerCase().replace(/^#/, "");
+    let items = zones.slice();
+    if (ownerPanelState.gameFilter === "hidden") items = items.filter(z => disabled.has(String(z.id)));
+    if (ownerPanelState.gameFilter === "reported") items = items.filter(z => reports[String(z.id)]);
+    if (query) items = items.filter(z => z.name.toLowerCase().includes(query) || String(z.id) === query);
+    if (ownerPanelState.gameFilter === "reported") {
+        items.sort((a, b) => (reports[String(b.id)]?.reports || 0) - (reports[String(a.id)]?.reports || 0));
+    } else {
+        items.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    list.innerHTML = "";
+    if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "op-empty";
+        empty.textContent = ownerPanelState.gameFilter === "hidden" ? "No hidden games — everything is live."
+            : ownerPanelState.gameFilter === "reported" ? "No broken reports. 🎉"
+            : "No games match that search.";
+        list.appendChild(empty);
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    items.forEach(zone => {
+        const id = String(zone.id);
+        const isHidden = disabled.has(id);
+        const reportCount = reports[id]?.reports || 0;
+
+        const row = document.createElement("div");
+        row.className = "op-game" + (isHidden ? " is-hidden" : "");
+
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.alt = "";
+        img.src = (zone.cover || "").replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+        img.onerror = () => { img.style.visibility = "hidden"; };
+        row.appendChild(img);
+
+        const info = document.createElement("div");
+        info.className = "op-game-info";
+        const name = document.createElement("div");
+        name.className = "op-game-name";
+        name.textContent = zone.name;
+        const meta = document.createElement("div");
+        meta.className = "op-game-meta";
+        meta.textContent = `#${id}` + (reportCount ? ` · ⚠️ ${reportCount} report${reportCount === 1 ? "" : "s"}` : "") + (isHidden ? " · hidden" : "");
+        info.append(name, meta);
+        row.appendChild(info);
+
+        const toggle = document.createElement("label");
+        toggle.className = "op-switch";
+        toggle.title = isHidden ? "Hidden — click to show" : "Visible — click to hide";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = !isHidden;
+        checkbox.setAttribute("aria-label", `Show ${zone.name}`);
+        checkbox.onchange = () => {
+            const hide = !checkbox.checked;
+            setZoneDisabled(zone.id, hide);
+            row.classList.toggle("is-hidden", hide);
+            toggle.title = hide ? "Hidden — click to show" : "Visible — click to hide";
+            meta.textContent = `#${id}` + (reportCount ? ` · ⚠️ ${reportCount} report${reportCount === 1 ? "" : "s"}` : "") + (hide ? " · hidden" : "");
+            updateOwnerStats();
+            showToast(hide ? `Hidden: ${zone.name}` : `Visible: ${zone.name}`, hide ? "info" : "success");
+        };
+        const knob = document.createElement("span");
+        knob.setAttribute("aria-hidden", "true");
+        toggle.append(checkbox, knob);
+        row.appendChild(toggle);
+
+        fragment.appendChild(row);
+    });
+    list.appendChild(fragment);
+}
+
+function ownerAddLinkRow(label = "", url = "", { focus = true } = {}) {
+    const rows = document.getElementById("op-link-rows");
+    if (!rows) return;
+    const row = document.createElement("div");
+    row.className = "op-link-row";
+    row.innerHTML = `
+        <input type="text" class="op-input" placeholder="Label (e.g. Discord)" maxlength="40" data-link-label>
+        <input type="url" class="op-input" placeholder="https://…" data-link-url>
+        <button type="button" class="op-icon-btn" title="Remove link" aria-label="Remove link">✕</button>`;
+    row.querySelector("[data-link-label]").value = label;
+    row.querySelector("[data-link-url]").value = url;
+    const markDirty = () => document.querySelector('[data-save="links"]')?.classList.add("is-dirty");
+    row.querySelectorAll("input").forEach(input => input.addEventListener("input", markDirty));
+    row.querySelector("button").onclick = () => { row.remove(); markDirty(); };
+    rows.appendChild(row);
+    if (focus) row.querySelector("input").focus();
+}
+
+function ownerTogglePatVisibility(button) {
+    const input = document.getElementById("owner-pat-input");
+    if (!input) return;
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "Hide" : "Show";
+}
+
+function previewMotd() {
+    const text = document.getElementById("owner-motd-text")?.value.trim();
+    if (!text) { showToast("Write a message first.", "error"); return; }
+    let preview = document.getElementById("op-motd-preview");
+    if (preview) preview.remove();
+    preview = document.createElement("div");
+    preview.id = "op-motd-preview";
+    preview.innerHTML = `
+        <div class="op-motd-card" role="dialog" aria-label="Message preview">
+            <div class="op-motd-head">📢 Notice <small>preview</small></div>
+            <p></p>
+            <button type="button" class="settings-button">Got it</button>
+        </div>`;
+    preview.querySelector("p").textContent = text;
+    preview.querySelector("button").onclick = () => preview.remove();
+    preview.addEventListener("mousedown", e => { if (e.target === preview) preview.remove(); });
+    document.body.appendChild(preview);
+}
+
+function clearBrokenReports() {
+    if (!confirm("Clear all broken game reports?")) return;
+    setBrokenReports({});
+    renderOwnerPanel();
+    showToast("Reports cleared.", "success");
+}
+
+// ── Announcement banner ──────────────────────────────────────────────────────
+
+function getAnnouncement() {
+    return {
+        text: localStorage.getItem(OWNER_STORAGE_KEYS.announcement) || "",
+        enabled: localStorage.getItem(OWNER_STORAGE_KEYS.announcementEnabled) === "true"
+    };
+}
+
+function setAnnouncement(text, enabled) {
+    localStorage.setItem(OWNER_STORAGE_KEYS.announcement, text);
+    localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, enabled ? "true" : "false");
+    applyAnnouncement();
+    githubAutoSync();
+}
+
+function saveAnnouncementFromPanel() {
+    const text    = (document.getElementById('owner-announcement-text')?.value ?? "").trim();
+    const enabled = document.getElementById('owner-announcement-enabled')?.checked ?? false;
+    if (enabled && !text) {
+        showToast("Type a message before turning the banner on.", "error");
+        return;
+    }
+    setAnnouncement(text, enabled);
+    document.querySelector('[data-save="banner"]')?.classList.remove("is-dirty");
+    showToast(enabled ? "Banner saved and showing." : "Banner saved (hidden).", "success");
+}
+
+function applyAnnouncement() {
+    const existing = document.getElementById("owner-announcement-bar");
+    const { text, enabled } = getAnnouncement();
+
+    if (!enabled || !text.trim()) {
+        if (existing) existing.remove();
+        return;
+    }
+
+    const bar = existing || document.createElement("div");
+    bar.id = "owner-announcement-bar";
+    bar.setAttribute("role", "status");
+    bar.textContent = "📢 " + text;
+
+    if (!existing) {
+        const header = document.querySelector("header");
+        header.insertAdjacentElement("afterend", bar);
+    }
+}
+
+// ── Disabled zones export / import ──────────────────────────────────────────
+
+function exportDisabledZones() {
+    const disabledIds = Array.from(getDisabledZoneIds());
+    downloadJsonFile("disabled-zones.json", { disabledZoneIds: disabledIds, exportedAt: new Date().toISOString() });
+}
+
+function importDisabledZones(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data.disabledZoneIds)) throw new Error("this isn't a hidden-games file");
+            setDisabledZoneIds(new Set(data.disabledZoneIds.map(String)));
+            featuredContainer.innerHTML = "";
+            sortZones();
+            githubAutoSync();
+            renderOwnerPanel();
+            showToast(`Imported ${data.disabledZoneIds.length} hidden game(s).`, "success");
+        } catch (err) {
+            showToast("Import failed: " + err.message, "error");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+}
+
+function enableAllZones() {
+    const hiddenCount = getDisabledZoneIds().size;
+    if (!hiddenCount) { showToast("No games are hidden."); return; }
+    if (!confirm(`Show all ${hiddenCount} hidden game(s) again?`)) return;
+    setDisabledZoneIds(new Set());
+    featuredContainer.innerHTML = "";
+    sortZones();
+    githubAutoSync();
+    renderOwnerPanel();
+    showToast("All games are visible.", "success");
+}
+
+// ── Force zone cache refresh ─────────────────────────────────────────────────
+
+async function forceRefreshZones() {
+    showToast("Refreshing game list…");
+    featuredContainer.innerHTML = "";
+    showZoneSkeletons();
+    _allStatsCache = null;
+    popularityData = {};
+    await listZones();
+    showToast(`Game list refreshed — ${zones.length.toLocaleString()} games.`, "success");
+    if (document.querySelector("#popupBody .op")) renderOwnerPanel();
+}
+
+// ── Reset all owner data ─────────────────────────────────────────────────────
+
+function ownerResetAll() {
+    if (!confirm("Reset ALL owner data? This clears site mode, hidden games, broken reports, the banner, the message of the day and footer links.")) return;
+    localStorage.removeItem(OWNER_STORAGE_KEYS.siteMode);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.disabledZones);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.announcement);
+    localStorage.removeItem(OWNER_STORAGE_KEYS.announcementEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motd);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, "[]");
+    applyOwnerSiteMode();
+    applyAnnouncement();
+    applyFooterLinks();
+    featuredContainer.innerHTML = "";
+    sortZones();
+    githubAutoSync();
+    renderOwnerPanel();
+    showToast("All owner data reset.", "success");
+}
+
+const AVAILABLE_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
+const TAB_CLOAK_STORAGE_KEYS = {
+    title: "gnmath-tab-cloak-title",
+    icon: "gnmath-tab-cloak-icon",
+    initialized: "gnmath-tab-cloak-initialized"
+};
+const PREVIEW_CLOAK_STORAGE_KEYS = {
+    enabled: "gnmath-preview-cloak-enabled",
+    sensitivity: "gnmath-preview-cloak-sensitivity"
+};
+const APP_SETTINGS_STORAGE_KEYS = {
+    warnBeforeUnload: "gnmath-warn-before-unload",
+    reducedMotion: "gnmath-reduced-motion",
+    customPrimaryColor: "gnmath-custom-primary-color",
+    cardSize: "gnmath-card-size",
+    fontSize: "gnmath-font-size",
+    defaultSort: "gnmath-default-sort",
+    hideFeatured: "gnmath-hide-featured",
+    compactMode: "gnmath-compact-mode",
+    autofocusSearch: "gnmath-autofocus-search",
+    showPlayCount: "gnmath-show-play-count"
+};
+const OWNER_EXTRA_STORAGE_KEYS = {
+    motd: "gnmath-owner-motd",
+    motdEnabled: "gnmath-owner-motd-enabled",
+    motdLastSeen: "gnmath-owner-motd-lastseen",
+    customPassword: "gnmath-owner-custom-password",
+    footerLinks: "gnmath-owner-footer-links"
+};
+const OWNER_PASSWORD = "1345";
+const OWNER_STORAGE_KEYS = {
+    siteMode: "gnmath-owner-site-mode",
+    disabledZones: "gnmath-owner-disabled-zones",
+    brokenReports: "gnmath-broken-zone-reports",
+    announcement: "gnmath-owner-announcement",
+    announcementEnabled: "gnmath-owner-announcement-enabled",
+    githubPat: "gnmath-owner-github-pat"
+};
+const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
+
+// ── GitHub Sync ──────────────────────────────────────────────────────────────
+const GITHUB_SYNC_REPO  = "paxtolins/Gn-2.0";
+const GITHUB_SYNC_FILE  = "owner-settings.json";
+const GITHUB_SYNC_URL   = `https://api.github.com/repos/${GITHUB_SYNC_REPO}/contents/${GITHUB_SYNC_FILE}`;
+// Public CDN URL — readable by ALL visitors (no token needed)
+const GITHUB_SYNC_CDN   = `https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/${GITHUB_SYNC_FILE}`;
+
+function getGithubPat() {
+    return localStorage.getItem(OWNER_STORAGE_KEYS.githubPat) || "";
+}
+function setGithubPat(pat) {
+    localStorage.setItem(OWNER_STORAGE_KEYS.githubPat, pat.trim());
+}
+
+/** Collect all current owner settings into one object */
+function buildOwnerSettingsObject() {
+    return {
+        siteMode:      getOwnerSiteMode(),
+        disabledZones: Array.from(getDisabledZoneIds()),
+        announcement: {
+            text:    getAnnouncement().text,
+            enabled: getAnnouncement().enabled
+        },
+        motd: {
+            text:    getMotd().text,
+            enabled: getMotd().enabled
+        },
+        footerLinks: getFooterLinks() || [],
+        updatedAt: new Date().toISOString()
+    };
+}
+
+/** Apply a settings object that was loaded from GitHub */
+function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
+    if (!settings || typeof settings !== "object") return;
+
+    if (typeof settings.siteMode === "string") {
+        localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, settings.siteMode);
+        applyOwnerSiteMode();
+    }
+    if (Array.isArray(settings.disabledZones)) {
+        setDisabledZoneIds(new Set(settings.disabledZones.map(String)));
+        if (rerender) { featuredContainer.innerHTML = ""; sortZones(); }
+    }
+    if (settings.announcement && typeof settings.announcement === "object") {
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcement, settings.announcement.text ?? "");
+        localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, settings.announcement.enabled ? "true" : "false");
+        applyAnnouncement();
+    }
+    if (settings.motd && typeof settings.motd === "object") {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, settings.motd.text ?? "");
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, settings.motd.enabled ? "true" : "false");
+    }
+    if (Array.isArray(settings.footerLinks)) {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));
+        applyFooterLinks();
+    }
+}
+
+/** Debounced auto-sync — waits 1.5 s after the last change before pushing */
+let _autoSyncTimer = null;
+function githubAutoSync() {
+    if (!getGithubPat()) return;          // no token stored → skip silently
+    clearTimeout(_autoSyncTimer);
+    updateOwnerSyncBar("busy");
+    _autoSyncTimer = setTimeout(async () => {
+        let ok = false;
+        try { ok = await githubSyncPush(); } catch (_) {}
+        if (ok) {
+            localStorage.setItem(OWNER_LAST_SYNC_KEY, new Date().toISOString());
+            updateOwnerSyncBar();
+        } else {
+            updateOwnerSyncBar("error");
+            showToast("Couldn't save to GitHub — check your token.", "error");
+        }
+    }, 1500);
+}
+
+/** Push current settings to GitHub. Returns true on success. */
+async function githubSyncPush() {
+    const pat = getGithubPat();
+    if (!pat) return false;
+
+    const content = btoa(unescape(encodeURIComponent(
+        JSON.stringify(buildOwnerSettingsObject(), null, 2)
+    )));
+
+    // Fetch current SHA (needed for updates)
+    let sha;
+    try {
+        const res = await fetch(GITHUB_SYNC_URL, {
+            headers: { Authorization: `token ${pat}`, Accept: "application/vnd.github+json" }
+        });
+        if (res.ok) {
+            const json = await res.json();
+            sha = json.sha;
+        }
+    } catch (_) {}
+
+    const body = { message: "chore: update owner-settings", content };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(GITHUB_SYNC_URL, {
+        method:  "PUT",
+        headers: {
+            Authorization: `token ${pat}`,
+            Accept:        "application/vnd.github+json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    return putRes.ok;
+}
+
+/** Pull settings from the public CDN (works for all visitors, no token). */
+async function githubSyncPull({ rerender = false } = {}) {
+    try {
+        // Use the GitHub API endpoint instead of raw CDN — CDN caches for up to
+        // 5 minutes which means lock/shutdown/open changes don't propagate fast.
+        // The API endpoint is always fresh (no CDN cache). No token needed for
+        // public repos — it just returns slightly less data per minute on the
+        // unauthenticated rate limit (60 req/hr), which is fine for a settings pull.
+        const pat = getGithubPat();
+        const headers = { Accept: "application/vnd.github+json" };
+        if (pat) headers.Authorization = `token ${pat}`;
+
+        const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), { headers });
+        if (!res.ok) return false;
+        const json = await res.json();
+
+        // API returns base64-encoded content — decode it
+        const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ""))));
+        const settings = JSON.parse(decoded);
+        applyOwnerSettingsObject(settings, { rerender });
+        return true;
+    } catch (_) { return false; }
+}
+
+/** Push to GitHub right now. */
+async function ownerSyncSave() {
+    if (!getGithubPat()) {
+        showToast("Add a GitHub token in Settings first.", "error");
+        ownerSwitchTab("settings");
+        return;
+    }
+    clearTimeout(_autoSyncTimer);
+    updateOwnerSyncBar("busy");
+    try {
+        const ok = await githubSyncPush();
+        if (!ok) throw new Error("GitHub rejected the save — make sure the token can write to the repo");
+        localStorage.setItem(OWNER_LAST_SYNC_KEY, new Date().toISOString());
+        updateOwnerSyncBar();
+        showToast("Saved to GitHub — visitors get it on their next visit.", "success");
+    } catch (e) {
+        updateOwnerSyncBar("error");
+        showToast(e.message, "error");
+    }
+}
+
+/** Save the token typed into the Settings tab. */
+function ownerSavePat() {
+    const input = document.getElementById("owner-pat-input");
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) { showToast("Paste a token first.", "error"); input.focus(); return; }
+    if (!/^(ghp_|github_pat_|gho_|ghu_|ghs_)/.test(val)) {
+        if (!confirm("That doesn't look like a GitHub token (they usually start with ghp_ or github_pat_). Save it anyway?")) return;
+    }
+    setGithubPat(val);
+    renderOwnerPanel();
+    showToast("Token saved on this device. Syncing…", "success");
+    ownerSyncSave();
+}
+
+function ownerRemovePat() {
+    if (!confirm("Remove the saved GitHub token from this device? Changes will stop syncing.")) return;
+    localStorage.removeItem(OWNER_STORAGE_KEYS.githubPat);
+    renderOwnerPanel();
+    showToast("Token removed.");
+}
+
+/** Manual pull — fetch latest settings from GitHub and apply. */
+async function ownerSyncPullManual() {
+    showToast("Pulling latest settings…");
+    const ok = await githubSyncPull({ rerender: true });
+    renderOwnerPanel();
+    showToast(ok ? "Pulled the latest settings from GitHub." : "Couldn't reach GitHub — try again in a minute.", ok ? "success" : "error");
+}
+const TAB_CLOAK_PRESETS = {
+    canvas: {
+        label: "Canvas",
+        title: "Dashboard",
+        icon: "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico"
+    },
+    googleClassroom: {
+        label: "Google Classroom",
+        title: "Classes",
+        icon: "https://ssl.gstatic.com/classroom/favicon.png"
+    },
+    googleDrive: {
+        label: "Google Drive",
+        title: "My Drive - Google Drive",
+        icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_32dp.png"
+    }
+};
+
+function applySavedSettings() {
+    const savedMode = localStorage.getItem("gnmath-mode");
+    if (savedMode === "light") {
+        document.body.classList.remove("dark-mode");
+    } else {
+        document.body.classList.add("dark-mode");
+    }
+
+    const savedTheme = localStorage.getItem("gnmath-theme") || "red";
+    setTheme(savedTheme);
+    applyStoredCustomPrimaryColor();
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
+    applyBehaviorSettings();
+    applyOwnerSiteMode();
+    applyAnnouncement();
+    setupTabPreviewCloak();
+    initializeDefaultTabCloak();
+    applyStoredTabCloak();
+    applyCardSize();
+    applyFontSize();
+    applyCompactMode();
+    applyHideFeatured();
+    applyDefaultSort();
+    applyFooterLinks();
+}
+
+// ── Card size ────────────────────────────────────────────────────────────────
+function getCardSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.cardSize) || "medium"; }
+function setCardSize(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.cardSize, val);
+    applyCardSize();
+}
+function applyCardSize() {
+    document.body.classList.remove("cards-small", "cards-large", "cards-list");
+    const v = getCardSize();
+    if (v !== "medium") document.body.classList.add(`cards-${v}`);
+}
+
+// ── Font size ────────────────────────────────────────────────────────────────
+function getFontSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.fontSize) || "medium"; }
+function setFontSize(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.fontSize, val);
+    applyFontSize();
+}
+function applyFontSize() {
+    document.body.classList.remove("font-small", "font-large");
+    const v = getFontSize();
+    if (v !== "medium") document.body.classList.add(`font-${v}`);
+}
+
+// ── Compact mode ─────────────────────────────────────────────────────────────
+function getCompactMode() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.compactMode) === "true"; }
+function setCompactMode(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.compactMode, val ? "true" : "false");
+    applyCompactMode();
+}
+function applyCompactMode() {
+    document.body.classList.toggle("compact-mode", getCompactMode());
+}
+
+// ── Hide featured ─────────────────────────────────────────────────────────────
+function getHideFeatured() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured) === "true"; }
+function setHideFeatured(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured, val ? "true" : "false");
+    applyHideFeatured();
+}
+function applyHideFeatured() {
+    const wrapper = document.getElementById("featuredZonesWrapper");
+    if (wrapper) wrapper.style.display = getHideFeatured() ? "none" : "";
+}
+
+// ── Default sort ──────────────────────────────────────────────────────────────
+function getDefaultSort() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.defaultSort) || "name"; }
+function setDefaultSort(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.defaultSort, val);
+}
+function applyDefaultSort() {
+    const s = getDefaultSort();
+    const el = document.getElementById("sortOptions");
+    if (el && el.value !== s) { el.value = s; sortZones(); }
+}
+
+// ── Autofocus search ──────────────────────────────────────────────────────────
+function getAutofocusSearch() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch) !== "false"; }
+function setAutofocusSearch(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, val ? "true" : "false");
+}
+
+// ── Show play count on cards ──────────────────────────────────────────────────
+function getShowPlayCount() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount) === "true"; }
+function setShowPlayCount(val) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount, val ? "true" : "false");
+    featuredContainer.innerHTML = "";
+    sortZones();
+}
+
+// ── MOTD (owner, synced) ──────────────────────────────────────────────────────
+function getMotd() {
+    return {
+        text: localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motd) || "",
+        enabled: localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled) === "true"
+    };
+}
+function setMotd(text, enabled) {
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, text);
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, enabled ? "true" : "false");
+    githubAutoSync();
+}
+function maybeShowMotd() {
+    const { text, enabled } = getMotd();
+    if (!enabled || !text.trim()) return;
+    const last = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen) || "";
+    const today = new Date().toDateString();
+    if (last === today) return;
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen, today);
+    // show as a popup
+    document.getElementById('popupTitle').textContent = "📢 Notice";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `<p style="white-space:pre-wrap;">${text.replace(/</g,'&lt;')}</p>
+        <button class="settings-button" onclick="closePopup()">Got it</button>`;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+// ── Owner password change ─────────────────────────────────────────────────────
+function getOwnerPassword() {
+    return localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.customPassword) || OWNER_PASSWORD;
+}
+function changeOwnerPassword() {
+    const pw1 = document.getElementById("owner-new-pw")?.value || "";
+    const pw2 = document.getElementById("owner-new-pw2")?.value || "";
+    if (!pw1) { showToast("Type a new password.", "error"); return; }
+    if (pw1.length < 4) { showToast("Use at least 4 characters.", "error"); return; }
+    if (pw1 !== pw2) { showToast("The two passwords don't match.", "error"); return; }
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.customPassword, pw1);
+    document.getElementById("owner-new-pw").value = "";
+    document.getElementById("owner-new-pw2").value = "";
+    showToast("Password changed on this device.", "success");
+}
+
+// ── MOTD panel helpers ────────────────────────────────────────────────────────
+function saveMotdFromPanel() {
+    const text    = (document.getElementById("owner-motd-text")?.value ?? "").trim();
+    const enabled = document.getElementById("owner-motd-enabled")?.checked ?? false;
+    if (enabled && !text) { showToast("Write a message before turning it on.", "error"); return; }
+    setMotd(text, enabled);
+    document.querySelector('[data-save="motd"]')?.classList.remove("is-dirty");
+    showToast(enabled ? "Message saved — visitors see it once a day." : "Message saved (turned off).", "success");
+}
+function resetMotdLastSeen() {
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
+    showToast("You'll see the message again next time you load the site.");
+}
+
+// ── Footer links panel helpers ────────────────────────────────────────────────
+function saveFooterLinksFromPanel() {
+    const rows = Array.from(document.querySelectorAll("#op-link-rows .op-link-row"));
+    const links = [];
+    for (const row of rows) {
+        const label = row.querySelector("[data-link-label]").value.trim();
+        let url = row.querySelector("[data-link-url]").value.trim();
+        if (!label && !url) continue;
+        if (!label || !url) { showToast("Each link needs both a label and a URL.", "error"); return; }
+        if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+        try { new URL(url); } catch (_) { showToast(`"${url}" isn't a valid link.`, "error"); return; }
+        links.push({ label, url });
+    }
+    setFooterLinks(links);
+    document.querySelector('[data-save="links"]')?.classList.remove("is-dirty");
+    showToast(links.length ? `Saved ${links.length} footer link${links.length === 1 ? "" : "s"}.` : "Footer links cleared.", "success");
+}
+function clearFooterLinks() {
+    if (!confirm("Remove all custom footer links?")) return;
+    setFooterLinks([]);
+    renderOwnerPanel();
+}
+
+// ── Custom footer links (owner, synced) ───────────────────────────────────────
+function getFooterLinks() {
+    try {
+        const stored = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks);
+        return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+}
+function setFooterLinks(links) {
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(links));
+    applyFooterLinks();
+    githubAutoSync();
+}
+function applyFooterLinks() {
+    const links = getFooterLinks();
+    if (!links || !Array.isArray(links)) return;
+    const footer = document.querySelector('.footer-links');
+    if (!footer) return;
+    // keep the built-in links, append custom ones (avoid duplicates by data attr)
+    footer.querySelectorAll('[data-owner-link]').forEach(el => el.remove());
+    links.forEach(({ label, url }) => {
+        if (!label || !url) return;
+        const a = document.createElement('a');
+        a.href = url;
+        a.textContent = label;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.dataset.ownerLink = '1';
+        footer.appendChild(a);
+    });
+}
+
+function darkMode() {
+    document.body.classList.toggle("dark-mode");
+    const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
+    localStorage.setItem("gnmath-mode", mode);
+}
+
+function setTheme(themeName) {
+    const safeTheme = AVAILABLE_THEMES.includes(themeName) ? themeName : "red";
+    document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
+    document.body.classList.add(`theme-${safeTheme}`);
+    localStorage.setItem("gnmath-theme", safeTheme);
+    clearCustomPrimaryColor();
+    updateThemeButtons();
+}
+
+function updateThemeButtons() {
+    const activeTheme = localStorage.getItem("gnmath-theme") || "red";
+    const buttons = document.querySelectorAll("[data-theme-option]");
+    buttons.forEach(button => {
+        const isActive = button.dataset.themeOption === activeTheme;
+        button.classList.toggle("active", isActive);
+    });
+}
+
+function clampColor(value) {
+    return Math.max(0, Math.min(255, value));
+}
+
+function adjustHexColor(hexColor, adjustment) {
+    const normalizedHex = (hexColor || "").replace("#", "");
+    if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+        return "#fc2651";
+    }
+
+    const r = clampColor(parseInt(normalizedHex.slice(0, 2), 16) + adjustment);
+    const g = clampColor(parseInt(normalizedHex.slice(2, 4), 16) + adjustment);
+    const b = clampColor(parseInt(normalizedHex.slice(4, 6), 16) + adjustment);
+
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+function hexToRgb(hexColor) {
+    const normalizedHex = (hexColor || "").replace("#", "");
+    if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+        return { r: 252, g: 38, b: 81 };
+    }
+
+    return {
+        r: parseInt(normalizedHex.slice(0, 2), 16),
+        g: parseInt(normalizedHex.slice(2, 4), 16),
+        b: parseInt(normalizedHex.slice(4, 6), 16)
+    };
+}
+
+function getCustomPrimaryColor() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+}
+
+function clearCustomPrimaryColorStyles() {
+    const style = document.body.style;
+    style.removeProperty("--primary");
+    style.removeProperty("--primary-hover");
+    style.removeProperty("--primary-light");
+    style.removeProperty("--primary-lighter");
+    style.removeProperty("--shadow-glow");
+    style.removeProperty("--gradient-primary");
+}
+
+function applyCustomPrimaryColor(hexColor) {
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(hexColor || "") ? hexColor : "#fc2651";
+    const hoverColor = adjustHexColor(safeColor, -20);
+    const rgb = hexToRgb(safeColor);
+    const style = document.body.style;
+
+    style.setProperty("--primary", safeColor);
+    style.setProperty("--primary-hover", hoverColor);
+    style.setProperty("--primary-light", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`);
+    style.setProperty("--primary-lighter", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`);
+    style.setProperty("--shadow-glow", `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
+    style.setProperty("--gradient-primary", `linear-gradient(135deg, ${safeColor} 0%, ${hoverColor} 100%)`);
+}
+
+function setCustomPrimaryColor(hexColor) {
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(hexColor || "") ? hexColor : "#fc2651";
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor, safeColor);
+    applyCustomPrimaryColor(safeColor);
+}
+
+function clearCustomPrimaryColor() {
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+    clearCustomPrimaryColorStyles();
+}
+
+function applyStoredCustomPrimaryColor() {
+    const customColor = getCustomPrimaryColor();
+    clearCustomPrimaryColorStyles();
+    if (customColor) {
+        applyCustomPrimaryColor(customColor);
+    }
+}
+
+function initializeDefaultTabCloak() {
+    if (localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.initialized)) {
+        return;
+    }
+
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, TAB_CLOAK_PRESETS.canvas.title);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, TAB_CLOAK_PRESETS.canvas.icon);
+    localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.initialized, "true");
+}
+
+function getStoredTabCloak() {
+    return {
+        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
+        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
+    };
+}
+
+function applyStoredTabCloak() {
+    const storedCloak = getStoredTabCloak();
+    cloakName(storedCloak.title, { persist: false });
+    cloakIcon(storedCloak.icon, { persist: false });
+}
+
+function getWarnBeforeUnloadEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+}
+
+function setWarnBeforeUnloadEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, isEnabled ? "true" : "false");
+    updateBeforeUnloadProtection();
+}
+
+function updateBeforeUnloadProtection() {
+    window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    if (getWarnBeforeUnloadEnabled()) {
+        window.addEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    }
+}
+
+function getReducedMotionEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+}
+
+function setReducedMotionEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion, isEnabled ? "true" : "false");
+    document.body.classList.toggle("reduced-motion", isEnabled);
+}
+
+function applyBehaviorSettings() {
+    updateBeforeUnloadProtection();
+    document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
+}
+
+function getPreviewCloakEnabled() {
+    return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
+}
+
+function setPreviewCloakEnabled(isEnabled) {
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
+    if (!isEnabled) {
+        setTabPreviewCloak(false);
+    }
+}
+
+function getPreviewCloakSensitivity() {
+    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "medium";
+    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
+        return "medium";
+    }
+    return sensitivity;
+}
+
+function setPreviewCloakSensitivity(sensitivity) {
+    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "medium";
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+}
+
+function ensureTabPreviewOverlay() {
+    let overlay = document.getElementById("tab-preview-cloak-overlay");
+    if (overlay) {
+        return overlay;
+    }
+
+    overlay = document.createElement("div");
+    overlay.id = "tab-preview-cloak-overlay";
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function setTabPreviewCloak(enabled) {
+    const overlay = ensureTabPreviewOverlay();
+    const shouldShow = enabled && getPreviewCloakEnabled();
+    overlay.style.display = shouldShow ? "block" : "none";
+}
+
+function handlePreviewCloakTrigger(reason) {
+    if (!getPreviewCloakEnabled()) {
+        setTabPreviewCloak(false);
+        return;
+    }
+
+    const sensitivity = getPreviewCloakSensitivity();
+
+    if (document.hidden) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "mouseleave" && ["medium", "high"].includes(sensitivity)) {
+        setTabPreviewCloak(true);
+        return;
+    }
+
+    if (reason === "windowmouseout" && sensitivity === "high") {
+        setTabPreviewCloak(true);
+    }
+}
+
+function setupTabPreviewCloak() {
+    ensureTabPreviewOverlay();
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            setTabPreviewCloak(true);
+        } else {
+            setTabPreviewCloak(false);
+        }
+    });
+
+    document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
+    document.addEventListener("mouseenter", () => {
+        if (!document.hidden && document.hasFocus()) {
+            setTabPreviewCloak(false);
+        }
+    });
+
+    window.addEventListener("mouseout", event => {
+        if (!event.relatedTarget && !event.toElement) {
+            handlePreviewCloakTrigger("windowmouseout");
+        }
+    });
+    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    window.addEventListener("focus", () => setTabPreviewCloak(false));
+
+}
+
+function cloakIcon(url, { persist = true } = {}) {
+    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement("link");
+    }
+    link.rel = "icon";
+    link.href = iconUrl;
+    document.head.appendChild(link);
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
+    }
+}
+
+function cloakName(title, { persist = true } = {}) {
+    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    document.title = nextTitle;
+
+    if (persist) {
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.title, nextTitle);
+    }
+}
+
+function applyTabCloakPreset(presetKey) {
+    const preset = TAB_CLOAK_PRESETS[presetKey];
+    if (!preset) {
+        return;
+    }
+
+    cloakName(preset.title);
+    cloakIcon(preset.icon);
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = preset.title;
+    if (iconInput) iconInput.value = preset.icon;
+}
+
+function resetTabCloak() {
+    cloakName("gn-math");
+    cloakIcon("favicon.png");
+
+    const titleInput = document.getElementById('tab-cloak-title-input');
+    const iconInput = document.getElementById('tab-cloak-icon-input');
+    if (titleInput) titleInput.value = "";
+    if (iconInput) iconInput.value = "";
+}
+
+function resetAppearanceSettings() {
+    localStorage.removeItem("gnmath-mode");
+    localStorage.removeItem("gnmath-theme");
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.title);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.icon);
+    localStorage.removeItem(TAB_CLOAK_STORAGE_KEYS.initialized);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled);
+    localStorage.removeItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.customPrimaryColor);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.cardSize);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.fontSize);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.defaultSort);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.compactMode);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch);
+    localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount);
+    clearCustomPrimaryColorStyles();
+    location.reload();
+}
+
+function tabCloak() {
+    closePopup();
+    document.getElementById('popupTitle').textContent = "Tab Cloak";
+    const popupBody = document.getElementById('popupBody');
+    const storedCloak = getStoredTabCloak();
+
+    popupBody.innerHTML = `
+        <p style="margin-top: 0;">Tab cloak is set to <b>Canvas</b> by default on first load. You can customize it below.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="settings-button" onclick="applyTabCloakPreset('canvas')">Canvas</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleClassroom')">Classroom</button>
+            <button class="settings-button" onclick="applyTabCloakPreset('googleDrive')">Drive</button>
+            <button class="settings-button" onclick="resetTabCloak()">Reset</button>
+        </div>
+        <label for="tab-cloak-title-input" style="font-weight: bold;">Set Tab Title:</label><br>
+        <input type="text" id="tab-cloak-title-input" placeholder="Enter new tab name..." oninput="cloakName(this.value)">
+        <br><br>
+        <label for="tab-cloak-icon-input" style="font-weight: bold;">Set Tab Icon:</label><br>
+        <input type="text" id="tab-cloak-icon-input" placeholder="Enter new tab icon URL..." oninput='cloakIcon(this.value)'>
+    `;
+    document.getElementById('tab-cloak-title-input').value = storedCloak.title;
+    document.getElementById('tab-cloak-icon-input').value = storedCloak.icon;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+const settings = document.getElementById('settings');
+settings.addEventListener('click', () => openSettingsPanel());
+
+function openSettingsPanel() {
+    document.getElementById('popupTitle').textContent = "Settings";
+    const popupBody = document.getElementById('popupBody');
+    const previewCloakEnabled    = getPreviewCloakEnabled();
+    const previewCloakSensitivity = getPreviewCloakSensitivity();
+    const warnBeforeUnload       = getWarnBeforeUnloadEnabled();
+    const reducedMotion          = getReducedMotionEnabled();
+    const customPrimaryColor     = getCustomPrimaryColor() || "#fc2651";
+    const cardSize               = getCardSize();
+    const fontSize               = getFontSize();
+    const defaultSort            = getDefaultSort();
+    const hideFeatured           = getHideFeatured();
+    const compactMode            = getCompactMode();
+    const autofocusSearch        = getAutofocusSearch();
+    const showPlayCount          = getShowPlayCount();
+
+    popupBody.innerHTML = `
+    <div class="settings-section">
+        <h4>Appearance</h4>
+        <button class="settings-button" onclick="darkMode()">Toggle Dark/Light Mode</button>
+        <br><br>
+        <div style="font-weight:700;margin-bottom:0.5rem;">Theme Color</div>
+        <div class="theme-options" style="grid-template-columns:repeat(4,1fr);">
+            <button class="theme-button" data-theme-option="red"    onclick="setTheme('red')">Red</button>
+            <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
+            <button class="theme-button" data-theme-option="blue"   onclick="setTheme('blue')">Blue</button>
+            <button class="theme-button" data-theme-option="green"  onclick="setTheme('green')">Green</button>
+            <button class="theme-button" data-theme-option="purple" onclick="setTheme('purple')">Purple</button>
+            <button class="theme-button" data-theme-option="pink"   onclick="setTheme('pink')">Pink</button>
+            <button class="theme-button" data-theme-option="cyan"   onclick="setTheme('cyan')">Cyan</button>
+        </div>
+        <br>
+        <label for="custom-theme-color" style="display:block;margin-bottom:0.4rem;">Custom primary color</label>
+        <div class="settings-inline">
+            <input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)">
+            <button class="theme-button" type="button" onclick="clearCustomPrimaryColor()">Clear Custom</button>
+        </div>
+        <br>
+        <label style="display:block;margin-bottom:0.4rem;">Font size</label>
+        <select class="settings-select" onchange="setFontSize(this.value)">
+            <option value="small"  ${fontSize === 'small'  ? 'selected' : ''}>Small</option>
+            <option value="medium" ${fontSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
+            <option value="large"  ${fontSize === 'large'  ? 'selected' : ''}>Large</option>
+        </select>
+        <br><br>
+        <div class="settings-inline">
+            <label>Compact header</label>
+            <input type="checkbox" ${compactMode ? 'checked' : ''} onchange="setCompactMode(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Reduce motion effects</label>
+            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? 'checked' : ''} onchange="setReducedMotionEnabled(this.checked)">
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Game Grid</h4>
+        <label style="display:block;margin-bottom:0.4rem;">Card size</label>
+        <select class="settings-select" onchange="setCardSize(this.value)">
+            <option value="small"  ${cardSize === 'small'  ? 'selected' : ''}>Small</option>
+            <option value="medium" ${cardSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
+            <option value="large"  ${cardSize === 'large'  ? 'selected' : ''}>Large</option>
+            <option value="list"   ${cardSize === 'list'   ? 'selected' : ''}>List view</option>
+        </select>
+        <br><br>
+        <label style="display:block;margin-bottom:0.4rem;">Default sort</label>
+        <select class="settings-select" onchange="setDefaultSort(this.value)">
+            <option value="name"          ${defaultSort === 'name'          ? 'selected' : ''}>Name</option>
+            <option value="id"            ${defaultSort === 'id'            ? 'selected' : ''}>ID (Date added)</option>
+            <option value="popular"       ${defaultSort === 'popular'       ? 'selected' : ''}>Most popular</option>
+            <option value="trendingDay"   ${defaultSort === 'trendingDay'   ? 'selected' : ''}>Trending today</option>
+            <option value="trendingWeek"  ${defaultSort === 'trendingWeek'  ? 'selected' : ''}>Trending this week</option>
+            <option value="trendingMonth" ${defaultSort === 'trendingMonth' ? 'selected' : ''}>Trending this month</option>
+        </select>
+        <br><br>
+        <div class="settings-inline">
+            <label>Hide Featured section</label>
+            <input type="checkbox" ${hideFeatured ? 'checked' : ''} onchange="setHideFeatured(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Show play count on cards</label>
+            <input type="checkbox" ${showPlayCount ? 'checked' : ''} onchange="setShowPlayCount(this.checked)">
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Privacy Cloak</h4>
+        <div class="settings-inline">
+            <label>Hide page in tab previews</label>
+            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? 'checked' : ''} onchange="setPreviewCloakEnabled(this.checked)">
+        </div>
+        <br>
+        <label style="display:block;margin-bottom:0.4rem;">Cloak sensitivity</label>
+        <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
+            <option value="low"    ${previewCloakSensitivity === 'low'    ? 'selected' : ''}>Low (hidden tabs only)</option>
+            <option value="lowMed" ${previewCloakSensitivity === 'lowMed' ? 'selected' : ''}>Low-Med (hidden + blur)</option>
+            <option value="medium" ${previewCloakSensitivity === 'medium' ? 'selected' : ''}>Medium (recommended)</option>
+            <option value="high"   ${previewCloakSensitivity === 'high'   ? 'selected' : ''}>High (aggressive)</option>
+        </select>
+        <br>
+        <button class="settings-button" onclick="tabCloak()">Tab Cloak Settings</button>
+    </div>
+
+    <div class="settings-section">
+        <h4>Behavior</h4>
+        <div class="settings-inline">
+            <label>Warn before leaving page</label>
+            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? 'checked' : ''} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Autofocus search bar on load</label>
+            <input type="checkbox" ${autofocusSearch ? 'checked' : ''} onchange="setAutofocusSearch(this.checked)">
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h4>Quick Actions</h4>
+        <button class="settings-button" onclick="listZones()">Refresh Zones</button>
+        <br><br>
+        <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
+        <br><br>
+        <button class="settings-button" onclick="resetAppearanceSettings()">Reset All Appearance Settings</button>
+    </div>
+    `;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+    updateThemeButtons();
+}
+
+
+function showContact() {
+    document.getElementById('popupTitle').textContent = "Contact";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `
+    <p>Discord: https://discord.gg/NAFw4ykZ7n</p>
+    <p>Email: gn.math.business@gmail.com</p>`;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+function loadPrivacy() {
+    document.getElementById('popupTitle').textContent = "Privacy Policy";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `
+        <div style="max-height: 60vh; overflow-y: auto;">
+            <h2>PRIVACY POLICY</h2>
+            <p>Last updated Feburary 20, 2026</p>
+            <p>This Privacy Notice for gn-math ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:</p>
+            <ul>
+                <li>Visit our website at <a href="https://gn-math.dev">https://gn-math.dev</a>, or any website of ours that links to this Privacy Notice</li>
+                <li>Engage with us in other related ways, including any sales, marketing, or events</li>
+            </ul>
+            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="https://discord.gg/NAFw4ykZ7n">https://discord.gg/NAFw4ykZ7n</a>.</p>
+            
+            <h3>SUMMARY OF KEY POINTS</h3>
+            <p>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.</p>
+            
+            <p><strong>What personal information do we process?</strong> When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us and the Services, the choices you make, and the products and features you use. Learn more about personal information you disclose to us.</p>
+            
+            <p><strong>Do we process any sensitive personal information?</strong> Some of the information may be considered "special" or "sensitive" in certain jurisdictions, for example your racial or ethnic origins, sexual orientation, and religious beliefs. We do not process sensitive personal information.</p>
+            
+            <p><strong>Do we collect any information from third parties?</strong> We do not collect any information from third parties.</p>
+            
+            <p><strong>How do we process your information?</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Learn more about how we process your information.</p>
+            
+            <p><strong>In what situations and with which parties do we share personal information?</strong> We may share information in specific situations and with specific third parties. Learn more about when and with whom we share your personal information.</p>
+            
+            <p><strong>How do we keep your information safe?</strong> We have adequate organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Learn more about how we keep your information safe.</p>
+            
+            <p><strong>What are your rights?</strong> Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Learn more about your privacy rights.</p>
+            
+            <p><strong>How do you exercise your rights?</strong> The easiest way to exercise your rights is by submitting a data subject access request, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</p>
+        </div>
+    `;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+function loadDMCA() {
+    document.getElementById('popupTitle').textContent = "DMCA";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `
+        <div class="dmca-content">
+            <p>
+                If you own or developed a game that is on <strong>gn-math</strong> 
+                and would like it removed, please do one of the following:
+            </p>
+            <ol>
+                <li>
+                    <a href="https://discord.gg/D4c9VFYWyU" target="_blank" rel="noopener noreferrer">
+                        Join the Discord
+                    </a> and DM <strong>breadbb</strong> or ping me in a public channel 
+                    <strong>[INSTANT RESPONSE]</strong>
+                </li>
+                <li>
+                    Email me at 
+                    <a href="mailto:gn.math.business@gmail.com">gn.math.business@gmail.com</a> 
+                    with the subject starting with <code>!DMCA</code>.
+                    <strong>[DELAYED RESPONSE]</strong>
+                </li>
+            </ol>
+            <p>
+                If you are going to do an email, please show proof you own the game before I have to ask.
+            </p>
+        </div>
+    `;
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+}
+
+let _allStatsCache = null;
+
+async function getAllStats() {
+  if (_allStatsCache) {
+    return _allStatsCache;
+  }
+
+  const BASE_URL =
+    "https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files";
+  const PERIOD = "year";
+  const PAGE_BATCH = 5;
+
+  let page = 1;
+  let done = false;
+  const combinedMap = Object.create(null);
+
+  while (!done) {
+    const pages = Array.from({ length: PAGE_BATCH }, (_, i) => page + i);
+
+    const responses = await Promise.all(
+      pages.map(p =>
+        fetch(`${BASE_URL}?period=${PERIOD}&page=${p}&limit=100`)
+          .then(r => (r.ok ? r.json() : []))
+      )
+    );
+
+    for (const data of responses) {
+      if (!Array.isArray(data) || data.length === 0) {
+        done = true;
+        break;
+      }
+
+      for (const item of data) {
+        if (!item?.name) continue;
+
+        const match = item.name.match(/^\/(\d+)([.-])/);
+        if (!match) continue;
+
+        const id = match[1];
+
+        if (!combinedMap[id]) {
+          combinedMap[id] = {
+            hits: 0,
+            bandwidth: 0
+          };
+        }
+
+        combinedMap[id].hits += item.hits?.total ?? 0;
+        combinedMap[id].bandwidth += item.bandwidth?.total ?? 0;
+      }
+    }
+
+    page += PAGE_BATCH;
+  }
+
+  _allStatsCache = combinedMap;
+  return combinedMap;
+}
+
+async function getStats(id) {
+  id = String(id);
+  const allStats = await getAllStats();
+
+  return allStats[id]?.hits ?? 0;
+}
+
+function showZoneInfo() {
+    let id = Number(document.getElementById('zoneId').textContent);
+    document.getElementById('popupTitle').textContent = "Info";
+    const popupBody = document.getElementById('popupBody');
+    popupBody.innerHTML = `<p>Loading...</p>`
+    popupBody.contentEditable = false;
+    document.getElementById('popupOverlay').style.display = "flex";
+    fetch(`https://api.github.com/repos/freebuisness/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
+        let stats = await getStats (id);
+        idjson = zones.filter(a=>a.id===id)[0]
+        document.getElementById('popupTitle').textContent = `${idjson.name} Info`;
+        const date = new Date(json.at(-1).commit.author.date);
+        let formatteddate = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true
+}).format(date);
+        popupBody.innerHTML = `
+        <p>
+        <b>Id</b>: ${id}<br>
+        <b>Name</b>: ${idjson.name}<br>
+        ${idjson.author?`<b>Game Author</b>: ${idjson.author}<br>`:""}
+        ${idjson.authorLink?`<b>Game Author Link</b>: <a style="color:#FFFF00;" href=${idjson.authorLink}>${idjson.authorLink}</a><br>`:""}
+        ${idjson.special?`<b>Tags</b>: ${idjson.special}<br>`:""}
+        <b>Gn-Math Adder</b>: ${json.at(-1).commit.author.name}<br>
+        <b>Date Added</b>: ${formatteddate}<br>
+        <b>Times Played (Globally)</b>: ${Number(stats).toLocaleString("en-US")}
+        </p>`;
+    })
+}
+
+function closePopup() {
+    document.getElementById('popupOverlay').style.display = "none";
+}
+
+// Click outside a popup or press Esc to close it; "/" jumps to search.
+document.getElementById('popupOverlay').addEventListener('mousedown', event => {
+    if (event.target.id === 'popupOverlay') closePopup();
+});
+document.addEventListener('keydown', event => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+    if (event.key === 'Escape') {
+        if (document.getElementById('op-motd-preview')) { document.getElementById('op-motd-preview').remove(); return; }
+        if (document.getElementById('popupOverlay').style.display === 'flex') { closePopup(); return; }
+        if (zoneViewer.style.display === 'flex' && !document.fullscreenElement) { closeZone(); return; }
+    }
+    if (event.key === '/' && !typing && zoneViewer.style.display !== 'flex') {
+        event.preventDefault();
+        searchBar.focus();
+    }
+});
+showZoneSkeletons();
+applySavedSettings();
+// Pull owner settings from GitHub FIRST, then render zones so disabled list is correct
+githubSyncPull().finally(() => {
+    listZones();
+    // After zones + settings are loaded, show MOTD and autofocus search if enabled
+    if (getAutofocusSearch()) {
+        setTimeout(() => document.getElementById('searchBar')?.focus(), 300);
+    }
+    setTimeout(maybeShowMotd, 800);
+});
+
+HTMLCanvasElement.prototype.toDataURL = function (...args) {
+    return "";
+};
+</script>
+    <script>
+      try {
+        const search = new URLSearchParams(window.location.search)
+        const privacy = search.get('privacy')
+        if (privacy) {
+          loadPrivacy()
+        }
+      } catch (error) {}
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(location.protocol + '//' + location.hostname + '/sw.js').catch(() => {})
+      }
+    </script>
+</body>
+</html>
