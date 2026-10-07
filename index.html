@@ -10,7 +10,7 @@
     // Tab title + icon are set before anything else so the tab cloak never flashes.
     (function () {
         var site = function (f) { return new URL(f, location.href).href; };
-        window.GN_ICON_URL = site("favicon-64.png");
+        window.GN_ICON_URL = site("assets/icons/favicon-64.png");
         var title = "GN 2.0", icon = window.GN_ICON_URL;
         try {
             if (localStorage.getItem("gnmath-tab-cloak-initialized")) {
@@ -22,7 +22,8 @@
                 icon = "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico";
             }
         } catch (e) {}
-        if (icon === "favicon.png") icon = window.GN_ICON_URL; // old default
+        // Older saved values for the GN icon (before it moved to assets/icons/)
+        if (icon === "favicon.png" || /\/favicon-64\.png$/.test(icon) && icon.indexOf("/assets/icons/") === -1) icon = window.GN_ICON_URL;
         document.title = title;
         var add = function (rel, href, extra) {
             var l = document.createElement("link"); l.rel = rel; l.href = href;
@@ -30,7 +31,7 @@
             document.head.appendChild(l);
         };
         add("icon", icon);
-        add("apple-touch-icon", site("apple-touch-icon.png"));
+        add("apple-touch-icon", site("assets/icons/apple-touch-icon.png"));
         add("manifest", site("manifest.json"));
     })();
     </script>
@@ -209,7 +210,7 @@
     </footer>
     <script src="js/ui.js?v=c5b2fdce8a"></script>
 
-    <script src="js/app.js?v=5f9ff5e2c4"></script>
+    <script src="js/app.js?v=4900bf96ba"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/accounts.js?v=9fe137e7fe"></script>

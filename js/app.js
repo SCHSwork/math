@@ -1495,7 +1495,7 @@ function getVisitorSetting(storageKey, defaultKey) {
 
 // ── GitHub Sync ──────────────────────────────────────────────────────────────
 const GITHUB_SYNC_REPO  = "SCHSwork/math";
-const GITHUB_SYNC_FILE  = "owner-settings.json";
+const GITHUB_SYNC_FILE  = "config/owner-settings.json";
 const GITHUB_SYNC_URL   = `https://api.github.com/repos/${GITHUB_SYNC_REPO}/contents/${GITHUB_SYNC_FILE}`;
 // Public CDN URL — readable by ALL visitors (no token needed)
 const GITHUB_SYNC_CDN   = `https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/${GITHUB_SYNC_FILE}`;
@@ -2243,7 +2243,7 @@ function setupTabPreviewCloak() {
 
 function cloakIcon(url, { persist = true } = {}) {
     let iconUrl = (url + "").trim();
-    if (!iconUrl || iconUrl === "favicon.png") iconUrl = window.GN_ICON_URL;
+    if (!iconUrl || iconUrl === "favicon.png" || (/\/favicon-64\.png$/.test(iconUrl) && !iconUrl.includes("/assets/icons/"))) iconUrl = window.GN_ICON_URL;
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
         link = document.createElement("link");
@@ -2253,7 +2253,7 @@ function cloakIcon(url, { persist = true } = {}) {
     document.head.appendChild(link);
 
     if (persist) {
-        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl);
+        localStorage.setItem(TAB_CLOAK_STORAGE_KEYS.icon, iconUrl === window.GN_ICON_URL ? "" : iconUrl);
     }
 }
 
