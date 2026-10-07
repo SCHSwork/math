@@ -12,5 +12,18 @@
     "enabled": true
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-19T22:37:15.130Z"
+  "updatedAt": "2026-05-19T22:37:15.130Z",
+  "visitorDefaults": {
+    "mode": "dark",
+    "theme": "red",
+    "cardSize": "medium",
+    "fontSize": "medium",
+    "defaultSort": "name",
+    "compactMode": false,
+    "hideFeatured": false,
+    "autofocusSearch": true,
+    "showPlayCount": false,
+    "warnBeforeUnload": true,
+    "reducedMotion": false
+  }
 }
