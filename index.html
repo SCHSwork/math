@@ -1164,7 +1164,7 @@ footer {
         <div class="header-content">
             <div class="logo">GN 2.0</div>
             <div class="search-container">
-                <input type="text" id="searchBar" placeholder="Search zones..." oninput="filterZones()">
+                <input type="text" id="searchBar" placeholder="Search games... ( / )" oninput="filterZones()">
                 <select id="sortOptions" onchange="sortZones()">
                     <option value="name">Name</option>
                     <option value="newest">Newest</option>
@@ -1464,7 +1464,7 @@ function sortZones() {
         const featured = zones.filter(z => z.featured);
         displayFeaturedZones(featured);
     }
-    displayZones(zones);
+    applyFilters();
     renderPersonalRows();
 }
 
@@ -1594,27 +1594,96 @@ function displayZones(zones) {
     observeLazyZoneImages('img.lazy-zone-img');
 }
 
-function filterZones2() {
-    const query = filterOptions.value;
-    if (query === "none") {
-        displayZones(zones);
-    } else {
-        const filteredZones = zones.filter(zone => zone.special?.includes(query));
-        if (query.length !== 0) {
-            document.getElementById("featuredZonesWrapper").removeAttribute("open");
-        }
-        displayZones(filteredZones);
-    }
+// ── Search ──────────────────────────────────────────────────────────────────
+// Search and the tag filter work together. Matching ignores case, accents and
+// punctuation, and tolerates small typos ("geomtry dash", "minecarft").
+function normText(t) {
+    return String(t ?? "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]+/g, " ").trim();
 }
-
-function filterZones() {
-    const query = searchBar.value.toLowerCase();
-    const filteredZones = zones.filter(zone => zone.name.toLowerCase().includes(query));
-    if (query.length !== 0) {
+// Levenshtein distance, giving up early once it exceeds max
+function editDistanceWithin(a, b, max) {
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev2 = null;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+        const cur = [i];
+        let rowMin = i;
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+            // swapped neighbours count as one typo ("geomtery" -> "geometry")
+            if (prev2 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, prev2[j - 2] + 1);
+            cur.push(v);
+            rowMin = Math.min(rowMin, v);
+        }
+        if (rowMin > max) return max + 1;
+        prev2 = prev;
+        prev = cur;
+    }
+    return prev[b.length];
+}
+function tokenScore(token, words, extraWords) {
+    let best = 0;
+    const allowed = token.length >= 7 ? 2 : token.length >= 4 ? 1 : 0;
+    for (const w of words) {
+        if (w === token) return 12;
+        if (w.startsWith(token)) best = Math.max(best, 10);
+        else if (token.length >= 2 && w.includes(token)) best = Math.max(best, 7);
+        else if (allowed) {
+            if (editDistanceWithin(token, w, allowed) <= allowed) best = Math.max(best, 6);
+            else if (w.length > token.length && editDistanceWithin(token, w.slice(0, token.length), allowed) <= allowed) best = Math.max(best, 5);
+        }
+    }
+    if (!best) for (const w of extraWords) {
+        if (w === token || (token.length >= 3 && w.startsWith(token))) best = Math.max(best, 4);
+    }
+    return best;
+}
+function searchScore(zone, query, tokens) {
+    const name = normText(String(zone.name ?? "").replace(/['’]/g, ""));
+    const words = name.split(" ");
+    const initials = words.map(w => w[0] || "").join("");
+    const extra = normText([zone.author, ...(zone.special || [])].join(" ")).split(" ").filter(Boolean);
+    let score = 0;
+    if (name === query) score += 100;
+    else if (name.startsWith(query)) score += 60;
+    else if (name.includes(query)) score += 40;
+    else if (name.replace(/ /g, "").includes(query.replace(/ /g, ""))) score += 35;
+    let tokenTotal = 0;
+    for (const t of tokens) {
+        let ts = tokenScore(t, words, extra);
+        // Abbreviations: "fnaf" -> Five Nights At Freddys, "botw", "gta"
+        if (!ts && t.length >= 2 && /[a-z]/.test(t) && initials.startsWith(t)) ts = 8;
+        if (!ts && score < 35) return 0;   // every word you typed has to match something
+        tokenTotal += ts;
+    }
+    return score + tokenTotal;
+}
+function applyFilters() {
+    if (!Array.isArray(zones)) return;
+    const query = normText(searchBar.value);
+    const tag = typeof filterOptions !== "undefined" ? filterOptions.value : "none";
+    let list = zones;
+    if (tag && tag !== "none") list = list.filter(zone => zone.special?.includes(tag));
+    if (query) {
+        const tokens = query.split(" ");
+        list = list.map(zone => [zone, searchScore(zone, query, tokens)])
+            .filter(([, sc]) => sc > 0)
+            .sort((a, b) => b[1] - a[1])          // stable: equal scores keep the chosen sort order
+            .map(([zone]) => zone);
+    }
+    if (query || (tag && tag !== "none")) {
         document.getElementById("featuredZonesWrapper").removeAttribute("open");
     }
-    displayZones(filteredZones);
+    displayZones(list);
+    const summary = document.getElementById("allSummary");
+    if (query && summary) summary.textContent = `Results for "${searchBar.value.trim()}" (${list.filter(z => !isZoneDisabled(z.id)).length})`;
+    if (query && !list.length) container.textContent = `No games match "${searchBar.value.trim()}".`;
 }
+// Kept for the existing oninput/onchange handlers
+function filterZones2() { applyFilters(); }
+function filterZones() { applyFilters(); }
 
 // ── Ad removal for game files ───────────────────────────────────────────────
 // The upstream game files carry a scrambled ad loader (cdn.r9x.in) that pops up
@@ -3531,6 +3600,11 @@ function openSettingsPanel() {
 
     popupBody.innerHTML = `
     <div class="settings-section">
+        <h4>My Stats</h4>
+        <button class="settings-button" onclick="openStatsPanel()">📊 View My Stats</button>
+    </div>
+
+    <div class="settings-section">
         <h4>Appearance</h4>
         <button class="settings-button" onclick="darkMode()">Toggle Dark/Light Mode</button>
         <br><br>
@@ -4527,10 +4601,7 @@ function refreshCards() {
     if (!Array.isArray(zones) || !zones.length) return;
     featuredContainer.innerHTML = "";
     displayFeaturedZones(zones.filter(z => z.featured));
-    const q = (searchBar.value || "").trim();
-    if (q) filterZones();
-    else if (typeof filterOptions !== "undefined" && filterOptions.value && filterOptions.value !== "none") filterZones2();
-    else displayZones(zones);
+    applyFilters();
     renderPersonalRows();
 }
 
@@ -4568,6 +4639,64 @@ function stopPlaytime() {
     playSession = null;
 }
 window.addEventListener("pagehide", () => flushPlaytime());
+
+// ── My Stats ────────────────────────────────────────────────────────────────
+function openStatsPanel() {
+    const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const played = Object.entries(getPlaytimeMap())
+        .map(([id, sec]) => ({ id, sec: Number(sec) || 0, zone: zoneById(id) }))
+        .filter(x => x.sec > 0 && x.zone)
+        .sort((a, b) => b.sec - a.sec);
+    const total = played.reduce((n, x) => n + x.sec, 0);
+    const tried = new Set([...played.filter(x => x.sec >= 60).map(x => x.id), ...getRecent().filter(id => zoneById(id))]);
+    const library = zones.filter(z => !isZoneDisabled(z.id) && z.url && !z.url.startsWith("http")).length;
+    const pct = library ? Math.round(tried.size / library * 100) : 0;
+    const favs = getFavorites().filter(id => zoneById(id)).length;
+    let votes = 0, reports = 0;
+    const uid = typeof cloudUser !== "undefined" && cloudUser ? cloudUser.uid : null;
+    if (uid) for (const st of Object.values(gameStats)) {
+        if (st.v && uid in st.v) votes++;
+        if (st.r && uid in st.r) reports++;
+    }
+    const top = played.slice(0, 5);
+    const max = top.length ? top[0].sec : 1;
+    const lastId = getRecent()[0];
+    const last = lastId ? zoneById(lastId) : null;
+    const tile = (big, label) => `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:0.75rem;text-align:center;">
+        <div style="font-size:22px;font-weight:800;">${big}</div><div style="font-size:12px;color:var(--text-muted);">${label}</div></div>`;
+
+    document.getElementById("popupTitle").textContent = "My Stats";
+    const body = document.getElementById("popupBody");
+    body.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:0.6rem;margin-bottom:1rem;">
+            ${tile(total >= 60 ? formatPlaytime(total) : "0m", "total play time")}
+            ${tile(tried.size, "games tried")}
+            ${tile(pct + "%", `of ${library} games explored`)}
+            ${tile(favs, "favorites")}
+        </div>
+        <h4 style="margin:0 0 0.5rem;">Most played</h4>
+        ${top.length ? top.map((x, i) => `
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.45rem;cursor:pointer;" onclick="closePopup(); openZone(zoneById('${esc(x.id)}'))" title="Play">
+                <span style="width:1.2rem;color:var(--text-muted);font-weight:700;">${i + 1}</span>
+                <span style="flex:0 0 38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">${esc(x.zone.name)}</span>
+                <span style="flex:1;height:8px;border-radius:99px;background:var(--bg-secondary);overflow:hidden;">
+                    <span style="display:block;height:100%;width:${Math.max(4, Math.round(x.sec / max * 100))}%;background:var(--primary);border-radius:99px;"></span></span>
+                <span style="flex:0 0 4.5rem;text-align:right;font-size:13px;color:var(--text-muted);">${formatPlaytime(x.sec)}</span>
+            </div>`).join("") : `<p style="color:var(--text-muted);">Play a game for a minute and it'll show up here.</p>`}
+        <p style="font-size:13px;color:var(--text-muted);margin:1rem 0 0;">
+            ${last ? `Last played: <b>${esc(last.name)}</b>. ` : ""}
+            ${uid ? `You've rated ${votes} game${votes === 1 ? "" : "s"} and reported ${reports}.` : "Sign in to keep these stats on every computer."}
+        </p>
+        <button class="settings-button" style="margin-top:1rem;background:var(--surface-hover);" onclick="resetMyStats()">Reset my stats</button>`;
+    body.contentEditable = false;
+    document.getElementById("popupOverlay").style.display = "flex";
+}
+function resetMyStats() {
+    if (!confirm("Reset your play time and recently played list? Favorites and game progress are kept.")) return;
+    try { localStorage.removeItem(LIB_KEYS.playtime); localStorage.removeItem(LIB_KEYS.recent); } catch {}
+    refreshCards();
+    openStatsPanel();
+}
 
 // ── Loading screen ──────────────────────────────────────────────────────────
 function gameLoadingScreenHtml(file) {
