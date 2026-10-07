@@ -1,5 +1,5 @@
 {
-  "siteMode": "shutdown",
+  "siteMode": "open",
   "disabledZones": [
     "653"
   ],
@@ -25,5 +25,5 @@
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "updatedAt": "2026-10-07T03:49:19.202Z"
+  "updatedAt": "2026-10-07T03:49:22.344Z"
 }
