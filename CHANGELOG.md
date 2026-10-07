@@ -5,6 +5,8 @@ All the changes to GN 2.0, newest first.
 ## October 7, 2026
 
 ### New
+- **Change password** in the Account panel. It asks for your current password first.
+- **Keyboard shortcuts list.** Press **?** or use the footer link. `/` jumps to search, the panic key leaves instantly, **Esc** closes panels and dialogs, and **← →** scroll a row of games once you Tab to it.
 - **GN 2.0 icon.** The site has its own red "GN" icon for the tab, phone home screens, and when it's installed as an app (named "GN 2.0"). The tab cloak still comes first: when it's on, the tab shows the cloak's title and icon, and the GN icon appears only when the cloak is off.
 - **Faster repeat visits and offline backup.** A small background helper saves game covers, so they load instantly next time. If you're offline, the site still opens with your saved game list.
 - **Backup game sources.** The game list, cover images and games now load from three places: jsDelivr, then GitHub directly, then githack. If one fails, times out or is blocked by a school filter, the site switches automatically and remembers for the rest of the session. When jsDelivr is down, links inside games are pointed at the backups too. If every source is down, the last game list that loaded is shown with a notice.
@@ -17,6 +19,13 @@ All the changes to GN 2.0, newest first.
 - **Broken reports in the owner panel**, most reported first, with one-click Disable/Enable.
 
 ### Changed
+- **No more browser pop-ups.** The plain gray "This page says…" boxes are replaced by notices in the site's style that fade on their own, and proper confirmation dialogs with clear button names. Dangerous actions like deleting an account start on Cancel. When you sign in on a new device, the cloud-save question is now two clear buttons, **Keep this device's** or **Load my cloud save**.
+- **Accessibility.**
+  - Every button and setting has a name screen readers can announce.
+  - Keyboard focus is clearly visible, including a full outline on game cards.
+  - Panels move focus in and back out, and Esc closes them.
+  - Low-contrast text (the red labels and the NEW badge) is now easier to read in every theme.
+- **Site code split into files** (`css/styles.css` and `js/`). Nothing changes for players, but updates are safer and load reliably. A leftover setting that pointed parts of the page at the original gn-math site was removed.
 - **Tidier header.** Sort and tag filter moved into one **Sort & filter** button, which shows a dot when something other than the default is selected. The search box has a magnifier icon and a `/` hint. On phones the header is two compact rows, and the tag filter is no longer pushed out of view.
 - **The tab cloak now applies immediately.** Before, "GN 2.0" flashed in the tab for a moment while the page loaded.
 - **Scrolling rows have no scroll bar.** Featured and Your games now show ‹ › arrow buttons when you hover over them, with a soft fade on the side that has more games. Touchscreens and trackpads can still swipe.

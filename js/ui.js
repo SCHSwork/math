@@ -132,3 +132,60 @@
         return dialog({ title: opts.title || "", message, dismissValue: null, buttons: opts.choices || [] });
     };
 })();
+
+// ── Accessibility helpers ──────────────────────────────────────────────────
+(function () {
+    // Give unlabeled form controls in pop-up panels a name from the text next to them
+    function labelControls(root) {
+        root.querySelectorAll("input:not([type=hidden]), select, textarea").forEach(el => {
+            if (el.getAttribute("aria-label") || el.getAttribute("aria-labelledby") || el.closest("label") ||
+                (el.id && root.querySelector(`label[for="${CSS.escape(el.id)}"]`))) return;
+            let text = "";
+            const row = el.closest(".settings-inline");
+            if (row) text = (row.querySelector("label, span")?.textContent || "").trim();
+            for (let prev = el.previousElementSibling; !text && prev; prev = prev.previousElementSibling) {
+                if (prev.tagName === "BR") continue;
+                if (/^(LABEL|SPAN|DIV|P|H4|H5)$/.test(prev.tagName)) text = prev.textContent.trim();
+                break;
+            }
+            if (!text && el.placeholder) text = el.placeholder;
+            if (text) el.setAttribute("aria-label", text.replace(/\s+/g, " ").slice(0, 80));
+        });
+    }
+
+    function setup() {
+        const overlay = document.getElementById("popupOverlay");
+        const body = document.getElementById("popupBody");
+        if (!overlay || !body) return;
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-labelledby", "popupTitle");
+        new MutationObserver(() => labelControls(body)).observe(body, { childList: true, subtree: true });
+        // Move focus into the panel when it opens, and back when it closes
+        let returnTo = null, wasOpen = false;
+        new MutationObserver(() => {
+            const open = overlay.style.display === "flex";
+            if (open && !wasOpen) {
+                returnTo = document.activeElement;
+                setTimeout(() => {
+                    const first = body.querySelector("input:not([type=hidden]), select, textarea, button, a[href], summary");
+                    (first || overlay).focus({ preventScroll: true });
+                }, 0);
+            } else if (!open && wasOpen && returnTo && document.contains(returnTo)) {
+                try { returnTo.focus({ preventScroll: true }); } catch (e) {}
+            }
+            wasOpen = open;
+        }).observe(overlay, { attributes: true, attributeFilter: ["style"] });
+        if (!overlay.hasAttribute("tabindex")) overlay.setAttribute("tabindex", "-1");
+        const closeBtn = overlay.querySelector(".close-button, .popup-close, [onclick*='closePopup']");
+        if (closeBtn && !closeBtn.getAttribute("aria-label")) closeBtn.setAttribute("aria-label", "Close");
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setup();
+
+    // Esc closes the open panel or menu (site dialogs handle their own Esc first)
+    document.addEventListener("keydown", e => {
+        if (e.key !== "Escape" || document.querySelector(".dialog-overlay")) return;
+        const overlay = document.getElementById("popupOverlay");
+        if (overlay && overlay.style.display === "flex" && typeof closePopup === "function") closePopup();
+    });
+})();

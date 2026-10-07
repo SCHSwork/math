@@ -265,7 +265,7 @@ header {
     transform: none;
 }
 .filter-menu #sortOptions:hover, .filter-menu #filterOptions:hover { background: var(--surface-hover); color: var(--text); transform: none; }
-.filter-reset { border: 0; background: none; padding: 0.2rem 0; color: var(--primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.filter-reset { border: 0; background: none; padding: 0.2rem 0; color: var(--accent-text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 
 #searchBar {
     flex: 1;
@@ -587,7 +587,7 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
     cursor: pointer;
 }
 #gotd > div { flex: 1; }
-#gotd .gotd-label { font-size: 13px; font-weight: 600; color: var(--primary); }
+#gotd .gotd-label { font-size: 13px; font-weight: 600; color: var(--accent-text); }
 #gotd h2 { margin: 0.1rem 0 0.15rem; font-size: 1.2rem; line-height: 1.25; }
 #gotd .gotd-meta { font-size: 13px; color: var(--text-muted); }
 #gotd .gotd-play { width: auto; min-width: 0; flex-shrink: 0; padding: 0.6rem 1.75rem; }
@@ -617,7 +617,7 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
     .shelf-small { grid-auto-columns: 108px; }
 }
 .changelog-doc h2 { margin: 1.25rem 0 0.25rem; font-size: 1.2rem; }
-.changelog-doc h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; color: var(--primary); }
+.changelog-doc h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; color: var(--accent-text); }
 .changelog-doc ul { margin: 0 0 0.5rem; padding-left: 1.2rem; }
 .changelog-doc li { margin: 0.25rem 0; }
 
@@ -724,7 +724,7 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
 .card-new {
     padding: 2px 8px;
     border-radius: 999px;
-    background: #16a34a;
+    background: #15803d;
     color: #fff;
     font-size: 11px;
     font-weight: 800;
@@ -781,7 +781,7 @@ body.cards-list .card-meta { margin: 0; padding: 0 0.75rem 0 0; flex-shrink: 0; 
 }
 
 .zone-item:hover button {
-    color: var(--primary);
+    color: var(--accent-text);
     background: rgba(252, 38, 81, 0.05);
 }
 
@@ -1164,7 +1164,7 @@ footer {
 }
 
 .footer-links a {
-    color: var(--primary);
+    color: var(--accent-text);
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;
@@ -1509,3 +1509,37 @@ footer {
 .acct-section .settings-button { margin-top: 0.9rem; }
 .acct-hint { margin: 0.6rem 0 0; font-size: 13px; color: var(--text-muted); }
 .acct-msg { margin: 0.5rem 0 0; font-size: 14px; min-height: 1.2em; }
+
+
+/* ── Accessibility ──────────────────────────────────────────────────────── */
+/* Theme color tuned for readable text (works with every theme and custom colors) */
+body { --accent-text: color-mix(in srgb, var(--primary) 70%, black); }
+body.dark-mode { --accent-text: color-mix(in srgb, var(--primary) 68%, white); }
+/* Visible keyboard focus everywhere */
+button:focus-visible, a:focus-visible, summary:focus-visible, [tabindex]:focus-visible,
+input[type="checkbox"]:focus-visible, input[type="color"]:focus-visible, select:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+header button:focus-visible, header select:focus-visible { outline-color: #fff; }
+#popupOverlay:focus { outline: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Keyboard shortcuts list */
+.shortcuts { width: 100%; border-collapse: collapse; }
+.shortcuts td { padding: 0.55rem 0.25rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.shortcuts td:first-child { width: 7.5rem; white-space: nowrap; }
+.shortcuts kbd {
+    display: inline-block;
+    min-width: 1.6rem;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    font: 700 13px/1.4 inherit;
+    text-align: center;
+}
+/* Game cards: outline the whole card when its name button has keyboard focus */
+.zone-item:has(> button:not(.card-fav):focus-visible) { outline: 3px solid var(--text); outline-offset: 3px; }
+.zone-item > button:not(.card-fav):focus-visible { outline: none; }
+.shelf:focus-visible { outline: 2px dashed var(--text-muted); outline-offset: 4px; border-radius: 12px; }

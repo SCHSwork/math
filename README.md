@@ -13,6 +13,7 @@ The game list and game files come from the community-run gn-math library on jsDe
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **Random game** button
+- **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
 - Fullscreen, rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
@@ -26,6 +27,7 @@ The game list and game files come from the community-run gn-math library on jsDe
 **Accounts and saves** (optional, username only, no email)
 - Cloud saves of all game progress and site settings, synced every 2 minutes, when a game closes and on sign-out
 - Asks which copy to keep if another device saved newer progress
+- Change password and delete account from the Account panel
 - **Export / Import Data** to back up progress to a file (same format as cloud saves)
 - **Delete account** removes the account, its cloud save and its ratings and reports
 
@@ -60,12 +62,21 @@ Changes are saved to `owner-settings.json` in this repo, and every visitor loads
 
 | File | What it is |
 | --- | --- |
-| `index.html` | The whole site: markup, styles and scripts |
+| `index.html` | The page itself (markup, plus the small tab-cloak script that must run first) |
+| `css/styles.css` | All the styles |
+| `js/ui.js` | Notices, dialogs and accessibility helpers (loaded first) |
+| `js/app.js` | Game list, search, cards, game player, ad/tracker removal, backup sources, settings, owner panel, panic button, tab cloak |
+| `js/accounts.js` | Accounts and cloud saves (Firebase) |
+| `js/library.js` | Favorites, recent, play time, stats, Today's pick, ratings and reports, shortcuts |
+| `js/loading-bar.js` | Game loading bar |
+| `js/game-menu.js` | The ⋯ More menu and per-game data clearing |
+| `js/url-options.js`, `js/service-worker-setup.js` | Small start-up helpers |
+| `sw.js` | Background helper: caches covers and lets the site open offline (the page and its files are always fetched fresh first) |
+| `manifest.json`, `icon-*.png`, `favicon-*.png`, `apple-touch-icon.png` | App name and icons |
 | `owner-settings.json` | Site-wide owner settings, written by the owner panel |
 | `firestore.rules` | Security rules for the Firebase database |
-| `sw.js` | Background helper: caches covers and lets the site open offline (the page itself is always fetched fresh first) |
-| `manifest.json`, `icon-*.png`, `favicon-*.png`, `apple-touch-icon.png` | App name and icons |
 | `CHANGELOG.md` | Everything that's changed, newest first (also shown on the site under **Changelog** in the footer) |
+| `tools/stamp_versions.py` | Run `python3 tools/stamp_versions.py` after editing anything in `css/` or `js/` so browsers load the new version right away |
 
 ## Firebase setup
 
