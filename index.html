@@ -154,8 +154,11 @@
 }
 
 /* Card size variants */
+body.cards-small  #favoriteZones, body.cards-small  #recentZones,
 body.cards-small  #container, body.cards-small  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+body.cards-large  #favoriteZones, body.cards-large  #recentZones,
 body.cards-large  #container, body.cards-large  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+body.cards-list   #favoriteZones, body.cards-list   #recentZones,
 body.cards-list   #container, body.cards-list   #featuredZones {
     grid-template-columns: 1fr;
     gap: 0.5rem;
@@ -336,6 +339,8 @@ main {
 }
 
 #container,
+#favoriteZones,
+#recentZones,
 #featuredZones {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -353,6 +358,16 @@ main {
     flex-direction: column;
     position: relative;
     box-shadow: var(--shadow-sm);
+    animation: cardEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#container .zone-item:nth-child(2n), #featuredZones .zone-item:nth-child(2n) { animation-delay: 40ms; }
+#container .zone-item:nth-child(3n), #featuredZones .zone-item:nth-child(3n) { animation-delay: 80ms; }
+#container .zone-item:nth-child(5n), #featuredZones .zone-item:nth-child(5n) { animation-delay: 120ms; }
+
+@keyframes cardEnter {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .zone-item:hover {
@@ -388,6 +403,68 @@ main {
 .zone-item:hover img {
     transform: scale(1.05);
 }
+
+/* Favorite star, broken flag and stats line on game cards */
+.zone-item button.card-fav,
+.zone-item:hover button.card-fav {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 17px;
+    line-height: 32px;
+    padding: 0;
+    min-height: 0;
+    display: block;
+    text-align: center;
+    font-weight: 400;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.zone-item:hover button.card-fav, .zone-item button.card-fav.on, .zone-item button.card-fav:focus-visible { opacity: 1; }
+.zone-item button.card-fav.on, .zone-item:hover button.card-fav.on { color: #facc15; }
+.zone-item button.card-fav:hover { transform: scale(1.12); }
+@media (hover: none) { .zone-item button.card-fav { opacity: 1; } }
+.card-flag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+    max-width: calc(100% - 56px);
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #b45309;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+.card-meta {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: -0.6rem;
+    padding: 0 0.75rem 0.6rem;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+body.cards-list .zone-item button.card-fav { position: static; opacity: 1; flex: 0 0 32px; margin-left: 0.5rem; padding: 0; text-align: center; }
+body.cards-list .card-flag { position: static; flex-shrink: 0; margin-right: 0.5rem; }
+body.cards-list .card-meta { margin: 0; padding: 0 0.75rem 0 0; flex-shrink: 0; }
+.zone-rating { display: flex; align-items: center; gap: 0.35rem; }
+.zone-rating button.voted { background: rgba(255, 255, 255, 0.35); }
 
 .zone-item button {
     background: transparent;
@@ -692,6 +769,16 @@ main {
         transform: scale(1) translateY(0);
         opacity: 1;
     }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
 }
 
 .popup-header {
@@ -1038,6 +1125,8 @@ footer {
                     <option value="trendingDay">Trending (Day)</option>
                     <option value="trendingWeek">Trending (Week)</option>
                     <option value="trendingMonth">Trending (Month)</option>
+                    <option value="topRated">Top Rated</option>
+                    <option value="myPlaytime">My Most Played</option>
                 </select>
                 <select id="filterOptions" onchange="filterZones2()">
                     <option value="none">(SELECT TAG)</option>
@@ -1079,6 +1168,16 @@ footer {
 	<main>
 </div>
     <br>
+        <details id="favoritesWrapper" open hidden>
+            <summary id="favoritesSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Favorites</summary>
+            <div id="favoriteZones" class="zone-container"></div>
+            <br>
+        </details>
+        <details id="recentWrapper" open hidden>
+            <summary id="recentSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Recently Played</summary>
+            <div id="recentZones" class="zone-container"></div>
+            <br>
+        </details>
         <details id="featuredZonesWrapper" open>
             <summary id="allZonesSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Featured Zones</summary>
             <div id="featuredZones" class="zone-container"></div>
@@ -1118,6 +1217,10 @@ footer {
                 <button onclick="fullscreenZone()">Fullscreen</button>
                 <button onclick="aboutBlank()">Open in New Tab</button>
                 <button onclick="downloadZone()">Download</button>
+                <span class="zone-rating">
+                    <button id="rateUp" onclick="rateCurrentZone(1)" title="I like this game" aria-label="Like">👍 <span id="rateUpCount"></span></button>
+                    <button id="rateDown" onclick="rateCurrentZone(-1)" title="I don't like this game" aria-label="Dislike">👎 <span id="rateDownCount"></span></button>
+                </span>
                 <button onclick="reportCurrentZone()">Report Broken</button>
                 <button onclick="closeZone()">Close</button>
             </div>
@@ -1301,6 +1404,10 @@ function sortZones() {
         zones.sort((a, b) => ((popularityData['week']?.[b.id]) ?? 0) - ((popularityData['week']?.[a.id]) ?? 0));
     } else if (sortBy === 'trendingDay') {
         zones.sort((a, b) => ((popularityData['day']?.[b.id]) ?? 0) - ((popularityData['day']?.[a.id]) ?? 0));
+    } else if (sortBy === 'topRated') {
+        zones.sort((a, b) => ratingScore(b.id) - ratingScore(a.id) || a.name.localeCompare(b.name));
+    } else if (sortBy === 'myPlaytime') {
+        zones.sort((a, b) => getPlaytime(b.id) - getPlaytime(a.id) || a.name.localeCompare(b.name));
     }
     zones.sort((a, b) => (a.id === -1 ? -1 : b.id === -1 ? 1 : 0));
     if (featuredContainer.innerHTML === "") {
@@ -1308,6 +1415,7 @@ function sortZones() {
         displayFeaturedZones(featured);
     }
     displayZones(zones);
+    renderPersonalRows();
 }
 
 function createZoneCard(file) {
@@ -1329,6 +1437,38 @@ function createZoneCard(file) {
         openZone(file);
     };
     zoneItem.appendChild(button);
+
+    // Favorite star
+    const fav = document.createElement("button");
+    fav.className = "card-fav" + (isFavorite(file.id) ? " on" : "");
+    fav.textContent = isFavorite(file.id) ? "★" : "☆";
+    fav.title = isFavorite(file.id) ? "Remove from favorites" : "Add to favorites";
+    fav.setAttribute("aria-label", fav.title);
+    fav.onclick = (event) => { event.stopPropagation(); toggleFavorite(file.id); };
+    zoneItem.prepend(fav);
+
+    // Flag games that many people recently reported as broken
+    const stats = getZoneStats(file.id);
+    if (stats.reports >= BROKEN_FLAG_THRESHOLD) {
+        const flag = document.createElement("div");
+        flag.className = "card-flag";
+        flag.textContent = `⚠ ${stats.reports} broken reports`;
+        flag.title = `${stats.reports} people reported this game as broken in the last ${BROKEN_REPORT_DAYS} days. It may not load.`;
+        zoneItem.appendChild(flag);
+    }
+
+    // Your play time + community rating
+    const metaParts = [];
+    const played = getPlaytime(file.id);
+    if (played >= 60) metaParts.push("⏱ " + formatPlaytime(played));
+    const votes = stats.up + stats.down;
+    if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(`👍 ${Math.round(stats.up / votes * 100)}%`);
+    if (metaParts.length) {
+        const meta = document.createElement("div");
+        meta.className = "card-meta";
+        metaParts.forEach(t => { const span = document.createElement("span"); span.textContent = t; meta.appendChild(span); });
+        zoneItem.appendChild(meta);
+    }
 
     // Play count badge
     if (getShowPlayCount()) {
@@ -1512,9 +1652,12 @@ function openZone(file) {
         }
         zoneViewer.style.display = "flex";
         zoneViewer.hidden = false;
+        addRecentZone(file.id);
+        startPlaytime(file.id);
+        updateRatingBar(file.id);
         if (zoneFrame.contentDocument !== null) {
             zoneFrame.contentDocument.open();
-            zoneFrame.contentDocument.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#94a3b8;font-family:sans-serif;font-size:1.2rem;">Loading...</body></html>');
+            zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
             zoneFrame.contentDocument.close();
         }
         fetchWithFallback(file.url).then(html => {
@@ -1546,6 +1689,7 @@ function aboutBlank() {
 }
 
 function closeZone() {
+    stopPlaytime();
     zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
     zoneViewer.removeChild(zoneFrame);
@@ -1628,99 +1772,42 @@ function isProtectedStorageKey(key) {
 }
 
 async function saveData() {
-    alert("This might take a while, dont touch anything other than this OK button");
-    const result = {};
-    result.cookies = document.cookie;
-    result.localStorage = {};
-    for (const key of Object.keys(localStorage)) {
-      if (isProtectedStorageKey(key)) continue; // never export the GitHub token or owner settings
-      result.localStorage[key] = localStorage.getItem(key);
+    // Same format as cloud saves: keeps binary game data, keys and indexes intact.
+    try {
+        const bundle = await collectCloudBundle();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([JSON.stringify({ gnmathExport: 2, exportedAt: new Date().toISOString(), bundle })], {
+            type: "application/octet-stream"
+        }));
+        link.download = `gn-math-save-${new Date().toISOString().slice(0, 10)}.data`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (e) {
+        console.error(e);
+        alert("Export failed: " + (e.message || e));
     }
-    result.sessionStorage = {...sessionStorage};
-    result.indexedDB = {};
-    const dbs = await indexedDB.databases();
-    for (const dbInfo of dbs) {
-      if (!dbInfo.name) continue;
-      result.indexedDB[dbInfo.name] = {};
-      await new Promise((resolve, reject) => {
-        const openRequest = indexedDB.open(dbInfo.name, dbInfo.version);
-        openRequest.onerror = () => reject(openRequest.error);
-        openRequest.onsuccess = () => {
-          const db = openRequest.result;
-          const storeNames = Array.from(db.objectStoreNames);
-          if (storeNames.length === 0) {
-            resolve();
-            return;
-          }
-          const transaction = db.transaction(storeNames, "readonly");
-          const storePromises = [];
-          for (const storeName of storeNames) {
-            result.indexedDB[dbInfo.name][storeName] = [];
-            const store = transaction.objectStore(storeName);
-            const getAllRequest = store.getAll();
-            const p = new Promise((res, rej) => {
-              getAllRequest.onsuccess = () => {
-                result.indexedDB[dbInfo.name][storeName] = sanitizeData(getAllRequest.result, 1000, 100);
-                res();
-              };
-              getAllRequest.onerror = () => rej(getAllRequest.error);
-            });
-            storePromises.push(p);
-          }
-          Promise.all(storePromises).then(() => resolve());
-        };
-      });
-    }
-
-    result.caches = {};
-    const cacheNames = await caches.keys();
-    for (const cacheName of cacheNames) {
-      const cache = await caches.open(cacheName);
-      const requests = await cache.keys();
-      result.caches[cacheName] = [];
-      for (const req of requests) {
-        const response = await cache.match(req);
-        if (!response) continue;
-        const cloned = response.clone();
-        const contentType = cloned.headers.get('content-type') || '';
-        let body;
-        try {
-          if (contentType.includes('application/json')) {
-            body = await cloned.json();
-          } else if (contentType.includes('text') || contentType.includes('javascript')) {
-            body = await cloned.text();
-          } else {
-            const buffer = await cloned.arrayBuffer();
-            body = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-          }
-        } catch (e) {
-          body = '[Unable to read body]';
-        }
-        result.caches[cacheName].push({
-          url: req.url,
-          body,
-          contentType
-        });
-      }
-    }
-  
-    alert("Done, wait for the download to come");
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(result)], {
-        type: "application/octet-stream"
-    }));
-    link.download = `${Date.now()}.data`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
-  
+
   async function loadData(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async function (e) {
-        const data = JSON.parse(e.target.result);
+        let data;
+        try { data = JSON.parse(e.target.result); } catch { alert("That isn't a valid save file."); return; }
+        if (data && data.gnmathExport === 2 && data.bundle) {
+            if (!confirm("Replace this device's game progress and settings with this save file?")) return;
+            try {
+                if (zoneViewer.style.display === "flex") closeZone();
+                await applyCloudBundle(data.bundle);
+                window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+                location.reload();
+            } catch (err) {
+                alert("Import failed: " + (err.message || err));
+            }
+            return;
+        }
         if (data.cookies) {
             data.cookies.split(';').forEach(cookie => {
               document.cookie = cookie.trim();
@@ -1897,7 +1984,6 @@ function reportBrokenZone(file) {
     currentReport.lastReportedAt = new Date().toISOString();
     reports[zoneId] = currentReport;
     setBrokenReports(reports);
-    alert(`${file.name} reported as broken. Total reports: ${currentReport.reports}.`);
 }
 
 function reportCurrentZone() {
@@ -1906,7 +1992,8 @@ function reportCurrentZone() {
         alert("No game is currently open.");
         return;
     }
-    reportBrokenZone(zone);
+    reportBrokenZone(zone);       // owner's local tally (owner panel)
+    reportBrokenShared(zone);     // shared count that flags cards for everyone
 }
 
 function getOwnerSiteMode() {
@@ -2027,6 +2114,7 @@ function renderOwnerPanel() {
     const storedPat    = getGithubPat();
     const maskedPat    = storedPat ? storedPat.slice(0, 10) + "•".repeat(12) + storedPat.slice(-4) : "";
     const footerLinks  = getFooterLinks() || [];
+    const visitorDefaults = getOwnerVisitorDefaults();
     const footerLinksJson = JSON.stringify(footerLinks, null, 2).replace(/"/g, '&quot;');
 
     popupBody.innerHTML = `
@@ -2057,6 +2145,28 @@ function renderOwnerPanel() {
             <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
+    </div>
+
+    <div class="settings-section">
+        <h4>New Visitor Defaults</h4>
+        <p style="margin:0 0 0.75rem;font-size:13px;color:var(--text-muted);">Applied only when a visitor has not chosen their own setting. Existing preferences are never overwritten.</p>
+        <label style="display:block;margin-bottom:0.35rem;">Color mode</label>
+        <select id="owner-default-mode" class="settings-select"><option value="dark" ${visitorDefaults.mode === "dark" ? "selected" : ""}>Dark</option><option value="light" ${visitorDefaults.mode === "light" ? "selected" : ""}>Light</option></select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Theme</label>
+        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${theme[0].toUpperCase() + theme.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Font size</label>
+        <select id="owner-default-font-size" class="settings-select">${["small", "medium", "large"].map(size => `<option value="${size}" ${visitorDefaults.fontSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Card size</label>
+        <select id="owner-default-card-size" class="settings-select">${["small", "medium", "large", "list"].map(size => `<option value="${size}" ${visitorDefaults.cardSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
+        <br><br><label style="display:block;margin-bottom:0.35rem;">Default sort</label>
+        <select id="owner-default-sort" class="settings-select">${[["name","Name"],["id","Date added"],["popular","Most popular"],["trendingDay","Trending today"],["trendingWeek","Trending this week"],["trendingMonth","Trending this month"]].map(([value,label]) => `<option value="${value}" ${visitorDefaults.defaultSort === value ? "selected" : ""}>${label}</option>`).join("")}</select>
+        <br><br><div class="settings-inline"><label>Compact header</label><input id="owner-default-compact" type="checkbox" ${visitorDefaults.compactMode ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Hide Featured section</label><input id="owner-default-hide-featured" type="checkbox" ${visitorDefaults.hideFeatured ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Autofocus search</label><input id="owner-default-autofocus" type="checkbox" ${visitorDefaults.autofocusSearch ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Show play count</label><input id="owner-default-play-count" type="checkbox" ${visitorDefaults.showPlayCount ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Warn before leaving</label><input id="owner-default-warn" type="checkbox" ${visitorDefaults.warnBeforeUnload ? "checked" : ""}></div>
+        <div class="settings-inline"><label>Reduce motion</label><input id="owner-default-reduced-motion" type="checkbox" ${visitorDefaults.reducedMotion ? "checked" : ""}></div>
+        <button class="settings-button" type="button" style="margin-top:0.75rem;" onclick="saveOwnerVisitorDefaults()">Save New Visitor Defaults</button>
     </div>
 
     <div class="settings-section">
@@ -2171,6 +2281,18 @@ function clearBrokenReports() {
     renderOwnerPanel();
 }
 
+function saveOwnerVisitorDefaults() {
+    const value = id => document.getElementById(id);
+    setOwnerVisitorDefaults({
+        mode: value("owner-default-mode").value, theme: value("owner-default-theme").value,
+        cardSize: value("owner-default-card-size").value, fontSize: value("owner-default-font-size").value, defaultSort: value("owner-default-sort").value,
+        compactMode: value("owner-default-compact").checked, hideFeatured: value("owner-default-hide-featured").checked,
+        autofocusSearch: value("owner-default-autofocus").checked, showPlayCount: value("owner-default-play-count").checked,
+        warnBeforeUnload: value("owner-default-warn").checked, reducedMotion: value("owner-default-reduced-motion").checked
+    });
+    alert("New visitor defaults saved. Existing visitor preferences are unchanged.");
+}
+
 // ── Announcement banner ──────────────────────────────────────────────────────
 
 function getAnnouncement() {
@@ -2279,6 +2401,7 @@ function ownerResetAll() {
     localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcement);
     localStorage.removeItem(OWNER_STORAGE_KEYS.announcementEnabled);
+    localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motd);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled);
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
@@ -2318,6 +2441,7 @@ const APP_SETTINGS_STORAGE_KEYS = {
     panicKeyEnabled: "gnmath-panic-key-enabled"
 };
 const OWNER_EXTRA_STORAGE_KEYS = {
+    visitorDefaults: "gnmath-owner-visitor-defaults",
     motd: "gnmath-owner-motd",
     motdEnabled: "gnmath-owner-motd-enabled",
     motdLastSeen: "gnmath-owner-motd-lastseen",
@@ -2334,6 +2458,36 @@ const OWNER_STORAGE_KEYS = {
     githubPat: "gnmath-owner-github-pat"
 };
 const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
+const VISITOR_DEFAULTS = {
+    mode: "dark", theme: "red", cardSize: "medium", fontSize: "medium", defaultSort: "name",
+    compactMode: false, hideFeatured: false, autofocusSearch: true, showPlayCount: false,
+    warnBeforeUnload: true, reducedMotion: false
+};
+
+function getOwnerVisitorDefaults() {
+    const stored = getJsonStorage(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults, {});
+    return { ...VISITOR_DEFAULTS, ...(stored && typeof stored === "object" ? stored : {}) };
+}
+
+function setOwnerVisitorDefaults(defaults, { sync = true } = {}) {
+    const safe = {
+        mode: defaults.mode === "light" ? "light" : "dark",
+        theme: AVAILABLE_THEMES.includes(defaults.theme) ? defaults.theme : "red",
+        cardSize: ["small", "medium", "large", "list"].includes(defaults.cardSize) ? defaults.cardSize : "medium",
+        fontSize: ["small", "medium", "large"].includes(defaults.fontSize) ? defaults.fontSize : "medium",
+        defaultSort: ["name", "id", "popular", "trendingDay", "trendingWeek", "trendingMonth"].includes(defaults.defaultSort) ? defaults.defaultSort : "name",
+        compactMode: Boolean(defaults.compactMode), hideFeatured: Boolean(defaults.hideFeatured),
+        autofocusSearch: Boolean(defaults.autofocusSearch), showPlayCount: Boolean(defaults.showPlayCount),
+        warnBeforeUnload: Boolean(defaults.warnBeforeUnload), reducedMotion: Boolean(defaults.reducedMotion)
+    };
+    setJsonStorage(OWNER_EXTRA_STORAGE_KEYS.visitorDefaults, safe);
+    if (sync) githubAutoSync();
+}
+
+function getVisitorSetting(storageKey, defaultKey) {
+    const saved = localStorage.getItem(storageKey);
+    return saved === null ? getOwnerVisitorDefaults()[defaultKey] : saved;
+}
 
 // ── GitHub Sync ──────────────────────────────────────────────────────────────
 const GITHUB_SYNC_REPO  = "SCHSwork/math";
@@ -2363,6 +2517,7 @@ function buildOwnerSettingsObject() {
             enabled: getMotd().enabled
         },
         footerLinks: getFooterLinks() || [],
+        visitorDefaults: getOwnerVisitorDefaults(),
         updatedAt: new Date().toISOString()
     };
 }
@@ -2387,6 +2542,10 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (settings.motd && typeof settings.motd === "object") {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motd, settings.motd.text ?? "");
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdEnabled, settings.motd.enabled ? "true" : "false");
+    }
+    if (settings.visitorDefaults && typeof settings.visitorDefaults === "object") {
+        setOwnerVisitorDefaults(settings.visitorDefaults, { sync: false });
+        applySavedSettings();
     }
     if (Array.isArray(settings.footerLinks)) {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));
@@ -2544,15 +2703,15 @@ const TAB_CLOAK_PRESETS = {
 };
 
 function applySavedSettings() {
-    const savedMode = localStorage.getItem("gnmath-mode");
+    const savedMode = getVisitorSetting("gnmath-mode", "mode");
     if (savedMode === "light") {
         document.body.classList.remove("dark-mode");
     } else {
         document.body.classList.add("dark-mode");
     }
 
-    const savedTheme = localStorage.getItem("gnmath-theme") || "red";
-    setTheme(savedTheme);
+    const savedTheme = getVisitorSetting("gnmath-theme", "theme");
+    setTheme(savedTheme, { persist: false });
     applyStoredCustomPrimaryColor();
     initializeDefaultTabCloak();
     applyStoredTabCloak();
@@ -2571,7 +2730,7 @@ function applySavedSettings() {
 }
 
 // ── Card size ────────────────────────────────────────────────────────────────
-function getCardSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.cardSize) || "medium"; }
+function getCardSize() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.cardSize, "cardSize"); }
 function setCardSize(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.cardSize, val);
     applyCardSize();
@@ -2583,7 +2742,7 @@ function applyCardSize() {
 }
 
 // ── Font size ────────────────────────────────────────────────────────────────
-function getFontSize() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.fontSize) || "medium"; }
+function getFontSize() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.fontSize, "fontSize"); }
 function setFontSize(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.fontSize, val);
     applyFontSize();
@@ -2595,7 +2754,7 @@ function applyFontSize() {
 }
 
 // ── Compact mode ─────────────────────────────────────────────────────────────
-function getCompactMode() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.compactMode) === "true"; }
+function getCompactMode() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.compactMode, "compactMode") === true || getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.compactMode, "compactMode") === "true"; }
 function setCompactMode(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.compactMode, val ? "true" : "false");
     applyCompactMode();
@@ -2605,7 +2764,7 @@ function applyCompactMode() {
 }
 
 // ── Hide featured ─────────────────────────────────────────────────────────────
-function getHideFeatured() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured) === "true"; }
+function getHideFeatured() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.hideFeatured, "hideFeatured") === true || getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.hideFeatured, "hideFeatured") === "true"; }
 function setHideFeatured(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.hideFeatured, val ? "true" : "false");
     applyHideFeatured();
@@ -2616,7 +2775,7 @@ function applyHideFeatured() {
 }
 
 // ── Default sort ──────────────────────────────────────────────────────────────
-function getDefaultSort() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.defaultSort) || "name"; }
+function getDefaultSort() { return getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.defaultSort, "defaultSort"); }
 function setDefaultSort(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.defaultSort, val);
 }
@@ -2627,13 +2786,13 @@ function applyDefaultSort() {
 }
 
 // ── Autofocus search ──────────────────────────────────────────────────────────
-function getAutofocusSearch() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch) !== "false"; }
+function getAutofocusSearch() { const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, "autofocusSearch"); return value === true || value === "true"; }
 function setAutofocusSearch(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.autofocusSearch, val ? "true" : "false");
 }
 
 // ── Show play count on cards ──────────────────────────────────────────────────
-function getShowPlayCount() { return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount) === "true"; }
+function getShowPlayCount() { const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.showPlayCount, "showPlayCount"); return value === true || value === "true"; }
 function setShowPlayCount(val) {
     localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.showPlayCount, val ? "true" : "false");
     featuredContainer.innerHTML = "";
@@ -2755,17 +2914,17 @@ function darkMode() {
     localStorage.setItem("gnmath-mode", mode);
 }
 
-function setTheme(themeName) {
+function setTheme(themeName, { persist = true } = {}) {
     const safeTheme = AVAILABLE_THEMES.includes(themeName) ? themeName : "red";
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
     document.body.classList.add(`theme-${safeTheme}`);
-    localStorage.setItem("gnmath-theme", safeTheme);
-    clearCustomPrimaryColor();
+    if (persist) localStorage.setItem("gnmath-theme", safeTheme);
+    if (persist) clearCustomPrimaryColor();
     updateThemeButtons();
 }
 
 function updateThemeButtons() {
-    const activeTheme = localStorage.getItem("gnmath-theme") || "red";
+    const activeTheme = getVisitorSetting("gnmath-theme", "theme");
     const buttons = document.querySelectorAll("[data-theme-option]");
     buttons.forEach(button => {
         const isActive = button.dataset.themeOption === activeTheme;
@@ -2874,7 +3033,8 @@ function applyStoredTabCloak() {
 }
 
 function getWarnBeforeUnloadEnabled() {
-    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload) !== "false";
+    const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.warnBeforeUnload, "warnBeforeUnload");
+    return value === true || value === "true";
 }
 
 function setWarnBeforeUnloadEnabled(isEnabled) {
@@ -2890,7 +3050,8 @@ function updateBeforeUnloadProtection() {
 }
 
 function getReducedMotionEnabled() {
-    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.reducedMotion) === "true";
+    const value = getVisitorSetting(APP_SETTINGS_STORAGE_KEYS.reducedMotion, "reducedMotion");
+    return value === true || value === "true";
 }
 
 function setReducedMotionEnabled(isEnabled) {
@@ -3612,7 +3773,7 @@ let cloudBusy = false, cloudStatus = "", cloudAutosaveTimer = null;
 
 // ── What goes into a save ────────────────────────────────────────────────────
 function isCloudExcludedStorageKey(key) {
-    return isProtectedStorageKey(key) || key.startsWith("gnmath-cloud-") || key.startsWith("firebase:");
+    return isProtectedStorageKey(key) || key.startsWith("gnmath-cloud-") || key.startsWith("gnmath-cache-") || key.startsWith("firebase:");
 }
 function isCloudExcludedDb(name) {
     // Firebase's own login/cache databases, and Unity's download cache (game files, not progress)
@@ -4106,6 +4267,286 @@ async function initCloudAccounts() {
     }
 }
 initCloudAccounts();
+</script>
+<script>
+// ═════════════════════════════════════════════════════════════════════════════
+// Library features: favorites, recently played, play time, loading screen,
+// "/" search shortcut, and shared ratings + broken-report flags.
+// Favorites, recents and play time live in localStorage, so cloud saves and
+// Export Data carry them to other devices automatically.
+// ═════════════════════════════════════════════════════════════════════════════
+const LIB_KEYS = {
+    favorites: "gnmath-favorites",
+    recent: "gnmath-recent",
+    playtime: "gnmath-playtime",
+    statsCache: "gnmath-cache-stats"   // gnmath-cache-* is never uploaded in saves
+};
+const RECENT_MAX = 12;
+const BROKEN_FLAG_THRESHOLD = 3;   // distinct people...
+const BROKEN_REPORT_DAYS = 14;     // ...within this many days
+const MIN_VOTES_TO_SHOW = 3;
+const STATS_SHARDS = 16;
+const STATS_CACHE_MS = 10 * 60 * 1000;
+
+function readJson(key, fallback) {
+    try {
+        const v = JSON.parse(localStorage.getItem(key));
+        return v === null || v === undefined ? fallback : v;
+    } catch { return fallback; }
+}
+function writeJson(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn(e); }
+}
+function zoneById(id) { return zones.find(z => String(z.id) === String(id)); }
+
+// ── Favorites ───────────────────────────────────────────────────────────────
+function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
+function isFavorite(id) { return getFavorites().includes(String(id)); }
+function toggleFavorite(id) {
+    const favs = getFavorites();
+    const key = String(id);
+    const i = favs.indexOf(key);
+    if (i === -1) favs.unshift(key); else favs.splice(i, 1);
+    writeJson(LIB_KEYS.favorites, favs);
+    refreshCards();
+}
+
+// ── Recently played ─────────────────────────────────────────────────────────
+function getRecent() { const r = readJson(LIB_KEYS.recent, []); return Array.isArray(r) ? r.map(String) : []; }
+function addRecentZone(id) {
+    const key = String(id);
+    const list = [key, ...getRecent().filter(x => x !== key)].slice(0, RECENT_MAX);
+    writeJson(LIB_KEYS.recent, list);
+}
+
+// ── Rows above Featured ─────────────────────────────────────────────────────
+function renderRow(wrapperId, gridId, summaryId, label, ids) {
+    const wrapper = document.getElementById(wrapperId);
+    const grid = document.getElementById(gridId);
+    if (!wrapper || !grid) return;
+    const items = ids.map(zoneById).filter(z => z && !isZoneDisabled(z.id));
+    grid.innerHTML = "";
+    items.forEach(z => grid.appendChild(createZoneCard(z)));
+    wrapper.hidden = items.length === 0;
+    document.getElementById(summaryId).textContent = `${label} (${items.length})`;
+    observeLazyZoneImages(`#${gridId} img.lazy-zone-img`);
+}
+function renderPersonalRows() {
+    if (!Array.isArray(zones) || !zones.length) return;
+    renderRow("favoritesWrapper", "favoriteZones", "favoritesSummary", "Favorites", getFavorites());
+    renderRow("recentWrapper", "recentZones", "recentSummary", "Recently Played", getRecent());
+}
+// Redraw every card section (after a favorite, a vote or new stats)
+function refreshCards() {
+    if (!Array.isArray(zones) || !zones.length) return;
+    featuredContainer.innerHTML = "";
+    displayFeaturedZones(zones.filter(z => z.featured));
+    const q = (searchBar.value || "").trim();
+    if (q) filterZones();
+    else if (typeof filterOptions !== "undefined" && filterOptions.value && filterOptions.value !== "none") filterZones2();
+    else displayZones(zones);
+    renderPersonalRows();
+}
+
+// ── Play time ───────────────────────────────────────────────────────────────
+let playSession = null;
+function getPlaytimeMap() { const m = readJson(LIB_KEYS.playtime, {}); return m && typeof m === "object" ? m : {}; }
+function getPlaytime(id) { return Number(getPlaytimeMap()[String(id)]) || 0; }
+function formatPlaytime(sec) {
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+    return h ? `${h}h ${m}m` : `${Math.max(1, m)}m`;
+}
+function flushPlaytime() {
+    if (!playSession || playSession.pending < 1) return;
+    const map = getPlaytimeMap();
+    map[playSession.id] = (Number(map[playSession.id]) || 0) + Math.round(playSession.pending);
+    playSession.pending = 0;
+    writeJson(LIB_KEYS.playtime, map);
+}
+function startPlaytime(id) {
+    stopPlaytime();
+    let last = Date.now();
+    playSession = { id: String(id), pending: 0, timer: null };
+    playSession.timer = setInterval(() => {
+        const now = Date.now();
+        // Only count time while the tab is visible (playing, not just left open)
+        if (document.visibilityState === "visible") playSession.pending += Math.min(now - last, 10000) / 1000;
+        last = now;
+        if (playSession.pending >= 30) flushPlaytime();
+    }, 5000);
+}
+function stopPlaytime() {
+    if (!playSession) return;
+    clearInterval(playSession.timer);
+    flushPlaytime();
+    playSession = null;
+}
+window.addEventListener("pagehide", () => flushPlaytime());
+
+// ── Loading screen ──────────────────────────────────────────────────────────
+function gameLoadingScreenHtml(file) {
+    const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const cover = file.cover ? file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL) : "";
+    return `<!doctype html><html><head><meta charset="utf-8"><style>
+        html,body{margin:0;height:100%;background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif}
+        body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:16px;box-sizing:border-box}
+        img{width:160px;height:160px;object-fit:cover;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+        h1{font-size:22px;margin:0}
+        .bar{width:220px;height:6px;border-radius:99px;background:#1e293b;overflow:hidden}
+        .bar span{display:block;width:40%;height:100%;border-radius:99px;background:#fc2651;animation:slide 1.1s ease-in-out infinite}
+        @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+        p{margin:0;color:#94a3b8;font-size:14px}
+    </style></head><body>
+        ${cover ? `<img src="${esc(cover)}" alt="">` : ""}
+        <h1>${esc(file.name)}</h1>
+        <div class="bar"><span></span></div>
+        <p>Loading game…</p>
+    </body></html>`;
+}
+
+// ── "/" jumps to search ─────────────────────────────────────────────────────
+window.addEventListener("keydown", e => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+    if (zoneViewer.style.display === "flex") return; // a game is open
+    e.preventDefault();
+    searchBar.focus();
+    searchBar.select();
+});
+
+// ── Shared ratings + broken reports (Firestore: gameStats/s0 … s15) ─────────
+// Each shard doc holds { "z<id>": { v: { <uid>: 1 | -1 }, r: { <uid>: timestamp } } }.
+// Rules only let a signed-in user change their own entry.
+let gameStats = {};   // { "<id>": { up, down, reports, v: {uid: ±1}, r: {uid: ms} } }
+function shardFor(id) { const n = Number(id) || 0; return "s" + (((n % STATS_SHARDS) + STATS_SHARDS) % STATS_SHARDS); }
+function getZoneStats(id) { return gameStats[String(id)] || { up: 0, down: 0, reports: 0, v: {}, r: {} }; }
+function ratingScore(id) {
+    const s = getZoneStats(id);
+    return (s.up + 1) / (s.up + s.down + 2); // smoothed % liked, so 1 vote doesn't beat 50
+}
+function summarizeStats(raw) {
+    const out = {};
+    const cutoff = Date.now() - BROKEN_REPORT_DAYS * 86400000;
+    for (const [zk, entry] of Object.entries(raw)) {
+        const id = zk.slice(1);
+        const v = entry.v || {}, r = entry.r || {};
+        const values = Object.values(v);
+        out[id] = {
+            up: values.filter(x => x === 1).length,
+            down: values.filter(x => x === -1).length,
+            reports: Object.values(r).filter(ms => ms >= cutoff).length,
+            v, r
+        };
+    }
+    return out;
+}
+async function loadGameStats({ force = false } = {}) {
+    const cached = readJson(LIB_KEYS.statsCache, null);
+    if (cached && cached.raw) gameStats = summarizeStats(cached.raw);
+    if (!force && cached && Date.now() - cached.t < STATS_CACHE_MS) return;
+    if (typeof cloudDb === "undefined" || !cloudDb) return;
+    try {
+        const snap = await cloudDb.collection("gameStats").get();
+        const raw = {};
+        snap.docs.forEach(doc => {
+            const data = doc.data() || {};
+            for (const [zk, entry] of Object.entries(data)) {
+                if (!/^z-?\d+$/.test(zk) || !entry || typeof entry !== "object") continue;
+                const dest = raw[zk] || (raw[zk] = { v: {}, r: {} });
+                for (const [uid, val] of Object.entries(entry.v || {})) if (val === 1 || val === -1) dest.v[uid] = val;
+                for (const [uid, ts] of Object.entries(entry.r || {})) {
+                    const ms = ts && typeof ts.toMillis === "function" ? ts.toMillis() : Number(ts) || 0;
+                    dest.r[uid] = Math.max(dest.r[uid] || 0, ms);
+                }
+            }
+        });
+        writeJson(LIB_KEYS.statsCache, { t: Date.now(), raw });
+        gameStats = summarizeStats(raw);
+        refreshCards();
+        const open = document.getElementById("zoneId")?.textContent;
+        if (open && zoneViewer.style.display === "flex") updateRatingBar(open);
+    } catch (e) {
+        console.warn("Couldn't load ratings/reports", e);
+    }
+}
+function updateRatingBar(id) {
+    const s = getZoneStats(id);
+    const uid = cloudUser && cloudUser.uid;
+    const mine = uid ? s.v[uid] : undefined;
+    const up = document.getElementById("rateUp"), down = document.getElementById("rateDown");
+    if (!up || !down) return;
+    document.getElementById("rateUpCount").textContent = s.up || "";
+    document.getElementById("rateDownCount").textContent = s.down || "";
+    up.classList.toggle("voted", mine === 1);
+    down.classList.toggle("voted", mine === -1);
+}
+function statsErrorText(e) {
+    const code = (e && e.code) || "";
+    if (code.includes("permission-denied") || /insufficient permissions/i.test((e && e.message) || ""))
+        return "this feature isn't switched on yet (the site owner needs to update the database rules).";
+    return (e && e.message) || String(e);
+}
+function needAccountFor(what) {
+    if (typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG) { alert(`${what} isn't available on this site.`); return true; }
+    if (!cloudUser) {
+        alert(`Sign in (or create a free account) to ${what.toLowerCase()}. It keeps it to one per person.`);
+        openAccountPanel();
+        return true;
+    }
+    return false;
+}
+async function writeGameStat(id, field, value, { remove = false } = {}) {
+    const zk = "z" + String(id);
+    const uid = cloudUser.uid;
+    const stored = remove ? firebase.firestore.FieldValue.delete()
+        : field === "r" ? firebase.firestore.FieldValue.serverTimestamp() : value;
+    await cloudDb.collection("gameStats").doc(shardFor(id)).set({
+        [zk]: { [field]: { [uid]: stored } },
+        last: { z: zk, u: uid }
+    }, { merge: true });
+    // Update our local copy right away so the UI reacts instantly
+    const cached = readJson(LIB_KEYS.statsCache, { t: 0, raw: {} });
+    const entry = cached.raw[zk] || (cached.raw[zk] = { v: {}, r: {} });
+    if (field === "v") { if (remove) delete entry.v[uid]; else entry.v[uid] = value; }
+    if (field === "r") entry.r[uid] = Date.now();
+    writeJson(LIB_KEYS.statsCache, cached);
+    gameStats = summarizeStats(cached.raw);
+}
+async function rateCurrentZone(value) {
+    const id = document.getElementById("zoneId").textContent;
+    if (!id || needAccountFor("Rating games")) return;
+    const current = getZoneStats(id).v[cloudUser.uid];
+    try {
+        // Clicking your current vote again removes it
+        await writeGameStat(id, "v", value, { remove: current === value });
+        updateRatingBar(id);
+        refreshCards();
+    } catch (e) {
+        console.error(e);
+        alert("Couldn't save your rating: " + statsErrorText(e));
+    }
+}
+async function reportBrokenShared(zone) {
+    if (needAccountFor("Reporting broken games")) return;
+    if (!confirm(`Report "${zone.name}" as broken? Games with ${BROKEN_FLAG_THRESHOLD}+ recent reports get a warning flag for everyone.`)) return;
+    try {
+        await writeGameStat(zone.id, "r", true);
+        refreshCards();
+        alert(`Thanks — "${zone.name}" has been reported. (${getZoneStats(zone.id).reports} report(s) in the last ${BROKEN_REPORT_DAYS} days.)`);
+    } catch (e) {
+        console.error(e);
+        alert("Couldn't send the report: " + statsErrorText(e));
+    }
+}
+
+// Load cached stats immediately, then fresh ones once Firebase is ready
+gameStats = summarizeStats((readJson(LIB_KEYS.statsCache, {}) || {}).raw || {});
+(function waitForDb(tries) {
+    if (typeof cloudDb !== "undefined" && cloudDb) return loadGameStats();
+    if (tries > 0) setTimeout(() => waitForDb(tries - 1), 500);
+})(40);
+setInterval(() => { if (!document.hidden) loadGameStats(); }, STATS_CACHE_MS);
 </script>
 </body>
 </html>
