@@ -17,6 +17,9 @@ The game list and game files come from the community-run gn-math library on jsDe
 - **Loading bar** with real progress, size and time left for big games
 - Fullscreen, rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
 
+**Reliable**
+- Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, links inside games are rewritten when jsDelivr is down, and the last game list is kept as an offline backup.
+
 **Clean games**
 - Ad loaders, ad banners and Google Analytics are stripped from every game before it runs, and known ad and tracking hosts are blocked as a backup.
 

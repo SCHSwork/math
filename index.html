@@ -1482,6 +1482,126 @@ const htmlURLFallbacks = [
     "https://cdn.jsdelivr.net/gh/freebuisness/html",
     "https://raw.githubusercontent.com/freebuisness/html/main"
 ];
+// ── Redundancy: every game-library file can come from three places ─────────
+// jsDelivr (fast CDN) → GitHub directly → githack (another CDN). A source that
+// fails, times out, or gets redirected (e.g. to a school filter's block page)
+// is skipped for the rest of the session.
+const MIRRORS = {
+    jsdelivr: (o, r, ref, p) => `https://cdn.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
+    github:   (o, r, ref, p) => `https://raw.githubusercontent.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`,
+    githack:  (o, r, ref, p) => `https://rawcdn.githack.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`
+};
+const MIRROR_HOSTS = { "cdn.jsdelivr.net": "jsdelivr", "raw.githubusercontent.com": "github", "rawcdn.githack.com": "githack" };
+const mirrorDown = new Set((() => { try { return JSON.parse(sessionStorage.getItem("gnmath-mirror-down") || "[]"); } catch { return []; } })());
+function markMirror(name, ok) {
+    if (!name) return;
+    const before = mirrorDown.has(name);
+    if (ok) mirrorDown.delete(name); else mirrorDown.add(name);
+    if (before !== mirrorDown.has(name)) {
+        try { sessionStorage.setItem("gnmath-mirror-down", JSON.stringify([...mirrorDown])); } catch {}
+        console.info(`Game source ${name} is ${ok ? "back up" : "unavailable"}`);
+    }
+}
+function mirrorUrls(owner, repo, ref, path) {
+    const order = ["jsdelivr", "github", "githack"];
+    order.sort((a, b) => mirrorDown.has(a) - mirrorDown.has(b)); // working sources first
+    return order.map(k => MIRRORS[k](owner, repo, ref, path));
+}
+function mirrorOf(url) { try { return MIRROR_HOSTS[new URL(url).hostname]; } catch { return null; } }
+// Try each URL until one returns a usable response
+async function fetchFirst(urls, { timeoutMs = 15000, validate, track = true } = {}) {
+    let lastError = new Error("No sources");
+    for (const url of urls) {
+        const name = mirrorOf(url);
+        const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+        try {
+            const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+            // Redirected to some other site = blocked by a filter
+            if (res.redirected && new URL(res.url).hostname !== new URL(url).hostname) throw Object.assign(new Error("redirected"), { down: true });
+            if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { down: res.status >= 500 || res.status === 403 });
+            const out = validate ? await validate(res) : res;
+            if (track) markMirror(name, true);
+            return out;
+        } catch (err) {
+            // Network errors, timeouts, filter redirects and bad data count against the source
+            if (track && err.down !== false && !/^HTTP 404/.test(err.message)) markMirror(name, false);
+            lastError = err;
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+    throw lastError;
+}
+// When jsDelivr is unreachable, point the jsDelivr links inside a game at backups
+function rewriteForMirrors(html) {
+    if (!mirrorDown.has("jsdelivr") || typeof html !== "string") return html;
+    return html
+        .replace(/https?:\/\/cdn\.jsdelivr\.net\/gh\/([^\/@\s"'`<>]+)\/([^\/@\s"'`<>]+)(?:@([^\/\s"'`<>]+))?\//g,
+            (m, o, r, ref) => `https://rawcdn.githack.com/${o}/${r}/${!ref || ref === "latest" ? "HEAD" : ref}/`)
+        .replace(/https?:\/\/cdn\.jsdelivr\.net\/npm\//g, "https://unpkg.com/");
+}
+// Cover image URL from the best working source, with the rest kept as fallbacks
+function coverSources(cover) {
+    if (!cover) return [];
+    if (!cover.includes("{COVER_URL}")) return [cover.replace("{HTML_URL}", htmlURL)];
+    const path = cover.replace("{COVER_URL}/", "").replace("{COVER_URL}", "");
+    return mirrorUrls("freebuisness", "covers", "main", path);
+}
+function setCoverImage(img, cover, lazy) {
+    const list = coverSources(cover);
+    if (!list.length) return;
+    img.dataset.fallbacks = JSON.stringify(list.slice(1));
+    img.onerror = () => {
+        let rest = [];
+        try { rest = JSON.parse(img.dataset.fallbacks || "[]"); } catch {}
+        markMirror(mirrorOf(img.currentSrc || img.src), false);
+        if (!rest.length) { img.onerror = null; return; }
+        img.dataset.fallbacks = JSON.stringify(rest.slice(1));
+        img.src = rest[0];
+    };
+    if (lazy) img.dataset.src = list[0]; else img.src = list[0];
+}
+// The game list: newest copy from any source, or the last one that loaded
+const ZONES_CACHE_KEY = "gnmath-cache-zones";
+async function loadZoneList(sha) {
+    const urls = [];
+    if (sha) urls.push(`https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`);
+    for (const u of mirrorUrls("freebuisness", "assets", "main", "zones.json")) urls.push(u + "?t=" + Date.now());
+    try {
+        const data = await fetchFirst(urls, {
+            timeoutMs: 12000,
+            validate: async res => {
+                const j = await res.json();
+                if (!Array.isArray(j) || j.length === 0) throw new Error("bad game list");
+                return j;
+            }
+        });
+        try { localStorage.setItem(ZONES_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch {}
+        return data;
+    } catch (err) {
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem(ZONES_CACHE_KEY)); } catch {}
+        if (cached && Array.isArray(cached.data)) {
+            showSourceNotice(`Couldn't reach the game library, so this is the list saved on ${new Date(cached.t).toLocaleDateString()}. Some games may not load until it's back.`);
+            return cached.data;
+        }
+        throw err;
+    }
+}
+function showSourceNotice(text) {
+    let el = document.getElementById("sourceNotice");
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "sourceNotice";
+        el.setAttribute("role", "status");
+        el.style.cssText = "margin:0 0 1.5rem;padding:0.75rem 1rem;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:14px;";
+        const main = document.querySelector("main");
+        if (main) main.prepend(el);
+    }
+    el.textContent = text;
+}
+
 let zones = [];
 let popularityData = {};
 const featuredContainer = document.getElementById('featuredZones');
@@ -1508,11 +1628,8 @@ async function listZones() {
           if (apiRes.ok) sha = (await apiRes.json())[0]?.sha;
         } catch (error) {}
       }
-      if (sha && /^[0-9a-f]{7,40}$/i.test(sha)) {
-        zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
-      }
-        const response = await fetch(zonesURL+"?t="+Date.now());
-        const json = await response.json();
+      if (!(sha && /^[0-9a-f]{7,40}$/i.test(sha))) sha = null;
+        const json = await loadZoneList(sha);
         // Drop upstream promo tiles: "[!] ..." entries (Discord, comments, etc.),
         // anything named comments, and anything linking to Discord.
         zones = json.filter(z => {
@@ -1574,7 +1691,7 @@ async function listZones() {
         }
     } catch (error) {
         console.error(error);
-        container.innerHTML = `Error loading zones: ${error}`;
+        container.textContent = "Couldn't reach the game library from any source. Check your internet connection and refresh the page in a few minutes.";
     }
 }
 // Play counts come from jsDelivr's download stats for the game library.
@@ -1660,7 +1777,7 @@ function createZoneCard(file) {
     zoneItem.onclick = () => openZone(file);
 
     const img = document.createElement("img");
-    img.dataset.src = file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    setCoverImage(img, file.cover, true);
     img.alt = file.name;
     img.loading = "lazy";
     img.className = "lazy-zone-img";
@@ -1923,24 +2040,14 @@ function cleanGameHtml(html) {
 }
 
 async function fetchWithFallback(rawUrl) {
-    // Build a list of candidate URLs: primary htmlURL first, then each fallback
-    const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "");
+    // Game pages: try every source (jsDelivr, GitHub, githack), working ones first
+    const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "").replace(/^\//, "");
     const isHtml = rawUrl.includes("{HTML_URL}");
     const candidates = isHtml
-        ? [htmlURL, ...htmlURLFallbacks].map(base => base + suffix)
+        ? [...mirrorUrls("freebuisness", "html", "main", suffix), `${htmlURLFallbacks[0]}/${suffix}`]
         : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
-
-    let lastError;
-    for (const url of candidates) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return cleanGameHtml(await response.text());
-        } catch (err) {
-            lastError = err;
-        }
-    }
-    throw lastError;
+    const html = await fetchFirst(candidates, { timeoutMs: 30000, validate: res => res.text() });
+    return rewriteForMirrors(cleanGameHtml(html));
 }
 
 function openRandomZone() {
@@ -1998,7 +2105,7 @@ function openZone(file) {
         }).catch(error => {
             endGameLoad(true);
             closeZone();
-            alert("Failed to load zone: " + error);
+            alert(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`);
         });
     }
 }
@@ -2986,9 +3093,12 @@ async function githubSyncPull({ rerender = false } = {}) {
             // the unauthenticated API would hit fast on a shared school network.
             // It can cache for a few minutes, so lock/shutdown changes may take
             // up to ~5 minutes to reach everyone.
-            const res = await fetch(GITHUB_SYNC_CDN + "?t=" + Date.now(), { cache: "no-store" });
-            if (!res.ok) return;
-            settings = await res.json();
+            const [owner, repo] = GITHUB_SYNC_REPO.split("/");
+            try {
+                settings = await fetchFirst(
+                    [GITHUB_SYNC_CDN + "?t=" + Date.now(), MIRRORS.githack(owner, repo, "HEAD", GITHUB_SYNC_FILE), MIRRORS.jsdelivr(owner, repo, "main", GITHUB_SYNC_FILE)],
+                    { timeoutMs: 10000, validate: r => r.json(), track: false });
+            } catch { return; } // keep the last settings this browser already has
         }
         applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
@@ -4794,7 +4904,7 @@ function renderGameOfTheDay() {
     box.innerHTML = "";
     const img = document.createElement("img");
     img.alt = "";
-    img.src = (z.cover || "").replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    setCoverImage(img, z.cover || "", false);
     img.onclick = () => openZone(z);
     const info = document.createElement("div");
     info.style.minWidth = "0";
@@ -4817,9 +4927,11 @@ async function loadChangelog() {
     legalPopup("Changelog", `<p style="color:var(--text-muted);">Loading…</p>`);
     const body = document.querySelector("#popupBody .legal-doc");
     try {
-        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/CHANGELOG.md?t=${Date.now()}`, { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        body.innerHTML = `<div class="changelog-doc">${renderSimpleMarkdown(await res.text())}</div>`;
+        const [owner, repo] = GITHUB_SYNC_REPO.split("/");
+        const md = await fetchFirst([`https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/CHANGELOG.md?t=${Date.now()}`,
+            MIRRORS.githack(owner, repo, "HEAD", "CHANGELOG.md"), MIRRORS.jsdelivr(owner, repo, "main", "CHANGELOG.md")],
+            { timeoutMs: 10000, validate: r => r.text(), track: false });
+        body.innerHTML = `<div class="changelog-doc">${renderSimpleMarkdown(md)}</div>`;
     } catch (e) {
         body.innerHTML = `<p>Couldn't load the changelog right now. You can read it on <a href="https://github.com/${GITHUB_SYNC_REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">GitHub</a>.</p>`;
     }
@@ -5007,7 +5119,7 @@ function resetMyStats() {
 // ── Loading screen ──────────────────────────────────────────────────────────
 function gameLoadingScreenHtml(file) {
     const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    const cover = file.cover ? file.cover.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL) : "";
+    const cover = coverSources(file.cover)[0] || "";
     return `<!doctype html><html><head><meta charset="utf-8"><style>
         html,body{margin:0;height:100%;background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif}
         body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:16px;box-sizing:border-box}
