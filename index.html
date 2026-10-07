@@ -1439,8 +1439,10 @@ async function listZones() {
             const name = (z.name || "").trim();
             return !/^\[!\]/.test(name) && !/comment|discord/i.test(name) && !/discord\.(gg|com)/i.test(z.url || "");
         });
-        await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
+        // Show games right away using cached play counts, then refresh them
+        const popularityFresh = loadCachedPopularity();
         sortZones();
+        if (!popularityFresh) refreshPopularity().then(() => { featuredContainer.innerHTML = ""; sortZones(); });
         try {
         const search = new URLSearchParams(window.location.search);
         const id = search.get('id');
@@ -1495,27 +1497,49 @@ async function listZones() {
         container.innerHTML = `Error loading zones: ${error}`;
     }
 }
-async function fetchPopularity(duration) {
+// Play counts come from jsDelivr's download stats for the game library.
+// Game files are named like "70.html", "33-ff.html" or "253-update2.html";
+// every file for the same game number is added together. Stats are paged
+// (100 files per page), so all pages are read, and the result is cached.
+const POPULARITY_CACHE_KEY = "gnmath-cache-popularity";
+const POPULARITY_CACHE_MS = 3 * 60 * 60 * 1000;
+function loadCachedPopularity() {
     try {
-        if (!popularityData[duration]) {
-            popularityData[duration] = {};
+        const c = JSON.parse(localStorage.getItem(POPULARITY_CACHE_KEY));
+        if (c && c.data) {
+            for (const [period, map] of Object.entries(c.data)) popularityData[period] = map;
+            return Date.now() - c.t < POPULARITY_CACHE_MS;
         }
-        const response = await fetch(
-            "https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files?period=" + duration
-        );
-        const data = await response.json();
-        data.forEach(file => {
-            const idMatch = file.name.match(/\/(\d+)\.html$/);
-            if (idMatch) {
-                const id = parseInt(idMatch[1]);
-                popularityData[duration][id] = file.hits?.total ?? 0;
+    } catch {}
+    return false;
+}
+async function fetchPopularity(duration) {
+    const map = {};
+    const url = p => `https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files?period=${duration}&limit=100&page=${p}`;
+    let page = 1, done = false, ok = false;
+    while (!done && page <= 20) {
+        const batch = [page, page + 1, page + 2, page + 3];
+        const results = await Promise.all(batch.map(p => fetch(url(p)).then(r => (r.ok ? r.json() : null)).catch(() => null)));
+        for (const data of results) {
+            if (!Array.isArray(data) || data.length === 0) { done = true; break; }
+            ok = true;
+            for (const file of data) {
+                const m = typeof file.name === "string" && file.name.match(/^\/(\d+)(?:[-_.][^/]*)?\.html$/);
+                if (!m) continue;
+                map[m[1]] = (map[m[1]] || 0) + (file.hits?.total ?? 0);
             }
-        });
-    } catch (error) {
-        if (!popularityData[duration]) {
-            popularityData[duration] = {};
+            if (data.length < 100) { done = true; break; }
         }
-        popularityData[duration][0] = 0;
+        page += batch.length;
+    }
+    if (ok) popularityData[duration] = map;
+    else if (!popularityData[duration]) popularityData[duration] = {};
+    return ok;
+}
+async function refreshPopularity() {
+    const results = await Promise.all(["year", "month", "week", "day"].map(fetchPopularity));
+    if (results.some(Boolean)) {
+        try { localStorage.setItem(POPULARITY_CACHE_KEY, JSON.stringify({ t: Date.now(), data: popularityData })); } catch {}
     }
 }
 

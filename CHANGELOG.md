@@ -21,6 +21,7 @@ All the changes to GN 2.0, newest first.
 - The README was rewritten to describe the site as it is now.
 
 ### Fixed
+- **Play counts now work for every game.** Before, games whose files have names like `33-ff.html`, including many of the most popular ones, showed no count, and only the top 100 files were read. Popular and Trending sorts are accurate now too.
 - Clicking Close twice on a game no longer causes an error.
 
 ## October 6, 2026
