@@ -398,6 +398,32 @@ async function cloudSignOut() {
     await cloudAuth.signOut();
 }
 
+async function cloudChangePassword() {
+    const msg = document.getElementById("acct-pw-msg");
+    const say = (t, ok) => { if (msg) { msg.textContent = t; msg.style.color = ok ? "var(--success)" : "#ef4444"; } };
+    const oldPw = document.getElementById("acct-old-password")?.value || "";
+    const pw1 = document.getElementById("acct-new-password")?.value || "";
+    const pw2 = document.getElementById("acct-new-password2")?.value || "";
+    if (!cloudUser) return say("Sign in first.");
+    if (!oldPw) return say("Enter your current password.");
+    if (pw1.length < 6) return say("The new password needs at least 6 characters.");
+    if (pw1 !== pw2) return say("The new passwords don't match.");
+    if (pw1 === oldPw) return say("The new password is the same as the current one.");
+    say("Changing password…", true);
+    try {
+        // Firebase requires a fresh sign-in before changing a password
+        await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, oldPw));
+        await cloudUser.updatePassword(pw1);
+        ["acct-old-password", "acct-new-password", "acct-new-password2"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        say("Password changed.", true);
+        notify("Your password was changed. Use the new one next time you sign in.", { type: "success" });
+    } catch (e) {
+        console.error("Change password failed", e);
+        const code = (e && e.code) || "";
+        say(code.includes("invalid-credential") || code.includes("wrong-password") ? "Your current password is wrong." : friendlyAuthError(e));
+    }
+}
+
 async function cloudDeleteAccount() {
     const pw = document.getElementById("acct-delete-password")?.value || "";
     if (!cloudUser) return;
@@ -459,11 +485,23 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
                 <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
             </div>
-            <details style="margin-top:0.5rem;">
-                <summary style="cursor:pointer;color:var(--text-muted);font-size:14px;">Delete account</summary>
-                <p style="font-size:14px;color:var(--text-muted);">This permanently deletes your account and its cloud save. Game progress saved in this browser is not touched. This can't be undone.</p>
-                <label for="acct-delete-password" style="font-weight:bold;">Confirm your password</label><br>
-                <input type="password" id="acct-delete-password" autocomplete="current-password"><br><br>
+            <details class="acct-section">
+                <summary>Change password</summary>
+                <label for="acct-old-password">Current password</label>
+                <input type="password" id="acct-old-password" autocomplete="current-password">
+                <label for="acct-new-password">New password</label>
+                <input type="password" id="acct-new-password" autocomplete="new-password" aria-describedby="acct-pw-hint">
+                <label for="acct-new-password2">Confirm new password</label>
+                <input type="password" id="acct-new-password2" autocomplete="new-password">
+                <p id="acct-pw-hint" class="acct-hint">At least 6 characters. There's no password reset, so pick one you'll remember.</p>
+                <button class="settings-button" onclick="cloudChangePassword()">Change password</button>
+                <p id="acct-pw-msg" class="acct-msg" role="status"></p>
+            </details>
+            <details class="acct-section">
+                <summary>Delete account</summary>
+                <p class="acct-hint">This permanently deletes your account, its cloud save, and its ratings and reports. Game progress saved in this browser isn't touched.</p>
+                <label for="acct-delete-password">Confirm your password</label>
+                <input type="password" id="acct-delete-password" autocomplete="current-password">
                 <button class="settings-button" style="background:#b91c1c;" onclick="cloudDeleteAccount()">Delete my account</button>
             </details>
             <p id="acct-status" style="font-size:14px;color:var(--text-muted);"></p>`;
