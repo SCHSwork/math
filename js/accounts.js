@@ -346,13 +346,17 @@ async function cloudSyncOnSignIn() {
         if (!meta) { await uploadCloudSave({ force: true }); return; }
         if (meta.gen === localGen) { await uploadCloudSave(); return; }
         const when = meta.updatedAt && meta.updatedAt.toDate ? meta.updatedAt.toDate().toLocaleString() : "earlier";
-        const load = confirm(
-            `Your account has cloud progress from ${when}.\n\n` +
-            `OK = load it onto this device (replaces this device's game progress)\n` +
-            `Cancel = keep this device's progress and upload it instead`
-        );
-        if (load) await downloadCloudSave();
-        else await uploadCloudSave({ force: true });
+        const choice = await askChoice(
+            `Your account has game progress saved on ${when}, and this device has its own. Which do you want to keep?`, {
+                title: "Pick which progress to keep",
+                choices: [
+                    { value: "device", label: "Keep this device's" },
+                    { value: "cloud", label: "Load my cloud save", primary: true }
+                ]
+            });
+        if (choice === "cloud") await downloadCloudSave();
+        else if (choice === "device") await uploadCloudSave({ force: true });
+        else setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
     } catch (e) {
         console.error(e);
         setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
@@ -389,7 +393,7 @@ async function cloudSignIn(create) {
     }
 }
 async function cloudSignOut() {
-    if (!confirm("Save your progress to the cloud and sign out?")) return;
+    if (!(await askConfirm("Your progress will be saved to the cloud first.", { title: "Sign out?", confirmText: "Sign out" }))) return;
     await uploadCloudSave();
     await cloudAuth.signOut();
 }
@@ -398,7 +402,7 @@ async function cloudDeleteAccount() {
     const pw = document.getElementById("acct-delete-password")?.value || "";
     if (!cloudUser) return;
     if (!pw) { setCloudStatus("Enter your password to delete your account."); return; }
-    if (!confirm(`Permanently delete the account "${currentUsername()}" and its cloud save?`)) return;
+    if (!(await askConfirm(`This permanently deletes "${currentUsername()}", its cloud save, and its ratings and reports. It can't be undone.`, { title: "Delete account?", confirmText: "Delete account", danger: true }))) return;
     try {
         setCloudStatus("Deleting…");
         clearInterval(cloudAutosaveTimer);
@@ -415,7 +419,7 @@ async function cloudDeleteAccount() {
         localStorage.removeItem(CLOUD.keys.syncedGen);
         localStorage.removeItem(CLOUD.keys.syncedHash);
         cloudStatus = "";
-        alert("Your account and cloud save were deleted.");
+        notify("Your account and cloud save were deleted.", { type: "success" });
     } catch (e) {
         console.error("Delete account failed", e);
         setCloudStatus("Couldn't delete: " + friendlyAuthError(e));
@@ -423,6 +427,13 @@ async function cloudDeleteAccount() {
     } finally {
         cloudBusy = false;
     }
+}
+
+async function confirmUploadCloudSave() {
+    if (await askConfirm("This device's progress will replace your cloud save.", { title: "Save to cloud?", confirmText: "Save now" })) uploadCloudSave({ force: true });
+}
+async function confirmDownloadCloudSave() {
+    if (await askConfirm("Your cloud save will replace this device's game progress.", { title: "Load cloud save?", confirmText: "Load cloud save" })) downloadCloudSave();
 }
 
 // ── UI ──────────────────────────────────────────────────────────────────────
@@ -444,8 +455,8 @@ function openAccountPanel(mode) {
             <p style="margin-top:0;">Signed in as <b>${escapeHtml(currentUsername())}</b></p>
             <p style="color:var(--text-muted);font-size:14px;">Game progress saves to the cloud every 2 minutes, when you close a game, and when you sign out.</p>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;">
-                <button class="settings-button" onclick="uploadCloudSave({ force: confirm('Upload this device\\'s progress? It replaces your cloud save.') })">Save now</button>
-                <button class="settings-button" onclick="if (confirm('Replace this device\\'s game progress with your cloud save?')) downloadCloudSave()">Load cloud save</button>
+                <button class="settings-button" onclick="confirmUploadCloudSave()">Save now</button>
+                <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
                 <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
             </div>
             <details style="margin-top:0.5rem;">

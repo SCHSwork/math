@@ -200,7 +200,7 @@ async function listZones() {
                                 }
                                 document.body.appendChild(newScript);
                             });
-                        }).catch(error => alert("Failed to load zone: " + error));
+                        }).catch(() => notify("Couldn't load that game. Try again in a few minutes.", { type: "error" }));
                     }
                 }
             }
@@ -595,7 +595,7 @@ function openRandomZone() {
     const currentId = zoneViewer.style.display === "flex" ? document.getElementById('zoneId').textContent : null;
     const playable = zones.filter(zone => zone.url && !zone.url.startsWith("http") && !isZoneDisabled(zone.id) && zone.id + '' !== currentId);
     if (playable.length === 0) {
-        alert("Games are still loading, try again in a second!");
+        notify("Games are still loading. Try again in a second.");
         return;
     }
     openZone(playable[Math.floor(Math.random() * playable.length)]);
@@ -603,7 +603,7 @@ function openRandomZone() {
 
 function openZone(file) {
     if (isZoneDisabled(file.id)) {
-        alert("This game is disabled by the owner.");
+        notify("This game has been turned off by the site owner.");
         return;
     }
 
@@ -644,7 +644,7 @@ function openZone(file) {
         }).catch(error => {
             endGameLoad(true);
             closeZone();
-            alert(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`);
+            notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
         });
     }
 }
@@ -658,7 +658,7 @@ function aboutBlank() {
             newWindow.document.write(html);
             newWindow.document.close();
         }
-    }).catch(error => alert("Failed to open zone in new tab: " + error));
+    }).catch(() => notify("Couldn't open the game in a new tab. Try again in a few minutes.", { type: "error" }));
 }
 
 function closeZone() {
@@ -761,7 +761,7 @@ async function saveData() {
         document.body.removeChild(link);
     } catch (e) {
         console.error(e);
-        alert("Export failed: " + (e.message || e));
+        notify("Couldn't export your data: " + (e.message || e), { type: "error" });
     }
   }
 
@@ -771,16 +771,16 @@ async function saveData() {
     const reader = new FileReader();
     reader.onload = async function (e) {
         let data;
-        try { data = JSON.parse(e.target.result); } catch { alert("That isn't a valid save file."); return; }
+        try { data = JSON.parse(e.target.result); } catch { notify("That isn't a valid save file.", { type: "error" }); return; }
         if (data && data.gnmathExport === 2 && data.bundle) {
-            if (!confirm("Replace this device's game progress and settings with this save file?")) return;
+            if (!(await askConfirm("Your game progress and settings on this device will be replaced with the ones in this file.", { title: "Import this save?", confirmText: "Import" }))) return;
             try {
                 if (zoneViewer.style.display === "flex") closeZone();
                 await applyCloudBundle(data.bundle);
                 window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
                 location.reload();
             } catch (err) {
-                alert("Import failed: " + (err.message || err));
+                notify("Couldn't import that file: " + (err.message || err), { type: "error" });
             }
             return;
         }
@@ -864,9 +864,8 @@ async function saveData() {
               }
             }
           }
-        alert("Data loaded");
+        notify("Save file imported.", { type: "success" });
     };
-    alert("This might take a while, dont touch anything other than this OK button");
     reader.readAsText(file);
   }
 
@@ -965,7 +964,7 @@ function reportBrokenZone(file) {
 function reportCurrentZone() {
     const zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
     if (!zone) {
-        alert("No game is currently open.");
+        notify("No game is open.");
         return;
     }
     reportBrokenZone(zone);       // owner's local tally (owner panel)
@@ -1280,8 +1279,8 @@ async function renderOwnerReports(refresh) {
     }
 }
 
-function clearBrokenReports() {
-    if (!confirm("Clear all broken game reports?")) {
+async function clearBrokenReports() {
+    if (!(await askConfirm('This only clears the reports saved in this browser.', { title: 'Clear all broken-game reports?', confirmText: 'Clear', danger: true }))) {
         return;
     }
     setBrokenReports({});
@@ -1297,7 +1296,7 @@ function saveOwnerVisitorDefaults() {
         autofocusSearch: value("owner-default-autofocus").checked, showPlayCount: value("owner-default-play-count").checked,
         warnBeforeUnload: value("owner-default-warn").checked, reducedMotion: value("owner-default-reduced-motion").checked
     });
-    alert("New visitor defaults saved. Existing visitor preferences are unchanged.");
+    notify("New-visitor defaults saved. People who already chose their own settings keep them.", { type: "success" });
 }
 
 // ── Announcement banner ──────────────────────────────────────────────────────
@@ -1371,17 +1370,17 @@ function importDisabledZones(event) {
             const data = JSON.parse(e.target.result);
             if (!Array.isArray(data.disabledZoneIds)) throw new Error("Invalid format");
             setDisabledZoneIds(new Set(data.disabledZoneIds.map(String)));
-            alert(`Imported ${data.disabledZoneIds.length} disabled zone(s).`);
+            notify(`Imported ${data.disabledZoneIds.length} disabled game(s).`, { type: "success" });
             renderOwnerPanel();
         } catch (err) {
-            alert("Failed to import: " + err.message);
+            notify("Couldn't import that file: " + err.message, { type: "error" });
         }
     };
     reader.readAsText(file);
 }
 
-function enableAllZones() {
-    if (!confirm("Re-enable all disabled games?")) return;
+async function enableAllZones() {
+    if (!(await askConfirm('Every game you disabled will be visible to everyone again.', { title: 'Turn all games back on?', confirmText: 'Turn on all' }))) return;
     setDisabledZoneIds(new Set());
     githubAutoSync();
     renderOwnerPanel();
@@ -1395,14 +1394,14 @@ async function forceRefreshZones() {
     _allStatsCache = null;
     popularityData = {};
     await listZones();
-    alert("Zones refreshed!");
+    notify("Game list refreshed.", { type: "success" });
     renderOwnerPanel();
 }
 
 // ── Reset all owner data ─────────────────────────────────────────────────────
 
-function ownerResetAll() {
-    if (!confirm("This will clear ALL owner data: site mode, disabled zones, broken reports, announcement, MOTD, and footer links. Are you sure?")) return;
+async function ownerResetAll() {
+    if (!(await askConfirm('This clears site mode, disabled games, broken reports, the announcement, the message of the day and footer links.', { title: 'Reset all owner data?', confirmText: 'Reset everything', danger: true }))) return;
     localStorage.removeItem(OWNER_STORAGE_KEYS.siteMode);
     localStorage.removeItem(OWNER_STORAGE_KEYS.disabledZones);
     localStorage.removeItem(OWNER_STORAGE_KEYS.brokenReports);
@@ -1418,7 +1417,7 @@ function ownerResetAll() {
     applyFooterLinks();
     featuredContainer.innerHTML = "";
     sortZones();
-    alert("All owner data has been reset.");
+    notify("All owner data was reset.", { type: "success" });
     renderOwnerPanel();
 }
 
@@ -1919,8 +1918,8 @@ function showOwnerTokenDialog(onSuccess, notice) {
     setTimeout(() => input.focus(), 0);
 }
 
-function ownerForgetToken() {
-    if (!confirm("Remove your GitHub token from this browser? You'll need to paste it again to open the Owner Panel.")) return;
+async function ownerForgetToken() {
+    if (!(await askConfirm("You'll need to paste it again to open the Owner Panel on this browser.", { title: "Remove GitHub token?", confirmText: "Remove", danger: true }))) return;
     setGithubPat("");
     try { sessionStorage.removeItem("gnmath-owner-unlocked"); } catch {}
     closePopup();
@@ -1934,7 +1933,7 @@ function saveMotdFromPanel() {
 }
 function resetMotdLastSeen() {
     localStorage.removeItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen);
-    alert("MOTD 'seen' flag cleared — it will show again on next load.");
+    notify("The message of the day will show again on the next visit.", { type: "success" });
 }
 
 // ── Footer links panel helpers ────────────────────────────────────────────────
@@ -1949,10 +1948,10 @@ function saveFooterLinksFromPanel() {
         })
         .filter(({ label, url }) => label && url);
     setFooterLinks(links);
-    alert(`Applied ${links.length} footer link(s).`);
+    notify(`Saved ${links.length} footer link(s).`, { type: "success" });
 }
-function clearFooterLinks() {
-    if (!confirm("Remove all custom footer links?")) return;
+async function clearFooterLinks() {
+    if (!(await askConfirm('Your custom footer links will be removed for everyone.', { title: 'Remove all footer links?', confirmText: 'Remove', danger: true }))) return;
     setFooterLinks([]);
     renderOwnerPanel();
 }
@@ -2331,7 +2330,7 @@ function setPanicUrl(raw) {
         if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
         localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.panicUrl, parsed.href);
     } catch {
-        alert("That doesn't look like a website address.");
+        notify("That doesn't look like a website address.", { type: "error" });
     }
 }
 function getPanicKey() {

@@ -193,16 +193,16 @@ async function clearCurrentGameData() {
     if (!zone) return;
     const n = trackedItemCount(zone.id);
     if (!n) {
-        alert(`No saved data found for "${zone.name}".\n\nThe site can only clear data the game saved after this feature was added. Play it for a bit and it'll be able to clear it next time.`);
+        notify(`No saved data found for "${zone.name}". The site can only clear data saved after this feature was added, so play it a bit and try again.`);
         return;
     }
-    if (!confirm(`Clear all saved progress and settings for "${zone.name}"?\n\nOther games aren't affected. This can't be undone (unless you load an older cloud save or export file).`)) return;
+    if (!(await askConfirm(`All saved progress and settings for "${zone.name}" will be deleted. Other games aren't affected. You can only get it back from an older cloud save or export file.`, { title: "Clear this game's data?", confirmText: "Clear data", danger: true }))) return;
     // Close the game first so it can't re-save what we delete
     closeZone();
     flushPlaytime && flushPlaytime();
     const { removed, skipped } = await clearGameData(zone.id);
-    alert(`Cleared ${removed} saved item${removed === 1 ? "" : "s"} for "${zone.name}".` +
+    notify(`Cleared ${removed} saved item${removed === 1 ? "" : "s"} for "${zone.name}".` +
         (skipped ? `\n${skipped} item${skipped === 1 ? " was" : "s were"} also used by another game and kept.` : "") +
-        (typeof cloudUser !== "undefined" && cloudUser ? "\nYour cloud save will update automatically." : ""));
+        (typeof cloudUser !== "undefined" && cloudUser ? "\nYour cloud save will update automatically." : ""), { type: "success" });
     openZone(zone);
 }

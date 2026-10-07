@@ -364,8 +364,8 @@ function openStatsPanel() {
     body.contentEditable = false;
     document.getElementById("popupOverlay").style.display = "flex";
 }
-function resetMyStats() {
-    if (!confirm("Reset your play time and recently played list? Favorites and game progress are kept.")) return;
+async function resetMyStats() {
+    if (!(await askConfirm("Your play time and recently played list will be cleared. Favorites and game progress are kept.", { title: "Reset your stats?", confirmText: "Reset", danger: true }))) return;
     try { localStorage.removeItem(LIB_KEYS.playtime); localStorage.removeItem(LIB_KEYS.recent); } catch {}
     refreshCards();
     openStatsPanel();
@@ -476,9 +476,9 @@ function statsErrorText(e) {
     return (e && e.message) || String(e);
 }
 function needAccountFor(what) {
-    if (typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG) { alert(`${what} isn't available on this site.`); return true; }
+    if (typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG) { notify(`${what} isn't available on this site.`); return true; }
     if (!cloudUser) {
-        alert(`Sign in (or create a free account) to ${what.toLowerCase()}. It keeps it to one per person.`);
+        notify(`Sign in or create a free account to use ${what.toLowerCase()}, so each person only counts once.`);
         openAccountPanel();
         return true;
     }
@@ -512,19 +512,19 @@ async function rateCurrentZone(value) {
         refreshCards();
     } catch (e) {
         console.error(e);
-        alert("Couldn't save your rating: " + statsErrorText(e));
+        notify("Couldn't save your rating: " + statsErrorText(e), { type: "error" });
     }
 }
 async function reportBrokenShared(zone) {
     if (needAccountFor("Reporting broken games")) return;
-    if (!confirm(`Report "${zone.name}" as broken? Games with ${BROKEN_FLAG_THRESHOLD}+ recent reports get a warning flag for everyone.`)) return;
+    if (!(await askConfirm(`When ${BROKEN_FLAG_THRESHOLD} or more people report a game within ${BROKEN_REPORT_DAYS} days, it gets a warning flag for everyone.`, { title: `Report "${zone.name}" as broken?`, confirmText: "Report" }))) return;
     try {
         await writeGameStat(zone.id, "r", true);
         refreshCards();
-        alert(`Thanks — "${zone.name}" has been reported. (${getZoneStats(zone.id).reports} report(s) in the last ${BROKEN_REPORT_DAYS} days.)`);
+        notify(`Thanks, "${zone.name}" was reported. It has ${getZoneStats(zone.id).reports} report(s) in the last ${BROKEN_REPORT_DAYS} days.`, { type: "success" });
     } catch (e) {
         console.error(e);
-        alert("Couldn't send the report: " + statsErrorText(e));
+        notify("Couldn't send the report: " + statsErrorText(e), { type: "error" });
     }
 }
 
