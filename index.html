@@ -14,27 +14,15 @@
             return 'Are you sure you want to leave? Any unsaved changes will be lost.';
         }
     </script>
-    <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-WX5VS54ZDW"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-        gtag('config', 'G-WX5VS54ZDW');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>gn-math</title>
     <meta name="title" content="GN-Math">
     <meta name="description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://gn-math.github.io/">
     <meta property="og:title" content="GN-Math">
     <meta property="og:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://gn-math.github.io/">
     <meta name="twitter:title" content="GN-Math">
     <meta name="twitter:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
     <style>
@@ -1142,35 +1130,29 @@ function toTitleCase(str) {
 }
 async function listZones() {
     try {
-      let sharesponse;
-      let shajson;
+      // Look up the latest commit SHA so jsDelivr serves a fresh zones.json.
+      // sha.txt on raw.githubusercontent.com has no per-IP rate limit, so try it
+      // first; the GitHub API allows only 60 calls/hour per IP (a whole school
+      // network shares one IP), so it is only a fallback.
       let sha;
+      try {
+        const shaRes = await fetch("https://raw.githubusercontent.com/freebuisness/xml/refs/heads/main/sha.txt?t="+Date.now());
+        if (shaRes.ok) sha = (await shaRes.text()).trim();
+      } catch (error) {}
+      if (!sha) {
         try {
-          sharesponse = await fetch("https://api.github.com/repos/freebuisness/assets/commits?t="+Date.now());
+          const apiRes = await fetch("https://api.github.com/repos/freebuisness/assets/commits?per_page=1");
+          if (apiRes.ok) sha = (await apiRes.json())[0]?.sha;
         } catch (error) {}
-        if (sharesponse && sharesponse.status === 200) {
-          try {
-            shajson = await sharesponse.json();
-            sha = shajson[0]['sha'];
-            if (sha) {
-                zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
-            }
-          } catch (error) {
-            try {
-                let secondarysharesponse = await fetch("https://raw.githubusercontent.com/freebuisness/xml/refs/heads/main/sha.txt?t="+Date.now());
-                if (secondarysharesponse && secondarysharesponse.status === 200) {
-                    sha = (await secondarysharesponse.text()).trim();
-                    if (sha) {
-                        zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
-                    }
-                }
-            } catch(error) {}
-          }
-        }
+      }
+      if (sha && /^[0-9a-f]{7,40}$/i.test(sha)) {
+        zonesURL = `https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`;
+      }
         const response = await fetch(zonesURL+"?t="+Date.now());
         const json = await response.json();
         zones = json;
-        zones[0].featured = true; // always gonna be the discord
+        const discordZone = zones.find(z => /discord/i.test(z.name || "")) || zones[0];
+        if (discordZone) discordZone.featured = true;
         await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
         sortZones();
         try {
@@ -1186,32 +1168,6 @@ async function listZones() {
                     } else {
                         fetchWithFallback(zone.url).then(html => {
                             document.documentElement.innerHTML = html;
-                            const popup = document.createElement("div");
-                            popup.style.position = "fixed";
-                            popup.style.bottom = "20px";
-                            popup.style.right = "20px";
-                            popup.style.backgroundColor = "#cce5ff";
-                            popup.style.color = "#004085";
-                            popup.style.padding = "10px";
-                            popup.style.border = "1px solid #b8daff";
-                            popup.style.borderRadius = "5px";
-                            popup.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.1)";
-                            popup.style.fontFamily = "Arial, sans-serif";
-                            
-                            popup.innerHTML = `Play more games at <a href="https://gn-math.dev" target="_blank" style="color:#004085; font-weight:bold;">https://gn-math.dev</a>!`;
-                            
-                            const closeBtn = document.createElement("button");
-                            closeBtn.innerText = "?";
-                            closeBtn.style.marginLeft = "10px";
-                            closeBtn.style.background = "none";
-                            closeBtn.style.border = "none";
-                            closeBtn.style.cursor = "pointer";
-                            closeBtn.style.color = "#004085";
-                            closeBtn.style.fontWeight = "bold";
-                            
-                            closeBtn.onclick = () => popup.remove();
-                            popup.appendChild(closeBtn);
-                            document.body.appendChild(popup);
                             document.documentElement.querySelectorAll('script').forEach(oldScript => {
                                 const newScript = document.createElement('script');
                                 if (oldScript.src) {
@@ -1557,11 +1513,21 @@ function sanitizeData(obj, maxStringLen = 1000, maxArrayLen = 10000) {
     return obj;
   }
 
+// Owner keys (GitHub token, owner password, site mode, etc.) must never be
+// exported to, or imported from, a save file.
+function isProtectedStorageKey(key) {
+    return key.startsWith("gnmath-owner-");
+}
+
 async function saveData() {
     alert("This might take a while, dont touch anything other than this OK button");
     const result = {};
     result.cookies = document.cookie;
-    result.localStorage = {...localStorage};
+    result.localStorage = {};
+    for (const key of Object.keys(localStorage)) {
+      if (isProtectedStorageKey(key)) continue; // never export the GitHub token or owner settings
+      result.localStorage[key] = localStorage.getItem(key);
+    }
     result.sessionStorage = {...sessionStorage};
     result.indexedDB = {};
     const dbs = await indexedDB.databases();
@@ -1655,6 +1621,7 @@ async function saveData() {
         
           if (data.localStorage) {
             for (const key in data.localStorage) {
+              if (isProtectedStorageKey(key)) continue; // a save file can't change owner settings or the token
               localStorage.setItem(key, data.localStorage[key]);
             }
           }
@@ -2373,22 +2340,27 @@ async function githubSyncPush() {
 /** Pull settings from the public CDN (works for all visitors, no token). */
 async function githubSyncPull({ rerender = false } = {}) {
     try {
-        // Use the GitHub API endpoint instead of raw CDN — CDN caches for up to
-        // 5 minutes which means lock/shutdown/open changes don't propagate fast.
-        // The API endpoint is always fresh (no CDN cache). No token needed for
-        // public repos — it just returns slightly less data per minute on the
-        // unauthenticated rate limit (60 req/hr), which is fine for a settings pull.
+        let settings;
         const pat = getGithubPat();
-        const headers = { Accept: "application/vnd.github+json" };
-        if (pat) headers.Authorization = `token ${pat}`;
-
-        const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), { headers });
-        if (!res.ok) return;
-        const json = await res.json();
-
-        // API returns base64-encoded content — decode it
-        const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ""))));
-        const settings = JSON.parse(decoded);
+        if (pat) {
+            // Owner device: authenticated API is always fresh and has a high rate limit.
+            const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), {
+                headers: { Accept: "application/vnd.github+json", Authorization: `token ${pat}` }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                settings = JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g, "")))));
+            }
+        }
+        if (!settings) {
+            // Visitors: raw.githubusercontent.com has no 60/hour per-IP limit, which
+            // the unauthenticated API would hit fast on a shared school network.
+            // It can cache for a few minutes, so lock/shutdown changes may take
+            // up to ~5 minutes to reach everyone.
+            const res = await fetch(GITHUB_SYNC_CDN + "?t=" + Date.now(), { cache: "no-store" });
+            if (!res.ok) return;
+            settings = await res.json();
+        }
         applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
 }
