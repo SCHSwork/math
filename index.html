@@ -1186,8 +1186,12 @@ async function listZones() {
       }
         const response = await fetch(zonesURL+"?t="+Date.now());
         const json = await response.json();
-        // Drop the upstream Discord promo tile(s)
-        zones = json.filter(z => !/discord/i.test(z.name || "") && !/discord\.(gg|com)/i.test(z.url || ""));
+        // Drop upstream promo tiles: "[!] ..." entries (Discord, comments, etc.),
+        // anything named comments, and anything linking to Discord.
+        zones = json.filter(z => {
+            const name = (z.name || "").trim();
+            return !/^\[!\]/.test(name) && !/comment|discord/i.test(name) && !/discord\.(gg|com)/i.test(z.url || "");
+        });
         await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
         sortZones();
         try {
