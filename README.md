@@ -54,29 +54,37 @@ From the panel you can:
 - set an announcement banner, a message of the day and extra footer links
 - choose **new-visitor defaults** (theme, card size, sort, and so on)
 
-Changes are saved to `owner-settings.json` in this repo, and every visitor loads them on their next visit.
+Changes are saved to `config/owner-settings.json` in this repo, and every visitor loads them on their next visit.
 
 **Making a token:** go to github.com → Settings → Developer settings → Fine-grained tokens → **Generate new token**. Give it access to **only this repository**, with **Contents: Read and write**. Never commit a token or paste it anywhere public.
 
 ## Files
 
-| File | What it is |
-| --- | --- |
-| `index.html` | The page itself (markup, plus the small tab-cloak script that must run first) |
-| `css/styles.css` | All the styles |
-| `js/ui.js` | Notices, dialogs and accessibility helpers (loaded first) |
-| `js/app.js` | Game list, search, cards, game player, ad/tracker removal, backup sources, settings, owner panel, panic button, tab cloak |
-| `js/accounts.js` | Accounts and cloud saves (Firebase) |
-| `js/library.js` | Favorites, recent, play time, stats, Today's pick, ratings and reports, shortcuts |
-| `js/loading-bar.js` | Game loading bar |
-| `js/game-menu.js` | The ⋯ More menu and per-game data clearing |
-| `js/url-options.js`, `js/service-worker-setup.js` | Small start-up helpers |
-| `sw.js` | Background helper: caches covers and lets the site open offline (the page and its files are always fetched fresh first) |
-| `manifest.json`, `icon-*.png`, `favicon-*.png`, `apple-touch-icon.png` | App name and icons |
-| `owner-settings.json` | Site-wide owner settings, written by the owner panel |
-| `firestore.rules` | Security rules for the Firebase database |
-| `CHANGELOG.md` | Everything that's changed, newest first (also shown on the site under **Changelog** in the footer) |
-| `tools/stamp_versions.py` | Run `python3 tools/stamp_versions.py` after editing anything in `css/` or `js/` so browsers load the new version right away |
+```
+index.html             the page (plus the tiny tab-cloak script that must run first)
+sw.js                  background helper: caches covers, lets the site open offline
+manifest.json          app name and icons for "install as app"
+CHANGELOG.md           everything that's changed, newest first (also in the site footer)
+
+css/styles.css         all the styles
+js/
+  ui.js                notices, dialogs, accessibility helpers (loaded first)
+  app.js               game list, search, cards, player, ad/tracker removal,
+                       backup sources, settings, owner panel, panic button, tab cloak
+  accounts.js          accounts and cloud saves (Firebase)
+  library.js           favorites, recent, play time, stats, Today's pick,
+                       ratings and reports, keyboard shortcuts
+  loading-bar.js       game loading bar
+  game-menu.js         the ⋯ More menu and per-game data clearing
+  url-options.js, service-worker-setup.js    small start-up helpers
+
+assets/icons/          site icon at every size
+config/
+  owner-settings.json  site-wide settings, written by the owner panel
+  firestore.rules      Firebase database security rules
+tools/
+  stamp_versions.py    run after editing css/ or js/ so browsers load the new version
+```
 
 ## Firebase setup
 
@@ -86,7 +94,7 @@ To use a different project:
 1. Create a Firebase project (the free Spark plan is enough).
 2. **Authentication → Sign-in method:** enable **Email/Password**.
 3. **Firestore Database:** create the `(default)` database in production mode.
-4. **Firestore → Rules:** paste in `firestore.rules` and click **Publish**. Republish it whenever that file changes.
+4. **Firestore → Rules:** paste in `config/firestore.rules` and click **Publish**. Republish it whenever that file changes.
 5. **Project settings → Your apps → Web:** register an app, then copy its config into `FIREBASE_CONFIG` in `index.html`.
 
 If `FIREBASE_CONFIG` is set to `null`, the account features are turned off and the rest of the site still works.
