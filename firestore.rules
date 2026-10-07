@@ -1,0 +1,42 @@
+rules_version = '2';
+// Paste this whole file into Firebase console → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // Cloud saves: only the owning account can read or write them.
+    match /saves/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Ratings + broken reports, split across shard docs s0..s15:
+    //   { "z<gameId>": { v: { <uid>: 1 | -1 }, r: { <uid>: timestamp } }, last: { z, u } }
+    // Everyone can read the totals. A signed-in user may only add, change or
+    // remove their OWN vote/report, for one game per write.
+    match /gameStats/{shard} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && shard.matches('s([0-9]|1[0-5])')
+        && validStatsWrite();
+    }
+
+    function validStatsWrite() {
+      let uid = request.auth.uid;
+      let after = request.resource.data;
+      let before = resource == null ? {} : resource.data;
+      let zk = after.last.z;
+      return zk is string && zk.matches('z-?[0-9]{1,6}')
+        && after.last.keys().hasOnly(['z', 'u']) && after.last.u == uid
+        && after.diff(before).affectedKeys().hasOnly([zk, 'last'])
+        && zoneEntryOk(before.get(zk, {}), after.get(zk, {}), uid);
+    }
+
+    function zoneEntryOk(b, a, uid) {
+      let vChanged = a.get('v', {}).diff(b.get('v', {})).affectedKeys();
+      let rChanged = a.get('r', {}).diff(b.get('r', {})).affectedKeys();
+      return a.keys().hasOnly(['v', 'r'])
+        && vChanged.hasOnly([uid]) && rChanged.hasOnly([uid])
+        && (vChanged.size() == 0 || !(uid in a.get('v', {})) || a.v[uid] == 1 || a.v[uid] == -1)
+        && (rChanged.size() == 0 || !(uid in a.get('r', {})) || a.r[uid] == request.time);
+    }
+  }
+}
