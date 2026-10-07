@@ -5,6 +5,8 @@ All the changes to GN 2.0, newest first.
 ## October 7, 2026
 
 ### New
+- **GN 2.0 icon.** The site has its own red "GN" icon for the tab, phone home screens, and when it's installed as an app (named "GN 2.0"). The tab cloak still comes first: when it's on, the tab shows the cloak's title and icon, and the GN icon appears only when the cloak is off.
+- **Faster repeat visits and offline backup.** A small background helper saves game covers, so they load instantly next time. If you're offline, the site still opens with your saved game list.
 - **Backup game sources.** The game list, cover images and games now load from three places: jsDelivr, then GitHub directly, then githack. If one fails, times out or is blocked by a school filter, the site switches automatically and remembers for the rest of the session. When jsDelivr is down, links inside games are pointed at the backups too. If every source is down, the last game list that loaded is shown with a notice.
 - **Game of the Day**: one game is featured at the top of the page each day, the same for everyone.
 - **Changelog**: this list. You can open it from the footer.
@@ -15,6 +17,8 @@ All the changes to GN 2.0, newest first.
 - **Broken reports in the owner panel**, most reported first, with one-click Disable/Enable.
 
 ### Changed
+- **Tidier header.** Sort and tag filter moved into one **Sort & filter** button, which shows a dot when something other than the default is selected. The search box has a magnifier icon and a `/` hint. On phones the header is two compact rows, and the tag filter is no longer pushed out of view.
+- **The tab cloak now applies immediately.** Before, "GN 2.0" flashed in the tab for a moment while the page loaded.
 - **Scrolling rows have no scroll bar.** Featured and Your games now show ‹ › arrow buttons when you hover over them, with a soft fade on the side that has more games. Touchscreens and trackpads can still swipe.
 - **Cleaner home page.** Recent and Favorites are now one compact **Your games** row with a switch between them. Featured is a single scrolling row instead of a full grid. Game of the Day is a slim **Today's pick** strip. Section headings are simpler, long game names cut off after two lines, and each card shows one short info line (for example "186K plays").
 - The site is now called **GN 2.0**.
@@ -24,6 +28,7 @@ All the changes to GN 2.0, newest first.
 - The README was rewritten to describe the site as it is now.
 
 ### Fixed
+- Removed a broken background-helper setup that caused an error on every page load.
 - **Play counts now work for every game.** Before, games whose files have names like `33-ff.html`, including many of the most popular ones, showed no count, and only the top 100 files were read. Popular and Trending sorts are accurate now too.
 - Clicking Close twice on a game no longer causes an error.
 

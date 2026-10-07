@@ -63,6 +63,8 @@ Changes are saved to `owner-settings.json` in this repo, and every visitor loads
 | `index.html` | The whole site: markup, styles and scripts |
 | `owner-settings.json` | Site-wide owner settings, written by the owner panel |
 | `firestore.rules` | Security rules for the Firebase database |
+| `sw.js` | Background helper: caches covers and lets the site open offline (the page itself is always fetched fresh first) |
+| `manifest.json`, `icon-*.png`, `favicon-*.png`, `apple-touch-icon.png` | App name and icons |
 | `CHANGELOG.md` | Everything that's changed, newest first (also shown on the site under **Changelog** in the footer) |
 
 ## Firebase setup
