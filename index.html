@@ -1140,6 +1140,7 @@ footer {
     <div class="footer-links">
             <a href="#" onclick="loadDMCA(); return false;">DMCA</a>
             <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>
+            <a href="#" onclick="loadTerms(); return false;">Terms</a>
             <a href="javascript:saveData()">Export Data</a>
             <a href="#" onclick="document.getElementById('importData').click(); return false;">Import Data</a>
             <input type="file" id="importData" style="display: none;" onchange="loadData(event)">
@@ -3337,42 +3338,79 @@ function openSettingsPanel() {
 
 
 
-function loadPrivacy() {
-    document.getElementById('popupTitle').textContent = "Privacy Policy";
+function legalPopup(title, html) {
+    document.getElementById('popupTitle').textContent = title;
     const popupBody = document.getElementById('popupBody');
-    popupBody.innerHTML = `
-        <div style="max-height: 60vh; overflow-y: auto;">
-            <h2>PRIVACY POLICY</h2>
-            <p>Last updated Feburary 20, 2026</p>
-            <p>This Privacy Notice for gn-math ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:</p>
-            <ul>
-                <li>Visit our website at <a href="https://gn-math.dev">https://gn-math.dev</a>, or any website of ours that links to this Privacy Notice</li>
-                <li>Engage with us in other related ways, including any sales, marketing, or events</li>
-            </ul>
-            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us.</p>
-            
-            <h3>SUMMARY OF KEY POINTS</h3>
-            <p>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.</p>
-            
-            <p><strong>What personal information do we process?</strong> When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us and the Services, the choices you make, and the products and features you use. Learn more about personal information you disclose to us.</p>
-            
-            <p><strong>Do we process any sensitive personal information?</strong> Some of the information may be considered "special" or "sensitive" in certain jurisdictions, for example your racial or ethnic origins, sexual orientation, and religious beliefs. We do not process sensitive personal information.</p>
-            
-            <p><strong>Do we collect any information from third parties?</strong> We do not collect any information from third parties.</p>
-            
-            <p><strong>How do we process your information?</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Learn more about how we process your information.</p>
-            
-            <p><strong>In what situations and with which parties do we share personal information?</strong> We may share information in specific situations and with specific third parties. Learn more about when and with whom we share your personal information.</p>
-            
-            <p><strong>How do we keep your information safe?</strong> We have adequate organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Learn more about how we keep your information safe.</p>
-            
-            <p><strong>What are your rights?</strong> Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Learn more about your privacy rights.</p>
-            
-            <p><strong>How do you exercise your rights?</strong> The easiest way to exercise your rights is by submitting a data subject access request, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</p>
-        </div>
-    `;
+    popupBody.innerHTML = `<div class="legal-doc" style="max-height: 60vh; overflow-y: auto; line-height: 1.55;">${html}</div>`;
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
+}
+
+function loadPrivacy() {
+    legalPopup("Privacy Policy", `
+        <p><b>Effective October 6, 2026</b></p>
+        <p>This policy explains what this website collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), we don't show ads, and we don't sell or share your information.</p>
+
+        <h3>What we collect</h3>
+        <p><b>If you just play (no account):</b> nothing is sent to us. Your settings and game progress are saved only in your own browser on your own device.</p>
+        <p><b>If you create an account:</b></p>
+        <ul>
+            <li><b>Username and password.</b> These are handled by Google Firebase Authentication. Your password is stored by Google in protected (hashed) form; the site owner can never see it. Firebase also records when the account was created and last signed in, and may log IP addresses to protect against abuse.</li>
+            <li><b>Cloud saves.</b> A copy of the game progress and site settings stored in your browser for this site, so you can continue on another device. It is stored in Google Cloud Firestore and is locked so only your signed-in account can read or change it. It does not include passwords or access tokens.</li>
+        </ul>
+        <p>We do <b>not</b> ask for your email, real name, age, location, contacts, or any other personal details. Please don't put your real name or personal information in your username.</p>
+
+        <h3>Children</h3>
+        <p>This site is not directed at children under 13, and we do not knowingly collect personal information from them. If you are under 13, you can still play, but please don't create an account. If we learn an account belongs to someone under 13, we will delete it.</p>
+
+        <h3>How we use it</h3>
+        <p>Only to run the features you use: signing in and keeping your game progress in sync between devices. No advertising, profiling, or tracking by this site, and we never sell or rent your information.</p>
+
+        <h3>Third-party services</h3>
+        <p>Like any website, these services receive basic technical information (such as your IP address and browser type) when your browser connects to them:</p>
+        <ul>
+            <li><b>Google Firebase</b> &mdash; accounts and cloud saves.</li>
+            <li><b>GitHub</b> &mdash; serves the site and its settings.</li>
+            <li><b>jsDelivr</b> and other content networks &mdash; deliver the game files and images.</li>
+        </ul>
+        <p>Games are made and hosted by third parties. Some game files contain their own code, such as analytics, that we don't control. The site removes known ad code from games, but we can't guarantee every third-party file. Each of these services has its own privacy policy.</p>
+
+        <h3>Keeping and deleting your data</h3>
+        <p>Your cloud save is kept until you delete your account; each new save replaces the previous one. You can delete your account and all of its cloud data at any time from <b>Account &rarr; Delete account</b>. Progress saved only in your browser stays on your device until you clear your browser data. Accounts that are inactive for a long time may be deleted.</p>
+
+        <h3>Security</h3>
+        <p>Access to cloud saves is restricted to the account that owns them, and connections are encrypted. No system is perfectly secure, so use a password you don't use anywhere else. There is no password reset, so keep your password safe.</p>
+
+        <h3>Changes</h3>
+        <p>We may update this policy. The effective date at the top shows when it last changed. Continuing to use the site after a change means you accept the updated policy.</p>
+    `);
+}
+
+function loadTerms() {
+    legalPopup("Terms of Use", `
+        <p><b>Effective October 6, 2026</b></p>
+        <p>By using this site you agree to these terms. If you don't agree, please don't use the site.</p>
+
+        <h3>Games and content</h3>
+        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them, and the game files are loaded from third-party sources. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
+
+        <h3>Using the site</h3>
+        <ul>
+            <li>You are responsible for following the rules of any school, workplace, or network you use the site on.</li>
+            <li>Don't attempt to break, overload, or get unauthorized access to the site or other people's accounts or saves.</li>
+            <li>Don't use offensive or impersonating usernames. We may remove accounts that break these terms.</li>
+            <li>You're responsible for keeping your password safe. Lost passwords can't be recovered.</li>
+        </ul>
+
+        <h3>No warranty</h3>
+        <p>The site and all games are provided "as is" and "as available," without warranties of any kind. Games may stop working, be removed, or lose progress at any time, and cloud saves may be lost. Keep your own backups (Export Data) of anything important.</p>
+
+        <h3>Limitation of liability</h3>
+        <p>To the fullest extent allowed by law, the site owner is not liable for any damages or losses from using, or not being able to use, the site, its games, or its accounts and saves.</p>
+
+        <h3>Changes</h3>
+        <p>We may change these terms or the site at any time. Continuing to use the site means you accept the current terms. See also the <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>.</p>
+    `);
 }
 
 function loadDMCA() {
@@ -3927,6 +3965,36 @@ async function cloudSignOut() {
     await cloudAuth.signOut();
 }
 
+async function cloudDeleteAccount() {
+    const pw = document.getElementById("acct-delete-password")?.value || "";
+    if (!cloudUser) return;
+    if (!pw) { setCloudStatus("Enter your password to delete your account."); return; }
+    if (!confirm(`Permanently delete the account "${currentUsername()}" and its cloud save?`)) return;
+    try {
+        setCloudStatus("Deleting…");
+        clearInterval(cloudAutosaveTimer);
+        // Firebase requires a fresh sign-in before deleting an account.
+        await cloudUser.reauthenticateWithCredential(
+            firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw)
+        );
+        cloudBusy = true;
+        const chunks = await saveDocRef().collection("chunks").get();
+        await Promise.all(chunks.docs.map(d => d.ref.delete()));
+        await saveDocRef().delete();
+        await cloudUser.delete();
+        localStorage.removeItem(CLOUD.keys.syncedGen);
+        localStorage.removeItem(CLOUD.keys.syncedHash);
+        cloudStatus = "";
+        alert("Your account and cloud save were deleted.");
+    } catch (e) {
+        console.error("Delete account failed", e);
+        setCloudStatus("Couldn't delete: " + friendlyAuthError(e));
+        if (cloudUser) cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave(); }, CLOUD.autosaveMs);
+    } finally {
+        cloudBusy = false;
+    }
+}
+
 // ── UI ──────────────────────────────────────────────────────────────────────
 function setCloudStatus(text) {
     cloudStatus = text;
@@ -3950,6 +4018,13 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="if (confirm('Replace this device\\'s game progress with your cloud save?')) downloadCloudSave()">Load cloud save</button>
                 <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
             </div>
+            <details style="margin-top:0.5rem;">
+                <summary style="cursor:pointer;color:var(--text-muted);font-size:14px;">Delete account</summary>
+                <p style="font-size:14px;color:var(--text-muted);">This permanently deletes your account and its cloud save. Game progress saved in this browser is not touched. This can't be undone.</p>
+                <label for="acct-delete-password" style="font-weight:bold;">Confirm your password</label><br>
+                <input type="password" id="acct-delete-password" autocomplete="current-password"><br><br>
+                <button class="settings-button" style="background:#b91c1c;" onclick="cloudDeleteAccount()">Delete my account</button>
+            </details>
             <p id="acct-status" style="font-size:14px;color:var(--text-muted);"></p>`;
     } else {
         const create = mode === "create";
