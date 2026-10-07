@@ -404,6 +404,57 @@ main {
     transform: scale(1.05);
 }
 
+/* Game of the Day */
+#gotd {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin: 0 0 1.75rem;
+    padding: 1rem;
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid var(--border);
+    background: linear-gradient(120deg, var(--primary-light, rgba(252,38,81,0.12)), transparent 70%), var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+#gotd[hidden] { display: none; }
+#gotd img {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 14px;
+    background: var(--border-light);
+    cursor: pointer;
+}
+#gotd .gotd-label { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--primary); }
+#gotd h2 { margin: 0.2rem 0 0.25rem; font-size: 1.5rem; line-height: 1.2; }
+#gotd .gotd-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 0.75rem; }
+#gotd .gotd-play { width: auto; padding: 0.6rem 1.4rem; }
+#gotd .gotd-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+}
+#gotd .gotd-close:hover { background: var(--surface-hover); color: var(--text); }
+@media (max-width: 520px) {
+    #gotd { gap: 0.9rem; padding: 0.8rem; }
+    #gotd img { width: 84px; height: 84px; }
+    #gotd h2 { font-size: 1.15rem; }
+}
+.changelog-doc h2 { margin: 1.25rem 0 0.25rem; font-size: 1.2rem; }
+.changelog-doc h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; color: var(--primary); }
+.changelog-doc ul { margin: 0 0 0.5rem; padding-left: 1.2rem; }
+.changelog-doc li { margin: 0.25rem 0; }
+
 /* Per-game "More" menu */
 #gameMenu {
     position: fixed;
@@ -1247,6 +1298,7 @@ footer {
 	<main>
 </div>
     <br>
+        <section id="gotd" hidden aria-label="Game of the Day"></section>
         <details id="favoritesWrapper" open hidden>
             <summary id="favoritesSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Favorites</summary>
             <div id="favoriteZones" class="zone-container"></div>
@@ -1321,6 +1373,7 @@ footer {
             <a href="#" onclick="loadDMCA(); return false;">DMCA</a>
             <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>
             <a href="#" onclick="loadTerms(); return false;">Terms</a>
+            <a href="#" onclick="loadChangelog(); return false;">Changelog</a>
             <a href="javascript:saveData()">Export Data</a>
             <a href="#" onclick="document.getElementById('importData').click(); return false;">Import Data</a>
             <input type="file" id="importData" style="display: none;" onchange="loadData(event)">
@@ -1861,7 +1914,7 @@ function closeZone() {
     if (typeof endGameLoad === "function") endGameLoad(true);
     zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
-    zoneViewer.removeChild(zoneFrame);
+    if (zoneFrame && zoneFrame.parentNode === zoneViewer) zoneViewer.removeChild(zoneFrame);
     clearZoneIdFromUrl();
 }
 
@@ -4592,6 +4645,98 @@ function isNewZone(id) {
     return newZoneIds.has(String(id));
 }
 
+// ── Game of the Day ─────────────────────────────────────────────────────────
+// Picked from the date, so everyone sees the same game on the same day.
+function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function hashString(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+}
+function gameOfTheDay() {
+    const pool = zones.filter(z => z.url && !z.url.startsWith("http") && Number(z.id) >= 0 && !isZoneDisabled(z.id))
+        .sort((a, b) => Number(a.id) - Number(b.id));
+    if (!pool.length) return null;
+    const start = hashString("gn2-gotd-" + todayKey()) % pool.length;
+    // Skip games that are currently flagged as broken
+    for (let i = 0; i < pool.length; i++) {
+        const z = pool[(start + i) % pool.length];
+        if (getZoneStats(z.id).reports < BROKEN_FLAG_THRESHOLD) return z;
+    }
+    return pool[start];
+}
+function renderGameOfTheDay() {
+    const box = document.getElementById("gotd");
+    if (!box) return;
+    let hiddenFor = "";
+    try { hiddenFor = localStorage.getItem("gnmath-gotd-hidden") || ""; } catch {}
+    const z = hiddenFor === todayKey() ? null : gameOfTheDay();
+    if (!z) { box.hidden = true; box.innerHTML = ""; return; }
+    const st = getZoneStats(z.id);
+    const votes = st.up + st.down;
+    const meta = [];
+    if (z.author) meta.push("by " + z.author);
+    if (votes >= MIN_VOTES_TO_SHOW) meta.push(`👍 ${Math.round(st.up / votes * 100)}%`);
+    const mine = getPlaytime(z.id);
+    meta.push(mine >= 60 ? `you've played ${formatPlaytime(mine)}` : "new to you");
+    const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    box.innerHTML = "";
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = (z.cover || "").replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL);
+    img.onclick = () => openZone(z);
+    const info = document.createElement("div");
+    info.style.minWidth = "0";
+    const label = document.createElement("div"); label.className = "gotd-label"; label.textContent = `🎯 Game of the Day · ${date}`;
+    const h = document.createElement("h2"); h.textContent = z.name;
+    const m = document.createElement("div"); m.className = "gotd-meta"; m.textContent = meta.join(" · ");
+    const play = document.createElement("button"); play.className = "settings-button gotd-play"; play.textContent = "▶ Play now"; play.onclick = () => openZone(z);
+    info.append(label, h, m, play);
+    const close = document.createElement("button");
+    close.className = "gotd-close"; close.title = "Hide until tomorrow"; close.setAttribute("aria-label", "Hide until tomorrow"); close.textContent = "×";
+    close.onclick = () => { try { localStorage.setItem("gnmath-gotd-hidden", todayKey()); } catch {} renderGameOfTheDay(); };
+    box.append(img, info, close);
+    box.hidden = false;
+}
+// Roll over to the next day's game if the page stays open past midnight
+setInterval(() => { const box = document.getElementById("gotd"); if (box && box.dataset.day !== todayKey()) { box.dataset.day = todayKey(); if (Array.isArray(zones) && zones.length) renderGameOfTheDay(); } }, 60000);
+
+// ── Changelog (read from CHANGELOG.md in the repo) ──────────────────────────
+async function loadChangelog() {
+    legalPopup("Changelog", `<p style="color:var(--text-muted);">Loading…</p>`);
+    const body = document.querySelector("#popupBody .legal-doc");
+    try {
+        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/CHANGELOG.md?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        body.innerHTML = `<div class="changelog-doc">${renderSimpleMarkdown(await res.text())}</div>`;
+    } catch (e) {
+        body.innerHTML = `<p>Couldn't load the changelog right now. You can read it on <a href="https://github.com/${GITHUB_SYNC_REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">GitHub</a>.</p>`;
+    }
+}
+// Just enough Markdown for the changelog: headings, bullet lists, **bold**, `code`, <kbd>
+function renderSimpleMarkdown(md) {
+    const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const inline = t => esc(t)
+        .replace(/&lt;kbd&gt;(.*?)&lt;\/kbd&gt;/g, "<kbd>$1</kbd>")
+        .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+    let html = "", inList = false;
+    for (const raw of md.split(/\r?\n/)) {
+        const line = raw.trimEnd();
+        const li = line.match(/^\s*[-*]\s+(.*)$/);
+        if (li) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${inline(li[1])}</li>`; continue; }
+        if (inList) { html += "</ul>"; inList = false; }
+        const hd = line.match(/^(#{1,3})\s+(.*)$/);
+        if (hd) { if (hd[1].length === 1) continue; html += `<h${hd[1].length}>${inline(hd[2])}</h${hd[1].length}>`; continue; }
+        if (line.trim()) html += `<p>${inline(line)}</p>`;
+    }
+    if (inList) html += "</ul>";
+    return html;
+}
+
 // ── Favorites ───────────────────────────────────────────────────────────────
 function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
 function isFavorite(id) { return getFavorites().includes(String(id)); }
@@ -4626,6 +4771,7 @@ function renderRow(wrapperId, gridId, summaryId, label, ids) {
 }
 function renderPersonalRows() {
     if (!Array.isArray(zones) || !zones.length) return;
+    renderGameOfTheDay();
     renderRow("favoritesWrapper", "favoriteZones", "favoritesSummary", "Favorites", getFavorites());
     renderRow("recentWrapper", "recentZones", "recentSummary", "Recently Played", getRecent());
 }

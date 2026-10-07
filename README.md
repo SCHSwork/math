@@ -7,6 +7,7 @@ The game list and game files come from the community-run gn-math library on jsDe
 ## Features
 
 **Playing**
+- **Game of the Day** at the top of the page, the same for everyone each day
 - **Smart search** that handles typos, missing spaces and abbreviations ("geomtry dash", "fnaf"), and works together with tag filters
 - Sort by name, newest, date added, popular, trending, top rated or my most played
 - **NEW** badges on the 12 most recently added games
@@ -59,6 +60,7 @@ Changes are saved to `owner-settings.json` in this repo, and every visitor loads
 | `index.html` | The whole site: markup, styles and scripts |
 | `owner-settings.json` | Site-wide owner settings, written by the owner panel |
 | `firestore.rules` | Security rules for the Firebase database |
+| `CHANGELOG.md` | Everything that's changed, newest first (also shown on the site under **Changelog** in the footer) |
 
 ## Firebase setup
 
