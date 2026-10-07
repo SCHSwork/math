@@ -411,7 +411,8 @@ main {
     bottom: 24px;
     transform: translate(-50%, 20px);
     z-index: 10050;
-    width: min(520px, calc(100vw - 32px));
+    width: min(600px, calc(100vw - 32px));
+    box-sizing: border-box;
     padding: 0.7rem 0.9rem 0.8rem;
     border-radius: 14px;
     background: rgba(15, 23, 42, 0.92);
@@ -424,7 +425,8 @@ main {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 #gameLoadBar.glb-show { opacity: 1; transform: translate(-50%, 0); }
-#gameLoadBar .glb-text { margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gameLoadBar .glb-text { margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gameLoadBar .glb-stats { margin-bottom: 0.5rem; font-size: 13px; font-weight: 500; color: #cbd5e1; white-space: normal; font-variant-numeric: tabular-nums; }
 #gameLoadBar .glb-track { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 #gameLoadBar .glb-fill { height: 100%; width: 0; border-radius: 999px; background: var(--primary, #fc2651); transition: width 0.35s ease; }
 #gameLoadBar .glb-fill.glb-indeterminate { width: 35% !important; animation: glbSlide 1.2s ease-in-out infinite; }
@@ -4683,7 +4685,7 @@ function gameLoadEl() {
         el = document.createElement("div");
         el.id = "gameLoadBar";
         el.setAttribute("role", "progressbar");
-        el.innerHTML = `<div class="glb-text"></div><div class="glb-track"><div class="glb-fill"></div></div>`;
+        el.innerHTML = `<div class="glb-text"></div><div class="glb-stats"></div><div class="glb-track"><div class="glb-fill"></div></div>`;
         document.body.appendChild(el);
     }
     return el;
@@ -4696,6 +4698,14 @@ function fmtEta(sec) {
     if (!isFinite(sec) || sec <= 0) return "";
     if (sec < 60) return `about ${Math.max(1, Math.round(sec))}s left`;
     return `about ${Math.round(sec / 60)} min left`;
+}
+
+function setGameLoadText(title, stats) {
+    const el = gameLoadEl();
+    el.querySelector(".glb-text").textContent = title;
+    const st = el.querySelector(".glb-stats");
+    st.textContent = stats || "";
+    st.style.display = stats ? "" : "none";
 }
 
 function beginGameLoad(file) {
@@ -4723,7 +4733,7 @@ function endGameLoad(immediate) {
     el.classList.add("glb-done");
     el.querySelector(".glb-fill").style.width = "100%";
     el.querySelector(".glb-fill").classList.remove("glb-indeterminate");
-    el.querySelector(".glb-text").textContent = `${gameLoad.name} is ready!`;
+    setGameLoadText(`${gameLoad.name} is ready!`, "");
     setTimeout(() => el.classList.remove("glb-show"), 900);
 }
 
@@ -4747,7 +4757,7 @@ function renderGameLoad() {
     const now = Date.now();
 
     if (gameLoad.phase === "page") {
-        text.textContent = `Opening ${gameLoad.name}…`;
+        setGameLoadText(`Opening ${gameLoad.name}…`, "");
         fill.classList.add("glb-indeterminate");
         return;
     }
@@ -4772,7 +4782,7 @@ function renderGameLoad() {
     if (inFlight === 0 && now - idleSince > idleNeeded) { endGameLoad(); return; }
 
     if (!gameLoad.everStarted || loaded === 0) {
-        text.textContent = `Starting ${gameLoad.name}…`;
+        setGameLoadText(`Starting ${gameLoad.name}…`, "");
         fill.classList.add("glb-indeterminate");
         return;
     }
@@ -4782,11 +4792,11 @@ function renderGameLoad() {
         fill.classList.remove("glb-indeterminate");
         fill.style.width = pct + "%";
         el.setAttribute("aria-valuenow", pct);
-        text.textContent = `Loading ${gameLoad.name} — ${pct}% · ${fmtMB(loaded)} of ${fmtMB(total)}${eta ? " · " + eta : ""}`;
+        setGameLoadText(`Loading ${gameLoad.name}`, `${pct}% · ${fmtMB(loaded)} of ${fmtMB(total)}${eta ? " · " + eta : ""}`);
     } else {
         fill.classList.add("glb-indeterminate");
         el.removeAttribute("aria-valuenow");
-        text.textContent = `Loading ${gameLoad.name} — ${fmtMB(loaded)} downloaded${speed > 0 ? ` · ${fmtMB(speed)}/s` : ""}`;
+        setGameLoadText(`Loading ${gameLoad.name}`, `${fmtMB(loaded)} downloaded${speed > 0 ? ` · ${fmtMB(speed)}/s` : ""}`);
     }
 }
 </script>
