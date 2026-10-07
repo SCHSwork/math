@@ -158,6 +158,12 @@ function enhanceShelf(shelf) {
         return b;
     };
     const prev = make("prev"), next = make("next");
+    // Keyboard: Tab to the row, then ← → scroll it
+    shelf.tabIndex = 0;
+    const section = shelf.closest("details, section");
+    const label = section?.querySelector(".section-title")?.childNodes[0]?.textContent?.trim();
+    shelf.setAttribute("role", "region");
+    shelf.setAttribute("aria-label", (label || "Games") + (shelf.id === "favoriteZones" ? " (favorites)" : shelf.id === "recentZones" ? " (recent)" : "") + ", use the arrow keys to scroll");
     const update = () => {
         const max = shelf.scrollWidth - shelf.clientWidth;
         const atStart = shelf.scrollLeft <= 4, atEnd = shelf.scrollLeft >= max - 4;
@@ -391,6 +397,44 @@ function gameLoadingScreenHtml(file) {
         <p>Loading game…</p>
     </body></html>`;
 }
+
+// ── Keyboard shortcuts panel ("?") ──────────────────────────────────────────
+function showShortcuts() {
+    const panic = typeof getPanicKey === "function" ? panicKeyName(getPanicKey()) : "`";
+    const panicOn = typeof getPanicKeyEnabled !== "function" || getPanicKeyEnabled();
+    const rows = [
+        ["/", "Jump to the search box"],
+        [panic, panicOn ? "Panic: leave instantly for your safe website (works during games too)" : "Panic key (turned off in Settings)"],
+        ["?", "Show this list"],
+        ["Esc", "Close a panel, menu or dialog"],
+        ["Tab", "Move between buttons and links; Enter or Space presses them"],
+        ["← →", "Scroll a row of games (Tab to the row first)"]
+    ];
+    document.getElementById("popupTitle").textContent = "Keyboard shortcuts";
+    const body = document.getElementById("popupBody");
+    body.innerHTML = "";
+    const table = document.createElement("table");
+    table.className = "shortcuts";
+    for (const [key, what] of rows) {
+        const tr = table.insertRow();
+        const k = tr.insertCell(); const kbd = document.createElement("kbd"); kbd.textContent = key; k.appendChild(kbd);
+        tr.insertCell().textContent = what;
+    }
+    const note = document.createElement("p");
+    note.style.cssText = "margin:1rem 0 0;font-size:13px;color:var(--text-muted);";
+    note.textContent = "Shortcuts don't work while you're typing in a box. You can change the panic key in Settings.";
+    body.append(table, note);
+    body.contentEditable = false;
+    document.getElementById("popupOverlay").style.display = "flex";
+}
+window.addEventListener("keydown", e => {
+    if (e.key !== "?" || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName))) return;
+    if (zoneViewer.style.display === "flex") return;
+    e.preventDefault();
+    showShortcuts();
+});
 
 // ── "/" jumps to search ─────────────────────────────────────────────────────
 window.addEventListener("keydown", e => {
