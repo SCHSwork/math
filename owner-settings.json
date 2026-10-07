@@ -4,8 +4,8 @@
     "653"
   ],
   "announcement": {
-    "text": "Test",
-    "enabled": false
+    "text": "HUGE UPDATE! account system to save progress and various things!",
+    "enabled": true
   },
   "motd": {
     "text": "Make sure t",
@@ -25,5 +25,5 @@
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "updatedAt": "2026-10-07T03:41:37.968Z"
+  "updatedAt": "2026-10-07T03:42:36.621Z"
 }
