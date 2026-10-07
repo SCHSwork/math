@@ -4,9 +4,35 @@
     <head>
         <base href="https://cdn.jsdelivr.net/gh/freebuisness/gn-math-DONTDMCA@main/">
 
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
+    <script>
+    // Tab title + icon are set before anything else so the tab cloak never flashes.
+    // (Relative URLs here would resolve against the <base> CDN, so build them from this page's address.)
+    (function () {
+        var site = function (f) { return new URL(f, location.href).href; };
+        window.GN_ICON_URL = site("favicon-64.png");
+        var title = "GN 2.0", icon = window.GN_ICON_URL;
+        try {
+            if (localStorage.getItem("gnmath-tab-cloak-initialized")) {
+                title = localStorage.getItem("gnmath-tab-cloak-title") || title;
+                icon = localStorage.getItem("gnmath-tab-cloak-icon") || icon;
+            } else {
+                // First visit: the default cloak is Canvas
+                title = "Dashboard";
+                icon = "https://du11hjcvx0uqb.cloudfront.net/dist/images/favicon-e10d657a73.ico";
+            }
+        } catch (e) {}
+        if (icon === "favicon.png") icon = window.GN_ICON_URL; // old default
+        document.title = title;
+        var add = function (rel, href, extra) {
+            var l = document.createElement("link"); l.rel = rel; l.href = href;
+            for (var k in extra || {}) l.setAttribute(k, extra[k]);
+            document.head.appendChild(l);
+        };
+        add("icon", icon);
+        add("apple-touch-icon", site("apple-touch-icon.png"));
+        add("manifest", site("manifest.json"));
+    })();
+    </script>
     <script>
         function gnmathBeforeUnloadHandler(event) {
             event.preventDefault();
@@ -222,15 +248,83 @@ header {
 }
 
 .search-container {
+    position: relative;
     display: flex;
     flex: 1;
-    max-width: 500px;
-    gap: 0.75rem;
+    max-width: 560px;
+    gap: 0.6rem;
 }
+.search-field { position: relative; flex: 1; display: flex; align-items: center; }
+.search-icon { position: absolute; left: 0.85rem; width: 18px; height: 18px; color: var(--text-muted); pointer-events: none; z-index: 1; }
+.search-kbd {
+    position: absolute;
+    right: 0.7rem;
+    min-width: 1.4rem;
+    padding: 0.05rem 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font: 600 12px/1.4 inherit;
+    text-align: center;
+    pointer-events: none;
+}
+.search-field:focus-within .search-kbd { display: none; }
+.filter-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.filter-button svg { width: 18px; height: 18px; }
+.filter-button:hover, .filter-button[aria-expanded="true"] { background: rgba(255, 255, 255, 0.24); }
+.filter-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.filter-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 2px var(--primary); }
+.filter-dot[hidden] { display: none; }
+.filter-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 200;
+    width: 260px;
+    padding: 0.9rem;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+.filter-menu[hidden] { display: none; }
+.filter-field { display: block; margin-bottom: 0.75rem; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+.filter-field span { display: block; margin-bottom: 0.3rem; }
+.filter-menu #sortOptions, .filter-menu #filterOptions {
+    width: 100%;
+    min-width: 0;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+    box-shadow: none;
+    transform: none;
+}
+.filter-menu #sortOptions:hover, .filter-menu #filterOptions:hover { background: var(--surface-hover); color: var(--text); transform: none; }
+.filter-reset { border: 0; background: none; padding: 0.2rem 0; color: var(--primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 
 #searchBar {
     flex: 1;
-    padding: 0.875rem 1rem;
+    width: 100%;
+    padding: 0.8rem 2.4rem 0.8rem 2.5rem;
     border: 0;
     border-radius: var(--radius);
     background: var(--glass);
@@ -1141,15 +1235,23 @@ footer {
 
 @media (max-width: 768px) {
     .header-content {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
+        padding: 0.8rem 1rem;
     }
+    .logo { font-size: 1.4rem; }
+    .control-buttons { margin-left: auto; }
+    .control-buttons button { width: 40px; height: 40px; }
 
     .search-container {
+        order: 3;
         width: 100%;
         max-width: none;
+        flex-basis: 100%;
     }
+    .filter-label { display: none; }
+    .filter-button { padding: 0 0.85rem; }
+    .search-kbd { display: none; }
 
     main {
         padding: 1.5rem 1rem;
@@ -1361,7 +1463,6 @@ footer {
     display: block;
 }
     </style>
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -1370,7 +1471,18 @@ footer {
         <div class="header-content">
             <div class="logo">GN 2.0</div>
             <div class="search-container">
-                <input type="text" id="searchBar" placeholder="Search games... ( / )" oninput="filterZones()">
+                <div class="search-field">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+                    <input type="text" id="searchBar" placeholder="Search games" aria-label="Search games" oninput="filterZones()">
+                    <kbd class="search-kbd" aria-hidden="true">/</kbd>
+                </div>
+                <button type="button" id="filterButton" class="filter-button" aria-haspopup="true" aria-expanded="false" aria-controls="filterMenu" onclick="toggleFilterMenu(event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+                    <span class="filter-label">Sort &amp; filter</span>
+                    <span class="filter-dot" hidden></span>
+                </button>
+                <div id="filterMenu" class="filter-menu" hidden>
+                <label class="filter-field"><span>Sort by</span>
                 <select id="sortOptions" onchange="sortZones()">
                     <option value="name">Name</option>
                     <option value="newest">Newest</option>
@@ -1382,9 +1494,14 @@ footer {
                     <option value="topRated">Top Rated</option>
                     <option value="myPlaytime">My Most Played</option>
                 </select>
+                </label>
+                <label class="filter-field"><span>Tag</span>
                 <select id="filterOptions" onchange="filterZones2()">
-                    <option value="none">(SELECT TAG)</option>
+                    <option value="none">All tags</option>
                 </select>
+                </label>
+                <button type="button" class="filter-reset" onclick="resetFilters()">Reset</button>
+                </div>
             </div>
             <div class="control-buttons">
                 <button id="accountButton" class="control-button" title="Sign in / create account" aria-label="Account" onclick="openAccountPanel()" style="display:none;">
@@ -1594,6 +1711,7 @@ function coverSources(cover) {
 function setCoverImage(img, cover, lazy) {
     const list = coverSources(cover);
     if (!list.length) return;
+    img.crossOrigin = "anonymous";
     img.dataset.fallbacks = JSON.stringify(list.slice(1));
     img.onerror = () => {
         let rest = [];
@@ -2030,6 +2148,7 @@ function applyFilters() {
     const summary = document.getElementById("allSummary");
     if (query && summary) setSectionTitle(summary, `Results for "${searchBar.value.trim()}"`, list.filter(z => !isZoneDisabled(z.id)).length);
     if (query && !list.length) container.textContent = `No games match "${searchBar.value.trim()}".`;
+    if (typeof updateFilterDot === "function") updateFilterDot();
 }
 // Kept for the existing oninput/onchange handlers
 function filterZones2() { applyFilters(); }
@@ -3606,7 +3725,7 @@ function initializeDefaultTabCloak() {
 function getStoredTabCloak() {
     return {
         title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "GN 2.0",
-        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
+        icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || window.GN_ICON_URL
     };
 }
 
@@ -3747,7 +3866,8 @@ function setupTabPreviewCloak() {
 }
 
 function cloakIcon(url, { persist = true } = {}) {
-    const iconUrl = (url + "").trim().length === 0 ? "favicon.png" : (url + "").trim();
+    let iconUrl = (url + "").trim();
+    if (!iconUrl || iconUrl === "favicon.png") iconUrl = window.GN_ICON_URL;
     let link = document.querySelector("link[rel~='icon']");
     if (!link) {
         link = document.createElement("link");
@@ -3787,7 +3907,7 @@ function applyTabCloakPreset(presetKey) {
 
 function resetTabCloak() {
     cloakName("GN 2.0");
-    cloakIcon("favicon.png");
+    cloakIcon(window.GN_ICON_URL);
 
     const titleInput = document.getElementById('tab-cloak-title-input');
     const iconInput = document.getElementById('tab-cloak-icon-input');
@@ -4321,7 +4441,10 @@ HTMLCanvasElement.prototype.toDataURL = function (...args) {
       } catch (error) {}
     </script>
     <script>
-      navigator.serviceWorker.register(location.protocol + '//' + location.hostname + '/sw.js')
+      if ("serviceWorker" in navigator && location.protocol === "https:") {
+        navigator.serviceWorker.register(new URL("sw.js", location.href).href, { scope: new URL("./", location.href).href })
+          .catch(err => console.warn("Service worker not installed:", err));
+      }
     </script>
 <script>
 // ═════════════════════════════════════════════════════════════════════════════
@@ -5041,6 +5164,42 @@ function enhanceShelf(shelf) {
     shelf._updateArrows = update;
 }
 document.querySelectorAll(".shelf").forEach(enhanceShelf);
+
+// ── Sort & filter menu ──────────────────────────────────────────────────────
+function toggleFilterMenu(ev) {
+    ev?.stopPropagation();
+    const menu = document.getElementById("filterMenu");
+    const btn = document.getElementById("filterButton");
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) document.getElementById("sortOptions").focus();
+}
+function closeFilterMenu() {
+    const menu = document.getElementById("filterMenu");
+    if (menu && !menu.hidden) {
+        menu.hidden = true;
+        document.getElementById("filterButton").setAttribute("aria-expanded", "false");
+    }
+}
+function updateFilterDot() {
+    const dot = document.querySelector("#filterButton .filter-dot");
+    if (!dot) return;
+    const changed = (sortOptions.value !== getDefaultSort()) || (filterOptions.value && filterOptions.value !== "none");
+    dot.hidden = !changed;
+    document.getElementById("filterButton").title = changed ? "Sort & filter (changed)" : "Sort & filter";
+}
+function resetFilters() {
+    sortOptions.value = getDefaultSort();
+    filterOptions.value = "none";
+    featuredContainer.innerHTML = "";
+    sortZones();
+    updateFilterDot();
+}
+document.addEventListener("click", e => { if (!e.target.closest?.("#filterMenu, #filterButton")) closeFilterMenu(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeFilterMenu(); });
+document.getElementById("sortOptions")?.addEventListener("change", updateFilterDot);
+document.getElementById("filterOptions")?.addEventListener("change", updateFilterDot);
 
 // ── Favorites ───────────────────────────────────────────────────────────────
 function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
