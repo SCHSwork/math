@@ -885,7 +885,20 @@ footer {
 .control-buttons button:hover {
     background: rgba(255, 255, 255, 0.2);
 }
-#accountButton.signed-in { color: var(--primary); }
+#accountButton { position: relative; }
+/* Signed in: white icon with a green "online" dot, readable on any theme color */
+#accountButton.signed-in { background: rgba(255, 255, 255, 0.22); }
+#accountButton.signed-in::after {
+    content: '';
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
 
 .settings-button {
     background: var(--gradient-primary);
