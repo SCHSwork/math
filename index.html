@@ -1231,11 +1231,10 @@ async function listZones() {
                             });
                         }).catch(error => alert("Failed to load zone: " + error));
                     }
-                } else {
-                    openZone(zone);
                 }
             }
         }
+        if (!embed) clearZoneIdFromUrl();
         } catch(error){}
         let alltags = [];
         for (const obj of json) {
@@ -1517,12 +1516,6 @@ function openZone(file) {
             zoneFrame.contentDocument.write('<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#94a3b8;font-family:sans-serif;font-size:1.2rem;">Loading...</body></html>');
             zoneFrame.contentDocument.close();
         }
-        try {
-            const locUrl = new URL(window.location);
-            locUrl.searchParams.set('id', file.id);
-            history.pushState(null, '', locUrl.toString());
-        } catch(e){}
-
         fetchWithFallback(file.url).then(html => {
             if (zoneFrame.contentDocument === null) {
                 zoneFrame = document.createElement("iframe");
@@ -1555,11 +1548,18 @@ function closeZone() {
     zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
     zoneViewer.removeChild(zoneFrame);
+    clearZoneIdFromUrl();
+}
+
+// Old links/history entries may still carry ?id=… — strip it so the address bar
+// (and Chrome's autocomplete) doesn't keep reopening that game.
+function clearZoneIdFromUrl() {
     try {
-    const url = new URL(window.location);
-    url.searchParams.delete('id');
-    history.pushState(null, '', url.toString());
-    } catch(error){}
+        const url = new URL(window.location);
+        if (!url.searchParams.has('id')) return;
+        url.searchParams.delete('id');
+        history.replaceState(null, '', url.toString());
+    } catch (error) {}
 }
 
 function downloadZone() {
