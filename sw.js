@@ -1,8 +1,9 @@
 // GN 2.0 service worker
-// - The site page: network first (so updates show right away), saved copy when offline.
+// - The site page and its own files (css/, js/, icons): network first so updates show
+//   right away, saved copy when offline.
 // - Game cover images: served from a local cache for faster repeat visits.
 // - Everything else (games, accounts, saves) is not touched.
-const VERSION = "gn2-v1";
+const VERSION = "gn2-v2";
 const PAGE_CACHE = `${VERSION}-page`;
 const COVER_CACHE = `${VERSION}-covers`;
 const MAX_COVERS = 600;
@@ -45,6 +46,22 @@ self.addEventListener("fetch", event => {
         return fresh;
       } catch (err) {
         const cached = await caches.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        throw err;
+      }
+    })());
+    return;
+  }
+
+  // The site's own files (styles, scripts, icons, manifest)
+  if (url.origin === self.location.origin && /\.(css|js|png|json)$/.test(url.pathname) && !url.pathname.endsWith("/sw.js")) {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        if (fresh.ok) (await caches.open(PAGE_CACHE)).put(req, fresh.clone());
+        return fresh;
+      } catch (err) {
+        const cached = await caches.match(req) || await caches.match(req, { ignoreSearch: true });
         if (cached) return cached;
         throw err;
       }
