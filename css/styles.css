@@ -1499,3 +1499,13 @@ footer {
 .dialog-btn.danger { border-color: transparent; background: #dc2626; color: #fff; }
 .dialog-btn:focus-visible { outline: 2px solid var(--text, #fff); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .toast, .dialog { animation: none; } }
+
+/* ── Account panel sections ─────────────────────────────────────────────── */
+.acct-section { margin-top: 0.5rem; padding: 0.6rem 0; border-top: 1px solid var(--border); }
+.acct-section summary { cursor: pointer; color: var(--text-muted); font-size: 14px; font-weight: 600; padding: 0.2rem 0; }
+.acct-section summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
+.acct-section label { display: block; margin: 0.7rem 0 0.3rem; font-size: 14px; font-weight: 700; }
+.acct-section input { width: 100%; box-sizing: border-box; }
+.acct-section .settings-button { margin-top: 0.9rem; }
+.acct-hint { margin: 0.6rem 0 0; font-size: 13px; color: var(--text-muted); }
+.acct-msg { margin: 0.5rem 0 0; font-size: 14px; min-height: 1.2em; }
