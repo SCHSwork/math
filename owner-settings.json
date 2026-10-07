@@ -21,9 +21,9 @@
     "compactMode": false,
     "hideFeatured": false,
     "autofocusSearch": true,
-    "showPlayCount": false,
+    "showPlayCount": true,
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "updatedAt": "2026-10-07T03:42:39.892Z"
+  "updatedAt": "2026-10-07T03:43:27.470Z"
 }
