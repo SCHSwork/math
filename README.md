@@ -7,7 +7,8 @@ The game list and game files come from the community-run gn-math library on jsDe
 ## Features
 
 **Playing**
-- Search, sort (name, date added, popular, trending, top rated, my most played) and tag filters
+- Search, sort (name, newest, date added, popular, trending, top rated, my most played) and tag filters
+- **NEW** badges on the 12 most recently added games
 - **Favorites** (☆ on any card) and **Recently Played** rows at the top
 - **Random game** button
 - **Loading bar** with real progress, size and time left for big games
@@ -40,6 +41,7 @@ Open it from **Settings → Owner Panel**. It unlocks with a **GitHub token** fo
 
 From the panel you can:
 - set the site to **open**, **locked** or **shut down**
+- see **broken reports** (most reported first) and disable a game in one click
 - disable individual games
 - set an announcement banner, a message of the day and extra footer links
 - choose **new-visitor defaults** (theme, card size, sort, and so on)

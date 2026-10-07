@@ -461,12 +461,30 @@ main {
 .zone-item button.card-fav.on, .zone-item:hover button.card-fav.on { color: #facc15; }
 .zone-item button.card-fav:hover { transform: scale(1.12); }
 @media (hover: none) { .zone-item button.card-fav { opacity: 1; } }
-.card-flag {
+.card-badges {
     position: absolute;
     top: 8px;
     right: 8px;
     z-index: 3;
     max-width: calc(100% - 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    pointer-events: none;
+}
+.card-new {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.card-flag {
     padding: 3px 8px;
     border-radius: 999px;
     background: #b45309;
@@ -490,7 +508,7 @@ main {
     color: var(--text-muted);
 }
 body.cards-list .zone-item button.card-fav { position: static; opacity: 1; flex: 0 0 32px; margin-left: 0.5rem; padding: 0; text-align: center; }
-body.cards-list .card-flag { position: static; flex-shrink: 0; margin-right: 0.5rem; }
+body.cards-list .card-badges { position: static; flex-direction: row; flex-shrink: 0; margin-right: 0.5rem; max-width: none; }
 body.cards-list .card-meta { margin: 0; padding: 0 0.75rem 0 0; flex-shrink: 0; }
 .zone-rating { display: flex; align-items: center; gap: 0.35rem; }
 .zone-rating button.voted { background: rgba(255, 255, 255, 0.35); }
@@ -1149,6 +1167,7 @@ footer {
                 <input type="text" id="searchBar" placeholder="Search zones..." oninput="filterZones()">
                 <select id="sortOptions" onchange="sortZones()">
                     <option value="name">Name</option>
+                    <option value="newest">Newest</option>
                     <option value="id">ID (Date)</option>
                     <option value="popular">Popular</option>
                     <option value="trendingDay">Trending (Day)</option>
@@ -1433,6 +1452,8 @@ function sortZones() {
         zones.sort((a, b) => ((popularityData['week']?.[b.id]) ?? 0) - ((popularityData['week']?.[a.id]) ?? 0));
     } else if (sortBy === 'trendingDay') {
         zones.sort((a, b) => ((popularityData['day']?.[b.id]) ?? 0) - ((popularityData['day']?.[a.id]) ?? 0));
+    } else if (sortBy === 'newest') {
+        zones.sort((a, b) => b.id - a.id);
     } else if (sortBy === 'topRated') {
         zones.sort((a, b) => ratingScore(b.id) - ratingScore(a.id) || a.name.localeCompare(b.name));
     } else if (sortBy === 'myPlaytime') {
@@ -1476,15 +1497,25 @@ function createZoneCard(file) {
     fav.onclick = (event) => { event.stopPropagation(); toggleFavorite(file.id); };
     zoneItem.prepend(fav);
 
-    // Flag games that many people recently reported as broken
+    // Badges: NEW for recently added games, warning for games many people reported broken
     const stats = getZoneStats(file.id);
+    const badges = document.createElement("div");
+    badges.className = "card-badges";
+    if (isNewZone(file.id)) {
+        const nb = document.createElement("div");
+        nb.className = "card-new";
+        nb.textContent = "NEW";
+        nb.title = "Recently added";
+        badges.appendChild(nb);
+    }
     if (stats.reports >= BROKEN_FLAG_THRESHOLD) {
         const flag = document.createElement("div");
         flag.className = "card-flag";
         flag.textContent = `⚠ ${stats.reports} broken reports`;
         flag.title = `${stats.reports} people reported this game as broken in the last ${BROKEN_REPORT_DAYS} days. It may not load.`;
-        zoneItem.appendChild(flag);
+        badges.appendChild(flag);
     }
+    if (badges.childElementCount) zoneItem.appendChild(badges);
 
     // Your play time + community rating
     const metaParts = [];
@@ -2222,11 +2253,9 @@ function renderOwnerPanel() {
 
     <div class="settings-section">
         <h4>Broken Reports</h4>
-        <p style="margin:0 0 0.5rem;">Total reports: <strong>${reportsFile.totalReports}</strong></p>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button class="settings-button" type="button" style="flex:1;" onclick="saveBrokenReportsFile()">Export JSON</button>
-            <button class="settings-button" type="button" style="flex:1;" onclick="clearBrokenReports()">Clear All</button>
-        </div>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Games people reported as broken, most reported first. Reports older than ${BROKEN_REPORT_DAYS} days don't count toward the card warning. Disabling hides a game for everyone.</p>
+        <div id="owner-reports-list" class="owner-panel-list"><p style="margin:0.25rem;color:var(--text-muted);">Loading reports…</p></div>
+        <button class="settings-button" type="button" style="margin-top:0.5rem;" onclick="renderOwnerReports(true)">Refresh</button>
     </div>
 
     <div class="settings-section">
@@ -2276,6 +2305,70 @@ function renderOwnerPanel() {
 
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
+    renderOwnerReports(true);
+}
+
+function timeAgo(ms) {
+    const s = Math.max(0, (Date.now() - ms) / 1000);
+    if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`;
+    if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+    return `${Math.round(s / 86400)} days ago`;
+}
+
+async function renderOwnerReports(refresh) {
+    const list = document.getElementById("owner-reports-list");
+    if (!list) return;
+    if (typeof cloudDb === "undefined" || !cloudDb) {
+        list.innerHTML = `<p style="margin:0.25rem;color:var(--text-muted);">Reports need accounts to be switched on.</p>`;
+        return;
+    }
+    if (refresh) await loadGameStats({ force: true });
+    const box = document.getElementById("owner-reports-list");
+    if (!box) return;
+    const rows = Object.entries(gameStats)
+        .map(([id, st]) => {
+            const times = Object.values(st.r || {});
+            return { id, st, total: times.length, recent: st.reports, last: times.length ? Math.max(...times) : 0 };
+        })
+        .filter(x => x.total > 0)
+        .sort((a, b) => b.recent - a.recent || b.total - a.total || b.last - a.last);
+    box.innerHTML = "";
+    if (!rows.length) {
+        box.innerHTML = `<p style="margin:0.25rem;color:var(--text-muted);">No broken reports. 🎉</p>`;
+        return;
+    }
+    for (const x of rows) {
+        const zone = zoneById(x.id);
+        const row = document.createElement("div");
+        row.className = "owner-game-toggle";
+        const info = document.createElement("span");
+        info.className = "owner-game-name";
+        const title = document.createElement("b");
+        title.textContent = zone ? `${zone.name} (#${x.id})` : `Game #${x.id}`;
+        const detail = document.createElement("div");
+        detail.style.cssText = "font-size:12px;color:var(--text-muted);";
+        const votes = x.st.up + x.st.down;
+        detail.textContent = `${x.recent} in last ${BROKEN_REPORT_DAYS} days · ${x.total} total · last ${timeAgo(x.last)}` +
+            (votes ? ` · 👍 ${Math.round(x.st.up / votes * 100)}% of ${votes}` : "") +
+            (x.recent >= BROKEN_FLAG_THRESHOLD ? " · ⚠ flagged" : "");
+        info.append(title, detail);
+        row.appendChild(info);
+        const disabled = isZoneDisabled(x.id);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "settings-button";
+        btn.style.cssText = "flex:0 0 auto;width:84px;min-width:0;padding:0.45rem 0;font-size:13px;white-space:nowrap;" + (disabled ? "background:var(--surface-hover);" : "");
+        btn.textContent = disabled ? "Enable" : "Disable";
+        btn.onclick = () => {
+            setZoneDisabled(x.id, !disabled);
+            const cb = [...document.querySelectorAll("#owner-game-list .owner-game-toggle")]
+                .find(l => l.textContent.includes(`(#${x.id})`))?.querySelector("input");
+            if (cb) cb.checked = !disabled;
+            renderOwnerReports(false);
+        };
+        row.appendChild(btn);
+        box.appendChild(row);
+    }
 }
 
 function clearBrokenReports() {
@@ -4379,6 +4472,18 @@ function writeJson(key, value) {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.warn(e); }
 }
 function zoneById(id) { return zones.find(z => String(z.id) === String(id)); }
+
+// ── "NEW" badges: the most recently added games (highest IDs) ───────────────
+const NEW_GAME_COUNT = 12;
+let newZoneIds = null, newZoneSource = null;
+function isNewZone(id) {
+    if (newZoneSource !== zones || !newZoneIds) {
+        newZoneSource = zones;
+        newZoneIds = new Set(zones.map(z => Number(z.id)).filter(n => n >= 0)
+            .sort((a, b) => b - a).slice(0, NEW_GAME_COUNT).map(String));
+    }
+    return newZoneIds.has(String(id));
+}
 
 // ── Favorites ───────────────────────────────────────────────────────────────
 function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
