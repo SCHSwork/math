@@ -5,6 +5,7 @@ All the changes to GN 2.0, newest first.
 ## October 7, 2026
 
 ### New
+- **Backup game sources.** The game list, cover images and games now load from three places: jsDelivr, then GitHub directly, then githack. If one fails, times out or is blocked by a school filter, the site switches automatically and remembers for the rest of the session. When jsDelivr is down, links inside games are pointed at the backups too. If every source is down, the last game list that loaded is shown with a notice.
 - **Game of the Day**: one game is featured at the top of the page each day, the same for everyone.
 - **Changelog**: this list. You can open it from the footer.
 - **⋯ More menu** in each game's top bar: favorite, restart, game info, open in new tab, download, report broken, and **clear this game's data**. Clearing removes only that game's saves; other games aren't touched.
