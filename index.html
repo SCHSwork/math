@@ -16,15 +16,15 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gn-math</title>
-    <meta name="title" content="GN-Math">
-    <meta name="description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <title>GN 2.0</title>
+    <meta name="title" content="GN 2.0">
+    <meta name="description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="GN-Math">
-    <meta property="og:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <meta property="og:title" content="GN 2.0">
+    <meta property="og:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="GN-Math">
-    <meta name="twitter:description" content="Play unbl*cked games like Crazy Cattle 3D and DriveMad on GN-Math. Fast, free, no downloads—perfect for school or home.">
+    <meta name="twitter:title" content="GN 2.0">
+    <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
     <style>
         :root {
     --primary: #fc2651;
@@ -1144,7 +1144,7 @@ footer {
 
     <header>
         <div class="header-content">
-            <div class="logo">gn-math</div>
+            <div class="logo">GN 2.0</div>
             <div class="search-container">
                 <input type="text" id="searchBar" placeholder="Search zones..." oninput="filterZones()">
                 <select id="sortOptions" onchange="sortZones()">
@@ -1590,7 +1590,7 @@ function filterZones() {
 // a fake "Download" ad pushing a browser-hijacker extension, plus an anti-adblock
 // trap that wipes the page if its ad box is removed. We strip the loader before
 // the game runs (so the trap never starts) and block known ad hosts as a backup.
-const AD_HOST_PATTERN = "(^|\\.)(r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com)$";
+const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com)$";
 
 function isObfuscatedAdScript(code) {
     if (/r9x\.in/i.test(code)) return true;
@@ -1610,12 +1610,14 @@ function cleanGameHtml(html) {
             removed++; return "";
         }
         if (!src && isObfuscatedAdScript(code)) { removed++; return ""; }
+        // Inline Google Analytics setup: window.dataLayer / gtag('config', 'G-…')
+        if (!src && code.length < 3000 && /gtag\(\s*['"](config|js)['"]|googletagmanager|google-analytics/.test(code)) { removed++; return ""; }
         return whole;
     });
     // Empty side-banner ad slots
     out = out.replace(/<div id="sidebarad[12]">\s*<div class="sidebar-close"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi, "");
     // Backup: if any ad script survives, stop it from loading anything from ad hosts.
-    const guard = `<script>(function(){var bad=new RegExp(${JSON.stringify(AD_HOST_PATTERN)},"i");` +
+    const guard = `<script>window.dataLayer=[];window.gtag=function(){};window.ga=function(){};(function(){var bad=new RegExp(${JSON.stringify(AD_HOST_PATTERN)},"i");` +
         `function blocked(u){try{return bad.test(new URL(u,location.href).hostname)}catch(e){return false}}` +
         `[window.HTMLScriptElement,window.HTMLIFrameElement].forEach(function(C){if(!C)return;var d=Object.getOwnPropertyDescriptor(C.prototype,"src");` +
         `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v))return;d.set.call(this,v)}})});` +
@@ -1625,7 +1627,7 @@ function cleanGameHtml(html) {
     if (/<head\b[^>]*>/i.test(out)) out = out.replace(/<head\b[^>]*>/i, m => m + guard);
     else if (/<!doctype[^>]*>/i.test(out)) out = out.replace(/<!doctype[^>]*>/i, m => m + guard);
     else out = guard + out;
-    if (removed) console.info(`Removed ${removed} ad script(s) from game`);
+    if (removed) console.info(`Removed ${removed} ad/tracker script(s) from game`);
     return out;
 }
 
@@ -3094,7 +3096,7 @@ function initializeDefaultTabCloak() {
 
 function getStoredTabCloak() {
     return {
-        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "gn-math",
+        title: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.title) || "GN 2.0",
         icon: localStorage.getItem(TAB_CLOAK_STORAGE_KEYS.icon) || "favicon.png"
     };
 }
@@ -3251,7 +3253,7 @@ function cloakIcon(url, { persist = true } = {}) {
 }
 
 function cloakName(title, { persist = true } = {}) {
-    const nextTitle = (title + "").trim().length === 0 ? "gn-math" : (title + "").trim();
+    const nextTitle = (title + "").trim().length === 0 ? "GN 2.0" : (title + "").trim();
     document.title = nextTitle;
 
     if (persist) {
@@ -3275,7 +3277,7 @@ function applyTabCloakPreset(presetKey) {
 }
 
 function resetTabCloak() {
-    cloakName("gn-math");
+    cloakName("GN 2.0");
     cloakIcon("favicon.png");
 
     const titleInput = document.getElementById('tab-cloak-title-input');
@@ -3582,38 +3584,42 @@ function legalPopup(title, html) {
 
 function loadPrivacy() {
     legalPopup("Privacy Policy", `
-        <p><b>Effective October 6, 2026</b></p>
-        <p>This policy explains what this website collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), we don't show ads, and we don't sell or share your information.</p>
+        <p><b>Effective October 7, 2026</b></p>
+        <p>This policy explains what GN 2.0 collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), there are no ads or trackers, and we don't sell or share your information.</p>
 
         <h3>What we collect</h3>
-        <p><b>If you just play (no account):</b> nothing is sent to us. Your settings and game progress are saved only in your own browser on your own device.</p>
+        <p><b>If you just play (no account):</b> nothing is sent to us. Your settings, favorites, recently played games, play time and game progress are saved only in your own browser on your own device.</p>
         <p><b>If you create an account:</b></p>
         <ul>
             <li><b>Username and password.</b> These are handled by Google Firebase Authentication. Your password is stored by Google in protected (hashed) form; the site owner can never see it. Firebase also records when the account was created and last signed in, and may log IP addresses to protect against abuse.</li>
-            <li><b>Cloud saves.</b> A copy of the game progress and site settings stored in your browser for this site, so you can continue on another device. It is stored in Google Cloud Firestore and is locked so only your signed-in account can read or change it. It does not include passwords or access tokens.</li>
+            <li><b>Cloud saves.</b> A copy of the game progress and site settings stored in your browser for this site (including your favorites, recently played list and play time), so you can continue on another device. It is stored in Google Cloud Firestore and locked so only your signed-in account can read or change it. It never includes passwords or access tokens.</li>
+            <li><b>Ratings and broken-game reports.</b> When you rate a game or report it as broken, we store your vote or the time of your report together with your account's random ID (not your username). These are combined into the public totals shown on game cards, and the stored entries can be read by anyone, but they don't reveal your username.</li>
         </ul>
         <p>We do <b>not</b> ask for your email, real name, age, location, contacts, or any other personal details. Please don't put your real name or personal information in your username.</p>
+
+        <h3>No ads or tracking</h3>
+        <p>GN 2.0 doesn't use advertising, analytics or tracking tools. Many game files come with ad code or Google Analytics added by whoever uploaded them; the site removes known ad and tracking code from each game before it runs and blocks it from loading.</p>
 
         <h3>Children</h3>
         <p>This site is not directed at children under 13, and we do not knowingly collect personal information from them. If you are under 13, you can still play, but please don't create an account. If we learn an account belongs to someone under 13, we will delete it.</p>
 
         <h3>How we use it</h3>
-        <p>Only to run the features you use: signing in and keeping your game progress in sync between devices. No advertising, profiling, or tracking by this site, and we never sell or rent your information.</p>
+        <p>Only to run the features you use: signing in, keeping your progress in sync between devices, and showing game ratings and broken-game warnings. We never use it for advertising or profiling, and we never sell or rent it.</p>
 
         <h3>Third-party services</h3>
         <p>Like any website, these services receive basic technical information (such as your IP address and browser type) when your browser connects to them:</p>
         <ul>
-            <li><b>Google Firebase</b> &mdash; accounts and cloud saves.</li>
+            <li><b>Google Firebase</b> &mdash; accounts, cloud saves, ratings and reports.</li>
             <li><b>GitHub</b> &mdash; serves the site and its settings.</li>
-            <li><b>jsDelivr</b> and other content networks &mdash; deliver the game files and images.</li>
+            <li><b>jsDelivr</b> and other content networks &mdash; deliver the game files and images, and provide the public play counts.</li>
         </ul>
-        <p>Games are made and hosted by third parties. Some game files contain their own code, such as analytics, that we don't control. The site removes known ad code from games, but we can't guarantee every third-party file. Each of these services has its own privacy policy.</p>
+        <p>Games are made and hosted by third parties. We remove the ad and tracking code we know about, but we can't guarantee every third-party file. Each of these services has its own privacy policy.</p>
 
         <h3>Keeping and deleting your data</h3>
-        <p>Your cloud save is kept until you delete your account; each new save replaces the previous one. You can delete your account and all of its cloud data at any time from <b>Account &rarr; Delete account</b>. Progress saved only in your browser stays on your device until you clear your browser data. Accounts that are inactive for a long time may be deleted.</p>
+        <p>Your cloud save is kept until you delete your account; each new save replaces the previous one. Broken-game reports stop counting after ${BROKEN_REPORT_DAYS} days. You can delete your account at any time from <b>Account &rarr; Delete account</b>; this removes your account, your cloud save, and your ratings and reports. Data saved only in your browser stays on your device until you clear your browser data. Accounts that are inactive for a long time may be deleted.</p>
 
         <h3>Security</h3>
-        <p>Access to cloud saves is restricted to the account that owns them, and connections are encrypted. No system is perfectly secure, so use a password you don't use anywhere else. There is no password reset, so keep your password safe.</p>
+        <p>Cloud saves can only be read or changed by the account that owns them, and connections are encrypted. No system is perfectly secure, so use a password you don't use anywhere else. There is no password reset, so keep your password safe.</p>
 
         <h3>Changes</h3>
         <p>We may update this policy. The effective date at the top shows when it last changed. Continuing to use the site after a change means you accept the updated policy.</p>
@@ -3622,8 +3628,8 @@ function loadPrivacy() {
 
 function loadTerms() {
     legalPopup("Terms of Use", `
-        <p><b>Effective October 6, 2026</b></p>
-        <p>By using this site you agree to these terms. If you don't agree, please don't use the site.</p>
+        <p><b>Effective October 7, 2026</b></p>
+        <p>By using GN 2.0 you agree to these terms. If you don't agree, please don't use the site.</p>
 
         <h3>Games and content</h3>
         <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them, and the game files are loaded from third-party sources. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
@@ -3653,7 +3659,8 @@ function loadDMCA() {
     popupBody.innerHTML = `
         <div class="dmca-content">
             <p>
-                If you own or developed a game that is on <strong>gn-math</strong> 
+                GN 2.0 doesn't host any game files. They're loaded from the gn-math game library,
+                which is run by its own owner. If you own or developed a game shown here
                 and would like it removed, please do the following:
             </p>
             <ol>
@@ -3765,7 +3772,7 @@ function showZoneInfo() {
         ${idjson.author?`<b>Game Author</b>: ${idjson.author}<br>`:""}
         ${idjson.authorLink?`<b>Game Author Link</b>: <a style="color:#FFFF00;" href=${idjson.authorLink}>${idjson.authorLink}</a><br>`:""}
         ${idjson.special?`<b>Tags</b>: ${idjson.special}<br>`:""}
-        <b>Gn-Math Adder</b>: ${json.at(-1).commit.author.name}<br>
+        <b>Added By</b>: ${json.at(-1).commit.author.name}<br>
         <b>Date Added</b>: ${formatteddate}<br>
         <b>Times Played (Globally)</b>: ${Number(stats).toLocaleString("en-US")}
         </p>`;
@@ -4214,6 +4221,7 @@ async function cloudDeleteAccount() {
         cloudBusy = true;
         const chunks = await saveDocRef().collection("chunks").get();
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
+        if (typeof removeMyGameStats === "function") await removeMyGameStats(cloudUser.uid);
         await saveDocRef().delete();
         await cloudUser.delete();
         localStorage.removeItem(CLOUD.keys.syncedGen);
@@ -4611,6 +4619,23 @@ async function reportBrokenShared(zone) {
         console.error(e);
         alert("Couldn't send the report: " + statsErrorText(e));
     }
+}
+
+// Remove every rating and report this account made (used by Delete account).
+// The rules allow one game per write, so this writes once per game touched.
+async function removeMyGameStats(uid) {
+    const snap = await cloudDb.collection("gameStats").get();
+    const del = firebase.firestore.FieldValue.delete();
+    for (const doc of snap.docs) {
+        const data = doc.data() || {};
+        for (const [zk, entry] of Object.entries(data)) {
+            if (!/^z-?\d+$/.test(zk) || !entry || typeof entry !== "object") continue;
+            const mine = (entry.v && uid in entry.v) || (entry.r && uid in entry.r);
+            if (!mine) continue;
+            await doc.ref.set({ [zk]: { v: { [uid]: del }, r: { [uid]: del } }, last: { z: zk, u: uid } }, { merge: true });
+        }
+    }
+    try { localStorage.removeItem(LIB_KEYS.statsCache); } catch {}
 }
 
 // Load cached stats immediately, then fresh ones once Firebase is ready
