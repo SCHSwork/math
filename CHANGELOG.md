@@ -15,6 +15,7 @@ All the changes to GN 2.0, newest first.
 - **Broken reports in the owner panel**, most reported first, with one-click Disable/Enable.
 
 ### Changed
+- **Scrolling rows have no scroll bar.** Featured and Your games now show ‹ › arrow buttons when you hover over them, with a soft fade on the side that has more games. Touchscreens and trackpads can still swipe.
 - **Cleaner home page.** Recent and Favorites are now one compact **Your games** row with a switch between them. Featured is a single scrolling row instead of a full grid. Game of the Day is a slim **Today's pick** strip. Section headings are simpler, long game names cut off after two lines, and each card shows one short info line (for example "186K plays").
 - The site is now called **GN 2.0**.
 - **Google Analytics is removed from every game** before it runs, and tracking sites are blocked.

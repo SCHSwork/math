@@ -456,8 +456,51 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
     scroll-padding-inline: 0.35rem;
     padding: 0.35rem 0.35rem 0.9rem;
     margin: -0.35rem -0.35rem 0;
-    scrollbar-width: thin;
+    scrollbar-width: none;
 }
+.shelf::-webkit-scrollbar { display: none; }
+.shelf-wrap { position: relative; }
+.shelf-wrap[hidden] { display: none; }
+.shelf-arrow {
+    position: absolute;
+    top: calc(50% - 0.45rem);
+    z-index: 5;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 0.2s ease, background 0.2s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+.shelf-arrow svg { width: 18px; height: 18px; }
+.shelf-arrow.prev { left: 6px; }
+.shelf-arrow.next { right: 6px; }
+.shelf-wrap:hover .shelf-arrow, .shelf-arrow:focus-visible { opacity: 1; }
+.shelf-arrow:hover { background: var(--primary); }
+.shelf-arrow:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.shelf-arrow[hidden] { display: none; }
+/* Soft fade on the side that has more games */
+.shelf-wrap.more-right::after, .shelf-wrap.more-left::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0.9rem;
+    width: 48px;
+    z-index: 4;
+    pointer-events: none;
+}
+.shelf-wrap.more-right::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+.shelf-wrap.more-left::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+@media (hover: none) { .shelf-arrow { display: none; } }
 .shelf[hidden] { display: none; }
 .shelf .zone-item { scroll-snap-align: start; flex-direction: column; align-self: start; animation: none; }
 .shelf .zone-item:hover { transform: translateY(-3px); }
@@ -4956,6 +4999,48 @@ function renderSimpleMarkdown(md) {
     if (inList) html += "</ul>";
     return html;
 }
+
+// ── Shelf arrows (scrolling rows without a scrollbar) ──────────────────────
+function enhanceShelf(shelf) {
+    if (!shelf || shelf.dataset.enhanced) return;
+    shelf.dataset.enhanced = "1";
+    const wrap = document.createElement("div");
+    wrap.className = "shelf-wrap";
+    shelf.parentNode.insertBefore(wrap, shelf);
+    wrap.appendChild(shelf);
+    const chevron = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+    const make = (dir) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `shelf-arrow ${dir}`;
+        b.setAttribute("aria-label", dir === "prev" ? "Scroll left" : "Scroll right");
+        b.innerHTML = chevron(dir === "prev" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6");
+        b.onclick = () => {
+            const step = Math.max(200, shelf.clientWidth * 0.85);
+            const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches && !document.body.classList.contains("reduced-motion");
+            shelf.scrollBy({ left: dir === "prev" ? -step : step, behavior: smooth ? "smooth" : "auto" });
+        };
+        wrap.appendChild(b);
+        return b;
+    };
+    const prev = make("prev"), next = make("next");
+    const update = () => {
+        const max = shelf.scrollWidth - shelf.clientWidth;
+        const atStart = shelf.scrollLeft <= 4, atEnd = shelf.scrollLeft >= max - 4;
+        prev.hidden = atStart;
+        next.hidden = atEnd || max <= 4;
+        wrap.classList.toggle("more-left", !atStart);
+        wrap.classList.toggle("more-right", !atEnd && max > 4);
+        wrap.hidden = shelf.hidden;
+    };
+    shelf.addEventListener("scroll", update, { passive: true });
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(update).observe(shelf);
+    new MutationObserver(update).observe(shelf, { childList: true, attributes: true, attributeFilter: ["hidden"] });
+    window.addEventListener("resize", update);
+    update();
+    shelf._updateArrows = update;
+}
+document.querySelectorAll(".shelf").forEach(enhanceShelf);
 
 // ── Favorites ───────────────────────────────────────────────────────────────
 function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
