@@ -154,12 +154,9 @@
 }
 
 /* Card size variants */
-body.cards-small  #favoriteZones, body.cards-small  #recentZones,
-body.cards-small  #container, body.cards-small  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-body.cards-large  #favoriteZones, body.cards-large  #recentZones,
-body.cards-large  #container, body.cards-large  #featuredZones { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-body.cards-list   #favoriteZones, body.cards-list   #recentZones,
-body.cards-list   #container, body.cards-list   #featuredZones {
+body.cards-small  #container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+body.cards-large  #container { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+body.cards-list   #container {
     grid-template-columns: 1fr;
     gap: 0.5rem;
 }
@@ -338,10 +335,7 @@ main {
     background: var(--primary);
 }
 
-#container,
-#favoriteZones,
-#recentZones,
-#featuredZones {
+#container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.5rem;
@@ -404,37 +398,121 @@ main {
     transform: scale(1.05);
 }
 
-/* Game of the Day */
+/* ── Home layout ─────────────────────────────────────────────────────────── */
+.home-section { margin: 0 0 1.9rem; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+.section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    cursor: default;
+}
+summary.section-title { list-style: none; cursor: pointer; margin-bottom: 0.9rem; user-select: none; }
+summary.section-title::-webkit-details-marker { display: none; }
+summary.section-title::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-left: 0.15rem;
+    border-right: 2px solid var(--text-muted);
+    border-bottom: 2px solid var(--text-muted);
+    transform: translateY(-3px) rotate(45deg);
+    transition: transform 0.2s ease;
+    align-self: center;
+}
+details:not([open]) > summary.section-title::after { transform: rotate(-45deg); }
+summary.section-title:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 6px; }
+.section-count { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+
+/* Segmented Recent / Favorites switch */
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--bg-secondary); border: 1px solid var(--border); }
+.seg button {
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+}
+.seg button[aria-selected="true"] { background: var(--surface-hover); color: var(--text); }
+.seg button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+/* Shelves: one scrolling row instead of a full grid */
+.shelf {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 176px;
+    gap: 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 0.35rem;
+    padding: 0.35rem 0.35rem 0.9rem;
+    margin: -0.35rem -0.35rem 0;
+    scrollbar-width: thin;
+}
+.shelf[hidden] { display: none; }
+.shelf .zone-item { scroll-snap-align: start; flex-direction: column; align-self: start; animation: none; }
+.shelf .zone-item:hover { transform: translateY(-3px); }
+.shelf .zone-item img { width: 100%; height: auto; }
+.shelf .zone-item > button:not(.card-fav) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    min-height: calc(2 * 1.35em);
+    max-height: calc(2 * 1.35em);
+    padding: 0 0.6rem;
+    margin: 0.7rem 0;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: center;
+}
+.shelf .card-meta { display: none; }
+.shelf-small { grid-auto-columns: 124px; gap: 0.75rem; }
+.shelf-small .zone-item > button:not(.card-fav) { min-height: calc(2 * 1.3em); max-height: calc(2 * 1.3em); padding: 0 0.45rem; margin: 0.55rem 0; font-size: 12px; line-height: 1.3; }
+.shelf-small .card-badges { display: none; }
+.shelf-empty { margin: 0; padding: 1.25rem; border: 1px dashed var(--border); border-radius: 12px; color: var(--text-muted); font-size: 14px; text-align: center; }
+
+/* Today's pick */
 #gotd {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    margin: 0 0 1.75rem;
-    padding: 1rem;
-    border-radius: var(--radius-lg, 16px);
+    gap: 1rem;
+    margin: 0 0 2.25rem;
+    padding: 0.85rem 3rem 0.85rem 0.85rem;
+    border-radius: 16px;
     border: 1px solid var(--border);
-    background: linear-gradient(120deg, var(--primary-light, rgba(252,38,81,0.12)), transparent 70%), var(--surface);
-    box-shadow: var(--shadow-sm);
+    background: var(--surface);
 }
 #gotd[hidden] { display: none; }
 #gotd img {
-    width: 120px;
-    height: 120px;
+    width: 76px;
+    height: 76px;
     flex-shrink: 0;
     object-fit: cover;
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--border-light);
     cursor: pointer;
 }
-#gotd .gotd-label { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--primary); }
-#gotd h2 { margin: 0.2rem 0 0.25rem; font-size: 1.5rem; line-height: 1.2; }
-#gotd .gotd-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 0.75rem; }
-#gotd .gotd-play { width: auto; padding: 0.6rem 1.4rem; }
+#gotd > div { flex: 1; }
+#gotd .gotd-label { font-size: 13px; font-weight: 600; color: var(--primary); }
+#gotd h2 { margin: 0.1rem 0 0.15rem; font-size: 1.2rem; line-height: 1.25; }
+#gotd .gotd-meta { font-size: 13px; color: var(--text-muted); }
+#gotd .gotd-play { width: auto; min-width: 0; flex-shrink: 0; padding: 0.6rem 1.75rem; }
 #gotd .gotd-close {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
     width: 30px;
     height: 30px;
     border: 0;
@@ -445,10 +523,15 @@ main {
     cursor: pointer;
 }
 #gotd .gotd-close:hover { background: var(--surface-hover); color: var(--text); }
-@media (max-width: 520px) {
-    #gotd { gap: 0.9rem; padding: 0.8rem; }
-    #gotd img { width: 84px; height: 84px; }
-    #gotd h2 { font-size: 1.15rem; }
+@media (max-width: 560px) {
+    #gotd { flex-wrap: wrap; padding-right: 2.6rem; }
+    #gotd img { width: 60px; height: 60px; }
+    #gotd > div { flex-basis: calc(100% - 76px); }
+    #gotd .gotd-play { width: 100%; }
+    #gotd .gotd-close { top: 12px; transform: none; }
+    .section-title { font-size: 1.15rem; }
+    .shelf { grid-auto-columns: 148px; }
+    .shelf-small { grid-auto-columns: 108px; }
 }
 .changelog-doc h2 { margin: 1.25rem 0 0.25rem; font-size: 1.2rem; }
 .changelog-doc h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; color: var(--primary); }
@@ -1029,8 +1112,7 @@ footer {
         padding: 1.5rem 1rem;
     }
 
-    #container,
-    #featuredZones {
+    #container {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 1.25rem;
     }
@@ -1047,8 +1129,7 @@ footer {
 }
 
 @media (max-width: 480px) {
-    #container,
-    #featuredZones {
+    #container {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 1rem;
     }
@@ -1296,27 +1377,26 @@ footer {
         </div>
     </header>
 	<main>
-</div>
-    <br>
-        <section id="gotd" hidden aria-label="Game of the Day"></section>
-        <details id="favoritesWrapper" open hidden>
-            <summary id="favoritesSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Favorites</summary>
-            <div id="favoriteZones" class="zone-container"></div>
-            <br>
+        <section id="gotd" hidden aria-label="Today's pick"></section>
+        <section id="yourGames" class="home-section" hidden>
+            <div class="section-head">
+                <h2 class="section-title">Your games</h2>
+                <div class="seg" role="tablist" aria-label="Your games">
+                    <button type="button" role="tab" data-tab="recent" aria-selected="true" onclick="setYourGamesTab('recent')">Recent</button>
+                    <button type="button" role="tab" data-tab="favorites" aria-selected="false" onclick="setYourGamesTab('favorites')">Favorites</button>
+                </div>
+            </div>
+            <div id="recentZones" class="shelf shelf-small" role="tabpanel"></div>
+            <div id="favoriteZones" class="shelf shelf-small" role="tabpanel" hidden></div>
+            <p id="yourGamesEmpty" class="shelf-empty" hidden></p>
+        </section>
+        <details id="featuredZonesWrapper" class="home-section" open>
+            <summary id="allZonesSummary" class="section-title">Featured</summary>
+            <div id="featuredZones" class="shelf"></div>
         </details>
-        <details id="recentWrapper" open hidden>
-            <summary id="recentSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Recently Played</summary>
-            <div id="recentZones" class="zone-container"></div>
-            <br>
-        </details>
-        <details id="featuredZonesWrapper" open>
-            <summary id="allZonesSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">Featured Zones</summary>
-            <div id="featuredZones" class="zone-container"></div>
-        </details>
-        <br><hr><br>
-        <details id="allZonesWrapper" open>
-            <summary id="allSummary" style="font-size: 1.2rem; font-weight: bold; cursor: pointer;">All Zones</summary>
-            <div id="container">Loading...</div>
+        <details id="allZonesWrapper" class="home-section" open>
+            <summary id="allSummary" class="section-title">All games</summary>
+            <div id="container">Loading games…</div>
         </details>
     </main>
 
@@ -1629,22 +1709,15 @@ function createZoneCard(file) {
     if (played >= 60) metaParts.push("⏱ " + formatPlaytime(played));
     const votes = stats.up + stats.down;
     if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(`👍 ${Math.round(stats.up / votes * 100)}%`);
+    if (getShowPlayCount()) {
+        const plays = (popularityData['year']?.[file.id]) ?? 0;
+        if (plays > 0) metaParts.push(`${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(plays)} plays`);
+    }
     if (metaParts.length) {
         const meta = document.createElement("div");
         meta.className = "card-meta";
         metaParts.forEach(t => { const span = document.createElement("span"); span.textContent = t; meta.appendChild(span); });
         zoneItem.appendChild(meta);
-    }
-
-    // Play count badge
-    if (getShowPlayCount()) {
-        const plays = (popularityData['year']?.[file.id]) ?? 0;
-        if (plays > 0) {
-            const badge = document.createElement("div");
-            badge.style.cssText = "font-size:11px;color:var(--text-muted);text-align:center;padding:0 0.75rem 0.4rem;";
-            badge.textContent = "▶ " + plays.toLocaleString() + " plays";
-            zoneItem.appendChild(badge);
-        }
     }
 
     return zoneItem;
@@ -1671,6 +1744,17 @@ function observeLazyZoneImages(selector) {
     });
 }
 
+function setSectionTitle(el, title, count) {
+    if (!el) return;
+    el.textContent = title;
+    if (typeof count === "number") {
+        const c = document.createElement("span");
+        c.className = "section-count";
+        c.textContent = count;
+        el.appendChild(c);
+    }
+}
+
 function displayFeaturedZones(featuredZones) {
     featuredContainer.innerHTML = "";
     const visibleFeaturedZones = featuredZones.filter(file => !isZoneDisabled(file.id));
@@ -1678,9 +1762,9 @@ function displayFeaturedZones(featuredZones) {
         featuredContainer.appendChild(createZoneCard(file));
     });
     if (featuredContainer.innerHTML === "") {
-        featuredContainer.innerHTML = "No featured zones found.";
+        featuredContainer.textContent = "No featured games right now.";
     } else {
-        document.getElementById("allZonesSummary").textContent = `Featured Zones (${visibleFeaturedZones.length})`;
+        setSectionTitle(document.getElementById("allZonesSummary"), "Featured", visibleFeaturedZones.length);
     }
 
     observeLazyZoneImages('#featuredZones img.lazy-zone-img');
@@ -1692,9 +1776,9 @@ function displayZones(zones) {
         container.appendChild(createZoneCard(file));
     });
     if (container.innerHTML === "") {
-        container.innerHTML = "No zones found.";
+        container.textContent = "No games found.";
     } else {
-        document.getElementById("allSummary").textContent = `All Zones (${visibleZones.length})`;
+        setSectionTitle(document.getElementById("allSummary"), "All games", visibleZones.length);
     }
 
     observeLazyZoneImages('img.lazy-zone-img');
@@ -1784,7 +1868,7 @@ function applyFilters() {
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");
-    if (query && summary) summary.textContent = `Results for "${searchBar.value.trim()}" (${list.filter(z => !isZoneDisabled(z.id)).length})`;
+    if (query && summary) setSectionTitle(summary, `Results for "${searchBar.value.trim()}"`, list.filter(z => !isZoneDisabled(z.id)).length);
     if (query && !list.length) container.textContent = `No games match "${searchBar.value.trim()}".`;
 }
 // Kept for the existing oninput/onchange handlers
@@ -4702,10 +4786,10 @@ function renderGameOfTheDay() {
     const st = getZoneStats(z.id);
     const votes = st.up + st.down;
     const meta = [];
-    if (z.author) meta.push("by " + z.author);
+    if (z.author) meta.push("By " + z.author);
     if (votes >= MIN_VOTES_TO_SHOW) meta.push(`👍 ${Math.round(st.up / votes * 100)}%`);
     const mine = getPlaytime(z.id);
-    meta.push(mine >= 60 ? `you've played ${formatPlaytime(mine)}` : "new to you");
+    meta.push(mine >= 60 ? `You've played ${formatPlaytime(mine)}` : "New to you");
     const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
     box.innerHTML = "";
     const img = document.createElement("img");
@@ -4714,15 +4798,15 @@ function renderGameOfTheDay() {
     img.onclick = () => openZone(z);
     const info = document.createElement("div");
     info.style.minWidth = "0";
-    const label = document.createElement("div"); label.className = "gotd-label"; label.textContent = `🎯 Game of the Day · ${date}`;
+    const label = document.createElement("div"); label.className = "gotd-label"; label.textContent = `Today's pick, ${date}`;
     const h = document.createElement("h2"); h.textContent = z.name;
     const m = document.createElement("div"); m.className = "gotd-meta"; m.textContent = meta.join(" · ");
-    const play = document.createElement("button"); play.className = "settings-button gotd-play"; play.textContent = "▶ Play now"; play.onclick = () => openZone(z);
-    info.append(label, h, m, play);
+    const play = document.createElement("button"); play.className = "settings-button gotd-play"; play.textContent = "Play"; play.onclick = () => openZone(z);
+    info.append(label, h, m);
     const close = document.createElement("button");
     close.className = "gotd-close"; close.title = "Hide until tomorrow"; close.setAttribute("aria-label", "Hide until tomorrow"); close.textContent = "×";
     close.onclick = () => { try { localStorage.setItem("gnmath-gotd-hidden", todayKey()); } catch {} renderGameOfTheDay(); };
-    box.append(img, info, close);
+    box.append(img, info, play, close);
     box.hidden = false;
 }
 // Roll over to the next day's game if the page stays open past midnight
@@ -4782,22 +4866,41 @@ function addRecentZone(id) {
 }
 
 // ── Rows above Featured ─────────────────────────────────────────────────────
-function renderRow(wrapperId, gridId, summaryId, label, ids) {
-    const wrapper = document.getElementById(wrapperId);
+function fillShelf(gridId, ids) {
     const grid = document.getElementById(gridId);
-    if (!wrapper || !grid) return;
     const items = ids.map(zoneById).filter(z => z && !isZoneDisabled(z.id));
     grid.innerHTML = "";
     items.forEach(z => grid.appendChild(createZoneCard(z)));
-    wrapper.hidden = items.length === 0;
-    document.getElementById(summaryId).textContent = `${label} (${items.length})`;
     observeLazyZoneImages(`#${gridId} img.lazy-zone-img`);
+    return items.length;
+}
+let yourGamesTab = null;
+function setYourGamesTab(tab) {
+    yourGamesTab = tab;
+    try { localStorage.setItem("gnmath-your-games-tab", tab); } catch {}
+    renderPersonalRows();
 }
 function renderPersonalRows() {
     if (!Array.isArray(zones) || !zones.length) return;
     renderGameOfTheDay();
-    renderRow("favoritesWrapper", "favoriteZones", "favoritesSummary", "Favorites", getFavorites());
-    renderRow("recentWrapper", "recentZones", "recentSummary", "Recently Played", getRecent());
+    const section = document.getElementById("yourGames");
+    if (!section) return;
+    const nRecent = fillShelf("recentZones", getRecent());
+    const nFav = fillShelf("favoriteZones", getFavorites());
+    if (!yourGamesTab) { try { yourGamesTab = localStorage.getItem("gnmath-your-games-tab"); } catch {} }
+    if (yourGamesTab !== "favorites" && yourGamesTab !== "recent") yourGamesTab = nRecent ? "recent" : "favorites";
+    section.hidden = nRecent + nFav === 0;
+    const showFav = yourGamesTab === "favorites";
+    document.getElementById("recentZones").hidden = showFav || !nRecent;
+    document.getElementById("favoriteZones").hidden = !showFav || !nFav;
+    const empty = document.getElementById("yourGamesEmpty");
+    empty.hidden = showFav ? nFav > 0 : nRecent > 0;
+    empty.textContent = showFav ? "Tap ☆ on any game to add it here." : "Games you play will show up here.";
+    section.querySelectorAll(".seg button").forEach(b => {
+        const on = b.dataset.tab === yourGamesTab;
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.textContent = b.dataset.tab === "recent" ? "Recent" : `Favorites${nFav ? " " + nFav : ""}`;
+    });
 }
 // Redraw every card section (after a favorite, a vote or new stats)
 function refreshCards() {
