@@ -14,7 +14,7 @@ The game list and game files come from the community-run gn-math library on jsDe
 - **Random game** button
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
-- Fullscreen, open in a new tab, or download a game
+- Fullscreen, rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
 
 **Clean games**
 - Ad loaders, ad banners and Google Analytics are stripped from every game before it runs, and known ad and tracking hosts are blocked as a backup.
