@@ -1027,6 +1027,13 @@ footer {
                 </select>
             </div>
             <div class="control-buttons">
+                <button id="panicButton" class="control-button" title="Panic! (or press the panic key)" aria-label="Panic: leave to a safe website" onclick="panicRedirect()">
+                    <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </button>
                 <button id="randomGame" class="control-button" title="Random game!" aria-label="Play a random game" onclick="openRandomZone()">
                     <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="3" y="3" width="18" height="18" rx="3"></rect>
@@ -2236,7 +2243,10 @@ const APP_SETTINGS_STORAGE_KEYS = {
     hideFeatured: "gnmath-hide-featured",
     compactMode: "gnmath-compact-mode",
     autofocusSearch: "gnmath-autofocus-search",
-    showPlayCount: "gnmath-show-play-count"
+    showPlayCount: "gnmath-show-play-count",
+    panicUrl: "gnmath-panic-url",
+    panicKey: "gnmath-panic-key",
+    panicKeyEnabled: "gnmath-panic-key-enabled"
 };
 const OWNER_EXTRA_STORAGE_KEYS = {
     motd: "gnmath-owner-motd",
@@ -2993,6 +3003,89 @@ function resetAppearanceSettings() {
     location.reload();
 }
 
+// ── Panic button ─────────────────────────────────────────────────────────────
+const PANIC_DEFAULT_URL = "https://classroom.google.com";
+const PANIC_DEFAULT_KEY = "`";
+let panicKeyListening = false;
+
+function getPanicUrl() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.panicUrl) || PANIC_DEFAULT_URL;
+}
+function setPanicUrl(raw) {
+    let url = (raw || "").trim();
+    if (!url) { localStorage.removeItem(APP_SETTINGS_STORAGE_KEYS.panicUrl); return; }
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+        localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.panicUrl, parsed.href);
+    } catch {
+        alert("That doesn't look like a website address.");
+    }
+}
+function getPanicKey() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.panicKey) || PANIC_DEFAULT_KEY;
+}
+function getPanicKeyEnabled() {
+    return localStorage.getItem(APP_SETTINGS_STORAGE_KEYS.panicKeyEnabled) !== "false";
+}
+function setPanicKeyEnabled(isEnabled) {
+    localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.panicKeyEnabled, isEnabled ? "true" : "false");
+}
+function panicKeyName(key) {
+    if (key === " ") return "Space";
+    if (key === "`") return "` (backtick)";
+    return key.length === 1 ? key.toUpperCase() : key;
+}
+function listenForPanicKey() {
+    panicKeyListening = true;
+    const label = document.getElementById('panic-key-label');
+    if (label) label.textContent = "press any key…";
+}
+
+function panicRedirect() {
+    // Drop the "are you sure you want to leave?" prompt so it can't block the escape.
+    window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+    try { zoneFrame.src = "about:blank"; } catch (_) {}
+    // replace() so the Back button doesn't come back here
+    window.location.replace(getPanicUrl());
+}
+
+function handlePanicKeydown(event) {
+    if (panicKeyListening) {
+        if (["Shift", "Control", "Alt", "Meta"].includes(event.key)) return;
+        event.preventDefault();
+        panicKeyListening = false;
+        const key = event.key === "Escape" ? PANIC_DEFAULT_KEY : event.key;
+        localStorage.setItem(APP_SETTINGS_STORAGE_KEYS.panicKey, key);
+        const label = document.getElementById('panic-key-label');
+        if (label) label.textContent = panicKeyName(key);
+        return;
+    }
+    if (!getPanicKeyEnabled() || event.repeat) return;
+    // Don't fire while typing in a text box (search bar, settings, etc.)
+    const target = event.target;
+    if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+    if (event.key.toLowerCase() === getPanicKey().toLowerCase()) {
+        event.preventDefault();
+        panicRedirect();
+    }
+}
+window.addEventListener("keydown", handlePanicKeydown, true);
+
+// Games run inside the zone iframe, which swallows key presses, so listen there too.
+function attachPanicKeyToFrame() {
+    try {
+        const doc = zoneFrame && zoneFrame.contentDocument;
+        if (doc && !doc.__gnmathPanicAttached) {
+            doc.__gnmathPanicAttached = true;
+            doc.addEventListener("keydown", handlePanicKeydown, true);
+        }
+    } catch (_) {} // cross-origin game page: can't attach, the button still works
+}
+zoneFrame.addEventListener("load", attachPanicKeyToFrame);
+setInterval(attachPanicKeyToFrame, 1000);
+
 function tabCloak() {
     closePopup();
     document.getElementById('popupTitle').textContent = "Tab Cloak";
@@ -3128,6 +3221,22 @@ function openSettingsPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>Panic Button</h4>
+        <label for="panic-url-input" style="display:block;margin-bottom:0.4rem;">Panic redirect website</label>
+        <input id="panic-url-input" type="text" placeholder="${PANIC_DEFAULT_URL}" onchange="setPanicUrl(this.value); this.value = getPanicUrl();">
+        <br><br>
+        <div class="settings-inline">
+            <label>Panic key enabled</label>
+            <input type="checkbox" ${getPanicKeyEnabled() ? 'checked' : ''} onchange="setPanicKeyEnabled(this.checked)">
+        </div>
+        <br>
+        <div class="settings-inline">
+            <label>Panic key: <b id="panic-key-label"></b></label>
+            <button class="settings-button" id="panic-key-change" onclick="listenForPanicKey()">Change key</button>
+        </div>
+    </div>
+
+    <div class="settings-section">
         <h4>Behavior</h4>
         <div class="settings-inline">
             <label>Warn before leaving page</label>
@@ -3150,6 +3259,10 @@ function openSettingsPanel() {
     </div>
     `;
     popupBody.contentEditable = false;
+    const panicUrlInput = document.getElementById('panic-url-input');
+    if (panicUrlInput) panicUrlInput.value = getPanicUrl();
+    const panicKeyLabel = document.getElementById('panic-key-label');
+    if (panicKeyLabel) panicKeyLabel.textContent = panicKeyName(getPanicKey());
     document.getElementById('popupOverlay').style.display = "flex";
     updateThemeButtons();
 }
