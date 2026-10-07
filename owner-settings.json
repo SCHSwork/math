@@ -8,8 +8,8 @@
     "enabled": false
   },
   "motd": {
-    "text": "Make sure to update your bookmark (new website)",
-    "enabled": true
+    "text": "Make sure t",
+    "enabled": false
   },
   "footerLinks": [],
   "visitorDefaults": {
@@ -25,5 +25,5 @@
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "updatedAt": "2026-10-07T03:30:15.841Z"
+  "updatedAt": "2026-10-07T03:41:36.328Z"
 }
