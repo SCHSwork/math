@@ -12,7 +12,6 @@
     "enabled": true
   },
   "footerLinks": [],
-  "updatedAt": "2026-05-19T22:37:15.130Z",
   "visitorDefaults": {
     "mode": "dark",
     "theme": "red",
@@ -23,7 +22,8 @@
     "hideFeatured": false,
     "autofocusSearch": true,
     "showPlayCount": false,
-    "warnBeforeUnload": true,
+    "warnBeforeUnload": false,
     "reducedMotion": false
-  }
+  },
+  "updatedAt": "2026-10-07T03:30:15.841Z"
 }
