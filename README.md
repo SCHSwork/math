@@ -7,11 +7,11 @@ The game list and game files come from the community-run gn-math library on jsDe
 ## Features
 
 **Playing**
-- **Game of the Day** at the top of the page, the same for everyone each day
+- **Today's pick** (game of the day) at the top of the page, the same for everyone each day
 - **Smart search** that handles typos, missing spaces and abbreviations ("geomtry dash", "fnaf"), and works together with tag filters
 - Sort by name, newest, date added, popular, trending, top rated or my most played
 - **NEW** badges on the 12 most recently added games
-- **Favorites** (☆ on any card) and **Recently Played** rows at the top
+- **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **Random game** button
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
