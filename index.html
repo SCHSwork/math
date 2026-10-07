@@ -1126,7 +1126,6 @@ footer {
 
     <div class="footer-links">
             <a href="#" onclick="loadDMCA(); return false;">DMCA</a>
-            <a href="#" onclick="showContact(); return false;">Contact</a>
             <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>
             <a href="javascript:saveData()">Export Data</a>
             <a href="#" onclick="document.getElementById('importData').click(); return false;">Import Data</a>
@@ -1187,9 +1186,8 @@ async function listZones() {
       }
         const response = await fetch(zonesURL+"?t="+Date.now());
         const json = await response.json();
-        zones = json;
-        const discordZone = zones.find(z => /discord/i.test(z.name || "")) || zones[0];
-        if (discordZone) discordZone.featured = true;
+        // Drop the upstream Discord promo tile(s)
+        zones = json.filter(z => !/discord/i.test(z.name || "") && !/discord\.(gg|com)/i.test(z.url || ""));
         await Promise.all([fetchPopularity("year"), fetchPopularity("month"), fetchPopularity("week"), fetchPopularity("day")]);
         sortZones();
         try {
@@ -1466,10 +1464,10 @@ async function fetchWithFallback(rawUrl) {
 }
 
 function openRandomZone() {
-    // Skip the first entry (Discord link), external links, and owner-disabled games
+    // Skip external links and owner-disabled games
     // If a game is open, don't pick that same game again
     const currentId = zoneViewer.style.display === "flex" ? document.getElementById('zoneId').textContent : null;
-    const playable = zones.filter((zone, i) => i !== 0 && zone.url && !zone.url.startsWith("http") && !isZoneDisabled(zone.id) && zone.id + '' !== currentId);
+    const playable = zones.filter(zone => zone.url && !zone.url.startsWith("http") && !isZoneDisabled(zone.id) && zone.id + '' !== currentId);
     if (playable.length === 0) {
         alert("Games are still loading, try again in a second!");
         return;
@@ -2072,7 +2070,7 @@ function renderOwnerPanel() {
     <div class="settings-section">
         <h4>Custom Footer Links</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Add extra links to the footer. One per line as <code>Label | https://url</code></p>
-        <textarea id="owner-footer-links-text" rows="4" placeholder="Discord | https://discord.gg/yourserver&#10;Blog | https://yourblog.com"
+        <textarea id="owner-footer-links-text" rows="4" placeholder="My Site | https://example.com"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:13px;resize:vertical;margin-bottom:0.5rem;font-family:monospace;">${footerLinks.map(l => l.label + ' | ' + l.url).join('\n')}</textarea>
         <button class="settings-button" type="button" onclick="saveFooterLinksFromPanel()">Apply Footer Links</button>
         <button class="settings-button" type="button" style="margin-top:0.4rem;" onclick="clearFooterLinks()">Clear All</button>
@@ -3321,15 +3319,6 @@ function openSettingsPanel() {
 }
 
 
-function showContact() {
-    document.getElementById('popupTitle').textContent = "Contact";
-    const popupBody = document.getElementById('popupBody');
-    popupBody.innerHTML = `
-    <p>Discord: https://discord.gg/NAFw4ykZ7n</p>
-    <p>Email: gn.math.business@gmail.com</p>`;
-    popupBody.contentEditable = false;
-    document.getElementById('popupOverlay').style.display = "flex";
-}
 
 function loadPrivacy() {
     document.getElementById('popupTitle').textContent = "Privacy Policy";
@@ -3343,7 +3332,7 @@ function loadPrivacy() {
                 <li>Visit our website at <a href="https://gn-math.dev">https://gn-math.dev</a>, or any website of ours that links to this Privacy Notice</li>
                 <li>Engage with us in other related ways, including any sales, marketing, or events</li>
             </ul>
-            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="https://discord.gg/NAFw4ykZ7n">https://discord.gg/NAFw4ykZ7n</a>.</p>
+            <p>Questions or concerns? Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us.</p>
             
             <h3>SUMMARY OF KEY POINTS</h3>
             <p>This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.</p>
@@ -3376,20 +3365,13 @@ function loadDMCA() {
         <div class="dmca-content">
             <p>
                 If you own or developed a game that is on <strong>gn-math</strong> 
-                and would like it removed, please do one of the following:
+                and would like it removed, please do the following:
             </p>
             <ol>
-                <li>
-                    <a href="https://discord.gg/D4c9VFYWyU" target="_blank" rel="noopener noreferrer">
-                        Join the Discord
-                    </a> and DM <strong>breadbb</strong> or ping me in a public channel 
-                    <strong>[INSTANT RESPONSE]</strong>
-                </li>
                 <li>
                     Email me at 
                     <a href="mailto:gn.math.business@gmail.com">gn.math.business@gmail.com</a> 
                     with the subject starting with <code>!DMCA</code>.
-                    <strong>[DELAYED RESPONSE]</strong>
                 </li>
             </ol>
             <p>
