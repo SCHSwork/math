@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## October 8, 2026
+
+### Fixed
+- Chrome no longer fills your saved username into the search box when the page loads. The box is now marked as a search field, which password managers skip. As a bonus, pressing **Esc** in the search box clears it.
+
 ## October 7, 2026
 
 ### New
