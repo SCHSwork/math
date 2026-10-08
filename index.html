@@ -50,7 +50,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=d7f8d20883">
+    <link rel="stylesheet" href="css/styles.css?v=ff9510c7ac">
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -61,7 +61,7 @@
             <div class="search-container">
                 <div class="search-field">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
-                    <input type="text" id="searchBar" placeholder="Search games" aria-label="Search games" oninput="filterZones()">
+                    <input type="search" id="searchBar" name="gn-game-search" placeholder="Search games" aria-label="Search games" oninput="filterZones()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                     <kbd class="search-kbd" aria-hidden="true">/</kbd>
                 </div>
                 <button type="button" id="filterButton" class="filter-button" aria-haspopup="true" aria-expanded="false" aria-controls="filterMenu" onclick="toggleFilterMenu(event)">
