@@ -81,6 +81,8 @@ function rewriteForMirrors(html) {
 // Cover image URL from the best working source, with the rest kept as fallbacks
 function coverSources(cover) {
     if (!cover) return [];
+    const gh = typeof parseGhUrl === "function" && parseGhUrl(cover);
+    if (gh) return mirrorUrls(gh.owner, gh.repo, gh.ref, gh.path);
     if (!cover.includes("{COVER_URL}")) return [cover.replace("{HTML_URL}", htmlURL)];
     const path = cover.replace("{COVER_URL}/", "").replace("{COVER_URL}", "");
     return mirrorUrls("freebuisness", "covers", "main", path);
@@ -150,6 +152,7 @@ function toTitleCase(str) {
   );
 }
 async function listZones() {
+    const originalsPromise = typeof loadOriginals === "function" ? loadOriginals() : Promise.resolve([]);
     try {
       // Look up the latest commit SHA so jsDelivr serves a fresh zones.json.
       // sha.txt on raw.githubusercontent.com has no per-IP rate limit, so try it
@@ -174,6 +177,10 @@ async function listZones() {
             const name = (z.name || "").trim();
             return !/^\[!\]/.test(name) && !/comment|discord/i.test(name) && !/discord\.(gg|com)/i.test(z.url || "");
         });
+        // Add the GN Originals (open-source games) after the main library
+        const originals = await originalsPromise;
+        const libraryIds = new Set(zones.map(z => String(z.id)));
+        zones = zones.concat(originals.filter(z => !libraryIds.has(String(z.id))));
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
         sortZones();
@@ -208,7 +215,7 @@ async function listZones() {
         if (!embed) clearZoneIdFromUrl();
         } catch(error){}
         let alltags = [];
-        for (const obj of json) {
+        for (const obj of zones) {
             if (Array.isArray(obj.special)) {
                 alltags.push(...obj.special);
             }
@@ -224,11 +231,19 @@ async function listZones() {
         for (const tag of alltags) {
             const opt = document.createElement("option");
             opt.value = tag;
-            opt.textContent = toTitleCase(tag);
+            opt.textContent = tag === "originals" ? "GN Originals" : toTitleCase(tag);
             filteroption.appendChild(opt);
         }
     } catch (error) {
         console.error(error);
+        // The main library is down, but the GN Originals may still work
+        const originals = await originalsPromise;
+        if (originals.length) {
+            zones = originals;
+            sortZones();
+            showSourceNotice("Couldn't reach the main game library right now, so only GN Originals are showing. Refresh in a few minutes to try again.");
+            return;
+        }
         container.textContent = "Couldn't reach the game library from any source. Check your internet connection and refresh the page in a few minutes.";
     }
 }
@@ -294,7 +309,9 @@ function sortZones() {
     } else if (sortBy === 'trendingDay') {
         zones.sort((a, b) => ((popularityData['day']?.[b.id]) ?? 0) - ((popularityData['day']?.[a.id]) ?? 0));
     } else if (sortBy === 'newest') {
-        zones.sort((a, b) => b.id - a.id);
+        // GN Originals sit after the library here; they're always in their own row
+        const addedKey = z => (typeof isOriginalZone === "function" && isOriginalZone(z)) ? -2 : Number(z.id);
+        zones.sort((a, b) => addedKey(b) - addedKey(a));
     } else if (sortBy === 'topRated') {
         zones.sort((a, b) => ratingScore(b.id) - ratingScore(a.id) || a.name.localeCompare(b.name));
     } else if (sortBy === 'myPlaytime') {
@@ -423,6 +440,7 @@ function displayFeaturedZones(featuredZones) {
     }
 
     observeLazyZoneImages('#featuredZones img.lazy-zone-img');
+    if (typeof renderOriginalsShelf === "function") renderOriginalsShelf();
 }
 function displayZones(zones) {
     container.innerHTML = "";
@@ -520,6 +538,7 @@ function applyFilters() {
     }
     if (query || (tag && tag !== "none")) {
         document.getElementById("featuredZonesWrapper").removeAttribute("open");
+        document.getElementById("originalsWrapper")?.removeAttribute("open");
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");
@@ -579,6 +598,8 @@ function cleanGameHtml(html) {
 }
 
 async function fetchWithFallback(rawUrl) {
+    // GN Originals: "gh:owner/repo@sha/path"
+    if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) return rewriteForMirrors(await fetchOriginalHtml(rawUrl));
     // Game pages: try every source (jsDelivr, GitHub, githack), working ones first
     const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "").replace(/^\//, "");
     const isHtml = rawUrl.includes("{HTML_URL}");
@@ -2642,7 +2663,7 @@ function loadTerms() {
         <p>By using GN 2.0 you agree to these terms. If you don't agree, please don't use the site.</p>
 
         <h3>Games and content</h3>
-        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them, and the game files are loaded from third-party sources. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
+        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
 
         <h3>Using the site</h3>
         <ul>
@@ -2682,6 +2703,11 @@ function loadDMCA() {
             </ol>
             <p>
                 If you are going to do an email, please show proof you own the game before I have to ask.
+            </p>
+            <p>
+                <b>GN Originals</b> are open-source games copied, with their licenses, into
+                <a href="https://github.com/SCHSwork/GN-originals" target="_blank" rel="noopener">github.com/SCHSwork/GN-originals</a>.
+                To have one of those removed or its credit corrected, open an issue on that repository.
             </p>
         </div>
     `;
@@ -2762,6 +2788,8 @@ function showZoneInfo() {
     popupBody.innerHTML = `<p>Loading...</p>`
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
+    const original = typeof isOriginalZone === "function" && isOriginalZone(id) ? zones.find(z => Number(z.id) === id) : null;
+    if (original) { showOriginalInfo(original); return; }
     fetch(`https://api.github.com/repos/freebuisness/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
         let stats = await getStats (id);
         idjson = zones.filter(a=>a.id===id)[0]

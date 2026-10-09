@@ -34,7 +34,7 @@ let newZoneIds = null, newZoneSource = null;
 function isNewZone(id) {
     if (newZoneSource !== zones || !newZoneIds) {
         newZoneSource = zones;
-        newZoneIds = new Set(zones.map(z => Number(z.id)).filter(n => n >= 0)
+        newZoneIds = new Set(zones.map(z => Number(z.id)).filter(n => n >= 0 && n < 100000)   // not GN Originals (own row)
             .sort((a, b) => b - a).slice(0, NEW_GAME_COUNT).map(String));
     }
     return newZoneIds.has(String(id));
