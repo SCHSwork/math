@@ -10,6 +10,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **Today's pick** (game of the day) at the top of the page, the same for everyone each day
 - **Smart search** that handles typos, missing spaces and abbreviations ("geomtry dash", "fnaf"), and works together with tag filters
 - Sort by name, newest, date added, popular, trending, top rated or my most played
+- Filter by **genre** (17 genres), **source** (library / GN Originals / js13k), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **Random game** button
@@ -82,6 +83,7 @@ js/
   accounts.js          accounts and cloud saves (Firebase)
   library.js           favorites, recent, play time, stats, Today's pick,
                        ratings and reports, keyboard shortcuts
+  filters.js           Genre / Source / Show filters
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers

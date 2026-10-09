@@ -151,6 +151,8 @@ function toTitleCase(str) {
     text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
   );
 }
+// Names for the library's own tags in the "Type" filter
+const TYPE_LABELS = { port: "Ports", flash: "Flash", emulator: "Emulator", fnf: "FNF mods", nds: "Nintendo DS", dos: "DOS", tools: "Tools", psx: "PlayStation", gba: "Game Boy Advance", nes: "NES", n64: "Nintendo 64" };
 async function listZones() {
     const originalsPromise = typeof loadOriginals === "function" ? loadOriginals() : Promise.resolve([]);
     try {
@@ -217,13 +219,13 @@ async function listZones() {
         if (!embed) clearZoneIdFromUrl();
         } catch(error){}
         let alltags = [];
-        for (const obj of zones) {
+        for (const obj of json) {
             if (Array.isArray(obj.special)) {
                 alltags.push(...obj.special);
             }
         }
 
-        alltags = [...new Set(alltags)];
+        alltags = [...new Set(alltags)].filter(t => t !== "originals" && t !== "js13k");
         let filteroption = document.getElementById("filterOptions");
         if (filteroption && filteroption.children.length > 1) {
             while (filteroption.children.length > 1) {
@@ -233,7 +235,7 @@ async function listZones() {
         for (const tag of alltags) {
             const opt = document.createElement("option");
             opt.value = tag;
-            opt.textContent = tag === "originals" ? "GN Originals" : tag === "js13k" ? "js13k (tiny games)" : toTitleCase(tag);
+            opt.textContent = TYPE_LABELS[tag] || toTitleCase(tag);
             filteroption.appendChild(opt);
         }
     } catch (error) {
@@ -326,6 +328,7 @@ function sortZones() {
     }
     applyFilters();
     renderPersonalRows();
+    if (typeof updateFilterCounts === "function") updateFilterCounts();
 }
 
 function createZoneCard(file) {
@@ -536,6 +539,8 @@ function applyFilters() {
     const tag = typeof filterOptions !== "undefined" ? filterOptions.value : "none";
     let list = zones;
     if (tag && tag !== "none") list = list.filter(zone => zone.special?.includes(tag));
+    const extra = typeof gameMatchesExtraFilters === "function" && typeof extraFiltersActive === "function" && extraFiltersActive();
+    if (extra) list = list.filter(gameMatchesExtraFilters);
     if (query) {
         const tokens = query.split(" ");
         list = list.map(zone => [zone, searchScore(zone, query, tokens)])
@@ -543,14 +548,16 @@ function applyFilters() {
             .sort((a, b) => b[1] - a[1])          // stable: equal scores keep the chosen sort order
             .map(([zone]) => zone);
     }
-    if (query || (tag && tag !== "none")) {
+    if (query || (tag && tag !== "none") || extra) {
         document.getElementById("featuredZonesWrapper").removeAttribute("open");
         document.getElementById("originalsWrapper")?.removeAttribute("open");
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");
     if (query && summary) setSectionTitle(summary, `Results for "${searchBar.value.trim()}"`, list.filter(z => !isZoneDisabled(z.id)).length);
+    if (!query && extra && summary) setSectionTitle(summary, "Filtered games", list.filter(z => !isZoneDisabled(z.id)).length);
     if (query && !list.length) container.textContent = `No games match "${searchBar.value.trim()}".`;
+    else if (!list.length && (extra || (tag && tag !== "none"))) container.textContent = "No games match these filters. Try Reset in the Sort & filter menu.";
     if (typeof updateFilterDot === "function") updateFilterDot();
 }
 // Kept for the existing oninput/onchange handlers

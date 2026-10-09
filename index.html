@@ -50,7 +50,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=ff9510c7ac">
+    <link rel="stylesheet" href="css/styles.css?v=a74f122f23">
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -83,9 +83,30 @@
                     <option value="myPlaytime">My Most Played</option>
                 </select>
                 </label>
-                <label class="filter-field"><span>Tag</span>
+                <label class="filter-field"><span>Genre</span>
+                <select id="genreOptions"><option value="all">All genres</option></select>
+                </label>
+                <label class="filter-field"><span>Source</span>
+                <select id="sourceOptions">
+                    <option value="all">All sources</option>
+                    <option value="library">Main library</option>
+                    <option value="originals">GN Originals</option>
+                    <option value="js13k">js13k tiny games</option>
+                </select>
+                </label>
+                <label class="filter-field"><span>Show</span>
+                <select id="showOptions">
+                    <option value="all">Everything</option>
+                    <option value="unplayed">Not played yet</option>
+                    <option value="played">Played before</option>
+                    <option value="favorites">Favorites</option>
+                    <option value="working">Hide games flagged broken</option>
+                    <option value="liked">Well liked (80%+ 👍)</option>
+                </select>
+                </label>
+                <label class="filter-field"><span>Type</span>
                 <select id="filterOptions" onchange="filterZones2()">
-                    <option value="none">All tags</option>
+                    <option value="none">All types</option>
                 </select>
                 </label>
                 <button type="button" class="filter-reset" onclick="resetFilters()">Reset</button>
@@ -215,12 +236,13 @@
     <script src="js/ui.js?v=c5b2fdce8a"></script>
     <script src="js/originals.js?v=7e0e7a0c22"></script>
 
-    <script src="js/app.js?v=d9370439d7"></script>
+    <script src="js/app.js?v=3a1d7581b5"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/accounts.js?v=9fe137e7fe"></script>
-<script src="js/library.js?v=63fb459c5c"></script>
+<script src="js/library.js?v=7eaeb73db2"></script>
 <script src="js/loading-bar.js?v=6283c4e73e"></script>
 <script src="js/game-menu.js?v=20bf30f26d"></script>
+<script src="js/filters.js?v=015b0b2838"></script>
 </body>
 </html>
