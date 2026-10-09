@@ -5,7 +5,8 @@ All the changes to GN 2.0, newest first.
 ## October 9, 2026
 
 ### New
-- **Game jam games switch** above All games. Turn it off to hide all 626 js13k game jam games from the lists, search, the game finder, the random game button and Today's pick. It's saved on your device.
+- **41 more js13k games**: the 3D and VR games that needed shared libraries from the contest's server. GN 2.0 now hosts A-Frame and three.js itself, so these run, bringing the js13k games to 667 and the site to about 1,570 games.
+- **Game jam games switch** above All games. Turn it off to hide all the js13k game jam games from the lists, search, the game finder, the random game button and Today's pick. It's saved on your device.
 
 ### Changed
 - **A much smarter ✨ Find me a game.**
