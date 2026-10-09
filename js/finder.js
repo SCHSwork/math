@@ -494,7 +494,7 @@ function openGameFinder(prefill) {
     const chips = [...new Set([...hist.slice(0, 3), ...FINDER_EXAMPLES])].slice(0, 10);
     body.innerHTML = `
         <form id="finder-form" class="finder-form" autocomplete="off">
-            <input type="search" id="finder-input" name="gn-finder" placeholder="e.g. funny 2 player game, nothing scary" aria-label="Describe what you feel like playing" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
+            <input type="search" id="finder-input" name="gn-finder" data-no-autofill placeholder="e.g. funny 2 player game, nothing scary" aria-label="Describe what you feel like playing" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
             <button type="submit" class="settings-button" style="width:auto;">Find</button>
         </form>
         <div class="finder-chips finder-examples" id="finder-examples">${chips.map(e => `<button type="button" class="finder-chip${hist.includes(e) ? " recent" : ""}">${escapeHtmlText(e)}</button>`).join("")}</div>
