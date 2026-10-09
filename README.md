@@ -2,7 +2,7 @@
 
 A single-page browser game site with no ads, no trackers, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
 
-The game list and game files come from the community-run gn-math library on jsDelivr. GN 2.0 doesn't host any games itself.
+Most games come from the community-run gn-math library on jsDelivr. The **GN Originals** row adds 33 open-source games (2048, Hextris, HexGL, A Dark Room, Untrusted and more) kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
 
 ## Features
 
@@ -17,6 +17,12 @@ The game list and game files come from the community-run gn-math library on jsDe
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
 - Fullscreen, rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
+
+**GN Originals**
+- A row of open-source games from [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals), also under the **GN Originals** tag
+- Each game's Info panel shows who made it, its license and its source code
+- They still load if the main game library is down
+- To add one, follow the steps in that repo's README; the site picks it up on its own
 
 **Reliable**
 - Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, links inside games are rewritten when jsDelivr is down, and the last game list is kept as an offline backup.
@@ -69,6 +75,7 @@ CHANGELOG.md           everything that's changed, newest first (also in the site
 css/styles.css         all the styles
 js/
   ui.js                notices, dialogs, accessibility helpers (loaded first)
+  originals.js         GN Originals: loads games.json from SCHSwork/GN-originals
   app.js               game list, search, cards, player, ad/tracker removal,
                        backup sources, settings, owner panel, panic button, tab cloak
   accounts.js          accounts and cloud saves (Firebase)
@@ -101,4 +108,4 @@ If `FIREBASE_CONFIG` is set to `null`, the account features are turned off and t
 
 ## Legal
 
-The site includes a Privacy Policy, Terms of Use and a DMCA page (links in the footer). Games belong to their creators. Takedown requests go to the gn-math library that hosts the files.
+The site includes a Privacy Policy, Terms of Use and a DMCA page (links in the footer). Games belong to their creators. Takedown requests for library games go to the gn-math library that hosts the files. For GN Originals, open an issue on SCHSwork/GN-originals.

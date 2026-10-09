@@ -4,6 +4,12 @@ All the changes to GN 2.0, newest first.
 
 ## October 8, 2026
 
+### New
+- **GN Originals**: 33 open-source games in their own row on the home page, including 2048, Hextris, HexGL, A Dark Room, Untrusted, Elevator Saga, Flexbox Froggy, Radius Raid and Clumsy Bird. They're kept with their licenses in a separate repo, [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals), and you can also find them with the **GN Originals** tag.
+  - Each game's Info panel shows who made it, its license and a link to its source code.
+  - They load through the same three backup sources as the rest of the site, and they still show up if the main game library is down.
+  - Every game was tested in the site's player. Small fixes keep them working there: buttons that would have taken you off the site open in a new tab, and some outside scripts (a remote script in Hextris, plus the Clay.io and Facebook SDKs in Zop and Parity) were removed.
+
 ### Fixed
 - Chrome no longer fills your saved username into the search box when the page loads. The box is now marked as a search field, which password managers skip. As a bonus, pressing **Esc** in the search box clears it.
 
