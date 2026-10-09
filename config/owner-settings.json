@@ -25,5 +25,11 @@
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "updatedAt": "2026-10-07T03:49:43.393Z"
+  "trustedReporters": [
+    {
+      "uid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
+      "name": "lsp"
+    }
+  ],
+  "updatedAt": "2026-10-09T02:51:52.688Z"
 }
