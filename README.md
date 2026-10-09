@@ -2,7 +2,7 @@
 
 A single-page browser game site with no ads, no trackers, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
 
-Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 626 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
+Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 667 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
 
 ## Features
 
@@ -14,7 +14,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere
-- **Game jam games switch** above All games hides the 626 js13k games everywhere
+- **Game jam games switch** above All games hides the js13k games everywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
