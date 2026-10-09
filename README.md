@@ -13,7 +13,8 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - Filter by **genre** (17 genres), **source** (library / GN Originals / js13k), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
-- **Random game** button
+- **✨ Find me a game**: describe what you want ("chill puzzle game", "like Geometry Dash") and get suggestions. It runs in the browser, and nothing is sent anywhere
+- **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
@@ -84,6 +85,7 @@ js/
   library.js           favorites, recent, play time, stats, Today's pick,
                        ratings and reports, keyboard shortcuts
   filters.js           Genre / Source / Show filters
+  finder.js            ✨ game finder and random game options
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers

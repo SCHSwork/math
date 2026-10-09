@@ -50,7 +50,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=a74f122f23">
+    <link rel="stylesheet" href="css/styles.css?v=e372edd84a">
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -126,7 +126,13 @@
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </button>
-                <button id="randomGame" class="control-button" title="Random game!" aria-label="Play a random game" onclick="openRandomZone()">
+                <button id="finderButton" class="control-button" title="Find me a game" aria-label="Find me a game: describe what you want to play" onclick="openGameFinder()">
+                    <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path>
+                        <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path>
+                    </svg>
+                </button>
+                <button id="randomGame" class="control-button" title="Random game! (hold for options)" aria-label="Play a random game (hold for options)" onclick="openRandomZone()">
                     <svg class="control-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="3" y="3" width="18" height="18" rx="3"></rect>
                         <circle cx="8" cy="8" r="1.2" fill="currentColor"></circle>
@@ -243,6 +249,7 @@
 <script src="js/library.js?v=7eaeb73db2"></script>
 <script src="js/loading-bar.js?v=6283c4e73e"></script>
 <script src="js/game-menu.js?v=20bf30f26d"></script>
-<script src="js/filters.js?v=015b0b2838"></script>
+<script src="js/filters.js?v=f83447dae7"></script>
+<script src="js/finder.js?v=386d509e83"></script>
 </body>
 </html>

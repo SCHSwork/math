@@ -5,6 +5,8 @@ All the changes to GN 2.0, newest first.
 ## October 8, 2026
 
 ### New
+- **✨ Find me a game** (new button in the header). Describe what you feel like playing, like "scary game I haven't played", "racing games with friends" or "something like Geometry Dash", and it suggests games with the reasons it picked them. It runs in your browser, and nothing you type is sent anywhere. Typing a long sentence in the search box also offers to send it to the finder.
+- **Random game options.** Hold (or right-click) the 🎲 button to choose what it picks: genre, source, only games you haven't played, only favorites, only well-liked games, skip broken games, or use your Sort & filter choices. A normal click then uses those options, and the button gets an outline so you can tell they're on.
 - **More filters** in Sort & filter:
   - **Genre**: 17 genres, such as Horror, Racing, Puzzle, Shooter, Sports, Music and 2 player, each showing how many games it has. Genres are matched from game names and tags, so a few games may land in an odd genre or none.
   - **Source**: main library, GN Originals or js13k tiny games.
