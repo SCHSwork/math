@@ -36,7 +36,14 @@ async function loadOriginals() {
     const { owner, repo, ref } = ORIGINALS_REPO;
     let list = null;
     try {
-        list = await fetchFirst(mirrorUrls(owner, repo, ref, "games.json").map(u => u + "?t=" + Math.floor(Date.now() / 600000)), {
+        // GitHub first for the list: jsDelivr can keep an old copy of a branch for
+        // up to 12 hours, so newly added games would take that long to appear.
+        const listUrls = mirrorUrls(owner, repo, ref, "games.json")
+            .sort((a, b) => {
+                const first = u => mirrorOf(u) === "github" && !mirrorDown.has("github");
+                return first(b) - first(a);
+            });
+        list = await fetchFirst(listUrls.map(u => u + "?t=" + Math.floor(Date.now() / 600000)), {
             timeoutMs: 12000,
             validate: async res => {
                 const j = await res.json();
