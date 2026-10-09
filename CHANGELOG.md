@@ -5,7 +5,7 @@ All the changes to GN 2.0, newest first.
 ## October 9, 2026
 
 ### New
-- **Admin Panel** (Settings → Admin Panel, or 🛡️ in your Account panel if you're an admin; admins get a yellow dot on the account button). It lists every account with when it joined, when it was last seen, and its ratings, reports and submissions, with search and filters. For each account an admin can:
+- **Admin Panel** (Settings → Admin Panel, or 🛡️ in your Account panel if you're an admin; admins get an orange dot on the account button). It lists every account with when it joined, when it was last seen, and its ratings, reports and submissions, with search and filters. For each account an admin can:
   - make or remove a **game admin**;
   - make or remove a **trusted reporter** (needs the owner's GitHub token on that browser);
   - **suspend** the account with a reason it will see (it can still play and keep its saves, but can't rate, report or submit);

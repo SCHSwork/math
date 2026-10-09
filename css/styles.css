@@ -1629,4 +1629,4 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .admin-actions .finder-chip:disabled { opacity: 0.45; cursor: not-allowed; }
 .admin-id { font-family: monospace; word-break: break-all; }
 .admin-footnote { margin: 0.75rem 0 0; font-size: 12px; color: var(--text-muted); }
-#accountButton.is-admin::before { content: ""; position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: #facc15; }
+#accountButton.is-admin::before { content: ""; position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: #f97316; }
