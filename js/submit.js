@@ -28,6 +28,7 @@ function openSubmitGame() {
         openAccountPanel();
         return;
     }
+    if (typeof isSuspended === "function" && isSuspended()) { notify("This account is suspended, so it can't submit games.", { type: "error" }); return; }
     document.getElementById("popupTitle").textContent = "Submit a game";
     const body = document.getElementById("popupBody");
     body.contentEditable = false;

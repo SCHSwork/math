@@ -440,6 +440,7 @@ async function cloudDeleteAccount() {
         const chunks = await saveDocRef().collection("chunks").get();
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
         if (typeof removeMyGameStats === "function") await removeMyGameStats(cloudUser.uid);
+        try { await cloudDb.collection("profiles").doc(cloudUser.uid).delete(); } catch (e) {}
         try {
             const subs = await cloudDb.collection("submissions").where("uid", "==", cloudUser.uid).get();
             await Promise.all(subs.docs.map(d => d.ref.delete()));
@@ -489,6 +490,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
                 <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
             </div>
+            ${typeof isSiteAdmin === "function" && isSiteAdmin() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ Admin Panel</button>` : ""}
             <details class="acct-section">
                 <summary>Change password</summary>
                 <label for="acct-old-password">Current password</label>
@@ -564,6 +566,7 @@ async function initCloudAccounts() {
             const wasSignedIn = !!cloudUser;
             cloudUser = user;
             updateAccountButton();
+            if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
             clearInterval(cloudAutosaveTimer);
             if (user) {
                 cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave(); }, CLOUD.autosaveMs);

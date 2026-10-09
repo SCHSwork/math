@@ -552,6 +552,10 @@ function needAccountFor(what) {
         openAccountPanel();
         return true;
     }
+    if (typeof isSuspended === "function" && isSuspended()) {
+        notify(`This account is suspended, so ${what.toLowerCase()} is turned off for it.`, { type: "error" });
+        return true;
+    }
     return false;
 }
 async function writeGameStat(id, field, value, { remove = false } = {}) {

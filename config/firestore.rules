@@ -16,14 +16,14 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if request.auth != null
         && shard.matches('s([0-9]|1[0-5])')
-        && validStatsWrite();
+        && ((validStatsWrite() && !isBanned()) || isAdmin());
     }
 
     // Game submissions ("Submit a game"). A signed-in player can send one and
     // read or delete their own. Admins (a document admins/<uid>, created only in
     // the Firebase console) can read all of them and change status/note.
     match /submissions/{id} {
-      allow create: if request.auth != null && validSubmission(request.resource.data);
+      allow create: if request.auth != null && !isBanned() && validSubmission(request.resource.data);
       allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note'])
@@ -31,10 +31,43 @@ service cloud.firestore {
         && (!('note' in request.resource.data) || (request.resource.data.note is string && request.resource.data.note.size() <= 200));
       allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
     }
+    // Game admins. The first one is added in the Firebase console; after that,
+    // admins can add or remove others (but not remove themselves).
     match /admins/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
+        && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
+        && request.resource.data.addedAt == request.time;
+      allow delete: if isAdmin() && request.auth.uid != uid;
     }
 
+    // Suspended accounts: can still play and keep cloud saves, but can't
+    // rate, report or submit. Only admins can add or remove these.
+    match /bans/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isAdmin() && request.auth.uid != uid
+        && request.resource.data.keys().hasOnly(['name', 'reason', 'by', 'at'])
+        && shortText(request.resource.data.name, 40) && shortText(request.resource.data.reason, 200)
+        && shortText(request.resource.data.by, 40) && request.resource.data.at == request.time;
+      allow delete: if isAdmin();
+    }
+
+    // Small public-to-admins profile so admins can find accounts:
+    // username (must match the sign-in name), join date, last visit.
+    match /profiles/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen'])
+        && request.resource.data.username == request.auth.token.email.split('@')[0]
+        && shortText(request.resource.data.createdAt, 40)
+        && request.resource.data.lastSeen == request.time;
+      allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
+    }
+
+    function isBanned() {
+      return request.auth != null && exists(/databases/$(db)/documents/bans/$(request.auth.uid));
+    }
     function isAdmin() {
       return request.auth != null && exists(/databases/$(db)/documents/admins/$(request.auth.uid));
     }

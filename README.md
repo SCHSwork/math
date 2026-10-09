@@ -60,6 +60,12 @@ From the panel you can:
 - set the site to **open**, **locked** or **shut down**
 - see **broken reports** (most reported first) and disable a game in one click
 - make accounts **trusted reporters**: one report from them flags a game right away
+**Admin Panel** (Settings → Admin Panel, for game admins, no GitHub token needed):
+- see every account (username, joined, last seen, ratings/reports/submissions), with search and filters
+- make or remove **game admins** and **trusted reporters**, **suspend** accounts (with a reason), remove an account's ratings and reports, or delete its submissions
+- the first game admin is added once in the Firebase console (`admins/<account id>`); after that, admins add others from the panel
+
+Owner Panel also lets you:
 - review **game submissions** sent with "Submit a game": approve, mark added, reject (with a note) or delete. This needs a one-time admin setup: in the Firebase console, add a document `admins/<your account id>` (the panel shows the id), and publish the latest `config/firestore.rules`
 - disable individual games
 - set an announcement banner, a message of the day and extra footer links
@@ -89,6 +95,7 @@ js/
   filters.js           Genre / Source / Show filters
   finder.js            ✨ game finder and random game options
   submit.js            Submit a game form and owner review
+  admin.js             Admin Panel: accounts, roles, suspensions
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers
