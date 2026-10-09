@@ -2,7 +2,7 @@
 
 A single-page browser game site with no ads, no trackers, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
 
-Most games come from the community-run gn-math library on jsDelivr. The **GN Originals** row adds 63 open-source games (2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps, Bubble Shooter and more) kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
+Most games come from the community-run gn-math library on jsDelivr. The **GN Originals** row adds 65 open-source games (2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps, Bubble Shooter and more) kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
 
 ## Features
 

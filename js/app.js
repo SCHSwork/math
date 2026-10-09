@@ -177,10 +177,12 @@ async function listZones() {
             const name = (z.name || "").trim();
             return !/^\[!\]/.test(name) && !/comment|discord/i.test(name) && !/discord\.(gg|com)/i.test(z.url || "");
         });
-        // Add the GN Originals (open-source games) after the main library
+        // Add the GN Originals (open-source games) after the main library. An original
+        // marked "libraryDuplicate" in games.json is the same game as one the library
+        // already has (checked by hand, not by name), so it's only shown if the library is down.
         const originals = await originalsPromise;
         const libraryIds = new Set(zones.map(z => String(z.id)));
-        zones = zones.concat(originals.filter(z => !libraryIds.has(String(z.id))));
+        zones = zones.concat(originals.filter(z => !libraryIds.has(String(z.id)) && !z.libraryDuplicate));
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
         sortZones();
