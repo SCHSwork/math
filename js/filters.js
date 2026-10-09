@@ -120,3 +120,44 @@ function updateFilterCounts() {
         if (typeof updateFilterDot === "function") updateFilterDot();
     });
 });
+
+// ── Game jam games on/off ───────────────────────────────────────────────────
+// The js13k games are tiny entries made in a month for a game jam. Some people
+// would rather not see them, so a switch above All games hides them everywhere
+// (lists, search, finder, random game, Today's pick). Saved on this device.
+const HIDE_JAM_KEY = "gnmath-hide-jam-games";
+let ZONES_ALL = null;
+function isJamGame(z) { return (z.special || []).includes("js13k"); }
+function getHideJam() { try { return localStorage.getItem(HIDE_JAM_KEY) === "true"; } catch { return false; } }
+function applyJamPreference(list) {
+    ZONES_ALL = list;
+    updateJamToggle();
+    return getHideJam() ? list.filter(z => !isJamGame(z)) : list.slice();
+}
+function updateJamToggle() {
+    const btn = document.getElementById("jamToggle");
+    if (!btn) return;
+    const shown = !getHideJam();
+    const n = (ZONES_ALL || []).filter(isJamGame).length;
+    btn.setAttribute("aria-checked", shown ? "true" : "false");
+    btn.classList.toggle("on", shown);
+    document.getElementById("jamToggleLabel").textContent = `Game jam games: ${shown ? "shown" : "hidden"}${n ? ` (${n.toLocaleString()})` : ""}`;
+    btn.title = shown ? "Hide the js13k game jam games" : "Show the js13k game jam games";
+    const srcOpt = document.querySelector('#sourceOptions option[value="js13k"]');
+    if (srcOpt) srcOpt.hidden = !shown;
+}
+function toggleJamGames() {
+    const hide = !getHideJam();
+    try { localStorage.setItem(HIDE_JAM_KEY, hide ? "true" : "false"); } catch {}
+    if (ZONES_ALL) {
+        zones = hide ? ZONES_ALL.filter(z => !isJamGame(z)) : ZONES_ALL.slice();
+        const src = document.getElementById("sourceOptions");
+        if (hide && src && src.value === "js13k") src.value = "all";
+        featuredContainer.innerHTML = "";
+        sortZones();
+        if (typeof renderGameOfTheDay === "function") renderGameOfTheDay();
+    }
+    updateJamToggle();
+    notify(hide ? "Game jam games are hidden. Turn them back on above All games." : "Game jam games are shown again.", { type: "success" });
+}
+document.addEventListener("DOMContentLoaded", updateJamToggle);

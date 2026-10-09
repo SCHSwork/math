@@ -4,6 +4,9 @@ All the changes to GN 2.0, newest first.
 
 ## October 9, 2026
 
+### New
+- **Game jam games switch** above All games. Turn it off to hide all 626 js13k game jam games from the lists, search, the game finder, the random game button and Today's pick. It's saved on your device.
+
 ### Changed
 - **A much smarter ✨ Find me a game.**
   - Every one of the 1,500+ games now has a short description, genres and theme keywords, so the finder understands what a game actually is, not just its name.

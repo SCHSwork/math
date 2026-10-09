@@ -185,6 +185,7 @@ async function listZones() {
         const originals = await originalsPromise;
         const libraryIds = new Set(zones.map(z => String(z.id)));
         zones = zones.concat(originals.filter(z => !libraryIds.has(String(z.id)) && !z.libraryDuplicate));
+        if (typeof applyJamPreference === "function") zones = applyJamPreference(zones);
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
         sortZones();
@@ -243,7 +244,7 @@ async function listZones() {
         // The main library is down, but the GN Originals may still work
         const originals = await originalsPromise;
         if (originals.length) {
-            zones = originals;
+            zones = typeof applyJamPreference === "function" ? applyJamPreference(originals) : originals;
             sortZones();
             showSourceNotice("Couldn't reach the main game library right now, so only GN Originals are showing. Refresh in a few minutes to try again.");
             return;
