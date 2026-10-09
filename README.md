@@ -56,6 +56,7 @@ Open it from **Settings → Owner Panel**. It unlocks with a **GitHub token** fo
 From the panel you can:
 - set the site to **open**, **locked** or **shut down**
 - see **broken reports** (most reported first) and disable a game in one click
+- make accounts **trusted reporters**: one report from them flags a game right away
 - disable individual games
 - set an announcement banner, a message of the day and extra footer links
 - choose **new-visitor defaults** (theme, card size, sort, and so on)
