@@ -233,7 +233,7 @@ async function listZones() {
         for (const tag of alltags) {
             const opt = document.createElement("option");
             opt.value = tag;
-            opt.textContent = tag === "originals" ? "GN Originals" : toTitleCase(tag);
+            opt.textContent = tag === "originals" ? "GN Originals" : tag === "js13k" ? "js13k (tiny games)" : toTitleCase(tag);
             filteroption.appendChild(opt);
         }
     } catch (error) {

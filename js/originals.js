@@ -101,7 +101,9 @@ function renderOriginalsShelf() {
     if (!wrap || !shelf || !Array.isArray(zones)) return;
     // Cards need library.js; if the list arrived first, draw the row once the page has loaded
     if (typeof isFavorite !== "function") { window.addEventListener("load", renderOriginalsShelf, { once: true }); return; }
-    const list = zones.filter(z => isOriginalZone(z) && !isZoneDisabled(z.id))
+    // The row shows the hand-picked games; the hundreds of tiny js13k games are under
+    // their own "js13k" tag and in All games, so the row stays quick to scan.
+    const list = zones.filter(z => isOriginalZone(z) && !isZoneDisabled(z.id) && !(z.special || []).includes("js13k"))
         .sort((a, b) => a.name.localeCompare(b.name));
     shelf.innerHTML = "";
     list.forEach(z => shelf.appendChild(createZoneCard(z)));
