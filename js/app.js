@@ -368,11 +368,16 @@ function createZoneCard(file) {
         nb.title = "Recently added";
         badges.appendChild(nb);
     }
-    if (stats.reports >= BROKEN_FLAG_THRESHOLD) {
+    if (isFlaggedBroken(stats)) {
         const flag = document.createElement("div");
         flag.className = "card-flag";
-        flag.textContent = `⚠ ${stats.reports} broken reports`;
-        flag.title = `${stats.reports} people reported this game as broken in the last ${BROKEN_REPORT_DAYS} days. It may not load.`;
+        if (stats.reports >= BROKEN_FLAG_THRESHOLD) {
+            flag.textContent = `⚠ ${stats.reports} broken reports`;
+            flag.title = `${stats.reports} people reported this game as broken in the last ${BROKEN_REPORT_DAYS} days. It may not load.`;
+        } else {
+            flag.textContent = "⚠ Reported broken";
+            flag.title = "A site moderator reported this game as broken. It may not load.";
+        }
         badges.appendChild(flag);
     }
     if (badges.childElementCount) zoneItem.appendChild(badges);
@@ -1183,6 +1188,13 @@ function renderOwnerPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>Trusted Reporters</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">One broken report from a trusted account flags the game for everyone right away, instead of waiting for ${BROKEN_FLAG_THRESHOLD} reports.</p>
+        <div id="owner-trusted-list" class="owner-panel-list"></div>
+        <div id="owner-trusted-add" style="margin-top:0.5rem;"></div>
+    </div>
+
+    <div class="settings-section">
         <h4>Broken Reports</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Games people reported as broken, most reported first. Reports older than ${BROKEN_REPORT_DAYS} days don't count toward the card warning. Disabling hides a game for everyone.</p>
         <div id="owner-reports-list" class="owner-panel-list"><p style="margin:0.25rem;color:var(--text-muted);">Loading reports…</p></div>
@@ -1237,6 +1249,7 @@ function renderOwnerPanel() {
     popupBody.contentEditable = false;
     document.getElementById('popupOverlay').style.display = "flex";
     renderOwnerReports(true);
+    renderOwnerTrusted();
 }
 
 function timeAgo(ms) {
@@ -1244,6 +1257,53 @@ function timeAgo(ms) {
     if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`;
     if (s < 86400) return `${Math.round(s / 3600)} h ago`;
     return `${Math.round(s / 86400)} days ago`;
+}
+
+function renderOwnerTrusted() {
+    const list = document.getElementById("owner-trusted-list");
+    const add = document.getElementById("owner-trusted-add");
+    if (!list || !add) return;
+    const trusted = getTrustedReporters();
+    list.innerHTML = "";
+    if (!trusted.length) {
+        const p = document.createElement("p");
+        p.style.cssText = "margin:0.25rem;color:var(--text-muted);font-size:13px;";
+        p.textContent = "No trusted accounts yet.";
+        list.appendChild(p);
+    }
+    trusted.forEach(t => {
+        const row = document.createElement("div");
+        row.className = "owner-game-row";
+        row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.4rem 0.25rem;";
+        const name = document.createElement("span");
+        name.textContent = t.name || t.uid;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "settings-button";
+        btn.style.width = "auto";
+        btn.textContent = "Remove";
+        btn.onclick = () => { setTrustedReporters(getTrustedReporters().filter(x => x.uid !== t.uid)); githubAutoSync(); renderOwnerTrusted(); if (typeof refreshCards === "function") refreshCards(); };
+        row.append(name, btn);
+        list.appendChild(row);
+    });
+    add.innerHTML = "";
+    const me = typeof cloudUser !== "undefined" && cloudUser ? cloudUser : null;
+    if (!me) {
+        add.innerHTML = `<p style="margin:0;font-size:13px;color:var(--text-muted);">Sign in to an account on this browser to add it here.</p>`;
+    } else if (!trusted.some(x => x.uid === me.uid)) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "settings-button";
+        btn.textContent = `Make my account (${currentUsername()}) a trusted reporter`;
+        btn.onclick = () => {
+            setTrustedReporters([...getTrustedReporters(), { uid: me.uid, name: currentUsername() }]);
+            githubAutoSync();
+            renderOwnerTrusted();
+            if (typeof refreshCards === "function") refreshCards();
+            notify(`${currentUsername()} is now a trusted reporter. It's saved to GitHub, so it applies for everyone.`, { type: "success" });
+        };
+        add.appendChild(btn);
+    }
 }
 
 async function renderOwnerReports(refresh) {
@@ -1281,7 +1341,7 @@ async function renderOwnerReports(refresh) {
         const votes = x.st.up + x.st.down;
         detail.textContent = `${x.recent} in last ${BROKEN_REPORT_DAYS} days · ${x.total} total · last ${timeAgo(x.last)}` +
             (votes ? ` · 👍 ${Math.round(x.st.up / votes * 100)}% of ${votes}` : "") +
-            (x.recent >= BROKEN_FLAG_THRESHOLD ? " · ⚠ flagged" : "");
+            (isFlaggedBroken(x.st) ? " · ⚠ flagged" : "");
         info.append(title, detail);
         row.appendChild(info);
         const disabled = isZoneDisabled(x.id);
@@ -1545,6 +1605,7 @@ function buildOwnerSettingsObject() {
         },
         footerLinks: getFooterLinks() || [],
         visitorDefaults: getOwnerVisitorDefaults(),
+        trustedReporters: getTrustedReporters(),
         updatedAt: new Date().toISOString()
     };
 }
@@ -1573,6 +1634,12 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (settings.visitorDefaults && typeof settings.visitorDefaults === "object") {
         setOwnerVisitorDefaults(settings.visitorDefaults, { sync: false });
         applySavedSettings();
+    }
+    if (Array.isArray(settings.trustedReporters)) {
+        setTrustedReporters(settings.trustedReporters
+            .filter(x => x && typeof x.uid === "string" && /^[A-Za-z0-9_.@-]{6,128}$/.test(x.uid))
+            .map(x => ({ uid: x.uid, name: String(x.name || "").slice(0, 40) })));
+        if (rerender && typeof refreshCards === "function") refreshCards();
     }
     if (Array.isArray(settings.footerLinks)) {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));

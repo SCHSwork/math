@@ -5,6 +5,7 @@ All the changes to GN 2.0, newest first.
 ## October 8, 2026
 
 ### New
+- **Trusted reporters.** The owner panel can mark accounts as trusted. One broken report from a trusted account flags the game for everyone right away, and the card says "⚠ Reported broken". Reporting the game again removes the flag.
 - **626 tiny games from the js13kGames competition**, where each whole game fits in 13 KB. They're under the new **js13k (tiny games)** tag and in All games, and the site now has over 1,500 games. Only entries with an open license that ran in the site's player were added; every game's Info panel credits its creator and license.
 - **3 more GN Originals** from the leereilly/games list: Particle Clicker, Pond and Emberwind.
 - **No duplicate 2048.** It's in both the main library and GN Originals, so only the library copy shows. The GN Originals copy appears only if the library is down.

@@ -59,7 +59,7 @@ function gameOfTheDay() {
     // Skip games that are currently flagged as broken
     for (let i = 0; i < pool.length; i++) {
         const z = pool[(start + i) % pool.length];
-        if (getZoneStats(z.id).reports < BROKEN_FLAG_THRESHOLD) return z;
+        if (!isFlaggedBroken(z.id)) return z;
     }
     return pool[start];
 }
@@ -453,6 +453,30 @@ window.addEventListener("keydown", e => {
 let gameStats = {};   // { "<id>": { up, down, reports, v: {uid: ±1}, r: {uid: ms} } }
 function shardFor(id) { const n = Number(id) || 0; return "s" + (((n % STATS_SHARDS) + STATS_SHARDS) % STATS_SHARDS); }
 function getZoneStats(id) { return gameStats[String(id)] || { up: 0, down: 0, reports: 0, v: {}, r: {} }; }
+
+// ── Trusted reporters ───────────────────────────────────────────────────────
+// Accounts the owner trusts (set in the owner panel, saved in owner-settings.json).
+// One recent "broken" report from a trusted account flags the game right away.
+// Safe because the database rules only let an account write reports under its own id.
+const TRUSTED_REPORTERS_KEY = "gnmath-owner-trusted-reporters";
+function getTrustedReporters() {
+    try {
+        const list = JSON.parse(localStorage.getItem(TRUSTED_REPORTERS_KEY) || "[]");
+        return Array.isArray(list) ? list.filter(x => x && typeof x.uid === "string" && x.uid) : [];
+    } catch { return []; }
+}
+function setTrustedReporters(list) {
+    try { localStorage.setItem(TRUSTED_REPORTERS_KEY, JSON.stringify(list)); } catch {}
+}
+function isTrustedReporter(uid) { return !!uid && getTrustedReporters().some(x => x.uid === uid); }
+function hasTrustedReport(stats) {
+    const cutoff = Date.now() - BROKEN_REPORT_DAYS * 86400000;
+    return Object.entries(stats.r || {}).some(([uid, ms]) => ms >= cutoff && isTrustedReporter(uid));
+}
+function isFlaggedBroken(statsOrId) {
+    const s = typeof statsOrId === "object" && statsOrId ? statsOrId : getZoneStats(statsOrId);
+    return s.reports >= BROKEN_FLAG_THRESHOLD || hasTrustedReport(s);
+}
 function ratingScore(id) {
     const s = getZoneStats(id);
     return (s.up + 1) / (s.up + s.down + 2); // smoothed % liked, so 1 vote doesn't beat 50
@@ -561,7 +585,11 @@ async function rateCurrentZone(value) {
 }
 async function reportBrokenShared(zone) {
     if (needAccountFor("Reporting broken games")) return;
-    if (!(await askConfirm(`When ${BROKEN_FLAG_THRESHOLD} or more people report a game within ${BROKEN_REPORT_DAYS} days, it gets a warning flag for everyone.`, { title: `Report "${zone.name}" as broken?`, confirmText: "Report" }))) return;
+    const trusted = isTrustedReporter(cloudUser && cloudUser.uid);
+    const how = trusted
+        ? `You're a trusted reporter, so your report flags this game for everyone right away. Report it again later to take the flag back off.`
+        : `When ${BROKEN_FLAG_THRESHOLD} or more people report a game within ${BROKEN_REPORT_DAYS} days, it gets a warning flag for everyone.`;
+    if (!(await askConfirm(how, { title: `Report "${zone.name}" as broken?`, confirmText: "Report" }))) return;
     try {
         await writeGameStat(zone.id, "r", true);
         refreshCards();
