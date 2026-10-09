@@ -189,3 +189,49 @@
         if (overlay && overlay.style.display === "flex" && typeof closePopup === "function") closePopup();
     });
 })();
+
+// ── Keep browsers from auto-filling the saved username into search boxes ────
+// Chrome's password manager sometimes ignores autocomplete="off" and drops the
+// signed-in username into the first text box on the page. Search boxes marked
+// data-no-autofill start read-only (password managers skip read-only fields)
+// until you click, tap or tab into them, and any text that appears without you
+// typing it is cleared straight away.
+(function () {
+    const typed = new WeakSet();
+    const guarded = el => el && el.matches && el.matches("input[data-no-autofill]");
+    const unlock = e => { if (guarded(e.target)) e.target.readOnly = false; };
+    const markTyped = e => { if (guarded(e.target)) typed.add(e.target); };
+    ["pointerdown", "focusin", "touchstart"].forEach(t => document.addEventListener(t, unlock, true));
+    ["keydown", "paste", "drop", "compositionstart", "cut"].forEach(t => document.addEventListener(t, markTyped, true));
+    const isAutofilled = el => { try { return el.matches(":autofill") || el.matches(":-webkit-autofill"); } catch { return false; } };
+    function scrub(el) {
+        if (!el.value || typed.has(el)) return false;
+        el.value = "";
+        return true;
+    }
+    // Runs before the box's own handlers, so a filled-in name never triggers a search
+    window.addEventListener("input", e => {
+        const el = e.target;
+        if (!guarded(el) || typed.has(el)) return;
+        if (el.value && (isAutofilled(el) || !e.isTrusted || !e.inputType)) {
+            el.value = "";
+            e.stopImmediatePropagation();
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+    }, true);
+    function setup() {
+        const boxes = document.querySelectorAll("input[data-no-autofill]");
+        boxes.forEach(el => { if (document.activeElement !== el) el.readOnly = true; });
+        // Catch values that appear without any event during the first seconds
+        [50, 300, 1000, 2500, 5000].forEach(ms => setTimeout(() => {
+            // Nothing on this site fills these boxes by itself, so any text that's
+            // there before you've typed came from the browser.
+            document.querySelectorAll("input[data-no-autofill]").forEach(el => {
+                if (scrub(el)) el.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+        }, ms));
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setup();
+    // Search boxes added later (game finder, admin search) get the same treatment
+    window.protectFromAutofill = el => { if (el) { el.setAttribute("data-no-autofill", ""); if (document.activeElement !== el) el.readOnly = true; } };
+})();

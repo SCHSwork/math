@@ -113,7 +113,7 @@ async function openAdminPanel() {
         </div>
         <div id="admin-accounts">
             <div class="admin-toolbar">
-                <input type="search" id="admin-search" placeholder="Search usernames…" aria-label="Search accounts" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
+                <input type="search" id="admin-search" data-no-autofill placeholder="Search usernames…" aria-label="Search accounts" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
                 <select id="admin-filter" aria-label="Show">
                     <option value="all">All accounts</option>
                     <option value="admins">Admins</option>
