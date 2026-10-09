@@ -428,7 +428,7 @@ async function cloudDeleteAccount() {
     const pw = document.getElementById("acct-delete-password")?.value || "";
     if (!cloudUser) return;
     if (!pw) { setCloudStatus("Enter your password to delete your account."); return; }
-    if (!(await askConfirm(`This permanently deletes "${currentUsername()}", its cloud save, and its ratings and reports. It can't be undone.`, { title: "Delete account?", confirmText: "Delete account", danger: true }))) return;
+    if (!(await askConfirm(`This permanently deletes "${currentUsername()}", its cloud save, its ratings and reports, and its game submissions. It can't be undone.`, { title: "Delete account?", confirmText: "Delete account", danger: true }))) return;
     try {
         setCloudStatus("Deleting…");
         clearInterval(cloudAutosaveTimer);
@@ -440,6 +440,10 @@ async function cloudDeleteAccount() {
         const chunks = await saveDocRef().collection("chunks").get();
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
         if (typeof removeMyGameStats === "function") await removeMyGameStats(cloudUser.uid);
+        try {
+            const subs = await cloudDb.collection("submissions").where("uid", "==", cloudUser.uid).get();
+            await Promise.all(subs.docs.map(d => d.ref.delete()));
+        } catch (e) { console.warn("Couldn't remove game submissions", e); }
         await saveDocRef().delete();
         await cloudUser.delete();
         localStorage.removeItem(CLOUD.keys.syncedGen);

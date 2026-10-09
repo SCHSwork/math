@@ -19,6 +19,39 @@ service cloud.firestore {
         && validStatsWrite();
     }
 
+    // Game submissions ("Submit a game"). A signed-in player can send one and
+    // read or delete their own. Admins (a document admins/<uid>, created only in
+    // the Firebase console) can read all of them and change status/note.
+    match /submissions/{id} {
+      allow create: if request.auth != null && validSubmission(request.resource.data);
+      allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note'])
+        && request.resource.data.status in ['pending', 'approved', 'added', 'rejected']
+        && (!('note' in request.resource.data) || (request.resource.data.note is string && request.resource.data.note.size() <= 200));
+      allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(db)/documents/admins/$(request.auth.uid));
+    }
+    function shortText(v, max) { return v is string && v.size() <= max; }
+    function validSubmission(d) {
+      return d.keys().hasOnly(['uid', 'username', 'name', 'url', 'author', 'relation', 'license', 'genre', 'description', 'status', 'createdAt'])
+        && d.uid == request.auth.uid
+        && d.status == 'pending'
+        && d.createdAt == request.time
+        && shortText(d.name, 80) && d.name.size() > 0
+        && shortText(d.url, 300) && d.url.matches('https?://.+')
+        && shortText(d.author, 80) && d.author.size() > 0
+        && d.relation in ['mine', 'permission', 'license']
+        && shortText(d.username, 40) && shortText(d.license, 80)
+        && shortText(d.genre, 40) && shortText(d.description, 500);
+    }
+
     function validStatsWrite() {
       let uid = request.auth.uid;
       let after = request.resource.data;
