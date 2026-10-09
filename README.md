@@ -14,6 +14,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere
+- **Game jam games switch** above All games hides the 626 js13k games everywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
