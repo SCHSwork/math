@@ -5,6 +5,7 @@ All the changes to GN 2.0, newest first.
 ## October 8, 2026
 
 ### New
+- **30 more GN Originals** (63 in all), including Trimps, Bubble Shooter, Match 3, Space Huggers, Drakonas, BitBot, Dental Defender, Drunken Viking, Raging Gardens, Monster Wants Candy, Turkey Cooking Simulator and three LittleJS games. Like the first batch, each one was tested in the site's player and keeps its creator's license and credit.
 - **GN Originals**: 33 open-source games in their own row on the home page, including 2048, Hextris, HexGL, A Dark Room, Untrusted, Elevator Saga, Flexbox Froggy, Radius Raid and Clumsy Bird. They're kept with their licenses in a separate repo, [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals), and you can also find them with the **GN Originals** tag.
   - Each game's Info panel shows who made it, its license and a link to its source code.
   - They load through the same three backup sources as the rest of the site, and they still show up if the main game library is down.
