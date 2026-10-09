@@ -202,13 +202,15 @@ function closeFilterMenu() {
 function updateFilterDot() {
     const dot = document.querySelector("#filterButton .filter-dot");
     if (!dot) return;
-    const changed = (sortOptions.value !== getDefaultSort()) || (filterOptions.value && filterOptions.value !== "none");
+    const changed = (sortOptions.value !== getDefaultSort()) || (filterOptions.value && filterOptions.value !== "none")
+        || (typeof extraFiltersActive === "function" && extraFiltersActive());
     dot.hidden = !changed;
     document.getElementById("filterButton").title = changed ? "Sort & filter (changed)" : "Sort & filter";
 }
 function resetFilters() {
     sortOptions.value = getDefaultSort();
     filterOptions.value = "none";
+    if (typeof resetExtraFilters === "function") resetExtraFilters();
     featuredContainer.innerHTML = "";
     sortZones();
     updateFilterDot();

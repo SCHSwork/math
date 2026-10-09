@@ -5,6 +5,12 @@ All the changes to GN 2.0, newest first.
 ## October 8, 2026
 
 ### New
+- **More filters** in Sort & filter:
+  - **Genre**: 17 genres, such as Horror, Racing, Puzzle, Shooter, Sports, Music and 2 player, each showing how many games it has. Genres are matched from game names and tags, so a few games may land in an odd genre or none.
+  - **Source**: main library, GN Originals or js13k tiny games.
+  - **Show**: not played yet, played before, favorites, hide games flagged broken, or well liked (80%+ 👍).
+  - **Type** (formerly Tag) now has proper names, such as "Nintendo DS" and "FNF mods".
+  - The menu uses two columns on wider screens, and Reset clears everything.
 - **Trusted reporters.** The owner panel can mark accounts as trusted. One broken report from a trusted account flags the game for everyone right away, and the card says "⚠ Reported broken". Reporting the game again removes the flag.
 - **626 tiny games from the js13kGames competition**, where each whole game fits in 13 KB. They're under the new **js13k (tiny games)** tag and in All games, and the site now has over 1,500 games. Only entries with an open license that ran in the site's player were added; every game's Info panel credits its creator and license.
 - **3 more GN Originals** from the leereilly/games list: Particle Clicker, Pond and Emberwind.
