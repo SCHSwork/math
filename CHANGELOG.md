@@ -2,6 +2,18 @@
 
 All the changes to GN 2.0, newest first.
 
+## October 9, 2026
+
+### Changed
+- **A much smarter ✨ Find me a game.**
+  - Every one of the 1,500+ games now has a short description, genres and theme keywords, so the finder understands what a game actually is, not just its name.
+  - It handles **themes** ("zombies", "cats", "space"), **moods** ("chill", "funny", "hard", "cute"), **what you don't want** ("nothing scary", "shooter but no zombies") and **"like <game>"**, which compares genres and themes (for example, "games like Slope" finds Slope 2, Tunnel Rush and Rolling Sky).
+  - Opening it shows **picks for you** based on what you play, or popular games if you're new.
+  - Each result shows what the game is, why it was picked and a **More like this** button.
+  - **Narrow it down** chips (not played yet, 2 player, quick, popular, relaxing, no horror) and **Show more** results.
+  - Your recent searches are kept as chips.
+- **Genre filters are far more accurate**, because they now use each game's real genres instead of guessing from its name.
+
 ## October 8, 2026
 
 ### New

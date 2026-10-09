@@ -13,7 +13,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - Filter by **genre** (17 genres), **source** (library / GN Originals / js13k), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
-- **✨ Find me a game**: describe what you want ("chill puzzle game", "like Geometry Dash") and get suggestions. It runs in the browser, and nothing is sent anywhere
+- **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
@@ -94,6 +94,7 @@ assets/icons/          site icon at every size
 config/
   owner-settings.json  site-wide settings, written by the owner panel
   firestore.rules      Firebase database security rules
+  game-info.json       genres, description and keywords for every game (used by filters and the finder)
 tools/
   stamp_versions.py    run after editing css/ or js/ so browsers load the new version
 ```

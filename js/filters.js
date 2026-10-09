@@ -1,8 +1,8 @@
 // ═════════════════════════════════════════════════════════════════════════════
 // Extra filters in the Sort & filter menu: Genre, Source and Show.
-// Most library games have no genre tags, so genres are matched from each
-// game's name and tags (e.g. "racer", "drift" → Racing). A game can be in
-// more than one genre, and some games won't match any.
+// Genres come from config/game-info.json (written per game). Games missing
+// from it are matched from their name and tags instead ("racer" → Racing).
+// A game can be in more than one genre.
 // ═════════════════════════════════════════════════════════════════════════════
 const GENRES = [
     { id: "action",    label: "Action & fighting",   re: /\b(fight|fighter|smash|brawl|kombat|bowmasters|stick ?man|stickman|duel|sword|karate|ninja|combat|beat ?em|slash|hero)/, tags: ["action"] },
@@ -24,12 +24,34 @@ const GENRES = [
     { id: "strategy",  label: "Strategy & defense",  re: /\b(strategy|defen[cs]e|td|civ|empire|tactic|rts|conquer|siege)/, tags: ["strategy"] }
 ];
 const genreCache = new Map();
+// Hand-written info for each game (config/game-info.json): genres "g",
+// a one-line description "d", keywords "k" and "p": 2 for 2-player games.
+// Games without an entry fall back to guessing from the name.
+let GAME_INFO = {};
+function getGameInfo(id) { return GAME_INFO[String(id)] || null; }
+const gameInfoReady = fetch("config/game-info.json")
+    .then(r => (r.ok ? r.json() : {}))
+    .then(data => {
+        GAME_INFO = data && typeof data === "object" ? data : {};
+        genreCache.clear();
+        if (Array.isArray(zones) && zones.length) { updateFilterCounts(); if (extraFiltersActive()) applyFilters(); }
+    })
+    .catch(() => {});
 function zoneGenres(zone) {
     const key = zone.id + "|" + zone.name;
     if (genreCache.has(key)) return genreCache.get(key);
-    const name = String(zone.name || "").toLowerCase().replace(/['’]/g, "");
+    const info = getGameInfo(zone.id);
     const tags = (zone.special || []).map(t => String(t).toLowerCase());
-    const set = new Set(GENRES.filter(g => g.re.test(name) || g.tags.some(t => tags.includes(t))).map(g => g.id));
+    let set;
+    if (info && Array.isArray(info.g) && info.g.length) {
+        set = new Set(info.g);
+        if (info.p === 2) set.add("multi");
+        // Library tags like "emulator" or "fnf" are always right, so keep them too
+        GENRES.forEach(g => { if (g.tags.some(t => tags.includes(t)) && ["retro", "music"].includes(g.id)) set.add(g.id); });
+    } else {
+        const name = String(zone.name || "").toLowerCase().replace(/['’]/g, "");
+        set = new Set(GENRES.filter(g => g.re.test(name) || g.tags.some(t => tags.includes(t))).map(g => g.id));
+    }
     genreCache.set(key, set);
     return set;
 }
