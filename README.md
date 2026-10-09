@@ -60,6 +60,7 @@ From the panel you can:
 - set the site to **open**, **locked** or **shut down**
 - see **broken reports** (most reported first) and disable a game in one click
 - make accounts **trusted reporters**: one report from them flags a game right away
+- review **game submissions** sent with "Submit a game": approve, mark added, reject (with a note) or delete. This needs a one-time admin setup: in the Firebase console, add a document `admins/<your account id>` (the panel shows the id), and publish the latest `config/firestore.rules`
 - disable individual games
 - set an announcement banner, a message of the day and extra footer links
 - choose **new-visitor defaults** (theme, card size, sort, and so on)
@@ -87,6 +88,7 @@ js/
                        ratings and reports, keyboard shortcuts
   filters.js           Genre / Source / Show filters
   finder.js            ✨ game finder and random game options
+  submit.js            Submit a game form and owner review
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers

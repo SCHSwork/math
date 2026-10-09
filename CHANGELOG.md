@@ -5,10 +5,12 @@ All the changes to GN 2.0, newest first.
 ## October 9, 2026
 
 ### New
+- **Submit a game** (in the footer and in Settings). Signed-in players can send in a game they made or that's free to share: name, link, creator, how it can be shared, genre and a short description. They can see its status (waiting, approved, added or not added) and any note from the owner, and can withdraw it while it's waiting. The owner reviews submissions in a new **Game Submissions** section of the Owner Panel.
 - **41 more js13k games**: the 3D and VR games that needed shared libraries from the contest's server. GN 2.0 now hosts A-Frame and three.js itself, so these run, bringing the js13k games to 667 and the site to about 1,570 games.
 - **Game jam games switch** above All games. Turn it off to hide all the js13k game jam games from the lists, search, the game finder, the random game button and Today's pick. It's saved on your device.
 
 ### Changed
+- Privacy Policy updated for game submissions. Deleting your account now also deletes your submissions.
 - **A much smarter ✨ Find me a game.**
   - Every one of the 1,500+ games now has a short description, genres and theme keywords, so the finder understands what a game actually is, not just its name.
   - It handles **themes** ("zombies", "cats", "space"), **moods** ("chill", "funny", "hard", "cute"), **what you don't want** ("nothing scary", "shooter but no zombies") and **"like <game>"**, which compares genres and themes (for example, "games like Slope" finds Slope 2, Tunnel Rush and Rolling Sky).

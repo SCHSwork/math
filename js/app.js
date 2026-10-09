@@ -1196,6 +1196,13 @@ function renderOwnerPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>Game Submissions</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Games players sent in with "Submit a game". To add an approved one, put it in SCHSwork/GN-originals (see its README), then mark it added.</p>
+        <div id="owner-submissions" class="owner-panel-list"></div>
+        <button class="settings-button" type="button" style="margin-top:0.5rem;" onclick="renderOwnerSubmissions()">Refresh</button>
+    </div>
+
+    <div class="settings-section">
         <h4>Trusted Reporters</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">One broken report from a trusted account flags the game for everyone right away, instead of waiting for ${BROKEN_FLAG_THRESHOLD} reports.</p>
         <div id="owner-trusted-list" class="owner-panel-list"></div>
@@ -1258,6 +1265,7 @@ function renderOwnerPanel() {
     document.getElementById('popupOverlay').style.display = "flex";
     renderOwnerReports(true);
     renderOwnerTrusted();
+    if (typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
 }
 
 function timeAgo(ms) {
@@ -2666,6 +2674,8 @@ function openSettingsPanel() {
         <h4>Quick Actions</h4>
         <button class="settings-button" onclick="listZones()">Refresh Zones</button>
         <br><br>
+        <button class="settings-button" onclick="openSubmitGame()">Submit a Game</button>
+        <br><br>
         <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
         <br><br>
         <button class="settings-button" onclick="resetAppearanceSettings()">Reset All Appearance Settings</button>
@@ -2692,7 +2702,7 @@ function legalPopup(title, html) {
 
 function loadPrivacy() {
     legalPopup("Privacy Policy", `
-        <p><b>Effective October 7, 2026</b></p>
+        <p><b>Effective October 9, 2026</b></p>
         <p>This policy explains what GN 2.0 collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), there are no ads or trackers, and we don't sell or share your information.</p>
 
         <h3>What we collect</h3>
@@ -2702,6 +2712,7 @@ function loadPrivacy() {
             <li><b>Username and password.</b> These are handled by Google Firebase Authentication. Your password is stored by Google in protected (hashed) form; the site owner can never see it. Firebase also records when the account was created and last signed in, and may log IP addresses to protect against abuse.</li>
             <li><b>Cloud saves.</b> A copy of the game progress and site settings stored in your browser for this site (including your favorites, recently played list and play time), so you can continue on another device. It is stored in Google Cloud Firestore and locked so only your signed-in account can read or change it. It never includes passwords or access tokens.</li>
             <li><b>Ratings and broken-game reports.</b> When you rate a game or report it as broken, we store your vote or the time of your report together with your account's random ID (not your username). These are combined into the public totals shown on game cards, and the stored entries can be read by anyone, but they don't reveal your username.</li>
+            <li><b>Game submissions.</b> If you use "Submit a game", we store what you type in the form (game name, link, creator, license, genre and description) with your username and account ID, so the site owner can review it and you can see its status. Only you and the site admins can read it. You can withdraw a pending submission, and deleting your account removes all of yours. Please don't include personal information in a submission.</li>
         </ul>
         <p>We do <b>not</b> ask for your email, real name, age, location, contacts, or any other personal details. Please don't put your real name or personal information in your username.</p>
 
