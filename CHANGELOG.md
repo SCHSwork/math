@@ -5,6 +5,7 @@ All the changes to GN 2.0, newest first.
 ## October 9, 2026
 
 ### New
+- **GN Light** link in the footer: a separate, much faster version of the site for slow computers (same games, no accounts or ads).
 - **About 320 partner games from html5games.com**, including Temple Blocks, Cut the Rope 2, Om Nom Run, Moto Fury, Defly.io, mahjong, solitaire, sports and puzzle games. html5games.com lets websites share its games for free on the condition that the games keep their ads, so:
   - each partner game has a yellow **AD** badge on its card and a "May contain ads from html5games.com" notice above the game;
   - they play from html5games.com's own servers in a sandboxed frame that can't take you away from GN 2.0;
