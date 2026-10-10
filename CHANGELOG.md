@@ -16,6 +16,7 @@ All the changes to GN 2.0, newest first.
 - **Privacy Policy and Terms updated** for partner games: what loads from Famobi, that their ads and cookies follow Famobi's own privacy policy, and that GN 2.0 shares nothing about you with them.
 
 ### Fixed
+- **The site is much less laggy.** With nearly 2,000 games, opening the page was freezing the browser for up to 3 seconds. Cards that are far off screen are now skipped until you scroll to them, only the first screenful animates in, and the scrolling rows measure themselves at most once per frame. Page load work dropped from about 3.2 s to 0.2 s in testing, and typing in search no longer stutters.
 - **Color Match** (and any other game whose file has the same problem) no longer crashes with a Unity "null function" error. Its file in the game library contains the whole page twice, which started the game twice; the site now keeps only the first copy.
 - Your account name no longer shows up in the search box when the site opens. Some browsers ignored the earlier fix, so the search boxes now stay locked until you click or tap into them, and any text the browser adds before you type is cleared.
 

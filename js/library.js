@@ -166,7 +166,15 @@ function enhanceShelf(shelf) {
     const label = section?.querySelector(".section-title")?.childNodes[0]?.textContent?.trim();
     shelf.setAttribute("role", "region");
     shelf.setAttribute("aria-label", (label || "Games") + (shelf.id === "favoriteZones" ? " (favorites)" : shelf.id === "recentZones" ? " (recent)" : "") + ", use the arrow keys to scroll");
+    // Reading the row's size forces the browser to lay out the page, so do it at
+    // most once per frame instead of once per change (the page has ~2,000 cards).
+    let queued = false;
     const update = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; measure(); });
+    };
+    const measure = () => {
         const max = shelf.scrollWidth - shelf.clientWidth;
         const atStart = shelf.scrollLeft <= 4, atEnd = shelf.scrollLeft >= max - 4;
         prev.hidden = atStart;
