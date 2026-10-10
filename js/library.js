@@ -52,7 +52,9 @@ function hashString(str) {
     return h >>> 0;
 }
 function gameOfTheDay() {
-    const pool = zones.filter(z => z.url && !z.url.startsWith("http") && Number(z.id) >= 0 && !isZoneDisabled(z.id))
+    // Never picks a partner game (those may have ads)
+    const pool = zones.filter(z => z.url && !z.url.startsWith("http") && Number(z.id) >= 0 && !isZoneDisabled(z.id)
+            && !(typeof isPartnerZone === "function" && isPartnerZone(z)))
         .sort((a, b) => Number(a.id) - Number(b.id));
     if (!pool.length) return null;
     const start = hashString("gn2-gotd-" + todayKey()) % pool.length;

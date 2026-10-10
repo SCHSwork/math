@@ -16,7 +16,8 @@ function originalsUrl(path) {
 
 function isOriginalZone(zoneOrId) {
     const id = zoneOrId && typeof zoneOrId === "object" ? zoneOrId.id : zoneOrId;
-    return Number(id) >= ORIGINALS_ID_BASE;
+    const n = Number(id);
+    return n >= ORIGINALS_ID_BASE && n < 200000; // 200000+ are partner games (partners.js)
 }
 
 function parseGhUrl(url) {
@@ -57,7 +58,7 @@ async function loadOriginals() {
         if (!Array.isArray(list)) { console.warn("GN Originals list unavailable", err); return []; }
     }
     return list
-        .filter(z => z && Number(z.id) >= ORIGINALS_ID_BASE && z.name && typeof z.path === "string" && !/\.\./.test(z.path))
+        .filter(z => z && isOriginalZone(z.id) && z.name && typeof z.path === "string" && !/\.\./.test(z.path))
         .map(toOriginalZone);
 }
 

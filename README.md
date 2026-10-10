@@ -1,8 +1,8 @@
 # GN 2.0
 
-A single-page browser game site with no ads, no trackers, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
+A single-page browser game site with no ads or trackers of its own, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
 
-Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 667 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals).
+Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 667 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals). About 320 **partner games** from html5games.com (Famobi) are linked too; those can show Famobi's ads and are always marked **AD** (see below).
 
 ## Features
 
@@ -10,11 +10,12 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **Today's pick** (game of the day) at the top of the page, the same for everyone each day
 - **Smart search** that handles typos, missing spaces and abbreviations ("geomtry dash", "fnaf"), and works together with tag filters
 - Sort by name, newest, date added, popular, trending, top rated or my most played
-- Filter by **genre** (17 genres), **source** (library / GN Originals / js13k), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
+- Filter by **genre** (17 genres), **source** (library / GN Originals / js13k / partner games), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
 - **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere
 - **Game jam games switch** above All games hides the js13k games everywhere
+- **Partner games switch** above All games hides the html5games.com games everywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
@@ -27,11 +28,18 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - They still load if the main game library is down
 - To add one, follow the steps in that repo's README; the site picks it up on its own
 
+**Partner games (may contain ads)**
+- About 320 free games from [html5games.com](https://html5games.com/), made and hosted by Famobi. html5games.com lets any site link its games for free as long as the games keep their own ads, so these games are **linked, not copied**: they load from `play.famobi.com` in a sandboxed frame (it can open new tabs but can't navigate GN 2.0 away), and their ads can't be removed.
+- Every one has a yellow **AD** badge on its card, a "May contain ads from html5games.com" notice above the game and an explanation in its Info panel. They're never Today's pick, and the Privacy Policy and Terms explain them.
+- If html5games.com is blocked on the network (common at schools), the site notices that their pictures can't load and hides them automatically, with a note on the switch; players can still choose to show them.
+- GN 2.0 doesn't earn anything from these ads and sends Famobi nothing about players.
+- The list is `config/partner-games.json` (ids 200000+; `pkg` is the Famobi game id, `thumb` the cover file name). Entries with `"libraryDuplicate": true` are games the library or GN Originals already has, so they're hidden. To remove one, delete its entry.
+
 **Reliable**
 - Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, links inside games are rewritten when jsDelivr is down, and the last game list is kept as an offline backup.
 
 **Clean games**
-- Ad loaders, ad banners and Google Analytics are stripped from every game before it runs, and known ad and tracking hosts are blocked as a backup.
+- Ad loaders, ad banners and Google Analytics are stripped from every library and GN Originals game before it runs, and known ad and tracking hosts are blocked as a backup.
 
 **Accounts and saves** (optional, username only, no email)
 - Cloud saves of all game progress and site settings, synced every 2 minutes, when a game closes and on sign-out
@@ -87,6 +95,7 @@ css/styles.css         all the styles
 js/
   ui.js                notices, dialogs, accessibility helpers (loaded first)
   originals.js         GN Originals: loads games.json from SCHSwork/GN-originals
+  partners.js          partner games from html5games.com: AD badges, player, blocked-network check
   app.js               game list, search, cards, player, ad/tracker removal,
                        backup sources, settings, owner panel, panic button, tab cloak
   accounts.js          accounts and cloud saves (Firebase)
@@ -105,6 +114,7 @@ config/
   owner-settings.json  site-wide settings, written by the owner panel
   firestore.rules      Firebase database security rules
   game-info.json       genres, description and keywords for every game (used by filters and the finder)
+  partner-games.json   the html5games.com partner games (may contain ads)
 tools/
   stamp_versions.py    run after editing css/ or js/ so browsers load the new version
 ```
@@ -124,4 +134,4 @@ If `FIREBASE_CONFIG` is set to `null`, the account features are turned off and t
 
 ## Legal
 
-The site includes a Privacy Policy, Terms of Use and a DMCA page (links in the footer). Games belong to their creators. Takedown requests for library games go to the gn-math library that hosts the files. For GN Originals, open an issue on SCHSwork/GN-originals.
+The site includes a Privacy Policy, Terms of Use and a DMCA page (links in the footer). Games belong to their creators. Takedown requests for library games go to the gn-math library that hosts the files. For GN Originals, open an issue on SCHSwork/GN-originals. Partner games aren't hosted here at all; they're links to html5games.com, and removal requests go to the site's email.

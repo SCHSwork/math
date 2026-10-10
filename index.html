@@ -43,14 +43,14 @@
         }
     </script>
     <meta name="title" content="GN 2.0">
-    <meta name="description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
+    <meta name="description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
     <meta property="og:type" content="website">
     <meta property="og:title" content="GN 2.0">
-    <meta property="og:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
+    <meta property="og:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
-    <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=ef1ff2a689">
+    <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
+    <link rel="stylesheet" href="css/styles.css?v=c26765a9b5">
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -92,6 +92,7 @@
                     <option value="library">Main library</option>
                     <option value="originals">GN Originals</option>
                     <option value="js13k">js13k tiny games</option>
+                    <option value="partner">Partner games (may have ads)</option>
                 </select>
                 </label>
                 <label class="filter-field"><span>Show</span>
@@ -182,6 +183,13 @@
                 </button>
                 <span class="jam-toggle-note">Tiny games made in a month for the js13k contest</span>
             </div>
+            <div class="jam-toggle-row" id="partnerToggleRow" hidden>
+                <button type="button" id="partnerToggle" class="jam-toggle" role="switch" aria-checked="true" onclick="togglePartnerGames()">
+                    <span class="jam-switch" aria-hidden="true"></span>
+                    <span id="partnerToggleLabel">Partner games</span>
+                </button>
+                <span class="jam-toggle-note"><span class="ad-badge" aria-hidden="true">AD</span> Free games from html5games.com. They may show ads from their publisher; GN 2.0 adds none.</span>
+            </div>
             <div id="container">Loading games…</div>
         </details>
     </main>
@@ -199,6 +207,7 @@
                 </button>
                 <span id="zoneId" style="display: none;"></span>
                 <a id="zoneAuthor" href="#" target="_blank">by Author</a>
+                <span id="zoneAdNotice" class="zone-ad-notice" hidden title="This partner game is loaded from html5games.com (Famobi). It may show their ads. GN 2.0 doesn't add ads or get paid for them."><span class="ad-badge" aria-hidden="true">AD</span> May contain ads from html5games.com</span>
             </div>
             <div class="zone-controls">
                 <button onclick="openRandomZone()" title="Random game!" aria-label="Play a random game" style="display:flex;align-items:center;">
@@ -248,16 +257,17 @@
         </div>
     </footer>
     <script src="js/ui.js?v=4ac1fc5e47"></script>
-    <script src="js/originals.js?v=7e0e7a0c22"></script>
+    <script src="js/originals.js?v=85408dde13"></script>
+    <script src="js/partners.js?v=7d5128518a"></script>
 
-    <script src="js/app.js?v=7a6ae68cf8"></script>
+    <script src="js/app.js?v=b6a84f51da"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/accounts.js?v=85c70ca90e"></script>
-<script src="js/library.js?v=e8837a93d1"></script>
+<script src="js/library.js?v=e30028954d"></script>
 <script src="js/loading-bar.js?v=6283c4e73e"></script>
 <script src="js/game-menu.js?v=20bf30f26d"></script>
-<script src="js/filters.js?v=6d40cab5c6"></script>
+<script src="js/filters.js?v=35588a0212"></script>
 <script src="js/finder.js?v=5fac24d940"></script>
 <script src="js/submit.js?v=56be882b1f"></script>
 <script src="js/admin.js?v=0b0a9a344f"></script>
