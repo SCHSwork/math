@@ -355,6 +355,11 @@ main {
     animation: cardEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* With ~2,000 cards, only animate the first screenful, and let the browser skip
+   laying out and drawing cards that are far off screen until you scroll to them. */
+#container .zone-item:nth-child(n+41) { animation: none; }
+#container .zone-item { content-visibility: auto; contain-intrinsic-size: auto 240px; }
+body.cards-list #container .zone-item { contain-intrinsic-size: auto 64px; }
 #container .zone-item:nth-child(2n), #featuredZones .zone-item:nth-child(2n) { animation-delay: 40ms; }
 #container .zone-item:nth-child(3n), #featuredZones .zone-item:nth-child(3n) { animation-delay: 80ms; }
 #container .zone-item:nth-child(5n), #featuredZones .zone-item:nth-child(5n) { animation-delay: 120ms; }
