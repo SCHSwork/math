@@ -4,6 +4,17 @@ All the changes to GN 2.0, newest first.
 
 ## October 9, 2026
 
+### New
+- **About 320 partner games from html5games.com**, including Temple Blocks, Cut the Rope 2, Om Nom Run, Moto Fury, Defly.io, mahjong, solitaire, sports and puzzle games. html5games.com lets websites share its games for free on the condition that the games keep their ads, so:
+  - each partner game has a yellow **AD** badge on its card and a "May contain ads from html5games.com" notice above the game;
+  - they play from html5games.com's own servers in a sandboxed frame that can't take you away from GN 2.0;
+  - a new **Partner games switch** above All games hides them all, and they're under their own **Source** filter;
+  - if html5games.com is blocked on your network, they're hidden automatically (the switch says why);
+  - they're never Today's pick. GN 2.0 itself still has no ads and earns nothing from these.
+
+### Changed
+- **Privacy Policy and Terms updated** for partner games: what loads from Famobi, that their ads and cookies follow Famobi's own privacy policy, and that GN 2.0 shares nothing about you with them.
+
 ### Fixed
 - Your account name no longer shows up in the search box when the site opens. Some browsers ignored the earlier fix, so the search boxes now stay locked until you click or tap into them, and any text the browser adds before you type is cleared.
 

@@ -90,17 +90,28 @@ function coverSources(cover) {
 function setCoverImage(img, cover, lazy) {
     const list = coverSources(cover);
     if (!list.length) return;
-    img.crossOrigin = "anonymous";
+    // Partner game covers come from Famobi, which doesn't allow CORS image loads
+    if (!/^https:\/\/img\.cdn\.famobi\.com\//.test(list[0])) img.crossOrigin = "anonymous";
     img.dataset.fallbacks = JSON.stringify(list.slice(1));
     img.onerror = () => {
         let rest = [];
         try { rest = JSON.parse(img.dataset.fallbacks || "[]"); } catch {}
         markMirror(mirrorOf(img.currentSrc || img.src), false);
-        if (!rest.length) { img.onerror = null; return; }
+        if (!rest.length) {
+            img.onerror = null;
+            if (img.dataset.placeholder) img.src = img.dataset.placeholder;
+            return;
+        }
         img.dataset.fallbacks = JSON.stringify(rest.slice(1));
         img.src = rest[0];
     };
     if (lazy) img.dataset.src = list[0]; else img.src = list[0];
+}
+// Simple picture with the game's name, for covers that couldn't be loaded
+function coverPlaceholder(name) {
+    const esc = String(name || "").replace(/[&<>"']/g, "");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="#1f2937"/><text x="150" y="150" fill="#e5e7eb" font-family="sans-serif" font-size="26" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc.length > 18 ? esc.slice(0, 17) + "…" : esc}</text></svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 // The game list: newest copy from any source, or the last one that loaded
 const ZONES_CACHE_KEY = "gnmath-cache-zones";
@@ -155,6 +166,7 @@ function toTitleCase(str) {
 const TYPE_LABELS = { port: "Ports", flash: "Flash", emulator: "Emulator", fnf: "FNF mods", nds: "Nintendo DS", dos: "DOS", tools: "Tools", psx: "PlayStation", gba: "Game Boy Advance", nes: "NES", n64: "Nintendo 64" };
 async function listZones() {
     const originalsPromise = typeof loadOriginals === "function" ? loadOriginals() : Promise.resolve([]);
+    const partnersPromise = typeof loadPartners === "function" ? loadPartners().catch(() => []) : Promise.resolve([]);
     try {
       // Look up the latest commit SHA so jsDelivr serves a fresh zones.json.
       // sha.txt on raw.githubusercontent.com has no per-IP rate limit, so try it
@@ -185,6 +197,10 @@ async function listZones() {
         const originals = await originalsPromise;
         const libraryIds = new Set(zones.map(z => String(z.id)));
         zones = zones.concat(originals.filter(z => !libraryIds.has(String(z.id)) && !z.libraryDuplicate));
+        // Partner games (html5games.com, may have ads) go last; ones the library or
+        // GN Originals already have are marked "libraryDuplicate" in their list.
+        const partners = await partnersPromise;
+        zones = zones.concat(partners.filter(z => !libraryIds.has(String(z.id)) && !z.libraryDuplicate));
         if (typeof applyJamPreference === "function") zones = applyJamPreference(zones);
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
@@ -198,7 +214,9 @@ async function listZones() {
             const zone = zones.find(zone => zone.id + '' == id + '');
             if (zone) {
                 if (embed) {
-                    if (zone.url.startsWith("http")) {
+                    if (typeof isPartnerZone === "function" && isPartnerZone(zone)) {
+                        window.location.replace(partnerPlayUrl(zone));
+                    } else if (zone.url.startsWith("http")) {
                         window.open(zone.url, "_blank");
                     } else {
                         fetchWithFallback(zone.url).then(html => {
@@ -242,7 +260,7 @@ async function listZones() {
     } catch (error) {
         console.error(error);
         // The main library is down, but the GN Originals may still work
-        const originals = await originalsPromise;
+        const originals = (await originalsPromise).concat(await partnersPromise);
         if (originals.length) {
             zones = typeof applyJamPreference === "function" ? applyJamPreference(originals) : originals;
             sortZones();
@@ -338,6 +356,7 @@ function createZoneCard(file) {
     zoneItem.onclick = () => openZone(file);
 
     const img = document.createElement("img");
+    if (typeof isPartnerZone === "function" && isPartnerZone(file)) img.dataset.placeholder = coverPlaceholder(file.name);
     setCoverImage(img, file.cover, true);
     img.alt = file.name;
     img.loading = "lazy";
@@ -383,6 +402,12 @@ function createZoneCard(file) {
             flag.title = "A site moderator reported this game as broken. It may not load.";
         }
         badges.appendChild(flag);
+    }
+    // Partner games (html5games.com) may show their publisher's ads, so say so up front
+    if (typeof isPartnerZone === "function" && isPartnerZone(file)) {
+        zoneItem.classList.add("is-partner");
+        badges.classList.add("has-ad");
+        badges.prepend(makeAdBadge());
     }
     if (badges.childElementCount) zoneItem.appendChild(badges);
 
@@ -645,7 +670,28 @@ function openZone(file) {
 
     if (file.url.startsWith("http")) {
         window.open(file.url, "_blank");
+    } else if (typeof isPartnerZone === "function" && isPartnerZone(file)) {
+        // Partner game (html5games.com): plays from Famobi's own site and may show their ads
+        document.getElementById('zoneName').textContent = file.name;
+        document.getElementById('zoneId').textContent = file.id;
+        document.getElementById('zoneAuthor').textContent = "by " + file.author;
+        document.getElementById('zoneAuthor').href = file.authorLink;
+        setPartnerNotice(file);
+        zoneViewer.style.display = "flex";
+        zoneViewer.hidden = false;
+        addRecentZone(file.id);
+        startPlaytime(file.id);
+        currentGameId = String(file.id);
+        updateRatingBar(file.id);
+        if (typeof endGameLoad === "function") endGameLoad(true);
+        try { openPartnerFrame(file); }
+        catch (error) {
+            closeZone();
+            notify(`Couldn't open ${file.name}.`, { type: "error" });
+        }
     } else {
+        if (typeof setPartnerNotice === "function") setPartnerNotice(null);
+        if (typeof resetFrameAfterPartner === "function") resetFrameAfterPartner();
         // Show viewer immediately with a loading indicator
         document.getElementById('zoneName').textContent = file.name;
         document.getElementById('zoneId').textContent = file.id;
@@ -688,6 +734,10 @@ function openZone(file) {
 function aboutBlank() {
     const newWindow = window.open("about:blank", "_blank");
     let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    if (zone && typeof isPartnerZone === "function" && isPartnerZone(zone)) {
+        if (newWindow) newWindow.location.href = partnerPlayUrl(zone);
+        return;
+    }
     fetchWithFallback(zone.url).then(html => {
         if (newWindow) {
             newWindow.document.open();
@@ -721,6 +771,10 @@ function clearZoneIdFromUrl() {
 
 function downloadZone() {
     let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
+    if (zone && typeof isPartnerZone === "function" && isPartnerZone(zone)) {
+        notify("Partner games play from html5games.com, so they can't be downloaded.");
+        return;
+    }
     fetchWithFallback(zone.url).then(text => {
         const blob = new Blob([text], {
             type: "text/plain;charset=utf-8"
@@ -2705,7 +2759,7 @@ function legalPopup(title, html) {
 function loadPrivacy() {
     legalPopup("Privacy Policy", `
         <p><b>Effective October 9, 2026</b></p>
-        <p>This policy explains what GN 2.0 collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), there are no ads or trackers, and we don't sell or share your information.</p>
+        <p>This policy explains what GN 2.0 collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), GN 2.0 adds no ads or trackers, and we don't sell or share your information. The one exception is <b>partner games</b> (marked <span class="ad-badge">AD</span>), which come from html5games.com and may show that site's ads; see below.</p>
 
         <h3>What we collect</h3>
         <p><b>If you just play (no account):</b> nothing is sent to us. Your settings, favorites, recently played games, play time and game progress are saved only in your own browser on your own device.</p>
@@ -2719,14 +2773,24 @@ function loadPrivacy() {
         </ul>
         <p>We do <b>not</b> ask for your email, real name, age, location, contacts, or any other personal details. Please don't put your real name or personal information in your username.</p>
 
-        <h3>No ads or tracking</h3>
-        <p>GN 2.0 doesn't use advertising, analytics or tracking tools. Many game files come with ad code or Google Analytics added by whoever uploaded them; the site removes known ad and tracking code from each game before it runs and blocks it from loading.</p>
+        <h3>No ads or tracking from GN 2.0</h3>
+        <p>GN 2.0 doesn't use advertising, analytics or tracking tools, and doesn't earn money from ads. Many game files come with ad code or Google Analytics added by whoever uploaded them; for every game in the main library and GN Originals, the site removes known ad and tracking code before it runs and blocks it from loading.</p>
+
+        <h3>Partner games (may contain ads)</h3>
+        <p>Some games are <b>partner games</b> from <a href="https://html5games.com/" target="_blank" rel="noopener">html5games.com</a>, made and hosted by <a href="https://famobi.com/" target="_blank" rel="noopener">Famobi</a>. html5games.com lets websites share its games for free on the condition that the games keep their own ads. Partner games are always labelled with an <span class="ad-badge">AD</span> badge on their card and a "May contain ads" notice above the game, and you can hide all of them with the <b>Partner games</b> switch above All games. When you open a partner game:</p>
+        <ul>
+            <li>It loads directly from Famobi's servers (play.famobi.com) in a separate, sandboxed frame. The cover pictures for these games also load from Famobi (img.cdn.famobi.com), so Famobi's servers receive basic technical information such as your IP address and browser type when the covers are shown.</li>
+            <li>The game <b>may show ads</b>, and Famobi and its advertising partners may use cookies or similar technologies, collect device information and show personalized ads, under <b>their</b> privacy policy (linked on famobi.com), not this one. Their consent and ad settings apply inside the game.</li>
+            <li>GN 2.0 doesn't choose, see or get paid for those ads, and doesn't send Famobi your username, account, cloud save or any other information about you. Ads inside a partner game can't be removed by this site.</li>
+            <li>The sandbox lets the game open links in a new tab but stops it from navigating GN 2.0 away. If you see an ad that seems inappropriate, close the game and use the Report button.</li>
+        </ul>
+        <p>Your play time, favorites and ratings for partner games are stored the same way as for every other game (see above).</p>
 
         <h3>Children</h3>
         <p>This site is not directed at children under 13, and we do not knowingly collect personal information from them. If you are under 13, you can still play, but please don't create an account. If we learn an account belongs to someone under 13, we will delete it.</p>
 
         <h3>How we use it</h3>
-        <p>Only to run the features you use: signing in, keeping your progress in sync between devices, and showing game ratings and broken-game warnings. We never use it for advertising or profiling, and we never sell or rent it.</p>
+        <p>Only to run the features you use: signing in, keeping your progress in sync between devices, and showing game ratings and broken-game warnings. We never use it for advertising or profiling, we never sell or rent it, and we don't share it with Famobi or any advertiser.</p>
 
         <h3>Third-party services</h3>
         <p>Like any website, these services receive basic technical information (such as your IP address and browser type) when your browser connects to them:</p>
@@ -2734,6 +2798,7 @@ function loadPrivacy() {
             <li><b>Google Firebase</b> &mdash; accounts, cloud saves, ratings and reports.</li>
             <li><b>GitHub</b> &mdash; serves the site and its settings.</li>
             <li><b>jsDelivr</b> and other content networks &mdash; deliver the game files and images, and provide the public play counts.</li>
+            <li><b>Famobi / html5games.com</b> &mdash; hosts the partner games and their cover pictures, and the ads inside those games (only when partner games are shown or opened).</li>
         </ul>
         <p>Games are made and hosted by third parties. We remove the ad and tracking code we know about, but we can't guarantee every third-party file. Each of these services has its own privacy policy.</p>
 
@@ -2750,11 +2815,11 @@ function loadPrivacy() {
 
 function loadTerms() {
     legalPopup("Terms of Use", `
-        <p><b>Effective October 7, 2026</b></p>
+        <p><b>Effective October 9, 2026</b></p>
         <p>By using GN 2.0 you agree to these terms. If you don't agree, please don't use the site.</p>
 
         <h3>Games and content</h3>
-        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
+        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. Games marked <span class="ad-badge">AD</span> are <b>partner games</b> from html5games.com (Famobi): they are linked, not copied, load from Famobi's servers under Famobi's own terms, and may show Famobi's ads, which GN 2.0 doesn't control or profit from. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
 
         <h3>Using the site</h3>
         <ul>
@@ -2799,6 +2864,10 @@ function loadDMCA() {
                 <b>GN Originals</b> are open-source games copied, with their licenses, into
                 <a href="https://github.com/SCHSwork/GN-originals" target="_blank" rel="noopener">github.com/SCHSwork/GN-originals</a>.
                 To have one of those removed or its credit corrected, open an issue on that repository.
+            </p>
+            <p>
+                <b>Partner games</b> (marked AD) aren't copied here at all; they're linked from html5games.com and
+                play from Famobi's servers. To have one removed from this list, use the email above.
             </p>
         </div>
     `;
@@ -2881,6 +2950,8 @@ function showZoneInfo() {
     document.getElementById('popupOverlay').style.display = "flex";
     const original = typeof isOriginalZone === "function" && isOriginalZone(id) ? zones.find(z => Number(z.id) === id) : null;
     if (original) { showOriginalInfo(original); return; }
+    const partner = typeof isPartnerZone === "function" && isPartnerZone(id) ? zones.find(z => Number(z.id) === id) : null;
+    if (partner) { showPartnerInfo(partner); return; }
     fetch(`https://api.github.com/repos/freebuisness/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
         let stats = await getStats (id);
         idjson = zones.filter(a=>a.id===id)[0]

@@ -56,6 +56,7 @@ function zoneGenres(zone) {
     return set;
 }
 function zoneSource(zone) {
+    if (typeof isPartnerZone === "function" && isPartnerZone(zone)) return "partner";
     if (typeof isOriginalZone === "function" && isOriginalZone(zone)) return (zone.special || []).includes("js13k") ? "js13k" : "originals";
     return "library";
 }
@@ -110,7 +111,7 @@ function updateFilterCounts() {
     const srcSel = document.getElementById("sourceOptions");
     if (srcSel) {
         const count = s => visible.filter(z => zoneSource(z) === s).length;
-        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})` };
+        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})`, partner: `Partner games, may have ads (${count("partner")})` };
         for (const o of srcSel.options) if (labels[o.value]) o.textContent = labels[o.value];
     }
 }
@@ -129,10 +130,25 @@ const HIDE_JAM_KEY = "gnmath-hide-jam-games";
 let ZONES_ALL = null;
 function isJamGame(z) { return (z.special || []).includes("js13k"); }
 function getHideJam() { try { return localStorage.getItem(HIDE_JAM_KEY) === "true"; } catch { return false; } }
+// The games left after the jam and partner switches
+function visibleBySwitches(list) {
+    const hideJam = getHideJam();
+    const hidePartner = typeof getHidePartner === "function" && getHidePartner();
+    return list.filter(z => !(hideJam && isJamGame(z)) && !(hidePartner && typeof isPartnerZone === "function" && isPartnerZone(z)));
+}
 function applyJamPreference(list) {
     ZONES_ALL = list;
     updateJamToggle();
-    return getHideJam() ? list.filter(z => !isJamGame(z)) : list.slice();
+    if (typeof updatePartnerToggle === "function") updatePartnerToggle();
+    return visibleBySwitches(list);
+}
+// Redraw everything after one of the switches changes
+function refreshVisibleZones() {
+    if (!ZONES_ALL) return;
+    zones = visibleBySwitches(ZONES_ALL);
+    featuredContainer.innerHTML = "";
+    sortZones();
+    if (typeof renderGameOfTheDay === "function") renderGameOfTheDay();
 }
 function updateJamToggle() {
     const btn = document.getElementById("jamToggle");
@@ -149,14 +165,9 @@ function updateJamToggle() {
 function toggleJamGames() {
     const hide = !getHideJam();
     try { localStorage.setItem(HIDE_JAM_KEY, hide ? "true" : "false"); } catch {}
-    if (ZONES_ALL) {
-        zones = hide ? ZONES_ALL.filter(z => !isJamGame(z)) : ZONES_ALL.slice();
-        const src = document.getElementById("sourceOptions");
-        if (hide && src && src.value === "js13k") src.value = "all";
-        featuredContainer.innerHTML = "";
-        sortZones();
-        if (typeof renderGameOfTheDay === "function") renderGameOfTheDay();
-    }
+    const src = document.getElementById("sourceOptions");
+    if (hide && src && src.value === "js13k") src.value = "all";
+    refreshVisibleZones();
     updateJamToggle();
     notify(hide ? "Game jam games are hidden. Turn them back on above All games." : "Game jam games are shown again.", { type: "success" });
 }
