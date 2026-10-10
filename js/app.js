@@ -608,6 +608,14 @@ function isObfuscatedAdScript(code) {
 
 function cleanGameHtml(html) {
     if (typeof html !== "string") return html;
+    // Some library files contain the whole page twice, one after the other. The
+    // game then starts twice on the same canvas and crashes (Unity: "null function"),
+    // so keep only the first copy.
+    const firstEnd = html.search(/<\/html\s*>/i);
+    if (firstEnd !== -1 && /<html\b/i.test(html.slice(firstEnd))) {
+        html = html.slice(0, firstEnd) + "</html>";
+        console.info("Removed a duplicated copy of the game page");
+    }
     let removed = 0;
     let out = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (whole, attrs, code) => {
         const src = (attrs.match(/\bsrc\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
