@@ -8,6 +8,7 @@ All the changes to GN 2.0, newest first.
 - Your account name no longer shows up in the search box when the site opens. Some browsers ignored the earlier fix, so the search boxes now stay locked until you click or tap into them, and any text the browser adds before you type is cleared.
 
 ### New
+- **Two GitHub Game Off games**: Strider (side-scrolling action) and Escape Space (a brick-breaking puzzle game).
 - **Admin Panel** (Settings → Admin Panel, or 🛡️ in your Account panel if you're an admin; admins get a blue dot on the account button). It lists every account with when it joined, when it was last seen, and its ratings, reports and submissions, with search and filters. For each account an admin can:
   - make or remove a **game admin**;
   - make or remove a **trusted reporter** (needs the owner's GitHub token on that browser);
