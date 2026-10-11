@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+
+## October 11, 2026
+
+### Fixed
+- **Blocked a malicious script in the game library.** Early on October 11 the outside game library was changed so every game included a hidden ad script that could change your tab title and show a popup asking you to install an "EZ Block" extension (don't install it). GN 2.0 now loads library games from the last clean version of the library (October 10), and refuses to run any game file that contains that script.
+
 ## October 9, 2026
 
 ### New
