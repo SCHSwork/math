@@ -742,7 +742,7 @@ function openZone(file) {
         }).catch(error => {
             endGameLoad(true);
             closeZone();
-            if (error && error.blocked) notify(`${file.name} was blocked because its game file contains a known malicious script.`, { type: "error" });
+            if (error && error.blocked) notify(`${file.name} was blocked to keep you safe. Its game files were found to contain malicious code (added to the outside game library on October 11), so it can't be played right now.`, { type: "error", duration: 9000 });
             else notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
         });
     }
