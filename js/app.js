@@ -19,6 +19,18 @@ const coverURL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
 // Before moving this to a newer version, check it doesn't contain that script.
 const LIBRARY_REF = "48c0631289237dd2e9e202fde532edfae4ed2acf";
 const htmlURL = `https://cdn.jsdelivr.net/gh/freebuisness/html@${LIBRARY_REF}`;
+// The game files that exist in that clean version (config/library-pinned.json).
+// Games the library adds later aren't in it, so they're hidden instead of failing.
+const pinnedFilesPromise = fetch("config/library-pinned.json")
+    .then(r => r.ok ? r.json() : null)
+    .then(j => j && j.ref === LIBRARY_REF && Array.isArray(j.files) ? new Set(j.files) : null)
+    .catch(() => null);
+function pinnedFileForId(files, id) {
+    const re = new RegExp("^" + String(id).replace(/\D/g, "") + "(?:[-.]|$)");
+    const fix = n => Number((n.match(/-fix(\d*)/) || [0, -1])[1] || (/-fix/.test(n) ? 1 : 0));
+    const list = [...files].filter(n => re.test(n) && String(id).replace(/\D/g, "")).sort((a, b) => fix(b) - fix(a));
+    return list[0] || null;
+}
 const htmlURLFallbacks = [
     `https://raw.githubusercontent.com/freebuisness/html/${LIBRARY_REF}`
 ];
@@ -190,9 +202,18 @@ async function listZones() {
         const json = await loadZoneList(sha);
         // Drop upstream promo tiles: "[!] ..." entries (Discord, comments, etc.),
         // anything named comments, and anything linking to Discord.
+        const pinnedFiles = await pinnedFilesPromise;
         zones = json.filter(z => {
             const name = (z.name || "").trim();
-            return !/^\[!\]/.test(name) && !/comment|discord/i.test(name) && !/discord\.(gg|com)/i.test(z.url || "");
+            if (/^\[!\]/.test(name) || /comment|discord/i.test(name) || /discord\.(gg|com)/i.test(z.url || "")) return false;
+            // Library games must have a file in the clean pinned version. If the newest
+            // list renamed a game's file (e.g. 320-fix2.html → 320-fix3.html), use that
+            // game's file from the clean version; games added after it are hidden.
+            const file = String(z.url || "").match(/^\{HTML_URL\}\/?(.+)$/);
+            if (!pinnedFiles || !file || pinnedFiles.has(file[1])) return true;
+            const alt = pinnedFileForId(pinnedFiles, z.id);
+            if (alt) { z.url = "{HTML_URL}/" + alt; return true; }
+            return false;
         });
         // Add the GN Originals (open-source games) after the main library. An original
         // marked "libraryDuplicate" in games.json is the same game as one the library
