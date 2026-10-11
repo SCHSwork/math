@@ -13,11 +13,14 @@ const zonesurls = [
 ];
 let zonesURL = zonesurls[Math.floor(Math.random() * zonesurls.length)];
 const coverURL = "https://cdn.jsdelivr.net/gh/freebuisness/covers@main";
-const htmlURL = "https://cdn.jsdelivr.net/gh/freebuisness/html@main";
+// The game library is pinned to a checked version. On Oct 11, 2026 every game
+// file in the library's newest version had a malicious ad script added
+// (commit ee1a41a), so games load from the last clean version instead.
+// Before moving this to a newer version, check it doesn't contain that script.
+const LIBRARY_REF = "48c0631289237dd2e9e202fde532edfae4ed2acf";
+const htmlURL = `https://cdn.jsdelivr.net/gh/freebuisness/html@${LIBRARY_REF}`;
 const htmlURLFallbacks = [
-    "https://cdn.jsdelivr.net/gh/freebuisness/html@latest",
-    "https://cdn.jsdelivr.net/gh/freebuisness/html",
-    "https://raw.githubusercontent.com/freebuisness/html/main"
+    `https://raw.githubusercontent.com/freebuisness/html/${LIBRARY_REF}`
 ];
 // ── Redundancy: every game-library file can come from three places ─────────
 // jsDelivr (fast CDN) → GitHub directly → githack (another CDN). A source that
@@ -606,8 +609,13 @@ function isObfuscatedAdScript(code) {
     return hexCalls >= 25 && markers;
 }
 
+// Markers of the malicious script found in the game library on Oct 11, 2026.
+// A game file containing them is never run.
+const BAD_GAME_MARKERS = [/data-r=["']c7a94e["']/i, /xa0f20fba9693cbb2c66516f1/, /__gnGameAd/];
+function isKnownBadGame(html) { return typeof html === "string" && BAD_GAME_MARKERS.some(re => re.test(html)); }
 function cleanGameHtml(html) {
     if (typeof html !== "string") return html;
+    if (isKnownBadGame(html)) { const e = new Error("This game file contains a known malicious script"); e.blocked = true; throw e; }
     // Some library files contain the whole page twice, one after the other. The
     // game then starts twice on the same canvas and crashes (Unity: "null function"),
     // so keep only the first copy.
@@ -652,7 +660,7 @@ async function fetchWithFallback(rawUrl) {
     const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "").replace(/^\//, "");
     const isHtml = rawUrl.includes("{HTML_URL}");
     const candidates = isHtml
-        ? [...mirrorUrls("freebuisness", "html", "main", suffix), `${htmlURLFallbacks[0]}/${suffix}`]
+        ? mirrorUrls("freebuisness", "html", LIBRARY_REF, suffix)
         : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
     const html = await fetchFirst(candidates, { timeoutMs: 30000, validate: res => res.text() });
     return rewriteForMirrors(cleanGameHtml(html));
@@ -734,7 +742,8 @@ function openZone(file) {
         }).catch(error => {
             endGameLoad(true);
             closeZone();
-            notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
+            if (error && error.blocked) notify(`${file.name} was blocked because its game file contains a known malicious script.`, { type: "error" });
+            else notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
         });
     }
 }
