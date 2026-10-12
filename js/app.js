@@ -4,6 +4,38 @@ let zoneFrame = document.getElementById('zoneFrame');
 const searchBar = document.getElementById('searchBar');
 const sortOptions = document.getElementById('sortOptions');
 const filterOptions = document.getElementById('filterOptions');
+
+// ── Speed helpers for the game grid ─────────────────────────────────────────
+// Building ~2,000 cards used to re-read and re-parse favorites, play time and
+// hidden games from localStorage several times per card (10,000+ parses per
+// redraw). While cards are being built, each of those is read once and reused.
+let cardCache = null;
+function withCardCache(fn) {
+    if (cardCache) return fn();
+    cardCache = {};
+    try { return fn(); } finally { cardCache = null; }
+}
+function cardCached(key, read) {
+    if (!cardCache) return read();
+    if (!(key in cardCache)) cardCache[key] = read();
+    return cardCache[key];
+}
+const compactNumber = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
+
+// Ratings, play counts and the partner-games check all finish at different times
+// in the first few seconds. Each one used to redraw every card, so slow
+// computers froze 3-5 times in a row, often right as a game was starting.
+// Now they share one redraw, and nothing is redrawn while a game is open.
+let refreshTimer = null, refreshWaitingForGame = false;
+function scheduleFullRefresh() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+        if (zoneViewer.style.display === "flex") { refreshWaitingForGame = true; return; }
+        refreshWaitingForGame = false;
+        if (typeof refreshVisibleZones === "function" && typeof ZONES_ALL !== "undefined" && ZONES_ALL) refreshVisibleZones();
+        else { featuredContainer.innerHTML = ""; sortZones(); }
+    }, 400);
+}
 // https://www.jsdelivr.com/tools/purge
 const zonesurls = [
     "https://cdn.jsdelivr.net/gh/freebuisness/assets@main/zones.json",
@@ -229,7 +261,10 @@ async function listZones() {
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
         sortZones();
-        if (!popularityFresh) refreshPopularity().then(() => { featuredContainer.innerHTML = ""; sortZones(); });
+        // New play counts only change the page when sorting by them or showing them
+        if (!popularityFresh) refreshPopularity().then(() => {
+            if (/^(popular|trending)/.test(sortOptions.value) || getShowPlayCount()) scheduleFullRefresh();
+        });
         try {
         const search = new URLSearchParams(window.location.search);
         const id = search.get('id');
@@ -441,9 +476,9 @@ function createZoneCard(file) {
     if (played >= 60) metaParts.push("⏱ " + formatPlaytime(played));
     const votes = stats.up + stats.down;
     if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(`👍 ${Math.round(stats.up / votes * 100)}%`);
-    if (getShowPlayCount()) {
+    if (cardCached("showPlays", getShowPlayCount)) {
         const plays = (popularityData['year']?.[file.id]) ?? 0;
-        if (plays > 0) metaParts.push(`${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(plays)} plays`);
+        if (plays > 0) metaParts.push(`${compactNumber.format(plays)} plays`);
     }
     if (metaParts.length) {
         const meta = document.createElement("div");
@@ -455,25 +490,36 @@ function createZoneCard(file) {
     return zoneItem;
 }
 
+// One shared watcher for every card picture. Each redraw used to make a new one
+// and never stop the old ones, so they piled up and kept every old card in memory.
+let lazyImageObserver = null;
+function getLazyImageObserver() {
+    if (!lazyImageObserver) {
+        lazyImageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !zoneViewer.hidden) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove("lazy-zone-img");
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: "100px", threshold: 0.1 });
+    }
+    return lazyImageObserver;
+}
+function observeLazyImages(imgs) {
+    const observer = getLazyImageObserver();
+    imgs.forEach(img => observer.observe(img));
+}
 function observeLazyZoneImages(selector) {
-    const lazyImages = document.querySelectorAll(selector);
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && !zoneViewer.hidden) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove("lazy-zone-img");
-                observer.unobserve(img);
-            }
-        });
-    }, {
-        rootMargin: "100px", 
-        threshold: 0.1
-    });
-
-    lazyImages.forEach(img => {
-        imageObserver.observe(img);
-    });
+    observeLazyImages(document.querySelectorAll(selector));
+}
+// Empty a card area, letting go of the pictures it was watching
+function clearCards(el) {
+    if (!el) return;
+    if (lazyImageObserver) el.querySelectorAll("img.lazy-zone-img").forEach(img => lazyImageObserver.unobserve(img));
+    el.innerHTML = "";
 }
 
 function setSectionTitle(el, title, count) {
@@ -488,7 +534,7 @@ function setSectionTitle(el, title, count) {
 }
 
 function displayFeaturedZones(featuredZones) {
-    featuredContainer.innerHTML = "";
+    clearCards(featuredContainer);
     const visibleFeaturedZones = featuredZones.filter(file => !isZoneDisabled(file.id));
     visibleFeaturedZones.forEach(file => {
         featuredContainer.appendChild(createZoneCard(file));
@@ -502,19 +548,46 @@ function displayFeaturedZones(featuredZones) {
     observeLazyZoneImages('#featuredZones img.lazy-zone-img');
     if (typeof renderOriginalsShelf === "function") renderOriginalsShelf();
 }
+// All games is drawn in pieces: the first screenful right away, the rest in
+// small batches whenever the browser has a spare moment, so the page never
+// locks up building ~2,000 cards in one go. A newer draw cancels an older one.
+const FIRST_CARD_BATCH = 48;
+let zonesDrawId = 0;
 function displayZones(zones) {
-    container.innerHTML = "";
+    const drawId = ++zonesDrawId;
+    clearCards(container);
     const visibleZones = zones.filter(file => !isZoneDisabled(file.id));
-    visibleZones.forEach(file => {
-        container.appendChild(createZoneCard(file));
-    });
-    if (container.innerHTML === "") {
+    if (!visibleZones.length) {
         container.textContent = "No games found.";
-    } else {
-        setSectionTitle(document.getElementById("allSummary"), "All games", visibleZones.length);
+        return;
     }
+    setSectionTitle(document.getElementById("allSummary"), "All games", visibleZones.length);
 
-    observeLazyZoneImages('img.lazy-zone-img');
+    let next = 0;
+    const addCards = (shouldStop) => withCardCache(() => {
+        const frag = document.createDocumentFragment();
+        const imgs = [];
+        let built = 0;
+        while (next < visibleZones.length && !shouldStop(built)) {
+            const card = createZoneCard(visibleZones[next++]);
+            const img = card.querySelector("img.lazy-zone-img");
+            if (img) imgs.push(img);
+            frag.appendChild(card);
+            built++;
+        }
+        container.appendChild(frag);
+        observeLazyImages(imgs);
+    });
+    addCards(built => built >= FIRST_CARD_BATCH);
+
+    const idle = window.requestIdleCallback || (cb => setTimeout(() => cb({ timeRemaining: () => 8 }), 16));
+    const step = deadline => {
+        if (drawId !== zonesDrawId || next >= visibleZones.length) return;
+        // At least a few cards per step so it always finishes, more when the browser is free
+        addCards(built => built >= 12 && deadline.timeRemaining() < 3);
+        if (next < visibleZones.length) idle(step);
+    };
+    idle(step);
 }
 
 // ── Search ──────────────────────────────────────────────────────────────────
@@ -794,6 +867,8 @@ function closeZone() {
     zoneViewer.style.display = "none";
     if (zoneFrame && zoneFrame.parentNode === zoneViewer) zoneViewer.removeChild(zoneFrame);
     clearZoneIdFromUrl();
+    // Catch up on a redraw that was held back while the game was open
+    if (refreshWaitingForGame) scheduleFullRefresh();
 }
 
 // Old links/history entries may still carry ?id=… — strip it so the address bar
@@ -1020,7 +1095,7 @@ function setDisabledZoneIds(disabledIds) {
 }
 
 function isZoneDisabled(zoneId) {
-    return getDisabledZoneIds().has(String(zoneId));
+    return cardCached("disabled", getDisabledZoneIds).has(String(zoneId));
 }
 
 function setZoneDisabled(zoneId, isDisabled) {

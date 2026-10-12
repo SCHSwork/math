@@ -148,7 +148,8 @@ function checkPartnerReachable(list) {
         clearTimeout(timer);
         if (ok || partnerBlocked) return;
         partnerBlocked = true;
-        if (typeof refreshVisibleZones === "function") refreshVisibleZones();
+        if (typeof scheduleFullRefresh === "function") scheduleFullRefresh();
+        else if (typeof refreshVisibleZones === "function") refreshVisibleZones();
         updatePartnerToggle();
     };
     const timer = setTimeout(() => finish(false), 10000);
