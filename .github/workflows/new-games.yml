@@ -1,0 +1,33 @@
+# Checks the game library every few hours for games added after its clean
+# version, and opens (or updates) a GitHub issue so the owner and admins get notified.
+name: New library games
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find new games
+        run: python3 tools/check_new_games.py > body.md
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -s new-games-ids.txt ]; then echo "No new games"; exit 0; fi
+          gh label create new-library-games --color fc2651 --description "Games added to the library that need checking" 2>/dev/null || true
+          num=$(gh issue list --label new-library-games --state open --json number --jq '.[0].number')
+          ids=$(tr '\n' ',' < new-games-ids.txt)
+          if [ -z "$num" ]; then
+            gh issue create --title "New games in the library need checking" --label new-library-games --body-file body.md
+          else
+            old=$(gh issue view "$num" --json body --jq .body | grep -oE '^\| [0-9]+ ' | tr -dc '0-9\n' | sort -n | tr '\n' ',')
+            now=$(tr '\n' ',' < new-games-ids.txt | tr ',' '\n' | sort -n | tr '\n' ',')
+            gh issue edit "$num" --body-file body.md
+            if [ "$old" != "$now" ]; then gh issue comment "$num" --body "The list changed: there are now $(wc -l < new-games-ids.txt | tr -d ' ') games to check (see the updated list above)."; fi
+          fi

@@ -57,6 +57,9 @@ const pinnedFilesPromise = fetch("config/library-pinned.json")
     .then(r => r.ok ? r.json() : null)
     .then(j => j && j.ref === LIBRARY_REF && Array.isArray(j.files) ? new Set(j.files) : null)
     .catch(() => null);
+// Games the library added after the clean version. They're hidden, and admins
+// and the owner are told about them so each one can be checked (admin.js).
+let newLibraryGames = [];
 function pinnedFileForId(files, id) {
     const re = new RegExp("^" + String(id).replace(/\D/g, "") + "(?:[-.]|$)");
     const fix = n => Number((n.match(/-fix(\d*)/) || [0, -1])[1] || (/-fix/.test(n) ? 1 : 0));
@@ -245,8 +248,10 @@ async function listZones() {
             if (!pinnedFiles || !file || pinnedFiles.has(file[1])) return true;
             const alt = pinnedFileForId(pinnedFiles, z.id);
             if (alt) { z.url = "{HTML_URL}/" + alt; return true; }
+            newLibraryGames.push({ id: z.id, name, file: file[1], author: z.author || "" });
             return false;
         });
+        if (typeof notifyNewLibraryGames === "function") notifyNewLibraryGames();
         // Add the GN Originals (open-source games) after the main library. An original
         // marked "libraryDuplicate" in games.json is the same game as one the library
         // already has (checked by hand, not by name), so it's only shown if the library is down.

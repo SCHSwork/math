@@ -110,6 +110,7 @@ async function openAdminPanel() {
         <div class="admin-tabs" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
+            <button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>
         </div>
         <div id="admin-accounts">
             <div class="admin-toolbar">
@@ -126,11 +127,14 @@ async function openAdminPanel() {
             <div id="admin-list" class="admin-list"></div>
             <p class="admin-footnote">Passwords and cloud saves are private, even from admins. To delete an account completely or reset a password, use the Firebase console (Authentication → Users). Accounts show up here after they next visit the site.</p>
         </div>
-        <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>`;
+        <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
+        <div id="admin-newgames" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
         document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
+        document.getElementById("admin-newgames").hidden = b.dataset.tab !== "newgames";
+        if (b.dataset.tab === "newgames") renderNewLibraryGames();
         if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
     });
     document.getElementById("admin-search").addEventListener("input", renderAdminList);
@@ -315,4 +319,46 @@ async function adminRemoveStats(uid) {
         if (Object.keys(update).length) await d.ref.set(update, { merge: true });
     }
     return n;
+}
+
+
+// ── New library games ───────────────────────────────────────────────────────
+// The game library is pinned to its last clean version (October 10, 2026), so
+// games it adds later are hidden. Admins and the owner get a notice when new
+// ones appear, so each can be checked and added safely (e.g. to GN Originals).
+const NEW_GAMES_SEEN_KEY = "gnmath-new-library-games-checked";
+function checkedNewGames() { try { return new Set(JSON.parse(localStorage.getItem(NEW_GAMES_SEEN_KEY) || "[]")); } catch { return new Set(); } }
+function setCheckedNewGames(set) { try { localStorage.setItem(NEW_GAMES_SEEN_KEY, JSON.stringify([...set])); } catch {} }
+function unreviewedNewGames() {
+    const seen = checkedNewGames();
+    return (typeof newLibraryGames !== "undefined" ? newLibraryGames : []).filter(g => !seen.has(String(g.id)));
+}
+function isOwnerBrowser() { try { return !!localStorage.getItem("gnmath-owner-github-pat"); } catch { return false; } }
+let newGamesNoticeShown = false;
+function notifyNewLibraryGames() {
+    // Wait until we know whether this is an admin (accounts load after the game list)
+    setTimeout(() => {
+        if (newGamesNoticeShown) return;
+        if (!(isOwnerBrowser() || (typeof isSiteAdmin === "function" && isSiteAdmin()))) return;
+        const list = unreviewedNewGames();
+        if (!list.length) return;
+        newGamesNoticeShown = true;
+        notify(`${list.length} new game${list.length === 1 ? " was" : "s were"} added to the game library and ${list.length === 1 ? "is" : "are"} hidden until checked: ${list.slice(0, 3).map(g => g.name).join(", ")}${list.length > 3 ? "…" : ""}. See Admin Panel → New library games.`, { type: "info", duration: 12000 });
+    }, 4000);
+}
+function renderNewLibraryGames() {
+    const box = document.getElementById("admin-newgames");
+    if (!box) return;
+    const all = typeof newLibraryGames !== "undefined" ? newLibraryGames : [];
+    const seen = checkedNewGames();
+    if (!all.length) { box.innerHTML = `<p class="admin-summary">No new library games. Everything in the library's game list is in the clean version.</p>`; return; }
+    box.innerHTML = `<p class="admin-summary">${all.length} game${all.length === 1 ? "" : "s"} added to the library after its last clean version (October 10). They're hidden from players because every newer library version contains the malicious ad script. Check each one (for example, whether it can be loaded from its original source) before adding it to GN Originals.</p>
+        <div class="admin-list">${all.map(g => `<div class="newgame-row"><div><b>${escapeHtmlText(g.name)}</b><div class="newgame-meta">Library id ${escapeHtmlText(String(g.id))} · ${escapeHtmlText(g.file)}${g.author ? " · by " + escapeHtmlText(g.author) : ""}</div></div>
+            <button type="button" class="newgame-btn" data-newgame="${escapeHtmlText(String(g.id))}">${seen.has(String(g.id)) ? "Checked ✓" : "Mark checked"}</button></div>`).join("")}</div>
+        <p class="admin-footnote">"Mark checked" only hides the notice on this browser; it doesn't add the game.</p>`;
+    box.querySelectorAll("[data-newgame]").forEach(b => b.onclick = () => {
+        const set = checkedNewGames(), id = b.dataset.newgame;
+        set.has(id) ? set.delete(id) : set.add(id);
+        setCheckedNewGames(set); renderNewLibraryGames();
+    });
 }
