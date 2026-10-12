@@ -232,7 +232,7 @@ document.getElementById("filterOptions")?.addEventListener("change", updateFilte
 
 // ── Favorites ───────────────────────────────────────────────────────────────
 function getFavorites() { const f = readJson(LIB_KEYS.favorites, []); return Array.isArray(f) ? f.map(String) : []; }
-function isFavorite(id) { return getFavorites().includes(String(id)); }
+function isFavorite(id) { return cardCached("favorites", () => new Set(getFavorites())).has(String(id)); }
 function toggleFavorite(id) {
     const favs = getFavorites();
     const key = String(id);
@@ -254,7 +254,7 @@ function addRecentZone(id) {
 function fillShelf(gridId, ids) {
     const grid = document.getElementById(gridId);
     const items = ids.map(zoneById).filter(z => z && !isZoneDisabled(z.id));
-    grid.innerHTML = "";
+    clearCards(grid);
     items.forEach(z => grid.appendChild(createZoneCard(z)));
     observeLazyZoneImages(`#${gridId} img.lazy-zone-img`);
     return items.length;
@@ -299,7 +299,7 @@ function refreshCards() {
 // ── Play time ───────────────────────────────────────────────────────────────
 let playSession = null;
 function getPlaytimeMap() { const m = readJson(LIB_KEYS.playtime, {}); return m && typeof m === "object" ? m : {}; }
-function getPlaytime(id) { return Number(getPlaytimeMap()[String(id)]) || 0; }
+function getPlaytime(id) { return Number(cardCached("playtime", getPlaytimeMap)[String(id)]) || 0; }
 function formatPlaytime(sec) {
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
     return h ? `${h}h ${m}m` : `${Math.max(1, m)}m`;
@@ -531,7 +531,7 @@ async function loadGameStats({ force = false } = {}) {
         });
         writeJson(LIB_KEYS.statsCache, { t: Date.now(), raw });
         gameStats = summarizeStats(raw);
-        refreshCards();
+        scheduleFullRefresh();
         const open = document.getElementById("zoneId")?.textContent;
         if (open && zoneViewer.style.display === "flex") updateRatingBar(open);
     } catch (e) {
@@ -640,3 +640,11 @@ gameStats = summarizeStats((readJson(LIB_KEYS.statsCache, {}) || {}).raw || {});
     if (tries > 0) setTimeout(() => waitForDb(tries - 1), 500);
 })(40);
 setInterval(() => { if (!document.hidden) loadGameStats(); }, STATS_CACHE_MS);
+
+// Every full redraw reads favorites, play time and hidden games once instead of
+// once per card (see withCardCache in app.js).
+["sortZones", "applyFilters", "displayFeaturedZones", "renderPersonalRows", "refreshCards", "renderOriginalsShelf"].forEach(name => {
+    const original = window[name];
+    if (typeof original !== "function") return;
+    window[name] = function (...args) { return withCardCache(() => original.apply(this, args)); };
+});
