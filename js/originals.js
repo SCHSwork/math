@@ -106,7 +106,7 @@ function renderOriginalsShelf() {
     // their own "js13k" tag and in All games, so the row stays quick to scan.
     const list = zones.filter(z => isOriginalZone(z) && !isZoneDisabled(z.id) && !(z.special || []).includes("js13k"))
         .sort((a, b) => a.name.localeCompare(b.name));
-    shelf.innerHTML = "";
+    if (typeof clearCards === "function") clearCards(shelf); else shelf.innerHTML = "";
     list.forEach(z => shelf.appendChild(createZoneCard(z)));
     wrap.hidden = list.length === 0;
     if (typeof setSectionTitle === "function") setSectionTitle(document.getElementById("originalsSummary"), "GN Originals", list.length);

@@ -3,6 +3,16 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 12, 2026
+
+### Fixed
+- **The site no longer freezes right after it opens on slow computers like school Chromebooks.** In the first few seconds, play counts, ratings and the partner-games check each finished at different times, and each one rebuilt every game card on the page. That froze slower computers 3 to 5 times in a row, often just as you clicked a game. Now:
+  - they share one redraw, and nothing is redrawn while a game is open (it catches up when you close the game);
+  - All games draws the first screenful right away and the rest in small pieces when the browser is free;
+  - favorites, play time and hidden games are read once per redraw instead of several times per card;
+  - card pictures share one watcher instead of piling up a new one every redraw.
+  On a computer slowed down to Chromebook speed, freezing in the first 15 seconds dropped from 3.7 s to 1.2 s, and the longest single freeze from about 1 s to 0.3 s.
+
 ## October 11, 2026
 
 ### Fixed
