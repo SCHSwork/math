@@ -13,6 +13,11 @@ All the changes to GN 2.0, newest first.
   - card pictures share one watcher instead of piling up a new one every redraw.
   On a computer slowed down to Chromebook speed, freezing in the first 15 seconds dropped from 3.7 s to 1.2 s, and the longest single freeze from about 1 s to 0.3 s.
 
+## October 12, 2026
+
+### New
+- **Alerts for new library games.** When the game library adds a game that isn't in its clean version, admins and the owner get a notice when they open the site, and a new **New library games** tab in the Admin Panel lists them with a "Mark checked" button. A GitHub Action also checks every 6 hours and opens a GitHub issue on this repo (so the owner gets a GitHub notification) listing the games to check.
+
 ## October 11, 2026
 
 ### Fixed
