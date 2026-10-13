@@ -9,6 +9,7 @@ const ORIGINALS_REPO = { owner: "SCHSwork", repo: "GN-originals", ref: "main" };
 const ORIGINALS_CACHE_KEY = "gnmath-cache-originals";
 const ORIGINALS_ID_BASE = 100000;
 const ORIGINALS_TAG = "originals";
+let originalsState = "loading"; // live | cache | failed (read by the status indicator)
 const GH_URL_RE = /^gh:([\w.-]+)\/([\w.-]+)@([\w.-]+)\/([^\s?#]+)$/i;
 function originalsUrl(path) {
     return `gh:${ORIGINALS_REPO.owner}/${ORIGINALS_REPO.repo}@${ORIGINALS_REPO.ref}/${String(path).replace(/^\/+/, "")}`;
@@ -53,9 +54,11 @@ async function loadOriginals() {
             }
         });
         try { localStorage.setItem(ORIGINALS_CACHE_KEY, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
+        originalsState = "live";
     } catch (err) {
         try { list = JSON.parse(localStorage.getItem(ORIGINALS_CACHE_KEY))?.data; } catch (e) {}
-        if (!Array.isArray(list)) { console.warn("GN Originals list unavailable", err); return []; }
+        if (!Array.isArray(list)) { originalsState = "failed"; console.warn("GN Originals list unavailable", err); return []; }
+        originalsState = "cache";
     }
     return list
         .filter(z => z && isOriginalZone(z.id) && z.name && typeof z.path === "string" && !/\.\./.test(z.path))
