@@ -69,6 +69,8 @@ function collectStatusChecks() {
         });
     }
 
+    if (typeof syncPaceSummary === "function") checks.push({ name: "Live updates", ...syncPaceSummary() });
+
     checks.push({ name: "Game protection", level: "ok", detail: "Library locked to the checked, clean version" });
     return checks;
 }
