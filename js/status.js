@@ -73,6 +73,13 @@ function collectStatusChecks() {
     return checks;
 }
 
+// Sources marked down earlier get re-checked (at most once a minute each), so
+// the light matches what's actually reachable right now.
+function recheckDownMirrors() {
+    if (typeof mirrorDown === "undefined" || typeof suspectMirror !== "function") return;
+    for (const name of [...mirrorDown]) suspectMirror(name);
+}
+
 function computeSiteStatus() {
     const checks = collectStatusChecks();
     const override = typeof getStatusOverride === "function" ? getStatusOverride() : { level: "auto", text: "" };
@@ -149,6 +156,7 @@ function updateSiteStatus() {
     const fh = footer && getComputedStyle(footer).position === "fixed" ? footer.offsetHeight : 0;
     pill.style.bottom = (fh + 12) + "px";
 
+    recheckDownMirrors();
     const s = computeSiteStatus();
     pill.dataset.level = s.level;
     pill.querySelector(".status-text").textContent = s.headline;

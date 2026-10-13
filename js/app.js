@@ -89,6 +89,28 @@ function markMirror(name, ok) {
         console.info(`Game source ${name} is ${ok ? "back up" : "unavailable"}`);
     }
 }
+// A picture that won't load may just be missing (a 404), not a source that's
+// down, so instead of marking the source down, check it with a tiny file.
+// Also used to re-check sources marked down earlier, so one short blip
+// doesn't count as "down" for the rest of the visit.
+const mirrorProbeAt = {};
+async function probeMirror(name) {
+    if (!MIRRORS[name]) return null;
+    mirrorProbeAt[name] = Date.now();
+    const url = MIRRORS[name]("SCHSwork", "math", "main", "config/library-pinned.json") + "?probe=" + Date.now();
+    try {
+        await fetchFirst([url], { timeoutMs: 8000, track: false, validate: async r => { await r.json(); return true; } });
+        markMirror(name, true);
+        return true;
+    } catch (err) {
+        if (!/^HTTP 404/.test(err.message)) markMirror(name, false);
+        return false;
+    }
+}
+function suspectMirror(name) {
+    if (!name || Date.now() - (mirrorProbeAt[name] || 0) < 60000) return;
+    probeMirror(name);
+}
 function mirrorUrls(owner, repo, ref, path) {
     const order = ["jsdelivr", "github", "githack"];
     order.sort((a, b) => mirrorDown.has(a) - mirrorDown.has(b)); // working sources first
@@ -146,7 +168,7 @@ function setCoverImage(img, cover, lazy) {
     img.onerror = () => {
         let rest = [];
         try { rest = JSON.parse(img.dataset.fallbacks || "[]"); } catch {}
-        markMirror(mirrorOf(img.currentSrc || img.src), false);
+        suspectMirror(mirrorOf(img.currentSrc || img.src));
         if (!rest.length) {
             img.onerror = null;
             if (img.dataset.placeholder) img.src = img.dataset.placeholder;
@@ -1230,12 +1252,36 @@ function saveStatusOverrideFromPanel() {
 function getOwnerSiteMessage() {
     try { return localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage) || ""; } catch { return ""; }
 }
+// When the owner expects the site back (ISO time, or "" for not set)
+function getSiteBackAt() {
+    let v = "";
+    try { v = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt) || ""; } catch {}
+    return v && !isNaN(Date.parse(v)) ? v : "";
+}
+function siteBackAtText() {
+    const iso = getSiteBackAt();
+    if (!iso) return "";
+    const t = new Date(iso), mins = Math.round((t - Date.now()) / 60000);
+    const sameDay = t.toDateString() === new Date().toDateString();
+    const when = (sameDay ? "" : t.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + ", ") + t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (mins <= 0) return `Expected back around ${when}. Should be any minute now.`;
+    const left = mins < 60 ? `${mins} min` : mins < 48 * 60 ? `${Math.floor(mins / 60)} h ${mins % 60 ? (mins % 60) + " min" : ""}`.trim() : `${Math.round(mins / 1440)} days`;
+    return `Expected back around ${when} (in ${left})`;
+}
+// The datetime-local box works in local time; store it as a real time
+function toLocalInputValue(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
 function saveSiteMessageFromPanel() {
     const text = (document.getElementById("owner-site-message")?.value || "").slice(0, 400);
     localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage, text);
+    const back = document.getElementById("owner-site-back-at")?.value || "";
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt, back && !isNaN(Date.parse(back)) ? new Date(back).toISOString() : "");
     applyOwnerSiteMode();
     githubAutoSync();
-    notify("Lock screen message saved.", { type: "success" });
+    notify("Saved. It shows on the lock, maintenance and shutdown screens.", { type: "success" });
 }
 
 const SITE_MODE_SCREENS = {
@@ -1244,6 +1290,12 @@ const SITE_MODE_SCREENS = {
         title: "We'll be right back",
         text: "The owner has locked GN 2.0 for a little while. Your saves, favorites and settings are safe on this device.",
         icon: '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/>'
+    },
+    maintenance: {
+        badge: "Scheduled maintenance",
+        title: "Down for maintenance",
+        text: "GN 2.0 is getting some updates and fixes. It'll be back soon, and your saves, favorites and settings are safe on this device.",
+        icon: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L4 16.7V20h3.3l5.3-5.3a4 4 0 0 0 5.1-5.4l-2.5 2.5-2.3-.5-.5-2.3 2.3-2.7z"/>'
     },
     shutdown: {
         badge: "Service unavailable",
@@ -1256,6 +1308,8 @@ let siteModeRecheckTimer = null;
 let siteModeLastCheck = 0;
 
 function updateSiteModeCheckedText() {
+    const eta = document.getElementById("site-mode-eta");
+    if (eta) eta.textContent = siteBackAtText();
     const el = document.getElementById("site-mode-checked");
     if (!el || !siteModeLastCheck) return;
     const secs = Math.round((Date.now() - siteModeLastCheck) / 1000);
@@ -1289,7 +1343,8 @@ function applyOwnerSiteMode() {
     }
 
     const note = getOwnerSiteMessage().trim();
-    const key = mode + "|" + note;
+    const backAt = mode === "shutdown" ? "" : getSiteBackAt();
+    const key = mode + "|" + note + "|" + backAt;
     if (existingOverlay && existingOverlay.dataset.key === key && !existingOverlay.classList.contains("site-overlay-leaving")) return;
     if (existingOverlay) existingOverlay.remove();
 
@@ -1297,6 +1352,7 @@ function applyOwnerSiteMode() {
     const overlay = document.createElement("div");
     overlay.id = "owner-site-overlay";
     overlay.className = "site-mode-" + mode + (mode === "shutdown" ? " shutdown-mode" : "");
+    const etaText = backAt ? siteBackAtText() : "";
     overlay.dataset.key = key;
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
@@ -1311,6 +1367,7 @@ function applyOwnerSiteMode() {
             <h1 id="site-mode-title">${screen.title}</h1>
             <p class="site-mode-text">${screen.text}</p>
             ${note ? `<blockquote class="site-mode-note"><span class="site-mode-note-label">Message from the owner</span><span class="site-mode-note-text"></span></blockquote>` : ""}
+            ${etaText ? `<div class="site-mode-eta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="site-mode-eta">${escapeOwnerHtml(etaText)}</span></div>` : ""}
             <div class="site-mode-live">
                 <span class="site-mode-pulse" aria-hidden="true"></span>
                 <span>This page opens by itself when the site is back.</span>
@@ -1383,12 +1440,19 @@ function renderOwnerPanel() {
         <select id="owner-site-mode" class="settings-select" onchange="setOwnerSiteMode(this.value)">
             <option value="open"     ${mode === "open"     ? "selected" : ""}>🟢 Open — everyone can access</option>
             <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
+            <option value="maintenance" ${mode === "maintenance" ? "selected" : ""}>🛠️ Maintenance — show maintenance screen</option>
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
-        <label style="display:block;margin:0.85rem 0 0.4rem;">Message on the lock / shutdown screen (optional)</label>
+        <label style="display:block;margin:0.85rem 0 0.4rem;">Message on the lock / maintenance / shutdown screen (optional)</label>
         <textarea id="owner-site-message" rows="2" maxlength="400" placeholder="e.g. Back after lunch, or: Moving to a new address, details on Discord"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;resize:vertical;margin-bottom:0.5rem;font-family:inherit;">${escapeOwnerHtml(getOwnerSiteMessage())}</textarea>
-        <button class="settings-button" type="button" onclick="saveSiteMessageFromPanel()">Save Message</button>
+        <label style="display:block;margin:0.35rem 0 0.4rem;">Expected back (optional, shown on lock and maintenance screens)</label>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+            <input type="datetime-local" id="owner-site-back-at" value="${toLocalInputValue(getSiteBackAt())}"
+                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;color-scheme:dark light;">
+            <button class="settings-button" type="button" style="width:auto;padding:0 0.9rem;" onclick="document.getElementById('owner-site-back-at').value=''">Clear</button>
+        </div>
+        <button class="settings-button" type="button" onclick="saveSiteMessageFromPanel()">Save Message &amp; Time</button>
         <p style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);">Visitors' screens check every minute and open by themselves when you switch back to Open (GitHub can take a few minutes to pass the change on).</p>
     </div>
 
@@ -1870,6 +1934,7 @@ const OWNER_EXTRA_STORAGE_KEYS = {
     announcementType: "gnmath-owner-announcement-type",
     announcementDismissed: "gnmath-announcement-dismissed",
     siteMessage: "gnmath-owner-site-message",
+    siteBackAt: "gnmath-owner-site-back-at",
     statusOverride: "gnmath-owner-status-override"
 };
 const ANNOUNCEMENT_TYPES = ["info", "success", "warning", "urgent"];
@@ -1881,7 +1946,7 @@ const OWNER_STORAGE_KEYS = {
     announcementEnabled: "gnmath-owner-announcement-enabled",
     githubPat: "gnmath-owner-github-pat"
 };
-const OWNER_SITE_MODES = ["open", "locked", "shutdown"];
+const OWNER_SITE_MODES = ["open", "locked", "maintenance", "shutdown"];
 const VISITOR_DEFAULTS = {
     mode: "dark", theme: "red", cardSize: "medium", fontSize: "medium", defaultSort: "name",
     compactMode: false, hideFeatured: false, autofocusSearch: true, showPlayCount: false,
@@ -1938,6 +2003,7 @@ function buildOwnerSettingsObject() {
             type:    getAnnouncement().type
         },
         siteMessage: getOwnerSiteMessage(),
+        siteBackAt: getSiteBackAt(),
         statusOverride: getStatusOverride(),
         motd: {
             text:    getMotd().text,
@@ -1954,6 +2020,9 @@ function buildOwnerSettingsObject() {
 function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (!settings || typeof settings !== "object") return;
 
+    if (typeof settings.siteBackAt === "string") {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt, isNaN(Date.parse(settings.siteBackAt)) ? "" : settings.siteBackAt);
+    }
     if (typeof settings.siteMessage === "string") {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage, settings.siteMessage.slice(0, 400));
     }
