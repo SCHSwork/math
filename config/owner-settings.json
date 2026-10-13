@@ -16,7 +16,7 @@
   },
   "motd": {
     "text": "Test",
-    "enabled": true
+    "enabled": false
   },
   "footerLinks": [],
   "visitorDefaults": {
@@ -42,5 +42,5 @@
       "name": "poopmaster"
     }
   ],
-  "updatedAt": "2026-10-13T05:36:33.090Z"
+  "updatedAt": "2026-10-13T05:36:47.706Z"
 }
