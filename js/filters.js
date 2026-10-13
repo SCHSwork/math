@@ -57,7 +57,10 @@ function zoneGenres(zone) {
 }
 function zoneSource(zone) {
     if (typeof isPartnerZone === "function" && isPartnerZone(zone)) return "partner";
-    if (typeof isOriginalZone === "function" && isOriginalZone(zone)) return (zone.special || []).includes("js13k") ? "js13k" : "originals";
+    if (typeof isOriginalZone === "function" && isOriginalZone(zone)) {
+        const sp = zone.special || [];
+        return sp.includes("js13k") ? "js13k" : sp.includes("wasm4") ? "wasm4" : "originals";
+    }
     return "library";
 }
 function showMatches(zone, show) {
@@ -111,7 +114,7 @@ function updateFilterCounts() {
     const srcSel = document.getElementById("sourceOptions");
     if (srcSel) {
         const count = s => visible.filter(z => zoneSource(z) === s).length;
-        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})`, partner: `Partner games, may have ads (${count("partner")})` };
+        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})`, wasm4: `WASM-4 retro games (${count("wasm4")})`, partner: `Partner games, may have ads (${count("partner")})` };
         for (const o of srcSel.options) if (labels[o.value]) o.textContent = labels[o.value];
     }
 }
