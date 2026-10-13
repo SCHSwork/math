@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 13, 2026
+
+### Fixed
+- **Locking, maintenance and shutdown now reach everyone reliably.** People already on the site used to keep using it until they reloaded; now open pages check for owner changes about once a minute and show the lock, maintenance or shutdown screen by themselves. Switching quickly between Locked, Maintenance and Shut down in the Owner Panel could also fail to save (GitHub rejected the second save), so the site stayed on the old setting. Saves now go one at a time and retry, and an old cached copy of the settings from a backup source can no longer undo a newer change.
+
+
 ## October 12, 2026
 
 ### New
