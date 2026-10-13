@@ -118,14 +118,17 @@ function mirrorUrls(owner, repo, ref, path) {
 }
 function mirrorOf(url) { try { return MIRROR_HOSTS[new URL(url).hostname]; } catch { return null; } }
 // Try each URL until one returns a usable response
-async function fetchFirst(urls, { timeoutMs = 15000, validate, track = true } = {}) {
+async function fetchFirst(urls, { timeoutMs = 15000, validate, track = true, cache } = {}) {
     let lastError = new Error("No sources");
     for (const url of urls) {
         const name = mirrorOf(url);
         const ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
         const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
         try {
-            const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+            const opts = {};
+            if (ctrl) opts.signal = ctrl.signal;
+            if (cache) opts.cache = cache;
+            const res = await fetch(url, opts);
             // Redirected to some other site = blocked by a filter
             if (res.redirected && new URL(res.url).hostname !== new URL(url).hostname) throw Object.assign(new Error("redirected"), { down: true });
             if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { down: res.status >= 500 || res.status === 403 });
@@ -2016,9 +2019,22 @@ function buildOwnerSettingsObject() {
     };
 }
 
+// updatedAt of the newest settings this browser has applied. Backup mirrors can
+// serve an old copy, and that must never undo a newer lock or reopen.
+const OWNER_SETTINGS_AT_KEY = "gnmath-owner-settings-at";
+function getAppliedSettingsAt() {
+    try { return Date.parse(localStorage.getItem(OWNER_SETTINGS_AT_KEY) || "") || 0; } catch { return 0; }
+}
+function setAppliedSettingsAt(iso) {
+    try { if (!isNaN(Date.parse(iso))) localStorage.setItem(OWNER_SETTINGS_AT_KEY, iso); } catch {}
+}
+
 /** Apply a settings object that was loaded from GitHub */
 function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (!settings || typeof settings !== "object") return;
+    const at = Date.parse(settings.updatedAt || "");
+    if (at && at <= getAppliedSettingsAt()) return;  // nothing newer than what we already have
+    if (at) setAppliedSettingsAt(settings.updatedAt);
 
     if (typeof settings.siteBackAt === "string") {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt, isNaN(Date.parse(settings.siteBackAt)) ? "" : settings.siteBackAt);
@@ -2069,6 +2085,7 @@ function githubAutoSync() {
     if (!getGithubPat()) return;          // no token stored → skip silently
     clearTimeout(_autoSyncTimer);
     _autoSyncTimer = setTimeout(async () => {
+        _autoSyncTimer = null;
         const ok = await githubSyncPush();
         const status = document.getElementById("owner-sync-status");
         if (status) {
@@ -2081,51 +2098,61 @@ function githubAutoSync() {
 }
 
 /** Push current settings to GitHub. Returns true on success. */
-async function githubSyncPush() {
+// Pushes run one at a time: two at once would both use the same file SHA and
+// the second would be rejected, losing that change (e.g. locked → shutdown).
+let _syncPushChain = Promise.resolve();
+let _syncPushing = 0;
+function githubSyncPush() {
+    _syncPushing++;
+    const run = _syncPushChain.then(githubSyncPushOnce, githubSyncPushOnce);
+    _syncPushChain = run.catch(() => {});
+    return run.finally(() => { _syncPushing--; });
+}
+async function githubSyncPushOnce() {
     const pat = getGithubPat();
     if (!pat) return false;
 
-    const content = btoa(unescape(encodeURIComponent(
-        JSON.stringify(buildOwnerSettingsObject(), null, 2)
-    )));
+    const settings = buildOwnerSettingsObject();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(settings, null, 2))));
+    const headers = { Authorization: `token ${pat}`, Accept: "application/vnd.github+json" };
 
-    // Fetch current SHA (needed for updates)
-    let sha;
-    try {
-        const res = await fetch(GITHUB_SYNC_URL, {
-            headers: { Authorization: `token ${pat}`, Accept: "application/vnd.github+json" }
+    for (let attempt = 0; attempt < 3; attempt++) {
+        // Current SHA (needed for updates). no-store: the browser would otherwise
+        // reuse a cached reply for up to a minute and the save would be rejected.
+        let sha;
+        try {
+            const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), { headers, cache: "no-store" });
+            if (res.ok) sha = (await res.json()).sha;
+        } catch (_) {}
+
+        const body = { message: "chore: update owner-settings", content };
+        if (sha) body.sha = sha;
+
+        const putRes = await fetch(GITHUB_SYNC_URL, {
+            method: "PUT",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            cache: "no-store"
         });
-        if (res.ok) {
-            const json = await res.json();
-            sha = json.sha;
-        }
-    } catch (_) {}
-
-    const body = { message: "chore: update owner-settings", content };
-    if (sha) body.sha = sha;
-
-    const putRes = await fetch(GITHUB_SYNC_URL, {
-        method:  "PUT",
-        headers: {
-            Authorization: `token ${pat}`,
-            Accept:        "application/vnd.github+json",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-    });
-
-    return putRes.ok;
+        if (putRes.ok) { setAppliedSettingsAt(settings.updatedAt); return true; }
+        // 409/422 = SHA was out of date; fetch it again and retry
+        if (putRes.status !== 409 && putRes.status !== 422) return false;
+    }
+    return false;
 }
 
 /** Pull settings from the public CDN (works for all visitors, no token). */
 async function githubSyncPull({ rerender = false } = {}) {
+    // Don't let a pull undo a change the owner just made that isn't saved yet
+    if (_autoSyncTimer || _syncPushing) return;
     try {
         let settings;
         const pat = getGithubPat();
         if (pat) {
             // Owner device: authenticated API is always fresh and has a high rate limit.
             const res = await fetch(GITHUB_SYNC_URL + "?t=" + Date.now(), {
-                headers: { Accept: "application/vnd.github+json", Authorization: `token ${pat}` }
+                headers: { Accept: "application/vnd.github+json", Authorization: `token ${pat}` },
+                cache: "no-store"
             });
             if (res.ok) {
                 const json = await res.json();
@@ -2141,11 +2168,27 @@ async function githubSyncPull({ rerender = false } = {}) {
             try {
                 settings = await fetchFirst(
                     [GITHUB_SYNC_CDN + "?t=" + Date.now(), MIRRORS.githack(owner, repo, "HEAD", GITHUB_SYNC_FILE), MIRRORS.jsdelivr(owner, repo, "main", GITHUB_SYNC_FILE)],
-                    { timeoutMs: 10000, validate: r => r.json(), track: false });
+                    { timeoutMs: 10000, validate: r => r.json(), track: false, cache: "no-store" });
             } catch { return; } // keep the last settings this browser already has
         }
+        if (_autoSyncTimer || _syncPushing) return;
         applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
+}
+
+// Visitors already on the site pick up lock / maintenance / shutdown (and other
+// owner changes) without reloading. While closed, the lock screen checks on its own.
+let _settingsWatchLast = Date.now();
+function startOwnerSettingsWatch() {
+    const check = () => {
+        if (document.hidden || getOwnerSiteMode() !== "open") return;
+        if (Date.now() - _settingsWatchLast < 60000) return;
+        _settingsWatchLast = Date.now();
+        githubSyncPull();
+    };
+    setInterval(check, 15000);
+    document.addEventListener("visibilitychange", check);
+    window.addEventListener("online", check);
 }
 
 /** Save settings then immediately push to GitHub. Shows status in panel. */
@@ -3336,6 +3379,7 @@ function closePopup() {
 applySavedSettings();
 // Pull owner settings from GitHub FIRST, then render zones so disabled list is correct
 githubSyncPull().finally(() => {
+    startOwnerSettingsWatch();
     listZones();
     // After zones + settings are loaded, show MOTD and autofocus search if enabled
     if (getAutofocusSearch()) {
