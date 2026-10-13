@@ -65,6 +65,17 @@ service cloud.firestore {
       allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
     }
 
+    // "People online now": each open tab writes { t: server time, s: site } to
+    // presence/<random id> every couple of minutes. No account or personal
+    // info; anyone can read it so the site and status page can count it.
+    match /presence/{id} {
+      allow read: if true;
+      allow create, update: if id.matches('[A-Za-z0-9]{20}')
+        && request.resource.data.keys().hasOnly(['t', 's'])
+        && request.resource.data.t == request.time
+        && request.resource.data.s in ['gn2', 'light'];
+    }
+
     function isBanned() {
       return request.auth != null && exists(/databases/$(db)/documents/bans/$(request.auth.uid));
     }

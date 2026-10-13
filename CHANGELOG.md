@@ -7,6 +7,7 @@ All the changes to GN 2.0, newest first.
 
 ### New
 - **Site status light** in the bottom-left corner. Green means everything's working; yellow or red means something isn't, like a game source being blocked or accounts not connecting. Click it to see each part of the site (your connection, game library, GN Originals, accounts and saves, partner games). The owner can also set a status by hand, such as "Maintenance". It hides while you play, and you can turn it off in Settings.
+- **People online now.** The status light shows how many people are on GN 2.0 and GN Light right now (anyone with the site open in the last 5 minutes), and the GN Status page has a "People online now" number too. No account needed and nothing personal is stored: each open tab just sends a random id and the time every 2 minutes.
 - **Maintenance mode.** Besides Locked and Shut down, the owner can now show a "Down for maintenance" screen, and set an **expected back time** that shows on the lock and maintenance screens with a countdown ("in 42 min").
 - **New lock and shutdown screens.** They now say what's going on, can show a message from the owner, and **open by themselves** when the site is back (they check every minute, or tap Check now), so nobody has to keep reloading.
 

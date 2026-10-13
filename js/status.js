@@ -108,6 +108,7 @@ function ensureStatusPill() {
         <button type="button" class="status-pill" aria-expanded="false" aria-controls="statusPanel">
             <span class="status-dot" aria-hidden="true"></span>
             <span class="status-text"></span>
+            <span class="status-online" hidden></span>
         </button>
         <div class="status-panel" id="statusPanel" role="dialog" aria-label="Site status" hidden>
             <div class="status-panel-head">
@@ -130,7 +131,7 @@ function ensureStatusPill() {
         panel.hidden = !open;
         btn.setAttribute("aria-expanded", open ? "true" : "false");
         pill.classList.toggle("open", open);
-        if (open) updateSiteStatus();
+        if (open) { updateSiteStatus(); if (typeof refreshActiveUsers === "function") refreshActiveUsers(); }
     };
     btn.onclick = () => setOpen(panel.hidden);
     pill.querySelector(".status-panel-close").onclick = () => setOpen(false);
@@ -159,7 +160,12 @@ function updateSiteStatus() {
     recheckDownMirrors();
     const s = computeSiteStatus();
     pill.dataset.level = s.level;
+    const au = window.gnActiveUsers || {};
+    const online = typeof au.count === "number" ? au.count : null;
     pill.querySelector(".status-text").textContent = s.headline;
+    const oc = pill.querySelector(".status-online");
+    oc.hidden = online === null;
+    if (online !== null) oc.textContent = online.toLocaleString() + " online";
     pill.querySelector(".status-pill").title = "Site status: " + s.headline + " (click for details)";
     statusLastRender = Date.now();
 
@@ -171,6 +177,16 @@ function updateSiteStatus() {
         : "How GN 2.0 is working on this network";
     const list = panel.querySelector(".status-list");
     list.innerHTML = "";
+    if (online !== null) {
+        const li = document.createElement("li");
+        li.className = "status-people";
+        const mins = Math.round((Date.now() - au.at) / 60000);
+        li.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.4.2 4 1.8 4.5 4.3"/></svg>
+            <div><b></b><span></span></div>`;
+        li.querySelector("b").textContent = `${online.toLocaleString()} ${online === 1 ? "person" : "people"} online now`;
+        li.querySelector("div span").textContent = "On GN 2.0 in the last 5 minutes" + (mins >= 1 ? ` · counted ${mins} min ago` : "");
+        list.appendChild(li);
+    }
     if (s.override.level !== "auto" || s.override.text.trim()) {
         const li = document.createElement("li");
         li.className = "status-row status-owner-note";
