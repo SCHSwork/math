@@ -136,8 +136,9 @@ function getHideJam() { try { return localStorage.getItem(HIDE_JAM_KEY) === "tru
 // The games left after the jam and partner switches
 function visibleBySwitches(list) {
     const hideJam = getHideJam();
-    const hidePartner = typeof getHidePartner === "function" && getHidePartner();
-    return list.filter(z => !(hideJam && isJamGame(z)) && !(hidePartner && typeof isPartnerZone === "function" && isPartnerZone(z)));
+    const partnerHidden = z => typeof isPartnerZone === "function" && isPartnerZone(z)
+        && (typeof isPartnerHidden === "function" ? isPartnerHidden(z) : typeof getHidePartner === "function" && getHidePartner());
+    return list.filter(z => !(hideJam && isJamGame(z)) && !partnerHidden(z));
 }
 function applyJamPreference(list) {
     ZONES_ALL = list;

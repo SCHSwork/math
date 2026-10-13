@@ -141,7 +141,7 @@ function setCoverImage(img, cover, lazy) {
     const list = coverSources(cover);
     if (!list.length) return;
     // Partner game covers come from Famobi, which doesn't allow CORS image loads
-    if (!/^https:\/\/img\.cdn\.famobi\.com\//.test(list[0])) img.crossOrigin = "anonymous";
+    if (!/^https:\/\/(img\.cdn\.famobi\.com|static\.playgama\.com)\//.test(list[0])) img.crossOrigin = "anonymous";
     img.dataset.fallbacks = JSON.stringify(list.slice(1));
     img.onerror = () => {
         let rest = [];
@@ -901,7 +901,7 @@ function clearZoneIdFromUrl() {
 function downloadZone() {
     let zone = zones.find(zone => zone.id + '' === document.getElementById('zoneId').textContent);
     if (zone && typeof isPartnerZone === "function" && isPartnerZone(zone)) {
-        notify("Partner games play from html5games.com, so they can't be downloaded.");
+        notify("Partner games play from html5games.com or Playgama, so they can't be downloaded.");
         return;
     }
     fetchWithFallback(zone.url).then(text => {
@@ -2887,7 +2887,7 @@ function legalPopup(title, html) {
 
 function loadPrivacy() {
     legalPopup("Privacy Policy", `
-        <p><b>Effective October 9, 2026</b></p>
+        <p><b>Effective October 12, 2026</b></p>
         <p>This policy explains what GN 2.0 collects, why, and what you can do about it. The short version: you can play without an account, accounts use a username only (no email or real name), GN 2.0 adds no ads or trackers, and we don't sell or share your information. The one exception is <b>partner games</b> (marked <span class="ad-badge">AD</span>), which come from html5games.com and may show that site's ads; see below.</p>
 
         <h3>What we collect</h3>
@@ -2906,11 +2906,12 @@ function loadPrivacy() {
         <p>GN 2.0 doesn't use advertising, analytics or tracking tools, and doesn't earn money from ads. Many game files come with ad code or Google Analytics added by whoever uploaded them; for every game in the main library and GN Originals, the site removes known ad and tracking code before it runs and blocks it from loading.</p>
 
         <h3>Partner games (may contain ads)</h3>
-        <p>Some games are <b>partner games</b> from <a href="https://html5games.com/" target="_blank" rel="noopener">html5games.com</a>, made and hosted by <a href="https://famobi.com/" target="_blank" rel="noopener">Famobi</a>. html5games.com lets websites share its games for free on the condition that the games keep their own ads. Partner games are always labelled with an <span class="ad-badge">AD</span> badge on their card and a "May contain ads" notice above the game, and you can hide all of them with the <b>Partner games</b> switch above All games. When you open a partner game:</p>
+        <p>Some games are <b>partner games</b> from <a href="https://html5games.com/" target="_blank" rel="noopener">html5games.com</a> (made and hosted by <a href="https://famobi.com/" target="_blank" rel="noopener">Famobi</a>) or from <a href="https://playgama.com/" target="_blank" rel="noopener">Playgama</a> (uploaded there by their own developers and hosted by Playgama). Both let websites share their games for free on the condition that the games keep their own ads. GN 2.0 has no account with either and earns nothing from them. Partner games are always labelled with an <span class="ad-badge">AD</span> badge on their card and a "May contain ads" notice above the game, and you can hide all of them with the <b>Partner games</b> switch above All games. When you open a partner game:</p>
         <ul>
-            <li>It loads directly from Famobi's servers (play.famobi.com) in a separate, sandboxed frame. The cover pictures for these games also load from Famobi (img.cdn.famobi.com), so Famobi's servers receive basic technical information such as your IP address and browser type when the covers are shown.</li>
-            <li>The game <b>may show ads</b>, and Famobi and its advertising partners may use cookies or similar technologies, collect device information and show personalized ads, under <b>their</b> privacy policy (linked on famobi.com), not this one. Their consent and ad settings apply inside the game.</li>
-            <li>GN 2.0 doesn't choose, see or get paid for those ads, and doesn't send Famobi your username, account, cloud save or any other information about you. Ads inside a partner game can't be removed by this site.</li>
+            <li>It loads directly from that platform's servers (play.famobi.com or playgama.com) in a separate, sandboxed frame. The cover pictures for these games also load from them (img.cdn.famobi.com, static.playgama.com), so their servers receive basic technical information such as your IP address and browser type when the covers are shown.</li>
+            <li>The game <b>may show ads</b>, and Famobi or Playgama and their advertising partners may use cookies or similar technologies, collect device information and show personalized ads, under <b>their</b> privacy policies (linked on famobi.com and playgama.com), not this one. Their consent and ad settings apply inside the game.</li>
+            <li>GN 2.0 only lists Playgama games that have no in-game purchases.</li>
+            <li>GN 2.0 doesn't choose, see or get paid for those ads, and doesn't send Famobi or Playgama your username, account, cloud save or any other information about you. Ads inside a partner game can't be removed by this site.</li>
             <li>The sandbox lets the game open links in a new tab but stops it from navigating GN 2.0 away. If you see an ad that seems inappropriate, close the game and use the Report button.</li>
         </ul>
         <p>Your play time, favorites and ratings for partner games are stored the same way as for every other game (see above).</p>
@@ -2927,7 +2928,7 @@ function loadPrivacy() {
             <li><b>Google Firebase</b> &mdash; accounts, cloud saves, ratings and reports.</li>
             <li><b>GitHub</b> &mdash; serves the site and its settings.</li>
             <li><b>jsDelivr</b> and other content networks &mdash; deliver the game files and images, and provide the public play counts.</li>
-            <li><b>Famobi / html5games.com</b> &mdash; hosts the partner games and their cover pictures, and the ads inside those games (only when partner games are shown or opened).</li>
+            <li><b>Famobi / html5games.com</b> and <b>Playgama</b> &mdash; host the partner games and their cover pictures, and the ads inside those games (only when partner games are shown or opened).</li>
         </ul>
         <p>Games are made and hosted by third parties. We remove the ad and tracking code we know about, but we can't guarantee every third-party file. Each of these services has its own privacy policy.</p>
 
@@ -2948,7 +2949,7 @@ function loadTerms() {
         <p>By using GN 2.0 you agree to these terms. If you don't agree, please don't use the site.</p>
 
         <h3>Games and content</h3>
-        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. Games marked <span class="ad-badge">AD</span> are <b>partner games</b> from html5games.com (Famobi): they are linked, not copied, load from Famobi's servers under Famobi's own terms, and may show Famobi's ads, which GN 2.0 doesn't control or profit from. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
+        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. Games marked <span class="ad-badge">AD</span> are <b>partner games</b> from html5games.com (Famobi) or Playgama: they are linked, not copied, load from those platforms' servers under their own terms, and may show their ads, which GN 2.0 doesn't control or profit from. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
 
         <h3>Using the site</h3>
         <ul>
@@ -2995,8 +2996,8 @@ function loadDMCA() {
                 To have one of those removed or its credit corrected, open an issue on that repository.
             </p>
             <p>
-                <b>Partner games</b> (marked AD) aren't copied here at all; they're linked from html5games.com and
-                play from Famobi's servers. To have one removed from this list, use the email above.
+                <b>Partner games</b> (marked AD) aren't copied here at all; they're linked from html5games.com or Playgama and
+                play from their servers. To have one removed from this list, use the email above.
             </p>
         </div>
     `;
