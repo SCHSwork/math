@@ -165,6 +165,7 @@ function coverPlaceholder(name) {
 }
 // The game list: newest copy from any source, or the last one that loaded
 const ZONES_CACHE_KEY = "gnmath-cache-zones";
+let libraryListState = "loading"; // live | cache | failed (read by the status indicator)
 async function loadZoneList(sha) {
     const urls = [];
     if (sha) urls.push(`https://cdn.jsdelivr.net/gh/freebuisness/assets@${sha}/zones.json`);
@@ -179,14 +180,17 @@ async function loadZoneList(sha) {
             }
         });
         try { localStorage.setItem(ZONES_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch {}
+        libraryListState = "live";
         return data;
     } catch (err) {
         let cached = null;
         try { cached = JSON.parse(localStorage.getItem(ZONES_CACHE_KEY)); } catch {}
         if (cached && Array.isArray(cached.data)) {
+            libraryListState = "cache";
             showSourceNotice(`Couldn't reach the game library, so this is the list saved on ${new Date(cached.t).toLocaleDateString()}. Some games may not load until it's back.`);
             return cached.data;
         }
+        libraryListState = "failed";
         throw err;
     }
 }
@@ -1202,78 +1206,140 @@ function setOwnerSiteMode(mode) {
     githubAutoSync();
 }
 
+// Optional note from the owner shown on the lock and shutdown screens
+function escapeOwnerHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+// Owner-set status for the corner indicator: {level: auto|ok|degraded|down|maintenance, text}
+const STATUS_LEVELS = ["auto", "ok", "degraded", "down", "maintenance"];
+function getStatusOverride() {
+    let v = null;
+    try { v = JSON.parse(localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.statusOverride) || "null"); } catch {}
+    return { level: v && STATUS_LEVELS.includes(v.level) ? v.level : "auto", text: v && typeof v.text === "string" ? v.text.slice(0, 80) : "" };
+}
+function setStatusOverride(o, { sync = true } = {}) {
+    const safe = { level: STATUS_LEVELS.includes(o?.level) ? o.level : "auto", text: String(o?.text || "").slice(0, 80) };
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.statusOverride, JSON.stringify(safe));
+    if (typeof updateSiteStatus === "function") updateSiteStatus();
+    if (sync) githubAutoSync();
+}
+function saveStatusOverrideFromPanel() {
+    setStatusOverride({ level: document.getElementById("owner-status-level")?.value, text: document.getElementById("owner-status-text")?.value });
+    notify("Status saved.", { type: "success" });
+}
+function getOwnerSiteMessage() {
+    try { return localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage) || ""; } catch { return ""; }
+}
+function saveSiteMessageFromPanel() {
+    const text = (document.getElementById("owner-site-message")?.value || "").slice(0, 400);
+    localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage, text);
+    applyOwnerSiteMode();
+    githubAutoSync();
+    notify("Lock screen message saved.", { type: "success" });
+}
+
+const SITE_MODE_SCREENS = {
+    locked: {
+        badge: "Temporarily locked",
+        title: "We'll be right back",
+        text: "The owner has locked GN 2.0 for a little while. Your saves, favorites and settings are safe on this device.",
+        icon: '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/>'
+    },
+    shutdown: {
+        badge: "Service unavailable",
+        title: "GN 2.0 is offline",
+        text: "The owner has shut this website down. It isn't available right now.",
+        icon: '<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>'
+    }
+};
+let siteModeRecheckTimer = null;
+let siteModeLastCheck = 0;
+
+function updateSiteModeCheckedText() {
+    const el = document.getElementById("site-mode-checked");
+    if (!el || !siteModeLastCheck) return;
+    const secs = Math.round((Date.now() - siteModeLastCheck) / 1000);
+    el.textContent = secs < 10 ? "Checked just now" : secs < 60 ? `Checked ${secs}s ago` : `Checked ${Math.round(secs / 60)} min ago`;
+}
+// While the site is locked, look for the owner reopening it so nobody has to reload
+async function recheckSiteMode(manual) {
+    const btn = document.getElementById("site-mode-check");
+    if (btn) { btn.disabled = true; btn.classList.add("checking"); }
+    try { await githubSyncPull(); } catch {}
+    siteModeLastCheck = Date.now();
+    if (btn) { btn.disabled = false; btn.classList.remove("checking"); }
+    updateSiteModeCheckedText();
+    if (manual && getOwnerSiteMode() !== "open") notify("Still closed. It'll open by itself as soon as the owner reopens it.");
+}
+
 function applyOwnerSiteMode() {
     const existingOverlay = document.getElementById("owner-site-overlay");
     const mode = getOwnerSiteMode();
 
     if (mode === "open") {
+        clearInterval(siteModeRecheckTimer);
+        siteModeRecheckTimer = null;
+        document.documentElement.classList.remove("site-mode-closed");
         if (existingOverlay) {
-            existingOverlay.remove();
+            existingOverlay.classList.add("site-overlay-leaving");
+            setTimeout(() => existingOverlay.remove(), 300);
+            if (siteModeLastCheck) notify("GN 2.0 is open again!", { type: "success" });
         }
         return;
     }
 
-    const overlay = existingOverlay || document.createElement("div");
+    const note = getOwnerSiteMessage().trim();
+    const key = mode + "|" + note;
+    if (existingOverlay && existingOverlay.dataset.key === key && !existingOverlay.classList.contains("site-overlay-leaving")) return;
+    if (existingOverlay) existingOverlay.remove();
+
+    const screen = SITE_MODE_SCREENS[mode];
+    const overlay = document.createElement("div");
     overlay.id = "owner-site-overlay";
-    overlay.innerHTML = "";
-    overlay.className = mode === "shutdown" ? "shutdown-mode" : "";
-
-    const message = document.createElement("div");
-
-    if (mode === "shutdown") {
-        message.className = "owner-site-message shutdown-message";
-
-        const badge = document.createElement("div");
-        badge.className = "shutdown-badge";
-        badge.textContent = "Service Unavailable";
-        message.appendChild(badge);
-
-        const icon = document.createElement("span");
-        icon.className = "shutdown-icon";
-        icon.textContent = "⛔";
-        message.appendChild(icon);
-
-        const title = document.createElement("h1");
-        title.textContent = "Site Shutdown";
-        message.appendChild(title);
-
-        const description = document.createElement("p");
-        description.textContent = "This website has been shut down by the owner. It is not available at this time.";
-        message.appendChild(description);
-
-        const divider = document.createElement("hr");
-        divider.className = "shutdown-divider";
-        message.appendChild(divider);
-
-        const unlockButton = document.createElement("button");
-        unlockButton.className = "shutdown-unlock";
-        unlockButton.type = "button";
-        unlockButton.textContent = "owner access";
-        unlockButton.onclick = () => requestOwnerAccess(() => setOwnerSiteMode("open"));
-        message.appendChild(unlockButton);
-
-    } else {
-        message.className = "owner-site-message";
-
-        const title = document.createElement("h1");
-        title.textContent = "Website Locked";
-        message.appendChild(title);
-
-        const description = document.createElement("p");
-        description.textContent = "The owner has temporarily locked this website.";
-        message.appendChild(description);
-
-        const unlockButton = document.createElement("button");
-        unlockButton.className = "settings-button";
-        unlockButton.type = "button";
-        unlockButton.textContent = "Owner Unlock";
-        unlockButton.onclick = () => requestOwnerAccess(() => setOwnerSiteMode("open"));
-        message.appendChild(unlockButton);
+    overlay.className = "site-mode-" + mode + (mode === "shutdown" ? " shutdown-mode" : "");
+    overlay.dataset.key = key;
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "site-mode-title");
+    overlay.innerHTML = `
+        <div class="site-mode-bg" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="owner-site-message site-mode-card">
+            <div class="site-mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${screen.icon}</svg>
+            </div>
+            <div class="site-mode-badge"><span class="site-mode-dot"></span>${screen.badge}</div>
+            <h1 id="site-mode-title">${screen.title}</h1>
+            <p class="site-mode-text">${screen.text}</p>
+            ${note ? `<blockquote class="site-mode-note"><span class="site-mode-note-label">Message from the owner</span><span class="site-mode-note-text"></span></blockquote>` : ""}
+            <div class="site-mode-live">
+                <span class="site-mode-pulse" aria-hidden="true"></span>
+                <span>This page opens by itself when the site is back.</span>
+            </div>
+            <div class="site-mode-actions">
+                <button type="button" id="site-mode-check" class="site-mode-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+                    Check now
+                </button>
+                <span id="site-mode-checked" class="site-mode-checked"></span>
+            </div>
+            <button type="button" class="site-mode-owner">Owner access</button>
+        </div>`;
+    if (note) overlay.querySelector(".site-mode-note-text").textContent = note;
+    overlay.querySelector("#site-mode-check").onclick = () => recheckSiteMode(true);
+    overlay.querySelector(".site-mode-owner").onclick = () => requestOwnerAccess(() => setOwnerSiteMode("open"));
+    document.body.appendChild(overlay);
+    document.documentElement.classList.add("site-mode-closed");
+    // A game left open behind the screen keeps playing sound, so close it
+    if (typeof zoneViewer !== "undefined" && zoneViewer && zoneViewer.style.display === "flex" && typeof closeZone === "function") {
+        try { closeZone(); } catch {}
     }
 
-    overlay.appendChild(message);
-    if (!existingOverlay) {
-        document.body.appendChild(overlay);
+    if (!siteModeRecheckTimer) {
+        let lastAuto = Date.now();
+        siteModeRecheckTimer = setInterval(() => {
+            updateSiteModeCheckedText();
+            if (!document.hidden && Date.now() - lastAuto >= 60000) { lastAuto = Date.now(); recheckSiteMode(false); }
+        }, 10000);
     }
 }
 
@@ -1319,6 +1385,24 @@ function renderOwnerPanel() {
             <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
+        <label style="display:block;margin:0.85rem 0 0.4rem;">Message on the lock / shutdown screen (optional)</label>
+        <textarea id="owner-site-message" rows="2" maxlength="400" placeholder="e.g. Back after lunch, or: Moving to a new address, details on Discord"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;resize:vertical;margin-bottom:0.5rem;font-family:inherit;">${escapeOwnerHtml(getOwnerSiteMessage())}</textarea>
+        <button class="settings-button" type="button" onclick="saveSiteMessageFromPanel()">Save Message</button>
+        <p style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);">Visitors' screens check every minute and open by themselves when you switch back to Open (GitHub can take a few minutes to pass the change on).</p>
+    </div>
+
+    <div class="settings-section">
+        <h4>Status Indicator</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">The little status light in the bottom-left corner checks the site by itself. Set a status here to tell everyone something it can't detect.</p>
+        <label style="display:block;margin-bottom:0.4rem;">Status</label>
+        <select id="owner-status-level" class="settings-select">
+            ${[["auto","Automatic (checks the site by itself)"],["ok","🟢 All good"],["degraded","🟡 Some problems"],["down","🔴 Major outage"],["maintenance","🔵 Maintenance"]].map(([v,l]) => `<option value="${v}" ${getStatusOverride().level === v ? "selected" : ""}>${l}</option>`).join("")}
+        </select>
+        <input type="text" id="owner-status-text" maxlength="80" placeholder="Short text, e.g. Some games are slow today"
+            value="${escapeOwnerHtml(getStatusOverride().text)}"
+            style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin:0.5rem 0;">
+        <button class="settings-button" type="button" onclick="saveStatusOverrideFromPanel()">Apply Status</button>
     </div>
 
     <div class="settings-section">
@@ -1345,12 +1429,16 @@ function renderOwnerPanel() {
 
     <div class="settings-section">
         <h4>Announcement Banner</h4>
-        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Shown as a coloured bar below the header for all visitors.</p>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Shown as a bar below the header for all visitors. Visitors can close it; a new or changed message shows again.</p>
         <div class="settings-inline" style="margin-bottom:0.5rem;">
             <label>Show banner</label>
             <input id="owner-announcement-enabled" type="checkbox" ${announcement.enabled ? "checked" : ""} onchange="saveAnnouncementFromPanel()">
         </div>
-        <input type="text" id="owner-announcement-text" placeholder="Announcement message…"
+        <label style="display:block;margin-bottom:0.4rem;">Style</label>
+        <select id="owner-announcement-type" class="settings-select" style="margin-bottom:0.5rem;">
+            ${[["info","Announcement (theme color)"],["success","Good news (green)"],["warning","Heads up (yellow)"],["urgent","Important (red)"]].map(([v,l]) => `<option value="${v}" ${announcement.type === v ? "selected" : ""}>${l}</option>`).join("")}
+        </select>
+        <input type="text" id="owner-announcement-text" placeholder="Announcement message… (links become clickable)"
             value="${announcement.text.replace(/"/g, '&quot;')}"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;">
         <button class="settings-button" type="button" onclick="saveAnnouncementFromPanel()">Apply Banner</button>
@@ -1584,15 +1672,18 @@ function saveOwnerVisitorDefaults() {
 // ── Announcement banner ──────────────────────────────────────────────────────
 
 function getAnnouncement() {
+    const type = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.announcementType);
     return {
         text: localStorage.getItem(OWNER_STORAGE_KEYS.announcement) || "",
-        enabled: localStorage.getItem(OWNER_STORAGE_KEYS.announcementEnabled) === "true"
+        enabled: localStorage.getItem(OWNER_STORAGE_KEYS.announcementEnabled) === "true",
+        type: ANNOUNCEMENT_TYPES.includes(type) ? type : "info"
     };
 }
 
-function setAnnouncement(text, enabled) {
+function setAnnouncement(text, enabled, type) {
     localStorage.setItem(OWNER_STORAGE_KEYS.announcement, text);
     localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, enabled ? "true" : "false");
+    if (type) localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.announcementType, ANNOUNCEMENT_TYPES.includes(type) ? type : "info");
     applyAnnouncement();
     githubAutoSync();
 }
@@ -1600,39 +1691,81 @@ function setAnnouncement(text, enabled) {
 function saveAnnouncementFromPanel() {
     const text    = document.getElementById('owner-announcement-text')?.value ?? "";
     const enabled = document.getElementById('owner-announcement-enabled')?.checked ?? false;
-    setAnnouncement(text, enabled);
+    const type    = document.getElementById('owner-announcement-type')?.value || "info";
+    setAnnouncement(text, enabled, type);
+}
+
+// Short fingerprint of a banner, so closing it hides only that message:
+// a new or changed announcement shows up again.
+function announcementKey({ text, type }) {
+    let h = 0;
+    const s = type + "|" + text;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return String(h >>> 0);
+}
+
+const ANNOUNCEMENT_ICONS = {
+    info:    '<path d="M12 8h.01M11 12h1v4h1"/><circle cx="12" cy="12" r="9"/>',
+    success: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/>',
+    warning: '<path d="M12 4 2.8 19.5h18.4L12 4z"/><path d="M12 10v4M12 17h.01"/>',
+    urgent:  '<path d="M4 10v4h3l5 4V6L7 10H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>'
+};
+const ANNOUNCEMENT_LABELS = { info: "Announcement", success: "Good news", warning: "Heads up", urgent: "Important" };
+
+// Writes the text with any web links made clickable (no HTML from the message is used)
+function appendLinkedText(el, text) {
+    const re = /\bhttps?:\/\/[^\s<>"']+[^\s<>"'.,!?)]/g;
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+        if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const a = document.createElement("a");
+        a.href = m[0]; a.target = "_blank"; a.rel = "noopener"; a.textContent = m[0].replace(/^https?:\/\//, "");
+        el.appendChild(a);
+        last = m.index + m[0].length;
+    }
+    if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
 }
 
 function applyAnnouncement() {
     const existing = document.getElementById("owner-announcement-bar");
-    const { text, enabled } = getAnnouncement();
+    const ann = getAnnouncement();
+    const { text, enabled, type } = ann;
+    const key = announcementKey(ann);
+    let dismissed = null;
+    try { dismissed = localStorage.getItem(OWNER_EXTRA_STORAGE_KEYS.announcementDismissed); } catch {}
 
-    if (!enabled || !text.trim()) {
+    if (!enabled || !text.trim() || dismissed === key) {
         if (existing) existing.remove();
         return;
     }
+    if (existing && existing.dataset.key === key) return;
 
     const bar = existing || document.createElement("div");
     bar.id = "owner-announcement-bar";
-    // Use a real color value — CSS variables don't work in element.style
-    const primary = getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#fc2651';
-    const primaryHover = getComputedStyle(document.body).getPropertyValue('--primary-hover').trim() || '#e91e47';
-    bar.style.cssText = `
-        background: linear-gradient(135deg, ${primary} 0%, ${primaryHover} 100%);
-        color: #fff;
-        text-align: center;
-        padding: 0.6rem 2.5rem;
-        font-size: 14px;
-        font-weight: 600;
-        position: relative;
-        z-index: 99;
-        letter-spacing: 0.01em;
-    `;
-    bar.textContent = text;
+    bar.className = "announce-" + type;
+    bar.dataset.key = key;
+    bar.setAttribute("role", type === "urgent" || type === "warning" ? "alert" : "status");
+    bar.innerHTML = `
+        <div class="announce-inner">
+            <span class="announce-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ANNOUNCEMENT_ICONS[type]}</svg></span>
+            <span class="announce-label"></span>
+            <span class="announce-text"></span>
+        </div>
+        <button type="button" class="announce-close" aria-label="Hide this announcement" title="Hide this announcement">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>`;
+    bar.querySelector(".announce-label").textContent = ANNOUNCEMENT_LABELS[type];
+    appendLinkedText(bar.querySelector(".announce-text"), text.trim());
+    bar.querySelector(".announce-close").onclick = () => {
+        try { localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.announcementDismissed, key); } catch {}
+        bar.classList.add("announce-leaving");
+        setTimeout(() => bar.remove(), 220);
+    };
 
     if (!existing) {
         const header = document.querySelector("header");
-        header.insertAdjacentElement("afterend", bar);
+        if (header) header.insertAdjacentElement("afterend", bar);
+        else document.body.prepend(bar);
     }
 }
 
@@ -1733,8 +1866,13 @@ const OWNER_EXTRA_STORAGE_KEYS = {
     motd: "gnmath-owner-motd",
     motdEnabled: "gnmath-owner-motd-enabled",
     motdLastSeen: "gnmath-owner-motd-lastseen",
-    footerLinks: "gnmath-owner-footer-links"
+    footerLinks: "gnmath-owner-footer-links",
+    announcementType: "gnmath-owner-announcement-type",
+    announcementDismissed: "gnmath-announcement-dismissed",
+    siteMessage: "gnmath-owner-site-message",
+    statusOverride: "gnmath-owner-status-override"
 };
+const ANNOUNCEMENT_TYPES = ["info", "success", "warning", "urgent"];
 const OWNER_STORAGE_KEYS = {
     siteMode: "gnmath-owner-site-mode",
     disabledZones: "gnmath-owner-disabled-zones",
@@ -1796,8 +1934,11 @@ function buildOwnerSettingsObject() {
         disabledZones: Array.from(getDisabledZoneIds()),
         announcement: {
             text:    getAnnouncement().text,
-            enabled: getAnnouncement().enabled
+            enabled: getAnnouncement().enabled,
+            type:    getAnnouncement().type
         },
+        siteMessage: getOwnerSiteMessage(),
+        statusOverride: getStatusOverride(),
         motd: {
             text:    getMotd().text,
             enabled: getMotd().enabled
@@ -1813,6 +1954,12 @@ function buildOwnerSettingsObject() {
 function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (!settings || typeof settings !== "object") return;
 
+    if (typeof settings.siteMessage === "string") {
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage, settings.siteMessage.slice(0, 400));
+    }
+    if (settings.statusOverride && typeof settings.statusOverride === "object") {
+        setStatusOverride(settings.statusOverride, { sync: false });
+    }
     if (typeof settings.siteMode === "string") {
         localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, settings.siteMode);
         applyOwnerSiteMode();
@@ -1824,6 +1971,7 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     if (settings.announcement && typeof settings.announcement === "object") {
         localStorage.setItem(OWNER_STORAGE_KEYS.announcement, settings.announcement.text ?? "");
         localStorage.setItem(OWNER_STORAGE_KEYS.announcementEnabled, settings.announcement.enabled ? "true" : "false");
+        localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.announcementType, ANNOUNCEMENT_TYPES.includes(settings.announcement.type) ? settings.announcement.type : "info");
         applyAnnouncement();
     }
     if (settings.motd && typeof settings.motd === "object") {
@@ -2803,6 +2951,10 @@ function openSettingsPanel() {
         <div class="settings-inline">
             <label>Show play count on cards</label>
             <input type="checkbox" ${showPlayCount ? 'checked' : ''} onchange="setShowPlayCount(this.checked)">
+        </div>
+        <div class="settings-inline">
+            <label>Show site status in the corner</label>
+            <input type="checkbox" ${typeof getShowSiteStatus !== "function" || getShowSiteStatus() ? 'checked' : ''} onchange="setShowSiteStatus(this.checked)">
         </div>
     </div>
 
