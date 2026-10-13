@@ -251,19 +251,57 @@ async function sha256Hex(text) {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// Counts this browser's Firestore reads and writes toward the site's daily
+// Firebase limit (firebase-pace.js). Reads count one per document returned
+// (at least one per query), writes one per set/update/delete/add.
+function countFirestoreUse() {
+    const fs = firebase.firestore;
+    if (typeof fbCount !== "function" || !fs) return;
+    const wrap = (proto, name, cost) => {
+        const orig = proto && proto[name];
+        if (typeof orig !== "function" || orig.gnCounted) return;
+        const counted = function () {
+            const out = orig.apply(this, arguments);
+            if (out && typeof out.then === "function") {
+                out.then(res => { const [r, w] = cost(res); fbCount(r, w); noteFbOk(); }, e => noteFbError(e));
+            }
+            return out;
+        };
+        counted.gnCounted = true;
+        proto[name] = counted;
+    };
+    wrap(fs.DocumentReference && fs.DocumentReference.prototype, "get", () => [1, 0]);
+    for (const m of ["set", "update", "delete"]) wrap(fs.DocumentReference && fs.DocumentReference.prototype, m, () => [0, 1]);
+    wrap(fs.Query && fs.Query.prototype, "get", snap => [Math.max(1, (snap && snap.size) || 0), 0]);
+    wrap(fs.CollectionReference && fs.CollectionReference.prototype, "add", () => [0, 1]);
+}
+
 // ── Firestore: saves/{uid} holds meta, saves/{uid}/chunks/{gen}_{i} hold data ─
 function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 async function fetchCloudMeta() {
     const snap = await saveDocRef().get();
     return snap.exists ? snap.data() : null;
 }
-async function uploadCloudSave({ force = false } = {}) {
+async function uploadCloudSave({ force = false, background = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
     try {
-        setCloudStatus("Saving…");
         const json = JSON.stringify(await collectCloudBundle());
         const hash = await sha256Hex(json);
+        // Nothing changed since the last sync: skip the Firebase read entirely
+        if (!force && hash === localStorage.getItem(CLOUD.keys.syncedHash) && localStorage.getItem(CLOUD.keys.syncedGen)) {
+            setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            return true;
+        }
+        if (!force && typeof fbPaused === "function" && fbPaused()) {
+            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+            return false;
+        }
+        if (background && typeof fbBackgroundPaused === "function" && fbBackgroundPaused()) {
+            setCloudStatus("Autosave is paused because the site's daily Firebase limit is almost used up. Save from the Account menu, or it saves when you close a game.");
+            return false;
+        }
+        setCloudStatus("Saving…");
         const meta = await fetchCloudMeta();
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
@@ -303,7 +341,9 @@ async function uploadCloudSave({ force = false } = {}) {
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
-        setCloudStatus("Cloud save failed: " + (e.message || e));
+        if (typeof noteFbError === "function" && noteFbError(e)) {
+            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+        } else setCloudStatus("Cloud save failed: " + (e.message || e));
         return false;
     } finally {
         cloudBusy = false;
@@ -454,7 +494,7 @@ async function cloudDeleteAccount() {
     } catch (e) {
         console.error("Delete account failed", e);
         setCloudStatus("Couldn't delete: " + friendlyAuthError(e));
-        if (cloudUser) cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave(); }, CLOUD.autosaveMs);
+        if (cloudUser) cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
     } finally {
         cloudBusy = false;
     }
@@ -562,6 +602,7 @@ async function initCloudAccounts() {
         firebase.initializeApp(FIREBASE_CONFIG);
         cloudAuth = firebase.auth();
         cloudDb = firebase.firestore();
+        countFirestoreUse();
         cloudAuth.onAuthStateChanged(user => {
             const wasSignedIn = !!cloudUser;
             cloudUser = user;
@@ -569,7 +610,7 @@ async function initCloudAccounts() {
             if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
             clearInterval(cloudAutosaveTimer);
             if (user) {
-                cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave(); }, CLOUD.autosaveMs);
+                cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
                 cloudSyncOnSignIn();
             } else {
                 cloudStatus = "";

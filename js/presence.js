@@ -12,8 +12,29 @@ const PRESENCE = {
     activeMs: 5 * 60 * 1000,      // seen within this long = online
     countEveryMs: 3 * 60 * 1000,  // how often the number refreshes
     site: "gn2",
-    idKey: "gnmath-presence-id"
+    idKey: "gnmath-presence-id",
+    sharedKey: "gnmath-presence-shared"   // last heartbeat + count, shared by tabs
 };
+// Busy times stretch these (firebase-pace.js). The heartbeat stays under
+// activeMs so people don't drop out of the count.
+const fbOn = () => typeof fbPaused === "function";
+function presenceBeatMs() { return fbOn() ? fbEvery(PRESENCE.heartbeatMs, 2) : PRESENCE.heartbeatMs; }
+function presenceCountMs() { return fbOn() ? fbEvery(PRESENCE.countEveryMs) : PRESENCE.countEveryMs; }
+function presenceShared() {
+    try { return JSON.parse(localStorage.getItem(PRESENCE.sharedKey) || "null") || {}; } catch { return {}; }
+}
+function setPresenceShared(changes) {
+    try { localStorage.setItem(PRESENCE.sharedKey, JSON.stringify({ ...presenceShared(), ...changes })); } catch {}
+}
+// Each heartbeat also carries this browser's Firebase read/write count for
+// today as u: { "<Pacific date>": { r, w } }, and the count step adds everyone's
+// up, so the site can see roughly how much of Firebase's daily limit is used
+// (firebase-pace.js). Needs the updated presence rule; until it's published the
+// heartbeat falls back to the old fields.
+const PRESENCE_NO_USAGE_KEY = "gnmath-presence-no-usage";
+function presenceUsageAllowed() {
+    try { return Date.now() - Number(localStorage.getItem(PRESENCE_NO_USAGE_KEY) || 0) > 6 * 3600000; } catch { return true; }
+}
 // Read by the status light (status.js)
 window.gnActiveUsers = { count: null, at: 0, error: null };
 
@@ -40,18 +61,47 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         const res = await fetch(`${API}:${path}?key=${encodeURIComponent(KEY)}`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const err = new Error(`HTTP ${res.status}`);
+            if (fbOn()) noteFbError(err);
+            throw err;
+        }
+        if (fbOn()) noteFbOk();
         return res.json();
     }
 
+    function beatBody(withUsage) {
+        const fields = { s: { stringValue: PRESENCE.site } };
+        if (withUsage && fbOn()) {
+            const t = getFbTally();
+            fields.u = { mapValue: { fields: { [t.day]: { mapValue: { fields: {
+                r: { integerValue: String(Math.min(100000, t.r)) },
+                w: { integerValue: String(Math.min(100000, t.w)) }
+            } } } } } };
+        }
+        return { writes: [{
+            update: { name: `projects/${P}/databases/(default)/documents/presence/${presenceId()}`, fields },
+            updateTransforms: [{ fieldPath: "t", setToServerValue: "REQUEST_TIME" }]
+        }] };
+    }
     async function beat() {
-        if (document.hidden) return;
+        if (document.hidden || (fbOn() && fbBackgroundPaused())) return;
         lastBeat = Date.now();
+        // Tabs in this browser share one id, so one heartbeat covers them all
+        if (Date.now() - (presenceShared().beatAt || 0) < presenceBeatMs() - 30000) return;
+        setPresenceShared({ beatAt: Date.now() });
         try {
-            await post("commit", { writes: [{
-                update: { name: `projects/${P}/databases/(default)/documents/presence/${presenceId()}`, fields: { s: { stringValue: PRESENCE.site } } },
-                updateTransforms: [{ fieldPath: "t", setToServerValue: "REQUEST_TIME" }]
-            }] });
+            if (fbOn()) fbCount(0, 1);
+            const withUsage = presenceUsageAllowed();
+            try {
+                await post("commit", beatBody(withUsage));
+            } catch (e) {
+                // Old database rules don't allow the usage field yet: send without it
+                if (!withUsage || !/HTTP 403/.test(e.message)) throw e;
+                try { localStorage.setItem(PRESENCE_NO_USAGE_KEY, String(Date.now())); } catch {}
+                if (fbOn()) fbCount(0, 1);
+                await post("commit", beatBody(false));
+            }
         } catch (e) {
             window.gnActiveUsers.error = String(e.message || e);
             console.info("Online count unavailable:", e.message || e);
@@ -60,9 +110,19 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
 
     async function count(force) {
         if (counting || (!force && Date.now() - lastCount < 30000)) return;
-        counting = true;
         lastCount = Date.now();
+        // Use a count another tab got recently instead of asking again
+        const shared = presenceShared();
+        if (Number.isFinite(shared.count) && Date.now() - (shared.countAt || 0) < (force ? presenceCountMs() : 30000) - 5000) {
+            window.gnActiveUsers = { count: shared.count, at: shared.countAt, error: null };
+            if (typeof updateSiteStatus === "function") updateSiteStatus();
+            return;
+        }
+        if (fbOn() && fbPaused()) return;
+        counting = true;
+        if (fbOn()) sumUsage();
         try {
+            if (fbOn()) fbCount(1, 0);
             const out = await post("runAggregationQuery", { structuredAggregationQuery: {
                 structuredQuery: {
                     from: [{ collectionId: "presence" }],
@@ -73,6 +133,7 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             const n = Number((Array.isArray(out) ? out : [out]).map(x => x?.result?.aggregateFields?.n?.integerValue).find(v => v != null));
             if (!Number.isFinite(n)) throw new Error("bad count");
             window.gnActiveUsers = { count: Math.max(1, n), at: Date.now(), error: null };
+            setPresenceShared({ count: Math.max(1, n), countAt: Date.now() });
             if (typeof updateSiteStatus === "function") updateSiteStatus();
         } catch (e) {
             window.gnActiveUsers.error = String(e.message || e);
@@ -82,17 +143,40 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
     }
     window.refreshActiveUsers = () => count(false);
 
+    // Adds up every browser's Firebase count for today (about 1 read per 1,000 browsers)
+    async function sumUsage() {
+        const day = fbDayKey();
+        try {
+            fbCount(1, 0);
+            const out = await post("runAggregationQuery", { structuredAggregationQuery: {
+                structuredQuery: { from: [{ collectionId: "presence" }] },
+                aggregations: [
+                    { alias: "r", sum: { field: { fieldPath: `u.\`${day}\`.r` } } },
+                    { alias: "w", sum: { field: { fieldPath: `u.\`${day}\`.w` } } }
+                ]
+            } });
+            const f = (Array.isArray(out) ? out : [out]).map(x => x?.result?.aggregateFields).find(Boolean);
+            if (!f) return;
+            const num = v => Number(v?.integerValue ?? v?.doubleValue ?? 0) || 0;
+            // Nobody has reported yet today (e.g. old rules): don't show a fake zero
+            const r = num(f.r), w = num(f.w);
+            if (r + w > 0) setFbUsage(r, w);
+        } catch (e) {
+            console.info("Firebase usage total unavailable:", e.message || e);
+        }
+    }
+
     // Wait until the page has settled so this never slows down the first load
     setTimeout(async () => {
         await beat();
         count(true);
         setInterval(() => {
             if (document.hidden) return;
-            if (Date.now() - lastBeat >= PRESENCE.heartbeatMs - 1000) beat();
-            if (Date.now() - lastCount >= PRESENCE.countEveryMs) count(true);
+            if (Date.now() - lastBeat >= presenceBeatMs() - 1000) beat();
+            if (Date.now() - lastCount >= presenceCountMs()) count(true);
         }, 30000);
     }, 4000);
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && lastBeat && Date.now() - lastBeat >= PRESENCE.heartbeatMs) { beat().then(() => count(true)); }
+        if (!document.hidden && lastBeat && Date.now() - lastBeat >= presenceBeatMs()) { beat().then(() => count(true)); }
     });
 })();

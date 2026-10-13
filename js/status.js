@@ -70,6 +70,9 @@ function collectStatusChecks() {
     }
 
     if (typeof syncPaceSummary === "function") checks.push({ name: "Live updates", ...syncPaceSummary() });
+    if (typeof fbPaceSummary === "function" && typeof FIREBASE_CONFIG !== "undefined" && FIREBASE_CONFIG) {
+        checks.push({ name: "Database use", ...fbPaceSummary() });
+    }
 
     checks.push({ name: "Game protection", level: "ok", detail: "Library locked to the checked, clean version" });
     return checks;
