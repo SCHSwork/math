@@ -6,7 +6,8 @@ All the changes to GN 2.0, newest first.
 ## October 12, 2026
 
 ### New
-- **1,967 more partner games from Playgama**, uploaded there by their own developers: 3D, puzzle, racing, shooting, simulation, idle and more. Like the html5games.com games, they play from Playgama's own site, may show Playgama's ads, and are marked **AD**. Only games without in-game purchases are included, and copies of big brands were left out. GN 2.0 has no Playgama account and earns nothing from them. If Playgama is blocked on your network, its games are hidden automatically while the others stay.
+- **1,976 more partner games from Playgama**, uploaded there by their own developers: 3D, puzzle, racing, shooting, simulation, idle and more. Like the html5games.com games, they play from Playgama's own site, may show Playgama's ads, and are marked **AD**. Only games without in-game purchases are included, and copies of big brands were left out. GN 2.0 has no Playgama account and earns nothing from them. If Playgama is blocked on your network, its games are hidden automatically while the others stay.
+- **Duplicate check.** Games with the same name in more than one place were compared one by one (developer, description and the game files). 10 html5games.com games and 11 Playgama games that are the same game as one in the library are hidden, so the ad-free copy is the one you see. Same-name games that turned out to be different (for example two different games called Slope, Snakes, Bottle Flip or Zop) are all kept.
 
 ### Changed
 - Privacy Policy and Terms updated for Playgama.
