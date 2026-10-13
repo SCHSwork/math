@@ -512,10 +512,14 @@ function summarizeStats(raw) {
 async function loadGameStats({ force = false } = {}) {
     const cached = readJson(LIB_KEYS.statsCache, null);
     if (cached && cached.raw) gameStats = summarizeStats(cached.raw);
-    if (!force && cached && Date.now() - cached.t < STATS_CACHE_MS) return;
+    // Refreshes less often when lots of people are online (firebase-pace.js)
+    const maxAge = typeof fbEvery === "function" ? fbEvery(STATS_CACHE_MS) : STATS_CACHE_MS;
+    if (!force && cached && Date.now() - cached.t < maxAge) return;
     if (typeof cloudDb === "undefined" || !cloudDb) return;
+    if (!force && typeof fbBackgroundPaused === "function" && fbBackgroundPaused()) return;
     try {
         const snap = await cloudDb.collection("gameStats").get();
+        if (typeof noteFbOk === "function") noteFbOk();
         const raw = {};
         snap.docs.forEach(doc => {
             const data = doc.data() || {};
@@ -535,6 +539,7 @@ async function loadGameStats({ force = false } = {}) {
         const open = document.getElementById("zoneId")?.textContent;
         if (open && zoneViewer.style.display === "flex") updateRatingBar(open);
     } catch (e) {
+        if (typeof noteFbError === "function") noteFbError(e);
         console.warn("Couldn't load ratings/reports", e);
     }
 }
@@ -639,7 +644,8 @@ gameStats = summarizeStats((readJson(LIB_KEYS.statsCache, {}) || {}).raw || {});
     if (typeof cloudDb !== "undefined" && cloudDb) return loadGameStats();
     if (tries > 0) setTimeout(() => waitForDb(tries - 1), 500);
 })(40);
-setInterval(() => { if (!document.hidden) loadGameStats(); }, STATS_CACHE_MS);
+// Checked every minute; loadGameStats decides whether the saved copy is old enough
+setInterval(() => { if (!document.hidden) loadGameStats(); }, 60000);
 
 // Every full redraw reads favorites, play time and hidden games once instead of
 // once per card (see withCardCache in app.js).
