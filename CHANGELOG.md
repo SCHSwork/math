@@ -10,6 +10,7 @@ All the changes to GN 2.0, newest first.
 
 ### Changed
 - **Owner-change checks pace themselves.** Open pages normally check about once a minute, but slow down by themselves when GitHub says it's getting too many requests (or is close to its limit), and when lots of people are online, since a whole school often shares one network and GitHub's limit is per network. They speed back up once things are fine. Tabs in the same browser share one check instead of each making their own.
+- **"Live updates" in the status light.** It shows how often this page is checking for owner changes right now, and if it's slowed down or paused, why (lots of people online, close to or over GitHub's request limit, or trouble reaching GitHub).
 
 
 ## October 12, 2026

@@ -2199,16 +2199,23 @@ const SYNC_BASE_MS = 60000, SYNC_MAX_MS = 15 * 60000;
 function getSyncPace() {
     let p = null;
     try { p = JSON.parse(localStorage.getItem(SYNC_PACE_KEY) || "null"); } catch {}
-    return { slow: Math.min(16, Math.max(1, Number(p?.slow) || 1)), pauseUntil: Number(p?.pauseUntil) || 0, last: Number(p?.last) || 0 };
+    return {
+        slow: Math.min(16, Math.max(1, Number(p?.slow) || 1)), pauseUntil: Number(p?.pauseUntil) || 0,
+        last: Number(p?.last) || 0, okAt: Number(p?.okAt) || 0,
+        why: ["limited", "near", "network"].includes(p?.why) ? p.why : ""   // why it's slowed down
+    };
 }
 function setSyncPace(changes) {
     try { localStorage.setItem(SYNC_PACE_KEY, JSON.stringify({ ...getSyncPace(), ...changes })); } catch {}
 }
 function noteSyncResult(kind, pauseUntil = 0) {
-    const { slow } = getSyncPace();
-    if (kind === "ok") setSyncPace({ slow: Math.max(1, slow / 1.5) });          // ease back up
-    else if (kind === "limited") setSyncPace({ slow: Math.min(16, slow * 2), pauseUntil: Math.max(pauseUntil, Date.now() + SYNC_BASE_MS * 2) });
-    else setSyncPace({ slow: Math.min(4, slow * 1.5) });                        // network trouble: back off a little
+    const { slow, why } = getSyncPace();
+    if (kind === "ok") {                                                         // ease back up
+        const next = Math.max(1, slow / 1.5);
+        setSyncPace({ slow: next, okAt: Date.now(), why: next > 1 ? why : "" });
+    }
+    else if (kind === "limited") setSyncPace({ slow: Math.min(16, slow * 2), pauseUntil: Math.max(pauseUntil, Date.now() + SYNC_BASE_MS * 2), why: "limited" });
+    else setSyncPace({ slow: Math.min(4, slow * 1.5), why: why === "limited" ? why : "network" }); // network trouble: back off a little
 }
 // Reads GitHub's rate-limit headers when the browser is allowed to see them
 function noteSyncResponse(res) {
@@ -2220,17 +2227,38 @@ function noteSyncResponse(res) {
         noteSyncResult("limited", retryAfter ? Date.now() + retryAfter * 1000 : reset);
     } else if (res.ok && limit > 0 && remaining / limit < 0.2) {
         // Getting close: slow down in step with how little is left
-        setSyncPace({ slow: Math.min(16, Math.max(getSyncPace().slow, 2 * limit / Math.max(1, remaining) / 5)) });
+        setSyncPace({ slow: Math.min(16, Math.max(getSyncPace().slow, 2 * limit / Math.max(1, remaining) / 5)), okAt: Date.now(), why: "near" });
     } else if (res.ok) noteSyncResult("ok");
     else if (res.status >= 500) noteSyncResult("failed");
 }
 // Time to wait before the next check, with a little randomness so tabs on the
 // same network don't all ask at the same second
-function syncCheckDelay() {
+function syncCrowdFactor() {
     const online = window.gnActiveUsers?.count || 0;
-    const crowd = Math.min(4, Math.max(1, online / 150));   // 300 online = every 2 min, 600+ = every 4 min
-    const ms = Math.min(SYNC_MAX_MS, SYNC_BASE_MS * crowd * getSyncPace().slow);
-    return ms * (0.8 + Math.random() * 0.4);
+    return Math.min(4, Math.max(1, online / 150));          // 300 online = every 2 min, 600+ = every 4 min
+}
+function syncNominalDelay() {
+    return Math.min(SYNC_MAX_MS, SYNC_BASE_MS * syncCrowdFactor() * getSyncPace().slow);
+}
+function syncCheckDelay() {
+    return syncNominalDelay() * (0.8 + Math.random() * 0.4);
+}
+// One line for the status light: how fast owner changes reach this page right now
+function syncPaceSummary() {
+    const pace = getSyncPace();
+    const mins = ms => { const m = Math.max(1, Math.round(ms / 60000)); return m === 1 ? "1 min" : m + " min"; };
+    const ago = pace.okAt ? ` Last checked ${Date.now() - pace.okAt < 60000 ? "just now" : mins(Date.now() - pace.okAt) + " ago"}.` : "";
+    if (Date.now() < pace.pauseUntil) {
+        return { level: "info", detail: `Paused for about ${mins(pace.pauseUntil - Date.now())}: GitHub asked for fewer requests from this network. Lock and reopen changes may arrive late.${ago}` };
+    }
+    const every = `every ${mins(syncNominalDelay())}`;
+    const reasons = [];
+    if (pace.slow > 1.05 && pace.why === "limited") reasons.push("GitHub recently hit its request limit");
+    if (pace.slow > 1.05 && pace.why === "near") reasons.push("close to GitHub's request limit");
+    if (pace.slow > 1.05 && pace.why === "network") reasons.push("trouble reaching GitHub");
+    if (syncCrowdFactor() > 1.05) reasons.push("lots of people online");
+    if (!reasons.length) return { level: "ok", detail: `Checking for owner changes ${every}.${ago}` };
+    return { level: "info", detail: `Slowed to ${every} (${reasons.join(", ")}) to stay under GitHub's limits.${ago}` };
 }
 let _nextSyncDelay = SYNC_BASE_MS;
 function syncCheckDue() {
