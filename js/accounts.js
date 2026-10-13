@@ -261,9 +261,18 @@ async function uploadCloudSave({ force = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
     try {
-        setCloudStatus("Saving…");
         const json = JSON.stringify(await collectCloudBundle());
         const hash = await sha256Hex(json);
+        // Nothing changed since the last sync: skip the Firebase read entirely
+        if (!force && hash === localStorage.getItem(CLOUD.keys.syncedHash) && localStorage.getItem(CLOUD.keys.syncedGen)) {
+            setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            return true;
+        }
+        if (!force && typeof fbPaused === "function" && fbPaused()) {
+            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+            return false;
+        }
+        setCloudStatus("Saving…");
         const meta = await fetchCloudMeta();
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
@@ -303,7 +312,9 @@ async function uploadCloudSave({ force = false } = {}) {
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
-        setCloudStatus("Cloud save failed: " + (e.message || e));
+        if (typeof noteFbError === "function" && noteFbError(e)) {
+            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+        } else setCloudStatus("Cloud save failed: " + (e.message || e));
         return false;
     } finally {
         cloudBusy = false;
