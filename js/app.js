@@ -799,6 +799,7 @@ function openZone(file) {
         currentGameId = String(file.id);
         updateRatingBar(file.id);
         if (typeof endGameLoad === "function") endGameLoad(true);
+        zoneOpenToken++;
         try { openPartnerFrame(file); }
         catch (error) {
             closeZone();
@@ -823,17 +824,17 @@ function openZone(file) {
         currentGameId = String(file.id);
         updateRatingBar(file.id);
         beginGameLoad(file);
-        if (zoneFrame.contentDocument !== null) {
-            zoneFrame.contentDocument.open();
-            zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
-            zoneFrame.contentDocument.close();
-        }
+        // Every game gets a brand-new frame. Writing a game into the frame the last
+        // game used keeps that game's variables around, which breaks the next one
+        // (e.g. "Identifier 'GODOT_CONFIG' has already been declared").
+        replaceZoneFrame();
+        const token = ++zoneOpenToken;
+        zoneFrame.contentDocument.open();
+        zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
+        zoneFrame.contentDocument.close();
         fetchWithFallback(file.url).then(html => {
-            if (zoneFrame.contentDocument === null) {
-                zoneFrame = document.createElement("iframe");
-                zoneFrame.id = "zoneFrame";
-                zoneViewer.appendChild(zoneFrame);
-            }
+            if (token !== zoneOpenToken) return; // another game was opened meanwhile
+            if (zoneFrame.contentDocument === null) replaceZoneFrame();
             markGamePageWritten();
             zoneFrame.contentDocument.open();
             zoneFrame.contentDocument.write(html);
@@ -845,6 +846,15 @@ function openZone(file) {
             else notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
         });
     }
+}
+
+let zoneOpenToken = 0;
+function replaceZoneFrame() {
+    if (zoneFrame && zoneFrame.parentNode) zoneFrame.parentNode.removeChild(zoneFrame);
+    zoneFrame = document.createElement("iframe");
+    zoneFrame.id = "zoneFrame";
+    zoneViewer.appendChild(zoneFrame);
+    if (typeof attachPanicKeyToFrame === "function") zoneFrame.addEventListener("load", attachPanicKeyToFrame);
 }
 
 function aboutBlank() {
@@ -864,6 +874,7 @@ function aboutBlank() {
 }
 
 function closeZone() {
+    zoneOpenToken++;
     stopPlaytime();
     if (typeof closeGameMenu === "function") closeGameMenu();
     if (typeof currentGameId !== "undefined") currentGameId = null;
