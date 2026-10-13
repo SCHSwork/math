@@ -16,6 +16,7 @@ All the changes to GN 2.0, newest first.
 ## October 12, 2026
 
 ### New
+- **7 modern 3D games** in GN Originals: Kenney's 3D Platformer, Racing, Blaster Arena (FPS) and City Builder, plus Godot's Robot Platformer 3D, Truck Town and Voxel World. They're open source (MIT, with CC0 or CC BY-SA art) and run straight in the browser.
 - **135 new WebAssembly games in GN Originals**: 120 tiny retro games for the WASM-4 fantasy console (under a new **WASM-4 retro games** Source filter), 14 games by raylib's creator (Koala Seasons, Dr. Turtle & Mr. Shark, Skully Escape, Retro Maze 3D and more), and the platformer Inovation 2007. All are open-licensed and credited in the game's Info panel.
 - **Alerts for new library games.** When the game library adds a game that isn't in its clean version, admins and the owner get a notice when they open the site, and a new **New library games** tab in the Admin Panel lists them with a "Mark checked" button. A GitHub Action also checks every 6 hours and opens a GitHub issue on this repo (so the owner gets a GitHub notification) listing the games to check.
 
