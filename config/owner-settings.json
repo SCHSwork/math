@@ -1,5 +1,5 @@
 {
-  "siteMode": "maintenance",
+  "siteMode": "open",
   "disabledZones": [
     "653"
   ],
@@ -42,5 +42,5 @@
       "name": "poopmaster"
     }
   ],
-  "updatedAt": "2026-10-13T20:29:27.319Z"
+  "updatedAt": "2026-10-13T20:29:33.868Z"
 }
