@@ -1395,10 +1395,13 @@ function applyOwnerSiteMode() {
     }
 
     if (!siteModeRecheckTimer) {
-        let lastAuto = Date.now();
         siteModeRecheckTimer = setInterval(() => {
             updateSiteModeCheckedText();
-            if (!document.hidden && Date.now() - lastAuto >= 60000) { lastAuto = Date.now(); recheckSiteMode(false); }
+            if (!document.hidden && syncCheckDue()) {
+                setSyncPace({ last: Date.now() });
+                _nextSyncDelay = syncCheckDelay();
+                recheckSiteMode(false);
+            }
         }, 10000);
     }
 }
@@ -2154,6 +2157,7 @@ async function githubSyncPull({ rerender = false } = {}) {
                 headers: { Accept: "application/vnd.github+json", Authorization: `token ${pat}` },
                 cache: "no-store"
             });
+            noteSyncResponse(res);
             if (res.ok) {
                 const json = await res.json();
                 settings = JSON.parse(decodeURIComponent(escape(atob(json.content.replace(/\n/g, "")))));
@@ -2165,30 +2169,98 @@ async function githubSyncPull({ rerender = false } = {}) {
             // It can cache for a few minutes, so lock/shutdown changes may take
             // up to ~5 minutes to reach everyone.
             const [owner, repo] = GITHUB_SYNC_REPO.split("/");
-            try {
-                settings = await fetchFirst(
-                    [GITHUB_SYNC_CDN + "?t=" + Date.now(), MIRRORS.githack(owner, repo, "HEAD", GITHUB_SYNC_FILE), MIRRORS.jsdelivr(owner, repo, "main", GITHUB_SYNC_FILE)],
-                    { timeoutMs: 10000, validate: r => r.json(), track: false, cache: "no-store" });
-            } catch { return; } // keep the last settings this browser already has
+            const urls = [GITHUB_SYNC_CDN + "?t=" + Date.now(), MIRRORS.githack(owner, repo, "HEAD", GITHUB_SYNC_FILE), MIRRORS.jsdelivr(owner, repo, "main", GITHUB_SYNC_FILE)];
+            for (const [i, url] of urls.entries()) {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 10000);
+                try {
+                    const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+                    if (i === 0) noteSyncResponse(res);
+                    if (res.ok) { settings = await res.json(); break; }
+                } catch (_) {
+                    if (i === 0) noteSyncResult("failed");
+                } finally { clearTimeout(timer); }
+            }
+            if (!settings) return; // keep the last settings this browser already has
         }
         if (_autoSyncTimer || _syncPushing) return;
         applyOwnerSettingsObject(settings, { rerender });
     } catch (_) {}
 }
 
+// ── Adaptive check speed ────────────────────────────────────────────────────
+// How often open pages look for owner changes. It slows down by itself when
+// GitHub says "too many requests" (or is close to it), when a lot of people are
+// online (a whole school often shares one network address, and the limit is per
+// address), and speeds back up once things are fine. Shared by all tabs in this
+// browser, so several open tabs don't each make their own checks.
+const SYNC_PACE_KEY = "gnmath-sync-pace";
+const SYNC_BASE_MS = 60000, SYNC_MAX_MS = 15 * 60000;
+function getSyncPace() {
+    let p = null;
+    try { p = JSON.parse(localStorage.getItem(SYNC_PACE_KEY) || "null"); } catch {}
+    return { slow: Math.min(16, Math.max(1, Number(p?.slow) || 1)), pauseUntil: Number(p?.pauseUntil) || 0, last: Number(p?.last) || 0 };
+}
+function setSyncPace(changes) {
+    try { localStorage.setItem(SYNC_PACE_KEY, JSON.stringify({ ...getSyncPace(), ...changes })); } catch {}
+}
+function noteSyncResult(kind, pauseUntil = 0) {
+    const { slow } = getSyncPace();
+    if (kind === "ok") setSyncPace({ slow: Math.max(1, slow / 1.5) });          // ease back up
+    else if (kind === "limited") setSyncPace({ slow: Math.min(16, slow * 2), pauseUntil: Math.max(pauseUntil, Date.now() + SYNC_BASE_MS * 2) });
+    else setSyncPace({ slow: Math.min(4, slow * 1.5) });                        // network trouble: back off a little
+}
+// Reads GitHub's rate-limit headers when the browser is allowed to see them
+function noteSyncResponse(res) {
+    const h = name => res.headers.get(name);
+    const retryAfter = Number(h("retry-after")) || 0;
+    const remaining = Number(h("x-ratelimit-remaining")), limit = Number(h("x-ratelimit-limit"));
+    const reset = Number(h("x-ratelimit-reset")) * 1000 || 0;
+    if (res.status === 429 || (res.status === 403 && (remaining === 0 || retryAfter))) {
+        noteSyncResult("limited", retryAfter ? Date.now() + retryAfter * 1000 : reset);
+    } else if (res.ok && limit > 0 && remaining / limit < 0.2) {
+        // Getting close: slow down in step with how little is left
+        setSyncPace({ slow: Math.min(16, Math.max(getSyncPace().slow, 2 * limit / Math.max(1, remaining) / 5)) });
+    } else if (res.ok) noteSyncResult("ok");
+    else if (res.status >= 500) noteSyncResult("failed");
+}
+// Time to wait before the next check, with a little randomness so tabs on the
+// same network don't all ask at the same second
+function syncCheckDelay() {
+    const online = window.gnActiveUsers?.count || 0;
+    const crowd = Math.min(4, Math.max(1, online / 150));   // 300 online = every 2 min, 600+ = every 4 min
+    const ms = Math.min(SYNC_MAX_MS, SYNC_BASE_MS * crowd * getSyncPace().slow);
+    return ms * (0.8 + Math.random() * 0.4);
+}
+let _nextSyncDelay = SYNC_BASE_MS;
+function syncCheckDue() {
+    const pace = getSyncPace();
+    if (Date.now() < pace.pauseUntil) return false;
+    return Date.now() - pace.last >= _nextSyncDelay;
+}
+async function adaptiveSyncPull() {
+    setSyncPace({ last: Date.now() });
+    _nextSyncDelay = syncCheckDelay();
+    await githubSyncPull();
+}
+
 // Visitors already on the site pick up lock / maintenance / shutdown (and other
 // owner changes) without reloading. While closed, the lock screen checks on its own.
-let _settingsWatchLast = Date.now();
 function startOwnerSettingsWatch() {
+    setSyncPace({ last: Date.now() });
+    _nextSyncDelay = syncCheckDelay();
     const check = () => {
-        if (document.hidden || getOwnerSiteMode() !== "open") return;
-        if (Date.now() - _settingsWatchLast < 60000) return;
-        _settingsWatchLast = Date.now();
-        githubSyncPull();
+        if (document.hidden || getOwnerSiteMode() !== "open" || !syncCheckDue()) return;
+        adaptiveSyncPull();
     };
     setInterval(check, 15000);
     document.addEventListener("visibilitychange", check);
     window.addEventListener("online", check);
+    // Another tab in this browser got new settings: show them here too
+    window.addEventListener("storage", e => {
+        if (e.key === OWNER_STORAGE_KEYS.siteMode || e.key === OWNER_EXTRA_STORAGE_KEYS.siteMessage || e.key === OWNER_EXTRA_STORAGE_KEYS.siteBackAt) applyOwnerSiteMode();
+        if (e.key === OWNER_EXTRA_STORAGE_KEYS.statusOverride && typeof updateSiteStatus === "function") updateSiteStatus();
+    });
 }
 
 /** Save settings then immediately push to GitHub. Shows status in panel. */
@@ -3378,7 +3450,8 @@ function closePopup() {
 }
 applySavedSettings();
 // Pull owner settings from GitHub FIRST, then render zones so disabled list is correct
-githubSyncPull().finally(() => {
+// If GitHub recently said "too many requests", use the saved settings for now
+(Date.now() < getSyncPace().pauseUntil ? Promise.resolve() : githubSyncPull()).finally(() => {
     startOwnerSettingsWatch();
     listZones();
     // After zones + settings are loaded, show MOTD and autofocus search if enabled

@@ -8,6 +8,9 @@ All the changes to GN 2.0, newest first.
 ### Fixed
 - **Locking, maintenance and shutdown now reach everyone reliably.** People already on the site used to keep using it until they reloaded; now open pages check for owner changes about once a minute and show the lock, maintenance or shutdown screen by themselves. Switching quickly between Locked, Maintenance and Shut down in the Owner Panel could also fail to save (GitHub rejected the second save), so the site stayed on the old setting. Saves now go one at a time and retry, and an old cached copy of the settings from a backup source can no longer undo a newer change.
 
+### Changed
+- **Owner-change checks pace themselves.** Open pages normally check about once a minute, but slow down by themselves when GitHub says it's getting too many requests (or is close to its limit), and when lots of people are online, since a whole school often shares one network and GitHub's limit is per network. They speed back up once things are fine. Tabs in the same browser share one check instead of each making their own.
+
 
 ## October 12, 2026
 
