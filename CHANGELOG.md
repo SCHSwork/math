@@ -6,6 +6,9 @@ All the changes to GN 2.0, newest first.
 ## October 12, 2026
 
 ### Fixed
+- Opening a game while another is still open (for example with the 🎲 button in the player) no longer breaks the new game. Each game now gets a fresh frame, so leftovers from the last game can't clash with it.
+
+### Fixed
 - **The site no longer freezes right after it opens on slow computers like school Chromebooks.** In the first few seconds, play counts, ratings and the partner-games check each finished at different times, and each one rebuilt every game card on the page. That froze slower computers 3 to 5 times in a row, often just as you clicked a game. Now:
   - they share one redraw, and nothing is redrawn while a game is open (it catches up when you close the game);
   - All games draws the first screenful right away and the rest in small pieces when the browser is free;
@@ -16,6 +19,7 @@ All the changes to GN 2.0, newest first.
 ## October 12, 2026
 
 ### New
+- **3 more Godot games:** Gobot, a big third-person shooter by GDQuest (it takes a while to load), Squash the Creeps and Kenney's Match 3.
 - **7 modern 3D games** in GN Originals: Kenney's 3D Platformer, Racing, Blaster Arena (FPS) and City Builder, plus Godot's Robot Platformer 3D, Truck Town and Voxel World. They're open source (MIT, with CC0 or CC BY-SA art) and run straight in the browser.
 - **135 new WebAssembly games in GN Originals**: 120 tiny retro games for the WASM-4 fantasy console (under a new **WASM-4 retro games** Source filter), 14 games by raylib's creator (Koala Seasons, Dr. Turtle & Mr. Shark, Skully Escape, Retro Maze 3D and more), and the platformer Inovation 2007. All are open-licensed and credited in the game's Info panel.
 - **Alerts for new library games.** When the game library adds a game that isn't in its clean version, admins and the owner get a notice when they open the site, and a new **New library games** tab in the Admin Panel lists them with a "Mark checked" button. A GitHub Action also checks every 6 hours and opens a GitHub issue on this repo (so the owner gets a GitHub notification) listing the games to check.
