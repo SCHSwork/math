@@ -68,12 +68,23 @@ service cloud.firestore {
     // "People online now": each open tab writes { t: server time, s: site } to
     // presence/<random id> every couple of minutes. No account or personal
     // info; anyone can read it so the site and status page can count it.
+    // Optional u: { "<YYYYMMDD>": { r, w } } is that browser's Firebase read and
+    // write count for today, added up by the site to estimate daily usage.
     match /presence/{id} {
       allow read: if true;
       allow create, update: if id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['t', 's'])
+        && request.resource.data.keys().hasOnly(['t', 's', 'u'])
         && request.resource.data.t == request.time
-        && request.resource.data.s in ['gn2', 'light'];
+        && request.resource.data.s in ['gn2', 'light']
+        && (!('u' in request.resource.data) || validUsage(request.resource.data.u));
+    }
+    function validUsage(u) {
+      return u is map && u.size() == 1
+        && u.keys()[0].matches('20[0-9]{6}')
+        && u.values()[0] is map
+        && u.values()[0].keys().hasOnly(['r', 'w'])
+        && u.values()[0].r is int && u.values()[0].r >= 0 && u.values()[0].r <= 100000
+        && u.values()[0].w is int && u.values()[0].w >= 0 && u.values()[0].w <= 100000;
     }
 
     function isBanned() {
