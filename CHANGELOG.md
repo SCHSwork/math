@@ -10,6 +10,7 @@ All the changes to GN 2.0, newest first.
 
 ### Changed
 - **Owner-change checks pace themselves.** Open pages normally check about once a minute, but slow down by themselves when GitHub says it's getting too many requests (or is close to its limit), and when lots of people are online, since a whole school often shares one network and GitHub's limit is per network. They speed back up once things are fine. Tabs in the same browser share one check instead of each making their own.
+- **Firebase use paces itself too.** The free Firebase plan has a daily limit for the whole site, and when it runs out, accounts, ratings and the online count stop for everyone until it resets. Now ratings and the online count refresh less often when lots of people are online. If Firebase says the limit was reached, those features pause and try again later (15 min, then 30, 1 h, then every 2 h) instead of retrying over and over. Cloud autosave no longer contacts Firebase when nothing on this device changed, and tabs in the same browser share one online heartbeat and count. A new **"Database use"** row in the status light shows the current pace, or that it's paused and when it'll try again.
 - **"Live updates" in the status light.** It shows how often this page is checking for owner changes right now, and if it's slowed down or paused, why (lots of people online, close to or over GitHub's request limit, or trouble reaching GitHub).
 
 

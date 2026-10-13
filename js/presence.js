@@ -12,8 +12,20 @@ const PRESENCE = {
     activeMs: 5 * 60 * 1000,      // seen within this long = online
     countEveryMs: 3 * 60 * 1000,  // how often the number refreshes
     site: "gn2",
-    idKey: "gnmath-presence-id"
+    idKey: "gnmath-presence-id",
+    sharedKey: "gnmath-presence-shared"   // last heartbeat + count, shared by tabs
 };
+// Busy times stretch these (firebase-pace.js). The heartbeat stays under
+// activeMs so people don't drop out of the count.
+const fbOn = () => typeof fbPaused === "function";
+function presenceBeatMs() { return fbOn() ? fbEvery(PRESENCE.heartbeatMs, 2) : PRESENCE.heartbeatMs; }
+function presenceCountMs() { return fbOn() ? fbEvery(PRESENCE.countEveryMs) : PRESENCE.countEveryMs; }
+function presenceShared() {
+    try { return JSON.parse(localStorage.getItem(PRESENCE.sharedKey) || "null") || {}; } catch { return {}; }
+}
+function setPresenceShared(changes) {
+    try { localStorage.setItem(PRESENCE.sharedKey, JSON.stringify({ ...presenceShared(), ...changes })); } catch {}
+}
 // Read by the status light (status.js)
 window.gnActiveUsers = { count: null, at: 0, error: null };
 
@@ -40,13 +52,21 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         const res = await fetch(`${API}:${path}?key=${encodeURIComponent(KEY)}`, {
             method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const err = new Error(`HTTP ${res.status}`);
+            if (fbOn()) noteFbError(err);
+            throw err;
+        }
+        if (fbOn()) noteFbOk();
         return res.json();
     }
 
     async function beat() {
-        if (document.hidden) return;
+        if (document.hidden || (fbOn() && fbPaused())) return;
         lastBeat = Date.now();
+        // Tabs in this browser share one id, so one heartbeat covers them all
+        if (Date.now() - (presenceShared().beatAt || 0) < presenceBeatMs() - 30000) return;
+        setPresenceShared({ beatAt: Date.now() });
         try {
             await post("commit", { writes: [{
                 update: { name: `projects/${P}/databases/(default)/documents/presence/${presenceId()}`, fields: { s: { stringValue: PRESENCE.site } } },
@@ -60,8 +80,16 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
 
     async function count(force) {
         if (counting || (!force && Date.now() - lastCount < 30000)) return;
-        counting = true;
         lastCount = Date.now();
+        // Use a count another tab got recently instead of asking again
+        const shared = presenceShared();
+        if (Number.isFinite(shared.count) && Date.now() - (shared.countAt || 0) < (force ? presenceCountMs() : 30000) - 5000) {
+            window.gnActiveUsers = { count: shared.count, at: shared.countAt, error: null };
+            if (typeof updateSiteStatus === "function") updateSiteStatus();
+            return;
+        }
+        if (fbOn() && fbPaused()) return;
+        counting = true;
         try {
             const out = await post("runAggregationQuery", { structuredAggregationQuery: {
                 structuredQuery: {
@@ -73,6 +101,7 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             const n = Number((Array.isArray(out) ? out : [out]).map(x => x?.result?.aggregateFields?.n?.integerValue).find(v => v != null));
             if (!Number.isFinite(n)) throw new Error("bad count");
             window.gnActiveUsers = { count: Math.max(1, n), at: Date.now(), error: null };
+            setPresenceShared({ count: Math.max(1, n), countAt: Date.now() });
             if (typeof updateSiteStatus === "function") updateSiteStatus();
         } catch (e) {
             window.gnActiveUsers.error = String(e.message || e);
@@ -88,11 +117,11 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         count(true);
         setInterval(() => {
             if (document.hidden) return;
-            if (Date.now() - lastBeat >= PRESENCE.heartbeatMs - 1000) beat();
-            if (Date.now() - lastCount >= PRESENCE.countEveryMs) count(true);
+            if (Date.now() - lastBeat >= presenceBeatMs() - 1000) beat();
+            if (Date.now() - lastCount >= presenceCountMs()) count(true);
         }, 30000);
     }, 4000);
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && lastBeat && Date.now() - lastBeat >= PRESENCE.heartbeatMs) { beat().then(() => count(true)); }
+        if (!document.hidden && lastBeat && Date.now() - lastBeat >= presenceBeatMs()) { beat().then(() => count(true)); }
     });
 })();
