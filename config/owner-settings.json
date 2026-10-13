@@ -10,8 +10,8 @@
   },
   "siteMessage": "",
   "statusOverride": {
-    "level": "maintenance",
-    "text": "Testing currently"
+    "level": "auto",
+    "text": ""
   },
   "motd": {
     "text": "Make sure t",
@@ -41,5 +41,5 @@
       "name": "poopmaster"
     }
   ],
-  "updatedAt": "2026-10-13T05:11:50.023Z"
+  "updatedAt": "2026-10-13T05:12:54.744Z"
 }
