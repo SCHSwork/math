@@ -5,10 +5,11 @@
   ],
   "announcement": {
     "text": "HUGE UPDATE! account system to save progress and various things!",
-    "enabled": true,
+    "enabled": false,
     "type": "info"
   },
   "siteMessage": "",
+  "siteBackAt": "",
   "statusOverride": {
     "level": "auto",
     "text": ""
@@ -41,5 +42,5 @@
       "name": "poopmaster"
     }
   ],
-  "updatedAt": "2026-10-13T05:12:54.744Z"
+  "updatedAt": "2026-10-13T05:35:54.873Z"
 }
