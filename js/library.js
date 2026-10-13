@@ -516,7 +516,7 @@ async function loadGameStats({ force = false } = {}) {
     const maxAge = typeof fbEvery === "function" ? fbEvery(STATS_CACHE_MS) : STATS_CACHE_MS;
     if (!force && cached && Date.now() - cached.t < maxAge) return;
     if (typeof cloudDb === "undefined" || !cloudDb) return;
-    if (!force && typeof fbPaused === "function" && fbPaused()) return;
+    if (!force && typeof fbBackgroundPaused === "function" && fbBackgroundPaused()) return;
     try {
         const snap = await cloudDb.collection("gameStats").get();
         if (typeof noteFbOk === "function") noteFbOk();
