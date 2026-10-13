@@ -5,6 +5,12 @@ All the changes to GN 2.0, newest first.
 
 ## October 12, 2026
 
+### New
+- **1,967 more partner games from Playgama**, uploaded there by their own developers: 3D, puzzle, racing, shooting, simulation, idle and more. Like the html5games.com games, they play from Playgama's own site, may show Playgama's ads, and are marked **AD**. Only games without in-game purchases are included, and copies of big brands were left out. GN 2.0 has no Playgama account and earns nothing from them. If Playgama is blocked on your network, its games are hidden automatically while the others stay.
+
+### Changed
+- Privacy Policy and Terms updated for Playgama.
+
 ### Fixed
 - Opening a game while another is still open (for example with the 🎲 button in the player) no longer breaks the new game. Each game now gets a fresh frame, so leftovers from the last game can't clash with it.
 

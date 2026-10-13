@@ -2,7 +2,7 @@
 
 A single-page browser game site with no ads or trackers of its own, and optional accounts with cloud saves. It runs entirely on GitHub Pages and uses Firebase for accounts.
 
-Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 667 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals). About 320 **partner games** from html5games.com (Famobi) are linked too; those can show Famobi's ads and are always marked **AD** (see below).
+Most games come from the community-run gn-math library on jsDelivr. GN Originals adds about 690 open-source games: 65 hand-picked ones in their own row, plus 667 tiny js13kGames entries under the js13k tag. The hand-picked ones include 2048, Hextris, HexGL, A Dark Room, Untrusted, Trimps and Bubble Shooter. All of them are kept with their licenses in [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals). About 320 **partner games** from html5games.com (Famobi) and about 2,000 from Playgama are linked too; those can show Famobi's ads and are always marked **AD** (see below).
 
 ## Features
 
@@ -29,6 +29,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - To add one, follow the steps in that repo's README; the site picks it up on its own
 
 **Partner games (may contain ads)**
+- About 2,000 more come from [Playgama](https://playgama.com/), uploaded there by their developers, listed in `config/partner-games-playgama.json` (ids 220000+). They play from `playgama.com/export/game/<slug>` and follow the same rules below. Only games without in-game purchases are listed, brand knock-offs and gambling or dating themes are left out, and GN 2.0 has no Playgama account, so it earns nothing.
 - About 320 free games from [html5games.com](https://html5games.com/), made and hosted by Famobi. html5games.com lets any site link its games for free as long as the games keep their own ads, so these games are **linked, not copied**: they load from `play.famobi.com` in a sandboxed frame (it can open new tabs but can't navigate GN 2.0 away), and their ads can't be removed.
 - Every one has a yellow **AD** badge on its card, a "May contain ads from html5games.com" notice above the game and an explanation in its Info panel. They're never Today's pick, and the Privacy Policy and Terms explain them.
 - If html5games.com is blocked on the network (common at schools), the site notices that their pictures can't load and hides them automatically, with a note on the switch; players can still choose to show them.
