@@ -7,7 +7,11 @@ All the changes to GN 2.0, newest first.
 
 ### New
 - **Site status light** in the bottom-left corner. Green means everything's working; yellow or red means something isn't, like a game source being blocked or accounts not connecting. Click it to see each part of the site (your connection, game library, GN Originals, accounts and saves, partner games). The owner can also set a status by hand, such as "Maintenance". It hides while you play, and you can turn it off in Settings.
+- **Maintenance mode.** Besides Locked and Shut down, the owner can now show a "Down for maintenance" screen, and set an **expected back time** that shows on the lock and maintenance screens with a countdown ("in 42 min").
 - **New lock and shutdown screens.** They now say what's going on, can show a message from the owner, and **open by themselves** when the site is back (they check every minute, or tap Check now), so nobody has to keep reloading.
+
+### Fixed
+- The status light could say GitHub or githack were unreachable when they were fine. A cover picture that didn't load (often just a missing picture) counted as the whole source being down, and it stayed "down" for the rest of the visit. Now the light checks the source with a tiny file first, and re-checks sources marked down once a minute, so it matches the GN Status page.
 
 ### Changed
 - **Announcement banner redesigned.** It has an icon and four styles (announcement, good news, heads up, important), links in it can be clicked, and you can close it. A new or changed announcement shows up again.
