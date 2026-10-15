@@ -2806,6 +2806,23 @@ function darkMode() {
     localStorage.setItem("gnmath-mode", mode);
 }
 
+// The page scrollbar is drawn for <html>, which can't see the theme colors set
+// on <body>, so copy them up whenever the theme, custom color or mode changes.
+function syncScrollbarColors() {
+    if (!document.body) return;
+    const cs = getComputedStyle(document.body);
+    const root = document.documentElement.style;
+    root.setProperty("--sb-primary", cs.getPropertyValue("--primary").trim() || "#fc2651");
+    root.setProperty("--sb-bg", cs.getPropertyValue("--bg").trim() || cs.backgroundColor);
+}
+if (typeof MutationObserver !== "undefined") {
+    const startSbSync = () => {
+        syncScrollbarColors();
+        new MutationObserver(syncScrollbarColors).observe(document.body, { attributes: true, attributeFilter: ["class", "style"] });
+    };
+    if (document.body) startSbSync(); else document.addEventListener("DOMContentLoaded", startSbSync);
+}
+
 function setTheme(themeName, { persist = true } = {}) {
     const safeTheme = AVAILABLE_THEMES.includes(themeName) ? themeName : "red";
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));

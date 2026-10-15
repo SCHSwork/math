@@ -2058,3 +2058,31 @@ html.owner-mode-bar-on body { padding-top: 56px; }
 .admin-act-item .finder-chip { padding: 0.2rem 0.55rem; font-size: 12px; }
 .admin-act-empty { color: var(--text-muted); font-size: 12.5px; padding: 0.2rem; }
 .fb-review.admin-flash { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ── Scrollbars: slim, rounded and in the theme color ───────────────────── */
+/* Theme colors live on <body>; the page's own scrollbar belongs to <html>, so a
+   tiny script copies them up as --sb-primary / --sb-bg (see app.js). */
+:root { --sb-track: transparent; --sb-thumb: color-mix(in srgb, var(--sb-primary, var(--primary)) 75%, transparent); --sb-thumb-hover: var(--sb-primary, var(--primary)); }
+body { --sb-thumb: color-mix(in srgb, var(--primary) 75%, transparent); --sb-thumb-hover: var(--primary); }
+/* Firefox only: Chrome ignores the custom shapes below if these are set */
+@supports not selector(::-webkit-scrollbar) {
+    html { scrollbar-color: var(--sb-thumb) var(--sb-bg, var(--bg)); scrollbar-width: thin; }
+    * { scrollbar-color: var(--sb-thumb) var(--sb-track); }
+}
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--sb-track); }
+html::-webkit-scrollbar-track { background: var(--sb-bg, var(--bg)); }
+::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb);
+    border-radius: 999px;
+    border: 3px solid transparent;          /* gap around the thumb so it looks slim */
+    background-clip: padding-box;
+    min-height: 48px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--sb-thumb-hover); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:active { background: var(--sb-thumb-hover); background-clip: padding-box; border-width: 2px; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+/* Smaller ones inside panels and lists */
+#popupBody::-webkit-scrollbar, .owner-panel-list::-webkit-scrollbar, .status-panel::-webkit-scrollbar,
+.admin-act-list::-webkit-scrollbar, textarea::-webkit-scrollbar { width: 10px; }
