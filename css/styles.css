@@ -1996,3 +1996,53 @@ html.owner-mode-bar-on body { padding-top: 56px; }
 .fb-vote.on { border-color: var(--primary); color: var(--primary); background: var(--primary-lighter, rgba(252,38,81,.08)); }
 .fb-vote:disabled { cursor: default; }
 .status-report { margin-left: auto; }
+
+/* ── Settings: tabs + compact rows ──────────────────────────────────────── */
+.set-search {
+    width: 100%; box-sizing: border-box; margin: 0 0 0.75rem;
+    padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg-secondary); color: var(--text); font: inherit; font-size: 14px;
+}
+.set-tabs { margin-bottom: 0.9rem; }
+.set-pane[hidden], .set-row[hidden], .settings-section[hidden], .set-grid > button[hidden], .set-tabs[hidden] { display: none !important; }
+.set-pane .settings-section { padding: 0.35rem 0.9rem 0.5rem; margin-bottom: 0.75rem; }
+.set-pane .settings-section h4 { margin: 0.5rem 0 0.25rem; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.set-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.6rem 0; border-top: 1px solid var(--border-light, rgba(148,163,184,.15));
+}
+.set-pane .settings-section h4 + .set-row { border-top: none; }
+.set-row.set-col { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+.set-text { min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.set-label { font-weight: 600; font-size: 14px; }
+.set-text small { color: var(--text-muted); font-size: 12px; line-height: 1.35; }
+.set-control { flex: none; display: flex; align-items: center; gap: 0.4rem; }
+.set-select { width: auto !important; min-width: 9.5rem; padding: 0.4rem 0.6rem !important; font-size: 13.5px !important; }
+.set-input { width: 100%; box-sizing: border-box; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text); font: inherit; font-size: 14px; }
+.theme-button.set-mini { padding: 0.4rem 0.75rem; font-size: 13px; white-space: nowrap; }
+.set-themes { grid-template-columns: repeat(7, 1fr) !important; gap: 0.35rem !important; }
+.set-themes .theme-button { padding: 0.45rem 0.2rem; font-size: 12px; }
+.set-control input[type="color"] { width: 38px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: none; cursor: pointer; }
+/* On/off switch */
+.set-switch { position: relative; display: inline-block; width: 42px; height: 24px; cursor: pointer; }
+.set-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.set-switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--border); transition: background 0.15s; pointer-events: none; }
+.set-switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform 0.15s; }
+.set-switch input:checked + span { background: var(--primary); }
+.set-switch input:checked + span::after { transform: translateX(18px); }
+.set-switch input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+.set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding: 0.4rem 0 0.3rem; }
+.set-grid .settings-button { margin: 0; font-size: 13.5px; }
+.settings-button.set-secondary { background: var(--surface-hover); color: var(--text); box-shadow: none; }
+.set-pane > .settings-button.set-secondary { width: 100%; }
+.set-note { margin: 0.2rem 0 0.4rem; font-size: 12px; color: var(--text-muted); }
+.set-empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 1rem 0; }
+.set-staff summary { cursor: pointer; list-style: none; }
+.set-staff summary::-webkit-details-marker { display: none; }
+.set-staff summary h4::after { content: " ▸"; }
+.set-staff[open] summary h4::after { content: " ▾"; }
+@media (max-width: 480px) {
+    .set-themes { grid-template-columns: repeat(4, 1fr) !important; }
+    .set-grid { grid-template-columns: 1fr; }
+    .set-select { min-width: 7.5rem; }
+}
