@@ -6,6 +6,7 @@ All the changes to GN 2.0, newest first.
 ## October 14, 2026
 
 ### Changed
+- **Admins can see what each account did.** Opening an account in Admin Panel → Accounts now lists the games it liked, disliked and reported as broken (with dates), plus the reports and ideas it sent. Each game can be opened, and a single rating or broken report can be removed without wiping all of that person's activity.
 - **Settings are reorganized.** They're split into four tabs (🎨 Look, 🎮 Games, 🛡️ Privacy, ⋯ More) with a search box that finds any setting, one tidy row per setting with a short explanation, and on/off switches instead of checkboxes. Settings opens on the tab you used last. Report a problem, ideas, submitting a game and export/import are under More, and the Admin and Owner Panels are tucked into a Staff section there.
 
 ### New
