@@ -1,0 +1,29 @@
+# Rebuilds the GitHub Pages site whenever main changes.
+# GitHub's own automatic Pages build sometimes doesn't start for a push
+# (it stopped after Oct 13, 2026), which left the live site on an old
+# version. This asks GitHub to build it again. Also runnable by hand from
+# the Actions tab ("Run workflow").
+name: Rebuild site
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  pages: write
+concurrency:
+  group: pages-rebuild
+  cancel-in-progress: true
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request a Pages build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 20
+          code=$(curl -s -o out.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds")
+          cat out.json; echo; echo "HTTP $code"
+          test "$code" -lt 300
