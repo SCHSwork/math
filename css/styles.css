@@ -930,6 +930,10 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     margin-bottom: 1rem;
 }
 .site-mode-shutdown .site-mode-live { color: #9ca3af; }
+.site-mode-live.saving { color: #f59e0b; font-weight: 600; }
+.site-mode-live.saving .site-mode-pulse, .site-mode-live.saving .site-mode-pulse::after { background: #f59e0b; }
+.site-mode-live.saved { color: #10b981; font-weight: 600; }
+.site-mode-live.saved .site-mode-pulse, .site-mode-live.saved .site-mode-pulse::after { background: #10b981; }
 .site-mode-pulse { position: relative; width: 9px; height: 9px; border-radius: 50%; background: var(--sm-accent); flex: none; }
 .site-mode-pulse::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--sm-accent); animation: smPulse 1.8s ease-out infinite; }
 .site-mode-actions { display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }

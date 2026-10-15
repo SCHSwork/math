@@ -1431,6 +1431,55 @@ async function recheckSiteMode(manual) {
     if (manual && getOwnerSiteMode() !== "open") notify("Still closed. It'll open by itself as soon as the owner reopens it.");
 }
 
+// Ask the open game to save, the way it would if the tab were being closed,
+// then close it and upload the save to the player's account.
+let kickSaving = null;
+function flushGameFrame(timeoutMs = 3000) {
+    return new Promise(resolve => {
+        let win = null;
+        try { win = (typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow) || null; } catch {}
+        if (!win) return resolve();
+        let pending = 0, done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        try {
+            // Most web games save on these (tab hidden, page closing)
+            for (const type of ["blur", "pagehide", "beforeunload"]) {
+                try { win.dispatchEvent(new Event(type)); } catch {}
+            }
+            try { win.document.dispatchEvent(new Event("visibilitychange")); } catch {}
+            // Unity and other Emscripten games keep saves in memory until they sync them
+            const fsList = [win.FS, win.Module && win.Module.FS, win.unityInstance && win.unityInstance.Module && win.unityInstance.Module.FS, win.gameInstance && win.gameInstance.Module && win.gameInstance.Module.FS];
+            for (const fs of new Set(fsList.filter(f => f && typeof f.syncfs === "function"))) {
+                pending++;
+                try { fs.syncfs(false, () => { if (--pending <= 0) setTimeout(finish, 300); }); } catch { pending--; }
+            }
+        } catch {}
+        // Give saves that use the browser database a moment to finish writing
+        setTimeout(finish, pending ? timeoutMs : 1200);
+    });
+}
+function saveGameBeforeKick(overlay) {
+    if (kickSaving) return kickSaving;
+    const line = overlay && overlay.querySelector(".site-mode-live");
+    const setLine = (text, cls) => { if (line) { line.innerHTML = `<span class="site-mode-pulse" aria-hidden="true"></span><span></span>`; line.lastChild.textContent = text; line.className = "site-mode-live" + (cls ? " " + cls : ""); } };
+    const signedIn = typeof cloudUser !== "undefined" && cloudUser && typeof uploadCloudSave === "function";
+    setLine(signedIn ? "Saving your game to your account…" : "Saving your game on this device…", "saving");
+    kickSaving = (async () => {
+        await flushGameFrame();
+        try { if (zoneViewer.style.display === "flex") closeZone(); } catch {}
+        if (!signedIn) { setLine("✓ Your game was saved on this device. This page opens by itself when the site is back.", "saved"); return true; }
+        // closeZone already started an upload; wait for it, then make sure the latest is up
+        const until = Date.now() + 20000;
+        while (typeof cloudBusy !== "undefined" && cloudBusy && Date.now() < until) await new Promise(r => setTimeout(r, 250));
+        let ok = false;
+        try { ok = await uploadCloudSave(); } catch {}
+        setLine(ok ? "✓ Your game was saved to your account. This page opens by itself when the site is back."
+                   : "Your game is saved on this device. It couldn't be saved to your account right now; it will be next time you play.", ok ? "saved" : "");
+        return ok;
+    })().finally(() => { kickSaving = null; });
+    return kickSaving;
+}
+
 function applyOwnerSiteMode() {
     const existingOverlay = document.getElementById("owner-site-overlay");
     const mode = getOwnerSiteMode();
@@ -1499,9 +1548,10 @@ function applyOwnerSiteMode() {
     if (closePrev) closePrev.onclick = () => { siteModePreview = false; applyOwnerSiteMode(); };
     document.body.appendChild(overlay);
     document.documentElement.classList.add("site-mode-closed");
-    // A game left open behind the screen keeps playing sound, so close it
-    if (typeof zoneViewer !== "undefined" && zoneViewer && zoneViewer.style.display === "flex" && typeof closeZone === "function") {
-        try { closeZone(); } catch {}
+    // Someone in the middle of a game: save it (to their account if signed in)
+    // before closing it, so being locked out doesn't lose progress.
+    if (!siteModePreview && typeof zoneViewer !== "undefined" && zoneViewer && zoneViewer.style.display === "flex") {
+        saveGameBeforeKick(overlay);
     }
 
     if (!siteModeRecheckTimer) {
