@@ -1226,10 +1226,112 @@ function getOwnerSiteMode() {
 
 function setOwnerSiteMode(mode) {
     const safeMode = OWNER_SITE_MODES.includes(mode) ? mode : "open";
+    const changed = safeMode !== getOwnerSiteMode();
     localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, safeMode);
+    if (changed || siteModeSync.phase === "failed") {
+        siteModeSync = { mode: safeMode, phase: getGithubPat() ? "saving" : "local", at: Date.now(), pushedAt: 0 };
+        clearTimeout(siteModeVerifyTimer);
+    }
     applyOwnerSiteMode();
     githubAutoSync();
 }
+
+// ── Owner's view while the site is closed ──────────────────────────────────
+// The owner isn't locked out by their own change: instead of the full screen
+// they get a bar saying what visitors see and whether the change has reached
+// them yet (saving → saved to GitHub → visitors are getting it).
+let siteModeSync = { mode: null, phase: "", at: 0, pushedAt: 0 };
+let siteModeVerifyTimer = null;
+let siteModePreview = false;
+const SITE_MODE_NAMES = { open: "open", locked: "locked", maintenance: "in maintenance", shutdown: "shut down" };
+function ownerBypassesLock() { return typeof ownerUnlockedThisTab === "function" && ownerUnlockedThisTab(); }
+
+// Called after each save: did the change go through?
+function noteSiteModeSaved(ok) {
+    if (!siteModeSync.mode || siteModeSync.phase !== "saving") return;
+    if (!ok) { siteModeSync.phase = "failed"; renderOwnerModeBar(); return; }
+    siteModeSync.phase = "saved";
+    siteModeSync.savedAt = Date.now();
+    siteModeSync.pushedAt = Date.parse(_lastPushedAt || "") || Date.now();
+    renderOwnerModeBar();
+    verifySiteModeLive();
+}
+// Watch the public copy visitors read until it shows the new mode
+async function verifySiteModeLive() {
+    clearTimeout(siteModeVerifyTimer);
+    const want = siteModeSync;
+    if (want.phase !== "saved") return;
+    try {
+        const res = await fetch(GITHUB_SYNC_CDN + "?v=" + Date.now(), { cache: "no-store" });
+        if (res.ok) {
+            const pub = await res.json();
+            const pubAt = Date.parse(pub.updatedAt || "") || 0;
+            if (want === siteModeSync && pub.siteMode === want.mode && pubAt >= want.pushedAt - 1000) {
+                siteModeSync.phase = "live";
+                siteModeSync.liveAt = Date.now();
+                renderOwnerModeBar();
+                return;
+            }
+        }
+    } catch {}
+    if (want !== siteModeSync) return;
+    if (Date.now() - want.savedAt > 15 * 60000) { siteModeSync.phase = "slow"; renderOwnerModeBar(); return; }
+    renderOwnerModeBar();
+    siteModeVerifyTimer = setTimeout(verifySiteModeLive, 15000);
+}
+function siteModeSyncText() {
+    const t = ms => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const sy = siteModeSync, mode = getOwnerSiteMode();
+    if (sy.mode !== mode) return { icon: "", text: "" };
+    switch (sy.phase) {
+        case "saving": return { icon: "⏳", cls: "wait", text: "Saving to GitHub…" };
+        case "failed": return { icon: "✗", cls: "bad", text: "Didn't save. Check your token in the Owner Panel, then pick the mode again." };
+        case "saved": {
+            const secs = Math.round((Date.now() - sy.savedAt) / 1000);
+            return { icon: "⏳", cls: "wait", text: `Saved at ${t(sy.savedAt)}. Waiting for visitors to get it (usually 1–5 min)… ${secs >= 60 ? Math.floor(secs / 60) + " min " : ""}${secs % 60}s` };
+        }
+        case "live": return { icon: "✓", cls: "ok", text: `Live: visitors are getting this since ${t(sy.liveAt)}. Pages already open switch within about a minute.` };
+        case "slow": return { icon: "!", cls: "bad", text: "Saved, but GitHub still shows the old setting after 15 minutes. Try picking the mode again." };
+        case "local": return { icon: "!", cls: "bad", text: "Only changed on this device: no GitHub token is saved, so visitors won't see it." };
+        default: return { icon: "", text: "" };
+    }
+}
+function renderOwnerModeBar() {
+    const mode = getOwnerSiteMode();
+    let bar = document.getElementById("owner-mode-bar");
+    const sync = siteModeSyncText();
+    const panelLine = document.getElementById("owner-mode-sync");
+    if (panelLine) {
+        panelLine.textContent = sync.text ? `${sync.icon} ${sync.text}` : "";
+        panelLine.className = "owner-mode-sync " + (sync.cls || "");
+    }
+    // Show the bar while closed, and briefly after reopening until it's live
+    const showOpen = mode === "open" && sync.text && !(siteModeSync.phase === "live" && Date.now() - siteModeSync.liveAt > 20000);
+    const show = ownerBypassesLock() && !siteModePreview && (mode !== "open" || showOpen);
+    document.documentElement.classList.toggle("owner-mode-bar-on", !!show);
+    if (!show) { bar?.remove(); return; }
+    if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "owner-mode-bar";
+        bar.setAttribute("role", "status");
+        bar.innerHTML = `<div class="omb-main"><b class="omb-title"></b><span class="omb-sync"></span></div>
+            <div class="omb-actions"><button type="button" class="omb-preview">Preview screen</button><button type="button" class="omb-open">Reopen site</button><button type="button" class="omb-panel">Owner Panel</button></div>`;
+        bar.querySelector(".omb-preview").onclick = () => { siteModePreview = true; applyOwnerSiteMode(); };
+        bar.querySelector(".omb-open").onclick = () => setOwnerSiteMode("open");
+        bar.querySelector(".omb-panel").onclick = () => showOwnerPanel();
+        document.body.appendChild(bar);
+    }
+    bar.dataset.mode = mode;
+    bar.querySelector(".omb-title").textContent = mode === "open"
+        ? "Site reopened"
+        : `Site is ${SITE_MODE_NAMES[mode]} for visitors. You can still use it because you're the owner.`;
+    const syncEl = bar.querySelector(".omb-sync");
+    syncEl.textContent = sync.text ? `${sync.icon} ${sync.text}` : "";
+    syncEl.className = "omb-sync " + (sync.cls || "");
+    bar.querySelector(".omb-preview").hidden = mode === "open";
+    bar.querySelector(".omb-open").hidden = mode === "open";
+}
+setInterval(() => { if (siteModeSync.phase === "saved" || siteModeSync.phase === "live") renderOwnerModeBar(); }, 1000);
 
 // Optional note from the owner shown on the lock and shutdown screens
 function escapeOwnerHtml(s) {
@@ -1332,22 +1434,24 @@ async function recheckSiteMode(manual) {
 function applyOwnerSiteMode() {
     const existingOverlay = document.getElementById("owner-site-overlay");
     const mode = getOwnerSiteMode();
+    if (mode === "open") siteModePreview = false;
+    renderOwnerModeBar();
 
-    if (mode === "open") {
+    if (mode === "open" || (ownerBypassesLock() && !siteModePreview)) {
         clearInterval(siteModeRecheckTimer);
         siteModeRecheckTimer = null;
         document.documentElement.classList.remove("site-mode-closed");
         if (existingOverlay) {
             existingOverlay.classList.add("site-overlay-leaving");
             setTimeout(() => existingOverlay.remove(), 300);
-            if (siteModeLastCheck) notify("GN 2.0 is open again!", { type: "success" });
+            if (siteModeLastCheck && mode === "open" && !ownerBypassesLock()) notify("GN 2.0 is open again!", { type: "success" });
         }
         return;
     }
 
     const note = getOwnerSiteMessage().trim();
     const backAt = mode === "shutdown" ? "" : getSiteBackAt();
-    const key = mode + "|" + note + "|" + backAt;
+    const key = mode + "|" + note + "|" + backAt + "|" + siteModePreview;
     if (existingOverlay && existingOverlay.dataset.key === key && !existingOverlay.classList.contains("site-overlay-leaving")) return;
     if (existingOverlay) existingOverlay.remove();
 
@@ -1382,11 +1486,17 @@ function applyOwnerSiteMode() {
                 </button>
                 <span id="site-mode-checked" class="site-mode-checked"></span>
             </div>
-            <button type="button" class="site-mode-owner">Owner access</button>
+            ${siteModePreview
+                ? `<button type="button" class="site-mode-preview-close">Close preview (this is what visitors see)</button>`
+                : `<button type="button" class="site-mode-owner">Owner access</button>`}
         </div>`;
     if (note) overlay.querySelector(".site-mode-note-text").textContent = note;
     overlay.querySelector("#site-mode-check").onclick = () => recheckSiteMode(true);
-    overlay.querySelector(".site-mode-owner").onclick = () => requestOwnerAccess(() => setOwnerSiteMode("open"));
+    // Owner access lets the owner in (with the owner bar) without reopening the site for everyone
+    const ownerBtn = overlay.querySelector(".site-mode-owner");
+    if (ownerBtn) ownerBtn.onclick = () => requestOwnerAccess(() => { applyOwnerSiteMode(); notify("You're in. The site is still closed for visitors; use Reopen site in the bar at the top to open it.", { type: "success" }); });
+    const closePrev = overlay.querySelector(".site-mode-preview-close");
+    if (closePrev) closePrev.onclick = () => { siteModePreview = false; applyOwnerSiteMode(); };
     document.body.appendChild(overlay);
     document.documentElement.classList.add("site-mode-closed");
     // A game left open behind the screen keeps playing sound, so close it
@@ -1449,6 +1559,7 @@ function renderOwnerPanel() {
             <option value="maintenance" ${mode === "maintenance" ? "selected" : ""}>🛠️ Maintenance — show maintenance screen</option>
             <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
         </select>
+        <p id="owner-mode-sync" class="owner-mode-sync"></p>
         <label style="display:block;margin:0.85rem 0 0.4rem;">Message on the lock / maintenance / shutdown screen (optional)</label>
         <textarea id="owner-site-message" rows="2" maxlength="400" placeholder="e.g. Back after lunch, or: Moving to a new address, details on Discord"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;resize:vertical;margin-bottom:0.5rem;font-family:inherit;">${escapeOwnerHtml(getOwnerSiteMessage())}</textarea>
@@ -1607,6 +1718,7 @@ function renderOwnerPanel() {
     renderOwnerReports(true);
     renderOwnerTrusted();
     if (typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
+    renderOwnerModeBar();
 }
 
 function timeAgo(ms) {
@@ -2090,6 +2202,7 @@ function githubAutoSync() {
     _autoSyncTimer = setTimeout(async () => {
         _autoSyncTimer = null;
         const ok = await githubSyncPush();
+        noteSiteModeSaved(ok);
         const status = document.getElementById("owner-sync-status");
         if (status) {
             status.textContent = ok
@@ -2104,6 +2217,7 @@ function githubAutoSync() {
 // Pushes run one at a time: two at once would both use the same file SHA and
 // the second would be rejected, losing that change (e.g. locked → shutdown).
 let _syncPushChain = Promise.resolve();
+let _lastPushedAt = "";
 let _syncPushing = 0;
 function githubSyncPush() {
     _syncPushing++;
@@ -2137,7 +2251,7 @@ async function githubSyncPushOnce() {
             body: JSON.stringify(body),
             cache: "no-store"
         });
-        if (putRes.ok) { setAppliedSettingsAt(settings.updatedAt); return true; }
+        if (putRes.ok) { setAppliedSettingsAt(settings.updatedAt); _lastPushedAt = settings.updatedAt; return true; }
         // 409/422 = SHA was out of date; fetch it again and retry
         if (putRes.status !== 409 && putRes.status !== 422) return false;
     }
