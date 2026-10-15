@@ -3254,148 +3254,131 @@ function openSettingsPanel() {
     const autofocusSearch        = getAutofocusSearch();
     const showPlayCount          = getShowPlayCount();
 
+    const row = (label, hint, control) => `
+        <div class="set-row"><div class="set-text"><span class="set-label">${label}</span>${hint ? `<small>${hint}</small>` : ""}</div><div class="set-control">${control}</div></div>`;
+    const toggle = (checked, onchange, id = "") => `<label class="set-switch"><input type="checkbox" ${id ? `id="${id}"` : ""} ${checked ? "checked" : ""} onchange="${onchange}"><span></span></label>`;
+    const select = (value, onchange, options, id = "") => `<select ${id ? `id="${id}"` : ""} class="settings-select set-select" onchange="${onchange}">${options.map(([v, l]) => `<option value="${v}" ${value === v ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+    const isDark = document.body.classList.contains("dark-mode");
+    const signedIn = typeof cloudUser !== "undefined" && cloudUser;
+    const staff = (typeof isSiteAdmin === "function" && isSiteAdmin()) || !!getGithubPat();
+    const tab = (() => { try { return localStorage.getItem("gnmath-settings-tab") || "look"; } catch { return "look"; } })();
+
     popupBody.innerHTML = `
-    <div class="settings-section">
-        <h4>My Stats</h4>
-        <button class="settings-button" onclick="openStatsPanel()">📊 View My Stats</button>
+    <input type="search" id="settings-search" class="set-search" placeholder="Search settings…" aria-label="Search settings" data-lpignore="true" data-1p-ignore data-form-type="other">
+    <div class="admin-tabs set-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="look">🎨 Look</button>
+        <button type="button" role="tab" data-tab="games">🎮 Games</button>
+        <button type="button" role="tab" data-tab="privacy">🛡️ Privacy</button>
+        <button type="button" role="tab" data-tab="more">⋯ More</button>
+    </div>
+    <p id="settings-noresults" class="set-empty" hidden>No settings match that.</p>
+
+    <div class="set-pane" data-pane="look">
+        <div class="settings-section">
+            <h4>Colors</h4>
+            ${row("Dark mode", "", `<button class="theme-button set-mini" onclick="darkMode(); openSettingsPanel()">${isDark ? "🌙 On" : "☀️ Off"}</button>`)}
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">Theme color</span></div>
+                <div class="theme-options set-themes">
+                    ${["red", "orange", "blue", "green", "purple", "pink", "cyan"].map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${t[0].toUpperCase() + t.slice(1)}</button>`).join("")}
+                </div>
+            </div>
+            ${row("Custom color", "Pick any color for buttons and highlights", `<input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)"><button class="theme-button set-mini" type="button" onclick="clearCustomPrimaryColor()">Clear</button>`)}
+        </div>
+        <div class="settings-section">
+            <h4>Layout</h4>
+            ${row("Text size", "", select(fontSize, "setFontSize(this.value)", [["small", "Small"], ["medium", "Medium"], ["large", "Large"]]))}
+            ${row("Game card size", "", select(cardSize, "setCardSize(this.value)", [["small", "Small"], ["medium", "Medium"], ["large", "Large"], ["list", "List"]]))}
+            ${row("Compact header", "A slimmer top bar", toggle(compactMode, "setCompactMode(this.checked)"))}
+            ${row("Reduce motion", "Fewer animations", toggle(reducedMotion, "setReducedMotionEnabled(this.checked)", "reduced-motion-enabled"))}
+            ${row("Site status light", "The little light in the bottom-left corner", toggle(typeof getShowSiteStatus !== "function" || getShowSiteStatus(), "setShowSiteStatus(this.checked)"))}
+        </div>
+        <button class="settings-button set-secondary" onclick="resetAppearanceSettings()">Reset look to default</button>
     </div>
 
-    <div class="settings-section">
-        <h4>Appearance</h4>
-        <button class="settings-button" onclick="darkMode()">Toggle Dark/Light Mode</button>
-        <br><br>
-        <div style="font-weight:700;margin-bottom:0.5rem;">Theme Color</div>
-        <div class="theme-options" style="grid-template-columns:repeat(4,1fr);">
-            <button class="theme-button" data-theme-option="red"    onclick="setTheme('red')">Red</button>
-            <button class="theme-button" data-theme-option="orange" onclick="setTheme('orange')">Orange</button>
-            <button class="theme-button" data-theme-option="blue"   onclick="setTheme('blue')">Blue</button>
-            <button class="theme-button" data-theme-option="green"  onclick="setTheme('green')">Green</button>
-            <button class="theme-button" data-theme-option="purple" onclick="setTheme('purple')">Purple</button>
-            <button class="theme-button" data-theme-option="pink"   onclick="setTheme('pink')">Pink</button>
-            <button class="theme-button" data-theme-option="cyan"   onclick="setTheme('cyan')">Cyan</button>
+    <div class="set-pane" data-pane="games">
+        <div class="settings-section">
+            <h4>Game list</h4>
+            ${row("Sort games by", "", select(defaultSort, "setDefaultSort(this.value)", [["name", "Name"], ["id", "Date added"], ["popular", "Most popular"], ["trendingDay", "Trending today"], ["trendingWeek", "Trending this week"], ["trendingMonth", "Trending this month"]]))}
+            ${row("Hide Featured row", "", toggle(hideFeatured, "setHideFeatured(this.checked)"))}
+            ${row("Show play counts", "How many times each game was played, on its card", toggle(showPlayCount, "setShowPlayCount(this.checked)"))}
+            ${row("Focus search on load", "Start typing to search right away", toggle(autofocusSearch, "setAutofocusSearch(this.checked)"))}
         </div>
-        <br>
-        <label for="custom-theme-color" style="display:block;margin-bottom:0.4rem;">Custom primary color</label>
-        <div class="settings-inline">
-            <input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)">
-            <button class="theme-button" type="button" onclick="clearCustomPrimaryColor()">Clear Custom</button>
-        </div>
-        <br>
-        <label style="display:block;margin-bottom:0.4rem;">Font size</label>
-        <select class="settings-select" onchange="setFontSize(this.value)">
-            <option value="small"  ${fontSize === 'small'  ? 'selected' : ''}>Small</option>
-            <option value="medium" ${fontSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
-            <option value="large"  ${fontSize === 'large'  ? 'selected' : ''}>Large</option>
-        </select>
-        <br><br>
-        <div class="settings-inline">
-            <label>Compact header</label>
-            <input type="checkbox" ${compactMode ? 'checked' : ''} onchange="setCompactMode(this.checked)">
-        </div>
-        <br>
-        <div class="settings-inline">
-            <label>Reduce motion effects</label>
-            <input id="reduced-motion-enabled" type="checkbox" ${reducedMotion ? 'checked' : ''} onchange="setReducedMotionEnabled(this.checked)">
-        </div>
-    </div>
-
-    <div class="settings-section">
-        <h4>Game Grid</h4>
-        <label style="display:block;margin-bottom:0.4rem;">Card size</label>
-        <select class="settings-select" onchange="setCardSize(this.value)">
-            <option value="small"  ${cardSize === 'small'  ? 'selected' : ''}>Small</option>
-            <option value="medium" ${cardSize === 'medium' ? 'selected' : ''}>Medium (default)</option>
-            <option value="large"  ${cardSize === 'large'  ? 'selected' : ''}>Large</option>
-            <option value="list"   ${cardSize === 'list'   ? 'selected' : ''}>List view</option>
-        </select>
-        <br><br>
-        <label style="display:block;margin-bottom:0.4rem;">Default sort</label>
-        <select class="settings-select" onchange="setDefaultSort(this.value)">
-            <option value="name"          ${defaultSort === 'name'          ? 'selected' : ''}>Name</option>
-            <option value="id"            ${defaultSort === 'id'            ? 'selected' : ''}>ID (Date added)</option>
-            <option value="popular"       ${defaultSort === 'popular'       ? 'selected' : ''}>Most popular</option>
-            <option value="trendingDay"   ${defaultSort === 'trendingDay'   ? 'selected' : ''}>Trending today</option>
-            <option value="trendingWeek"  ${defaultSort === 'trendingWeek'  ? 'selected' : ''}>Trending this week</option>
-            <option value="trendingMonth" ${defaultSort === 'trendingMonth' ? 'selected' : ''}>Trending this month</option>
-        </select>
-        <br><br>
-        <div class="settings-inline">
-            <label>Hide Featured section</label>
-            <input type="checkbox" ${hideFeatured ? 'checked' : ''} onchange="setHideFeatured(this.checked)">
-        </div>
-        <br>
-        <div class="settings-inline">
-            <label>Show play count on cards</label>
-            <input type="checkbox" ${showPlayCount ? 'checked' : ''} onchange="setShowPlayCount(this.checked)">
-        </div>
-        <div class="settings-inline">
-            <label>Show site status in the corner</label>
-            <input type="checkbox" ${typeof getShowSiteStatus !== "function" || getShowSiteStatus() ? 'checked' : ''} onchange="setShowSiteStatus(this.checked)">
+        <div class="settings-section">
+            <h4>Your games</h4>
+            ${row("My stats", "Play time, favorites and most played", `<button class="theme-button set-mini" onclick="openStatsPanel()">📊 Open</button>`)}
+            ${row("Reload the game list", "If games are missing or look out of date", `<button class="theme-button set-mini" onclick="listZones(); notify('Reloading games…')">↻ Reload</button>`)}
         </div>
     </div>
 
-    <div class="settings-section">
-        <h4>Privacy Cloak</h4>
-        <div class="settings-inline">
-            <label>Hide page in tab previews</label>
-            <input id="preview-cloak-enabled" type="checkbox" ${previewCloakEnabled ? 'checked' : ''} onchange="setPreviewCloakEnabled(this.checked)">
+    <div class="set-pane" data-pane="privacy">
+        <div class="settings-section">
+            <h4>Panic button</h4>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">Panic website</span><small>Where the panic button or key takes you</small></div>
+                <input id="panic-url-input" type="text" class="set-input" placeholder="${PANIC_DEFAULT_URL}" onchange="setPanicUrl(this.value); this.value = getPanicUrl();"></div>
+            ${row("Use a panic key", "Press it anywhere to leave instantly", toggle(getPanicKeyEnabled(), "setPanicKeyEnabled(this.checked)"))}
+            ${row(`Panic key: <b id="panic-key-label"></b>`, "", `<button class="theme-button set-mini" id="panic-key-change" onclick="listenForPanicKey()">Change</button>`)}
         </div>
-        <br>
-        <label style="display:block;margin-bottom:0.4rem;">Cloak sensitivity</label>
-        <select id="preview-cloak-sensitivity" class="settings-select" onchange="setPreviewCloakSensitivity(this.value)">
-            <option value="low"    ${previewCloakSensitivity === 'low'    ? 'selected' : ''}>Low (hidden tabs only)</option>
-            <option value="lowMed" ${previewCloakSensitivity === 'lowMed' ? 'selected' : ''}>Low-Med (hidden + blur)</option>
-            <option value="medium" ${previewCloakSensitivity === 'medium' ? 'selected' : ''}>Medium (recommended)</option>
-            <option value="high"   ${previewCloakSensitivity === 'high'   ? 'selected' : ''}>High (aggressive)</option>
-        </select>
-        <br>
-        <button class="settings-button" onclick="tabCloak()">Tab Cloak Settings</button>
-    </div>
-
-    <div class="settings-section">
-        <h4>Panic Button</h4>
-        <label for="panic-url-input" style="display:block;margin-bottom:0.4rem;">Panic redirect website</label>
-        <input id="panic-url-input" type="text" placeholder="${PANIC_DEFAULT_URL}" onchange="setPanicUrl(this.value); this.value = getPanicUrl();">
-        <br><br>
-        <div class="settings-inline">
-            <label>Panic key enabled</label>
-            <input type="checkbox" ${getPanicKeyEnabled() ? 'checked' : ''} onchange="setPanicKeyEnabled(this.checked)">
-        </div>
-        <br>
-        <div class="settings-inline">
-            <label>Panic key: <b id="panic-key-label"></b></label>
-            <button class="settings-button" id="panic-key-change" onclick="listenForPanicKey()">Change key</button>
+        <div class="settings-section">
+            <h4>Cloaking</h4>
+            ${row("Hide page in tab previews", "Covers the page when you switch tabs", toggle(previewCloakEnabled, "setPreviewCloakEnabled(this.checked)", "preview-cloak-enabled"))}
+            ${row("How strongly", "", select(previewCloakSensitivity, "setPreviewCloakSensitivity(this.value)", [["low", "Low"], ["lowMed", "Low-medium"], ["medium", "Medium (recommended)"], ["high", "High"]], "preview-cloak-sensitivity"))}
+            ${row("Tab name & icon", "Make the tab look like another site", `<button class="theme-button set-mini" onclick="tabCloak()">Set up</button>`)}
+            ${row("Warn before leaving", "Asks before the tab closes, so you don't lose a game", toggle(warnBeforeUnload, "setWarnBeforeUnloadEnabled(this.checked)", "warn-before-unload"))}
         </div>
     </div>
 
-    <div class="settings-section">
-        <h4>Behavior</h4>
-        <div class="settings-inline">
-            <label>Warn before leaving page</label>
-            <input id="warn-before-unload" type="checkbox" ${warnBeforeUnload ? 'checked' : ''} onchange="setWarnBeforeUnloadEnabled(this.checked)">
+    <div class="set-pane" data-pane="more">
+        <div class="settings-section">
+            <h4>Help make GN 2.0 better</h4>
+            <div class="set-grid">
+                <button class="settings-button" onclick="openFeedback('bug')">⚠️ Report a problem</button>
+                <button class="settings-button" onclick="openFeedback('feature')">💡 Suggest a feature</button>
+                <button class="settings-button" onclick="openIdeasBoard()">🗳️ Ideas board</button>
+                <button class="settings-button" onclick="openSubmitGame()">🎮 Submit a game</button>
+            </div>
+            ${signedIn ? "" : `<p class="set-note">These need a free account so you can see replies.</p>`}
         </div>
-        <br>
-        <div class="settings-inline">
-            <label>Autofocus search bar on load</label>
-            <input type="checkbox" ${autofocusSearch ? 'checked' : ''} onchange="setAutofocusSearch(this.checked)">
+        <div class="settings-section">
+            <h4>Your data</h4>
+            <div class="set-grid">
+                <button class="settings-button set-secondary" onclick="saveData()">⬇️ Export data</button>
+                <button class="settings-button set-secondary" onclick="document.getElementById('importData').click()">⬆️ Import data</button>
+            </div>
         </div>
-    </div>
-
-    <div class="settings-section">
-        <h4>Quick Actions</h4>
-        <button class="settings-button" onclick="listZones()">Refresh Zones</button>
-        <br><br>
-        <button class="settings-button" onclick="openSubmitGame()">Submit a Game</button>
-        <br><br>
-        <div style="display:flex;gap:0.5rem;"><button class="settings-button" style="flex:1;" onclick="openFeedback('bug')">⚠️ Report a Problem</button><button class="settings-button" style="flex:1;" onclick="openFeedback('feature')">💡 Suggest a Feature</button></div>
-        <br><br>
-        <button class="settings-button" onclick="openAdminPanel()">Admin Panel</button>
-        <br><br>
-        <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
-        <br><br>
-        <button class="settings-button" onclick="resetAppearanceSettings()">Reset All Appearance Settings</button>
+        <details class="settings-section set-staff" ${staff ? "open" : ""}>
+            <summary><h4>Staff</h4></summary>
+            <div class="set-grid">
+                <button class="settings-button set-secondary" onclick="openAdminPanel()">Admin Panel</button>
+                <button class="settings-button set-secondary" onclick="showOwnerPanel()">Owner Panel</button>
+            </div>
+        </details>
     </div>
     `;
+    // Tabs (the last one used opens next time) and search across every tab
+    const panes = [...popupBody.querySelectorAll(".set-pane")];
+    const tabs = [...popupBody.querySelectorAll(".set-tabs button")];
+    const showTab = name => {
+        if (!panes.some(p => p.dataset.pane === name)) name = "look";
+        tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"));
+        panes.forEach(p => { p.hidden = p.dataset.pane !== name; });
+        try { localStorage.setItem("gnmath-settings-tab", name); } catch {}
+    };
+    tabs.forEach(b => b.onclick = () => { const q = document.getElementById("settings-search"); if (q.value) { q.value = ""; filterSettings(""); } showTab(b.dataset.tab); });
+    showTab(tab);
+    const filterSettings = q => {
+        q = q.trim().toLowerCase();
+        const noRes = document.getElementById("settings-noresults");
+        popupBody.querySelector(".set-tabs").hidden = !!q;
+        if (!q) { popupBody.querySelectorAll(".set-row, .settings-section, .set-grid > button, .set-pane > .settings-button").forEach(el => el.hidden = false); noRes.hidden = true; showTab((() => { try { return localStorage.getItem("gnmath-settings-tab") || "look"; } catch { return "look"; } })()); return; }
+        let any = false;
+        panes.forEach(p => {
+            p.hidden = false;
+            p.querySelectorAll(".set-row, .set-grid > button, :scope > .settings-button").forEach(el => { const hit = el.textContent.toLowerCase().includes(q); el.hidden = !hit; any = any || hit; });
+            p.querySelectorAll(".settings-section").forEach(sec => { sec.hidden = ![...sec.querySelectorAll(".set-row, .set-grid > button")].some(el => !el.hidden); });
+        });
+        noRes.hidden = any;
+    };
+    document.getElementById("settings-search").addEventListener("input", e => filterSettings(e.target.value));
     popupBody.contentEditable = false;
     const panicUrlInput = document.getElementById('panic-url-input');
     if (panicUrlInput) panicUrlInput.value = getPanicUrl();

@@ -5,6 +5,9 @@ All the changes to GN 2.0, newest first.
 
 ## October 14, 2026
 
+### Changed
+- **Settings are reorganized.** They're split into four tabs (🎨 Look, 🎮 Games, 🛡️ Privacy, ⋯ More) with a search box that finds any setting, one tidy row per setting with a short explanation, and on/off switches instead of checkboxes. Settings opens on the tab you used last. Report a problem, ideas, submitting a game and export/import are under More, and the Admin and Owner Panels are tucked into a Staff section there.
+
 ### New
 - **Report a problem and Suggest a feature.** Signed-in players can report a broken game, a site bug, ads or inappropriate content, or something else, and suggest features. Find them in the footer, in Settings, in the game player's ⋯ More menu (the game is filled in for you) and in the status light. You can see what you sent and what the mods replied, and withdraw anything not reviewed yet.
 - **Mod review.** Admins get a **Reports & ideas** tab in the Admin Panel with a count of what's waiting. Reports can be confirmed, marked fixed or rejected; ideas approved, marked done or rejected, each with a note the sender sees.
