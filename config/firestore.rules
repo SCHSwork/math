@@ -87,6 +87,37 @@ service cloud.firestore {
         && u.values()[0].w is int && u.values()[0].w >= 0 && u.values()[0].w <= 100000;
     }
 
+    // Report a problem / Suggest a feature (js/feedback.js). The sender and the
+    // mods (admins) can read a report. Approved ideas are readable by every
+    // signed-in player, who can add or remove only their own vote.
+    match /feedback/{id} {
+      allow create: if request.auth != null && !isBanned() && validFeedback(request.resource.data);
+      allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isAdmin()
+        || (resource.data.type == 'feature' && resource.data.status in ['approved', 'done']));
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note', 'reviewedBy', 'reviewedAt'])
+        && request.resource.data.status in ['open', 'confirmed', 'fixed', 'approved', 'done', 'rejected']
+        && (!('note' in request.resource.data) || shortText(request.resource.data.note, 200))
+        && (!('reviewedBy' in request.resource.data) || shortText(request.resource.data.reviewedBy, 40))
+        && (!('reviewedAt' in request.resource.data) || request.resource.data.reviewedAt == request.time);
+      allow update: if request.auth != null && !isBanned()
+        && resource.data.type == 'feature' && resource.data.status == 'approved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
+        && request.resource.data.get('votes', {}).diff(resource.data.get('votes', {})).affectedKeys().hasOnly([request.auth.uid])
+        && (!(request.auth.uid in request.resource.data.get('votes', {})) || request.resource.data.votes[request.auth.uid] == true);
+      allow delete: if request.auth != null && ((resource.data.uid == request.auth.uid && resource.data.status == 'open') || isAdmin());
+    }
+    function validFeedback(d) {
+      return d.keys().hasOnly(['uid', 'username', 'type', 'category', 'title', 'details', 'gameId', 'gameName', 'context', 'status', 'createdAt'])
+        && d.uid == request.auth.uid
+        && d.status == 'open'
+        && d.createdAt == request.time
+        && d.type in ['bug', 'feature']
+        && d.category in ['game', 'content', 'ads', 'site', 'account', 'other', 'idea']
+        && shortText(d.title, 80) && d.title.size() > 0
+        && shortText(d.details, 1000) && shortText(d.username, 40)
+        && shortText(d.gameId, 12) && shortText(d.gameName, 80) && shortText(d.context, 200);
+    }
+
     function isBanned() {
       return request.auth != null && exists(/databases/$(db)/documents/bans/$(request.auth.uid));
     }
