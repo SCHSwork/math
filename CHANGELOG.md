@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 14, 2026
+
+### Changed
+- **Locking the site no longer locks the owner out.** When the owner switches to Locked, Maintenance or Shut down, they keep using the site with a bar at the top that says what visitors see and whether the change has reached them: *Saving to GitHub…* → *Saved, waiting for visitors to get it* (with a timer) → *Live: visitors are getting this*. The bar has **Preview screen** (see exactly what visitors see), **Reopen site** and **Owner Panel**. The same progress shows under the mode in the Owner Panel. "Owner access" on the lock screen now lets the owner in without reopening the site for everyone.
+
+
 ## October 13, 2026
 
 ### Fixed

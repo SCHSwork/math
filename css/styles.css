@@ -1922,3 +1922,47 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .newgame-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
 .newgame-meta { color: var(--text-muted); font-size: 12px; margin-top: 2px; word-break: break-all; }
 .newgame-btn { flex-shrink: 0; }
+
+/* ── Owner bar: shown to the owner instead of their own lock screen ─────── */
+html.owner-mode-bar-on body { padding-top: 56px; }
+#owner-mode-bar {
+    --omb: #3b82f6;
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000001;
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    min-height: 56px;
+    padding: 0.5rem 1rem;
+    box-sizing: border-box;
+    background: color-mix(in srgb, var(--omb) 16%, var(--surface, #1e293b));
+    border-bottom: 2px solid var(--omb);
+    color: var(--text, #f1f5f9);
+    font-size: 13.5px;
+    box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
+}
+#owner-mode-bar[data-mode="locked"] { --omb: var(--primary, #fc2651); }
+#owner-mode-bar[data-mode="maintenance"] { --omb: #3b82f6; }
+#owner-mode-bar[data-mode="shutdown"] { --omb: #ef4444; }
+#owner-mode-bar[data-mode="open"] { --omb: #10b981; }
+.omb-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.1rem; }
+.omb-title { font-weight: 800; }
+.omb-sync { font-size: 12.5px; color: var(--text-muted, #94a3b8); font-variant-numeric: tabular-nums; }
+.omb-sync.ok, .owner-mode-sync.ok { color: #10b981; font-weight: 700; }
+.omb-sync.bad, .owner-mode-sync.bad { color: #ef4444; font-weight: 700; }
+.omb-sync.wait, .owner-mode-sync.wait { color: #f59e0b; }
+.omb-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.omb-actions button {
+    border: 1px solid var(--border, #334155); background: var(--surface, #1e293b); color: inherit;
+    font: inherit; font-size: 12.5px; font-weight: 700;
+    padding: 0.4rem 0.75rem; border-radius: 8px; cursor: pointer;
+}
+.omb-actions button:hover { border-color: var(--omb); }
+.omb-actions .omb-open { background: #10b981; border-color: #10b981; color: #fff; }
+.omb-actions button[hidden] { display: none; }
+.owner-mode-sync { margin: 0.5rem 0 0; font-size: 12.5px; min-height: 1em; color: var(--text-muted); }
+.owner-mode-sync:empty { display: none; }
+.site-mode-preview-close {
+    display: block; margin: 1.2rem auto 0; padding: 0.5rem 0.9rem;
+    border: 1px dashed var(--sm-accent); border-radius: 10px;
+    background: none; color: var(--sm-accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+@media (max-width: 600px) { html.owner-mode-bar-on body { padding-top: 104px; } }
