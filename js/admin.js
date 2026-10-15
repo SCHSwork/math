@@ -58,22 +58,28 @@ function timeOf(v) {
 
 let adminData = null;   // { profiles, admins:Set, bans:Map, subs:Map uid→count, stats:Map uid→{votes,reports} }
 async function loadAdminData() {
-    const [profiles, admins, bans, subs, stats] = await Promise.all([
+    const [profiles, admins, bans, subs, stats, feedback] = await Promise.all([
         cloudDb.collection("profiles").get(),
         cloudDb.collection("admins").get(),
         cloudDb.collection("bans").get(),
         cloudDb.collection("submissions").get().catch(() => ({ docs: [] })),
-        cloudDb.collection("gameStats").get().catch(() => ({ docs: [] }))
+        cloudDb.collection("gameStats").get().catch(() => ({ docs: [] })),
+        cloudDb.collection("feedback").get().catch(() => ({ docs: [] }))
     ]);
+    // Per account: which games they liked / disliked and reported as broken
     const statMap = new Map();
+    const entryFor = uid => { let s = statMap.get(uid); if (!s) { s = { votes: 0, reports: 0, likes: [], dislikes: [], broken: [] }; statMap.set(uid, s); } return s; };
     for (const d of stats.docs) {
         const data = d.data() || {};
         for (const [k, entry] of Object.entries(data)) {
             if (!/^z/.test(k) || !entry) continue;
-            for (const uid of Object.keys(entry.v || {})) { const s = statMap.get(uid) || { votes: 0, reports: 0 }; s.votes++; statMap.set(uid, s); }
-            for (const uid of Object.keys(entry.r || {})) { const s = statMap.get(uid) || { votes: 0, reports: 0 }; s.reports++; statMap.set(uid, s); }
+            const gameId = k.slice(1);
+            for (const [uid, v] of Object.entries(entry.v || {})) { const s = entryFor(uid); s.votes++; (v === -1 ? s.dislikes : s.likes).push({ gameId, shard: d.id }); }
+            for (const [uid, at] of Object.entries(entry.r || {})) { const s = entryFor(uid); s.reports++; s.broken.push({ gameId, shard: d.id, at }); }
         }
     }
+    const fbMap = new Map();
+    feedback.docs.forEach(d => { const f = { id: d.id, ...(d.data() || {}) }; if (f.uid) { if (!fbMap.has(f.uid)) fbMap.set(f.uid, []); fbMap.get(f.uid).push(f); } });
     const subMap = new Map();
     subs.docs.forEach(d => { const u = (d.data() || {}).uid; if (u) subMap.set(u, (subMap.get(u) || 0) + 1); });
     adminData = {
@@ -81,7 +87,8 @@ async function loadAdminData() {
         admins: new Map(admins.docs.map(d => [d.id, d.data() || {}])),
         bans: new Map(bans.docs.map(d => [d.id, d.data() || {}])),
         subs: subMap,
-        stats: statMap
+        stats: statMap,
+        feedback: fbMap
     };
     // Admins/bans whose account has no profile yet still show up
     for (const uid of [...adminData.admins.keys(), ...adminData.bans.keys()]) {
@@ -220,6 +227,11 @@ function adminRow(p) {
         adminData.subs.get(p.uid) ? `${adminData.subs.get(p.uid)} submission(s)` : ""].filter(Boolean).join(" · ");
     sum.appendChild(meta);
     row.appendChild(sum);
+    // Their likes, dislikes and reports, drawn when the row is opened
+    const activity = document.createElement("div");
+    activity.className = "admin-activity";
+    row.appendChild(activity);
+    row.addEventListener("toggle", () => { if (row.open) renderAdminActivity(activity, p); });
 
     const box = document.createElement("div");
     box.className = "admin-actions";
@@ -313,6 +325,100 @@ function adminRow(p) {
     box.appendChild(idLine);
     row.appendChild(box);
     return row;
+}
+
+// ── One account's activity: likes, dislikes, broken reports, reports & ideas ─
+function adminGameName(id) {
+    const all = (typeof ZONES_ALL !== "undefined" && ZONES_ALL) || (typeof zones !== "undefined" ? zones : []);
+    const z = all.find(x => String(x.id) === String(id));
+    return { zone: z || null, name: z ? z.name : `Game #${id} (not on the site any more)` };
+}
+function renderAdminActivity(box, p) {
+    const st = adminData.stats.get(p.uid) || { likes: [], dislikes: [], broken: [] };
+    const fb = (adminData.feedback && adminData.feedback.get(p.uid)) || [];
+    box.innerHTML = "";
+    const section = (title, count, open) => {
+        const d = document.createElement("details");
+        d.className = "admin-act-sec";
+        if (open) d.open = true;
+        const s = document.createElement("summary");
+        s.textContent = `${title} (${count})`;
+        d.appendChild(s);
+        const list = document.createElement("div");
+        list.className = "admin-act-list";
+        d.appendChild(list);
+        box.appendChild(d);
+        return list;
+    };
+    const empty = (list, text) => { const e = document.createElement("small"); e.className = "admin-act-empty"; e.textContent = text; list.appendChild(e); };
+    // A game with "open" and (for mods) "remove this one" buttons
+    const gameItem = (list, item, kind) => {
+        const { zone, name } = adminGameName(item.gameId);
+        const row = document.createElement("div");
+        row.className = "admin-act-item";
+        const label = document.createElement("span");
+        label.textContent = name + (item.at ? " · " + fmtDate(item.at) : "");
+        row.appendChild(label);
+        if (zone) {
+            const open = document.createElement("button");
+            open.type = "button"; open.className = "finder-chip"; open.textContent = "Open";
+            open.onclick = () => { closePopup(); openZone(zone); };
+            row.appendChild(open);
+        }
+        const rm = document.createElement("button");
+        rm.type = "button"; rm.className = "finder-chip danger";
+        rm.textContent = kind === "broken" ? "Remove report" : "Remove rating";
+        rm.onclick = async () => {
+            rm.disabled = true;
+            try {
+                const del = firebase.firestore.FieldValue.delete();
+                const field = kind === "broken" ? "r" : "v";
+                await cloudDb.collection("gameStats").doc(item.shard).set({ ["z" + item.gameId]: { [field]: { [p.uid]: del } } }, { merge: true });
+                if (typeof fbCount === "function") fbCount(0, 1);
+                const arr = kind === "broken" ? st.broken : kind === "like" ? st.likes : st.dislikes;
+                arr.splice(arr.indexOf(item), 1);
+                if (kind === "broken") st.reports--; else st.votes--;
+                if (typeof loadGameStats === "function") loadGameStats({ force: true });
+                renderAdminActivity(box, p);
+                const meta = box.parentElement?.querySelector(":scope > summary small");
+                if (meta) meta.textContent = meta.textContent.replace(/\d+ ratings?/, `${st.votes} rating${st.votes === 1 ? "" : "s"}`).replace(/\d+ reports?/, `${st.reports} report${st.reports === 1 ? "" : "s"}`);
+                notify("Removed.", { type: "success" });
+            } catch (e) { rm.disabled = false; notify("Couldn't remove it: " + (e.message || e), { type: "error" }); }
+        };
+        row.appendChild(rm);
+        list.appendChild(row);
+    };
+    const byName = arr => [...arr].sort((a, b) => adminGameName(a.gameId).name.localeCompare(adminGameName(b.gameId).name));
+    let list = section("👍 Liked", st.likes.length, st.likes.length > 0 && st.likes.length <= 12);
+    if (!st.likes.length) empty(list, "No likes."); else byName(st.likes).forEach(i => gameItem(list, i, "like"));
+    list = section("👎 Disliked", st.dislikes.length, st.dislikes.length > 0 && st.dislikes.length <= 12);
+    if (!st.dislikes.length) empty(list, "No dislikes."); else byName(st.dislikes).forEach(i => gameItem(list, i, "dislike"));
+    list = section("⚠ Reported as broken", st.broken.length, st.broken.length > 0);
+    if (!st.broken.length) empty(list, "No broken-game reports."); else [...st.broken].sort((a, b) => timeOf(b.at) - timeOf(a.at)).forEach(i => gameItem(list, i, "broken"));
+    list = section("📝 Reports & ideas sent", fb.length, fb.length > 0);
+    if (!fb.length) empty(list, "Nothing sent.");
+    else [...fb].sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt)).forEach(f => {
+        const row = document.createElement("div");
+        row.className = "admin-act-item admin-act-fb";
+        const t = document.createElement("span");
+        const status = (typeof FEEDBACK_STATUS !== "undefined" && FEEDBACK_STATUS[f.type]?.[f.status]) || f.status;
+        t.textContent = `${f.type === "feature" ? "💡" : "⚠️"} ${f.title}${f.gameName ? " · " + f.gameName : ""} · ${status}${f.createdAt ? " · " + fmtDate(f.createdAt) : ""}`;
+        t.title = f.details || "";
+        row.appendChild(t);
+        const view = document.createElement("button");
+        view.type = "button"; view.className = "finder-chip"; view.textContent = "View";
+        view.onclick = () => {
+            const tab = document.querySelector('.admin-tabs button[data-tab="feedback"]');
+            if (typeof modFeedbackFilter !== "undefined") modFeedbackFilter = "all";
+            tab?.click();
+            setTimeout(() => {
+                const el = [...document.querySelectorAll(".fb-review")].find(r => r.querySelector("b")?.textContent.includes(f.title));
+                if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("admin-flash"); setTimeout(() => el.classList.remove("admin-flash"), 1600); }
+            }, 900);
+        };
+        row.appendChild(view);
+        list.appendChild(row);
+    });
 }
 
 // Delete one account's votes and reports from every stats shard
