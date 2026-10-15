@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 15, 2026
+
+### Changed
+- **Nicer scrollbars.** The page's scrollbar (and the ones inside panels and lists) is now slim and rounded, in your theme color, with a track that matches dark or light mode. It gets brighter when you hover or drag it.
+
+
 ## October 14, 2026
 
 ### Changed
