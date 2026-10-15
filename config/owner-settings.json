@@ -1,5 +1,5 @@
 {
-  "siteMode": "maintenance",
+  "siteMode": "locked",
   "disabledZones": [
     "653"
   ],
@@ -33,5 +33,5 @@
     "reducedMotion": false
   },
   "trustedReporters": [],
-  "updatedAt": "2026-10-15T04:16:02.046Z"
+  "updatedAt": "2026-10-15T04:16:38.934Z"
 }
