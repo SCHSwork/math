@@ -11,7 +11,7 @@
   "siteMessage": "Testing",
   "siteBackAt": "2026-10-15T04:23:00.000Z",
   "statusOverride": {
-    "level": "auto",
+    "level": "down",
     "text": ""
   },
   "motd": {
@@ -33,5 +33,5 @@
     "reducedMotion": false
   },
   "trustedReporters": [],
-  "updatedAt": "2026-10-15T04:17:24.596Z"
+  "updatedAt": "2026-10-15T04:17:50.166Z"
 }
