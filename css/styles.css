@@ -1970,3 +1970,29 @@ html.owner-mode-bar-on body { padding-top: 56px; }
     background: none; color: var(--sm-accent); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 @media (max-width: 600px) { html.owner-mode-bar-on body { padding-top: 104px; } }
+
+/* ── Reports & ideas ─────────────────────────────────────────────────────── */
+.fb-switch { margin-bottom: 0.9rem; flex-wrap: wrap; }
+.fb-mod-note { display: block; margin-top: 0.2rem; color: var(--primary); font-weight: 600; }
+.fb-ctx { display: block; color: var(--text-light, #64748b); font-size: 11.5px; margin: 0.15rem 0; }
+.fb-ctx-text { color: var(--text-muted); font-size: 12px; }
+.fb-review[data-status="open"] { border-left: 3px solid #f59e0b; }
+.fb-review[data-status="confirmed"], .fb-review[data-status="approved"] { border-left: 3px solid #3b82f6; }
+.fb-review[data-status="fixed"], .fb-review[data-status="done"] { border-left: 3px solid #10b981; opacity: 0.85; }
+.fb-review[data-status="rejected"] { opacity: 0.6; }
+.finder-chip.fb-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.fb-ideas { display: flex; flex-direction: column; gap: 0.5rem; }
+.fb-idea { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.7rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
+.fb-idea.done { opacity: 0.75; }
+.fb-idea b { display: block; }
+.fb-idea p { margin: 0.25rem 0; font-size: 13.5px; color: var(--text-muted); white-space: pre-line; overflow-wrap: anywhere; }
+.fb-idea small { display: block; font-size: 12px; color: var(--text-muted); }
+.fb-vote {
+    flex: none; width: 48px; padding: 0.35rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.1rem;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-muted);
+    font: inherit; font-size: 12px; cursor: pointer;
+}
+.fb-vote b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.fb-vote.on { border-color: var(--primary); color: var(--primary); background: var(--primary-lighter, rgba(252,38,81,.08)); }
+.fb-vote:disabled { cursor: default; }
+.status-report { margin-left: auto; }

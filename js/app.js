@@ -3387,6 +3387,8 @@ function openSettingsPanel() {
         <br><br>
         <button class="settings-button" onclick="openSubmitGame()">Submit a Game</button>
         <br><br>
+        <div style="display:flex;gap:0.5rem;"><button class="settings-button" style="flex:1;" onclick="openFeedback('bug')">⚠️ Report a Problem</button><button class="settings-button" style="flex:1;" onclick="openFeedback('feature')">💡 Suggest a Feature</button></div>
+        <br><br>
         <button class="settings-button" onclick="openAdminPanel()">Admin Panel</button>
         <br><br>
         <button class="settings-button" onclick="showOwnerPanel()">Owner Panel</button>
@@ -3426,6 +3428,7 @@ function loadPrivacy() {
             <li><b>Cloud saves.</b> A copy of the game progress and site settings stored in your browser for this site (including your favorites, recently played list and play time), so you can continue on another device. It is stored in Google Cloud Firestore and locked so only your signed-in account can read or change it. It never includes passwords or access tokens.</li>
             <li><b>Ratings and broken-game reports.</b> When you rate a game or report it as broken, we store your vote or the time of your report together with your account's random ID (not your username). These are combined into the public totals shown on game cards, and the stored entries can be read by anyone, but they don't reveal your username.</li>
             <li><b>Account profile.</b> Each account keeps a small profile with its username, the date it was created and when it last visited, so site admins can find accounts to manage them, for example to suspend one that's abusing ratings or reports. Only admins and you can see it. Admins can't see your password or your cloud save.</li>
+            <li><b>Reports and feature ideas.</b> If you use "Report a problem" or "Suggest a feature", we store what you type (summary, details, the game it's about) with your username and account ID, and, if you leave the box ticked, your browser type and screen size. Only you and the site's mods can read a report. Ideas the mods approve are shown with your username on the ideas board, where signed-in players can vote. You can withdraw anything that hasn't been reviewed yet, and deleting your account removes all of yours.</li>
             <li><b>Game submissions.</b> If you use "Submit a game", we store what you type in the form (game name, link, creator, license, genre and description) with your username and account ID, so the site owner can review it and you can see its status. Only you and the site admins can read it. You can withdraw a pending submission, and deleting your account removes all of yours. Please don't include personal information in a submission.</li>
         </ul>
         <p>We do <b>not</b> ask for your email, real name, age, location, contacts, or any other personal details. Please don't put your real name or personal information in your username.</p>

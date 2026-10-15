@@ -126,6 +126,7 @@ function ensureStatusPill() {
             <ul class="status-list"></ul>
             <div class="status-panel-foot">
                 <span class="status-checked"></span>
+                <button type="button" class="status-hide status-report">Report a problem</button>
                 <button type="button" class="status-hide">Hide this light</button>
             </div>
         </div>`;
@@ -140,7 +141,8 @@ function ensureStatusPill() {
     };
     btn.onclick = () => setOpen(panel.hidden);
     pill.querySelector(".status-panel-close").onclick = () => setOpen(false);
-    pill.querySelector(".status-hide").onclick = () => {
+    pill.querySelector(".status-report").onclick = () => { setOpen(false); if (typeof openFeedback === "function") openFeedback("bug"); };
+    pill.querySelector(".status-hide:not(.status-report)").onclick = () => {
         setOpen(false);
         setShowSiteStatus(false);
         if (typeof notify === "function") notify("Status light hidden. Turn it back on in Settings.");

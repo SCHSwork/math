@@ -161,6 +161,7 @@ function toggleGameMenu(ev) {
         ["⬇", "Download game file", () => downloadZone()],
         "-",
         ["⚠", "Report broken", () => reportCurrentZone()],
+        ["📝", "Report a problem…", () => openFeedback("bug")],
         ["🗑", `Clear this game's data${tracked ? "" : "…"}`, () => clearCurrentGameData(), true]
     ];
     for (const it of items) {
