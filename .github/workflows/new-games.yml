@@ -20,6 +20,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ ! -s new-games-ids.txt ]; then echo "No new games"; exit 0; fi
+          # Issues are off by default on forks; the site's Admin Panel lists new games anyway
+          if [ "$(gh api repos/${{ github.repository }} --jq .has_issues)" != "true" ]; then
+            echo "::notice::Issues are turned off for this repo, so no issue was opened. New games are listed in Admin Panel → New library games."; cat body.md; exit 0
+          fi
           gh label create new-library-games --color fc2651 --description "Games added to the library that need checking" 2>/dev/null || true
           num=$(gh issue list --label new-library-games --state open --json number --jq '.[0].number')
           ids=$(tr '\n' ',' < new-games-ids.txt)
