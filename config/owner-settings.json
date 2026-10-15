@@ -1,5 +1,5 @@
 {
-  "siteMode": "open",
+  "siteMode": "maintenance",
   "disabledZones": [
     "653"
   ],
@@ -32,15 +32,6 @@
     "warnBeforeUnload": false,
     "reducedMotion": false
   },
-  "trustedReporters": [
-    {
-      "uid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-      "name": "lsp"
-    },
-    {
-      "uid": "qka6JaQ3xNM1OTQH91KsYZMjZxb2",
-      "name": "poopmaster"
-    }
-  ],
-  "updatedAt": "2026-10-13T21:42:34.040Z"
+  "trustedReporters": [],
+  "updatedAt": "2026-10-15T03:41:45.351Z"
 }
