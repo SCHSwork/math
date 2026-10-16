@@ -2071,10 +2071,16 @@ async function ownerResetAll() {
 const COLOR_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
 // Scene themes have their own animated background (scenes.js) and are always dark
 const SCENE_THEMES = {
-    space: "Outer space", starry: "Starry night", andromeda: "Andromeda", blackhole: "Black hole", saturn: "Saturn",
-    nebula: "Nebula", aurora: "Aurora", snow: "Snowfall", sakura: "Cherry blossom", fireflies: "Firefly forest",
-    synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", ocean: "Deep sea"
+    space: "Outer space", starry: "Starry night", andromeda: "Andromeda", blackhole: "Black hole", saturn: "Saturn", nebula: "Nebula",
+    clouds: "Sunny sky", beach: "Tropical beach", meadow: "Meadow", autumn: "Autumn leaves", sakura: "Cherry blossom", snow: "Snowfall",
+    aurora: "Aurora", fireflies: "Firefly forest", campfire: "Campfire", storm: "Thunderstorm", desert: "Desert sunset", ocean: "Deep sea",
+    pastel: "Pastel dream", arcade: "Retro arcade", synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", halloween: "Halloween"
 };
+// How the scene picker groups them, and which scenes are bright (dark text on light panels)
+const SCENE_GROUPS = { "🚀 Space": ["space", "starry", "andromeda", "blackhole", "saturn", "nebula"],
+    "🌿 Nature": ["clouds", "beach", "meadow", "autumn", "sakura", "snow", "aurora", "fireflies", "campfire", "storm", "desert", "ocean"],
+    "🎉 Fun": ["pastel", "arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
+const LIGHT_SCENES = new Set(["clouds", "beach", "meadow", "autumn", "pastel"]);
 const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
 function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
 const TAB_CLOAK_STORAGE_KEYS = {
@@ -2809,9 +2815,18 @@ function applyFooterLinks() {
 }
 
 function darkMode() {
-    document.body.classList.toggle("dark-mode");
-    const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
-    localStorage.setItem("gnmath-mode", mode);
+    // Flip the saved choice; a scene theme keeps its own look until you leave it
+    const wasDark = getVisitorSetting("gnmath-mode", "mode") !== "light";
+    localStorage.setItem("gnmath-mode", wasDark ? "light" : "dark");
+    applyModeForTheme();
+    const theme = getVisitorSetting("gnmath-theme", "theme");
+    if (SCENE_THEMES[theme] && typeof notify === "function") notify(`Saved: ${wasDark ? "light" : "dark"} mode. Scenes keep their own look, so you'll see it when you switch to a color theme.`);
+}
+// Scenes set their own brightness (bright scenes light, the rest dark);
+// color themes follow the visitor's dark/light choice.
+function applyModeForTheme(theme = getVisitorSetting("gnmath-theme", "theme")) {
+    const dark = SCENE_THEMES[theme] ? !LIGHT_SCENES.has(theme) : getVisitorSetting("gnmath-mode", "mode") !== "light";
+    document.body.classList.toggle("dark-mode", dark);
 }
 
 // The page scrollbar is drawn for <html>, which can't see the theme colors set
@@ -2836,6 +2851,8 @@ function setTheme(themeName, { persist = true } = {}) {
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
     document.body.classList.add(`theme-${safeTheme}`);
     document.body.classList.toggle("scene-theme", !!SCENE_THEMES[safeTheme]);
+    document.body.classList.toggle("scene-light", LIGHT_SCENES.has(safeTheme));
+    applyModeForTheme(safeTheme);
     if (persist) localStorage.setItem("gnmath-theme", safeTheme);
     if (persist) clearCustomPrimaryColor();
     updateThemeButtons();
@@ -3308,10 +3325,11 @@ function openSettingsPanel() {
                     ${COLOR_THEMES.map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${themeLabel(t)}</button>`).join("")}
                 </div>
             </div>
-            <div class="set-row set-col"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds. Scenes are always dark.</small></div>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds with their own colors. ☀️ scenes are bright, the rest are dark.</small></div>
+                ${Object.entries(SCENE_GROUPS).map(([group, list]) => `<div class="scene-group">${group}</div>
                 <div class="scene-picks">
-                    ${Object.keys(SCENE_THEMES).map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${themeLabel(t)}</span></button>`).join("")}
-                </div>
+                    ${list.map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${LIGHT_SCENES.has(t) ? "☀️ " : ""}${themeLabel(t)}</span></button>`).join("")}
+                </div>`).join("")}
             </div>
             ${row("Custom color", "Pick any color for buttons and highlights", `<input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)"><button class="theme-button set-mini" type="button" onclick="clearCustomPrimaryColor()">Clear</button>`)}
         </div>

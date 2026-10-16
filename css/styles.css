@@ -2565,6 +2565,170 @@ body.theme-lava      { --bg: #120302; --primary: #f97316; --primary-hover: #fb92
 .scene-prev-coderain { background: repeating-linear-gradient(90deg, transparent 0 10px, rgba(34,197,94,.7) 10px 12px, transparent 12px 22px), linear-gradient(180deg, transparent, #000a03 85%), #000a03 !important; }
 .scene-prev-lava { background: radial-gradient(circle at 30% 70%, #f97316, transparent 30%), radial-gradient(circle at 70% 40%, #fbbf24, transparent 25%), #2a0704 !important; }
 
+
+/* ── Bright scenes: light see-through panels with dark text ── */
+body.scene-theme.scene-light {
+    --text: #0f172a;
+    --text-muted: #475569;
+    --text-light: #64748b;
+    --bg-secondary: rgba(255, 255, 255, 0.72);
+    --surface: rgba(255, 255, 255, 0.86);
+    --surface-hover: rgba(255, 255, 255, 0.96);
+    --border: rgba(15, 23, 42, 0.12);
+    --border-light: rgba(15, 23, 42, 0.07);
+    --glass: rgba(255, 255, 255, 0.7);
+    --gradient-surface: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.64) 100%);
+    --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.12);
+    --shadow-lg: 0 10px 25px -5px rgb(15 23 42 / 0.2);
+    --shadow-xl: 0 20px 40px -8px rgb(15 23 42 / 0.28);
+    --accent-text: color-mix(in srgb, var(--primary) 70%, black);
+}
+body.scene-theme.scene-light :is(.popup, .status-panel, .toast, #gameMenu) { background: rgba(255, 255, 255, 0.97); }
+body.scene-theme.scene-light footer { background: rgba(255, 255, 255, 0.82); }
+body.scene-theme.scene-light header { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 85%, black), color-mix(in srgb, var(--primary) 60%, rgba(15, 23, 42, 0.5))); }
+
+body.theme-clouds    { --bg: #bfe6ff; --primary: #0284c7; --primary-hover: #0369a1; --primary-light: rgba(2,132,199,.15); --primary-lighter: rgba(2,132,199,.08); --gradient-primary: linear-gradient(135deg, #0284c7, #38bdf8); --shadow-glow: 0 0 22px rgba(2,132,199,.35); }
+body.theme-beach     { --bg: #ffe9c2; --primary: #0d9488; --primary-hover: #0f766e; --primary-light: rgba(13,148,136,.15); --primary-lighter: rgba(13,148,136,.08); --gradient-primary: linear-gradient(135deg, #0d9488, #f59e0b); --shadow-glow: 0 0 22px rgba(13,148,136,.35); }
+body.theme-meadow    { --bg: #d9f99d; --primary: #16a34a; --primary-hover: #15803d; --primary-light: rgba(22,163,74,.15); --primary-lighter: rgba(22,163,74,.08); --gradient-primary: linear-gradient(135deg, #16a34a, #65a30d); --shadow-glow: 0 0 22px rgba(22,163,74,.35); }
+body.theme-autumn    { --bg: #fde8c8; --primary: #c2410c; --primary-hover: #9a3412; --primary-light: rgba(194,65,12,.15); --primary-lighter: rgba(194,65,12,.08); --gradient-primary: linear-gradient(135deg, #c2410c, #ca8a04); --shadow-glow: 0 0 22px rgba(194,65,12,.35); }
+body.theme-pastel    { --bg: #fbe4f3; --primary: #a855f7; --primary-hover: #9333ea; --primary-light: rgba(168,85,247,.15); --primary-lighter: rgba(168,85,247,.08); --gradient-primary: linear-gradient(135deg, #f472b6, #a78bfa, #60a5fa); --shadow-glow: 0 0 22px rgba(168,85,247,.35); }
+body.theme-halloween { --bg: #0d0614; --primary: #fb923c; --primary-hover: #fdba74; --primary-light: rgba(251,146,60,.18); --primary-lighter: rgba(251,146,60,.09); --gradient-primary: linear-gradient(135deg, #581c87, #ea580c); --shadow-glow: 0 0 22px rgba(251,146,60,.45); }
+body.theme-storm     { --bg: #0b1018; --primary: #a5b4fc; --primary-hover: #c7d2fe; --primary-light: rgba(165,180,252,.18); --primary-lighter: rgba(165,180,252,.09); --gradient-primary: linear-gradient(135deg, #1e293b, #4f46e5); --shadow-glow: 0 0 22px rgba(165,180,252,.4); }
+body.theme-campfire  { --bg: #0a0604; --primary: #f59e0b; --primary-hover: #fbbf24; --primary-light: rgba(245,158,11,.18); --primary-lighter: rgba(245,158,11,.09); --gradient-primary: linear-gradient(135deg, #451a03, #d97706); --shadow-glow: 0 0 22px rgba(245,158,11,.45); }
+body.theme-arcade    { --bg: #0c0520; --primary: #facc15; --primary-hover: #fde047; --primary-light: rgba(250,204,21,.18); --primary-lighter: rgba(250,204,21,.09); --gradient-primary: linear-gradient(135deg, #4c1d95, #db2777); --shadow-glow: 0 0 22px rgba(250,204,21,.45); }
+body.theme-desert    { --bg: #1c0d14; --primary: #fb923c; --primary-hover: #fdba74; --primary-light: rgba(251,146,60,.18); --primary-lighter: rgba(251,146,60,.09); --gradient-primary: linear-gradient(135deg, #9a3412, #be185d); --shadow-glow: 0 0 22px rgba(251,146,60,.45); }
+
+/* Drifting clouds, shared by Sunny sky, Meadow and Thunderstorm: wide strips that slide left and repeat */
+@keyframes scClouds { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+.cloud-strip { left: 0; width: 200%; background-repeat: repeat-x; background-size: 50% 100%; }
+
+/* Sunny sky: blue sky, a warm sun and fluffy clouds */
+.theme-clouds #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 45%, #e0f2fe 100%); }
+.theme-clouds #scene .a2 { display: block; width: 26vmin; height: 26vmin; right: 9%; top: 8%; border-radius: 50%;
+    background: radial-gradient(circle, #fffbe8 0 38%, #fde68a 55%, rgba(253, 230, 138, 0) 72%); animation: scPulse 6s ease-in-out infinite alternate; }
+.theme-clouds #scene .a3, .theme-clouds #scene .a4, .theme-meadow #scene .a3 { display: block; left: 0; width: 200%; background-repeat: repeat-x; background-size: 50% 100%;
+    background-image: radial-gradient(ellipse 9% 40% at 12% 60%, #fff 60%, transparent 62%), radial-gradient(ellipse 6% 34% at 18% 52%, #fff 60%, transparent 62%), radial-gradient(ellipse 7% 30% at 7% 64%, #fff 60%, transparent 62%),
+        radial-gradient(ellipse 10% 42% at 55% 55%, #fff 60%, transparent 62%), radial-gradient(ellipse 7% 34% at 62% 46%, #fff 60%, transparent 62%), radial-gradient(ellipse 6% 28% at 49% 60%, #fff 60%, transparent 62%),
+        radial-gradient(ellipse 8% 36% at 85% 62%, #fff 60%, transparent 62%), radial-gradient(ellipse 6% 30% at 90% 54%, #fff 60%, transparent 62%); }
+.theme-clouds #scene .a3 { top: 6%; height: 26vh; opacity: 0.95; filter: drop-shadow(0 6px 10px rgba(14, 116, 144, 0.15)); animation: scClouds 120s linear infinite; }
+.theme-clouds #scene .a4 { top: 40%; height: 18vh; opacity: 0.6; animation: scClouds 200s linear -60s infinite; }
+
+/* Tropical beach: rolling waves, sand and a palm tree */
+.theme-beach #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #7dd3fc 0%, #bae6fd 40%, #fef3c7 58%); }
+.theme-beach #scene .a2 { display: block; width: 22vmin; height: 22vmin; left: 14%; top: 10%; border-radius: 50%; background: radial-gradient(circle, #fff7d6 0 40%, #fde047 58%, rgba(253, 224, 71, 0) 72%); }
+.theme-beach #scene .a3 { display: block; left: 0; width: 200%; top: 52%; height: 30vh;
+    background: radial-gradient(ellipse 4% 14% at 50% 0%, rgba(255, 255, 255, 0.85) 60%, transparent 62%) 0 6px / 8% 30px repeat-x,
+        radial-gradient(ellipse 4% 14% at 50% 0%, rgba(255, 255, 255, 0.5) 60%, transparent 62%) 4% 40px / 8% 30px repeat-x,
+        linear-gradient(180deg, #06b6d4 0%, #0891b2 45%, #22d3ee 100%);
+    animation: scClouds 40s linear infinite; }
+.theme-beach #scene .a4 { display: block; left: 0; right: 0; bottom: 0; height: 22vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cpath d='M0 60 C300 0 500 70 800 30 S1100 40 1200 20 V200 H0z' fill='%23fcd34d'/%3E%3Cpath d='M0 110 C300 70 600 130 900 90 S1150 100 1200 85 V200 H0z' fill='%23fbbf24' opacity='.7'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-beach #scene .a5 { display: block; right: 4%; bottom: 8vh; width: 30vmin; height: 52vmin; transform-origin: 40% 100%; animation: scPalm 7s ease-in-out infinite alternate;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 340'%3E%3Cpath d='M92 340 C100 250 96 170 112 90' stroke='%23854d0e' stroke-width='12' fill='none' stroke-linecap='round'/%3E%3Cg fill='%2315803d'%3E%3Cpath d='M112 90 C70 60 30 70 0 110 C40 80 80 82 112 95z'/%3E%3Cpath d='M112 90 C150 50 190 60 200 100 C170 78 140 80 112 95z'/%3E%3Cpath d='M112 88 C100 40 70 20 40 20 C80 35 100 60 110 92z'/%3E%3Cpath d='M112 88 C130 40 160 25 190 30 C150 40 130 60 114 92z'/%3E%3Cpath d='M112 92 C90 110 70 150 72 180 C85 140 100 115 114 98z'/%3E%3C/g%3E%3C/svg%3E") bottom / contain no-repeat; }
+@keyframes scPalm { from { transform: rotate(-2deg); } to { transform: rotate(2.5deg); } }
+
+/* Meadow: rolling green hills with flowers under a blue sky */
+.theme-meadow #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #60a5fa 0%, #bfdbfe 50%, #ecfccb 100%); }
+.theme-meadow #scene .a3 { top: 4%; height: 22vh; opacity: 0.9; animation: scClouds 150s linear infinite; }
+.theme-meadow #scene .a2 { display: block; left: 0; right: 0; bottom: 0; height: 50vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cpath d='M0 160 C200 80 400 140 600 110 S1000 60 1200 120 V400 H0z' fill='%2386efac'/%3E%3Cpath d='M0 240 C250 180 500 260 750 210 S1100 200 1200 230 V400 H0z' fill='%234ade80'/%3E%3Cpath d='M0 320 C300 280 600 340 900 300 S1150 310 1200 300 V400 H0z' fill='%2322c55e'/%3E%3Cg fill='%23fef08a'%3E%3Ccircle cx='120' cy='300' r='4'/%3E%3Ccircle cx='340' cy='250' r='4'/%3E%3Ccircle cx='560' cy='330' r='4'/%3E%3Ccircle cx='820' cy='270' r='4'/%3E%3Ccircle cx='1040' cy='320' r='4'/%3E%3C/g%3E%3Cg fill='%23f9a8d4'%3E%3Ccircle cx='220' cy='340' r='4'/%3E%3Ccircle cx='470' cy='290' r='4'/%3E%3Ccircle cx='700' cy='350' r='4'/%3E%3Ccircle cx='950' cy='300' r='4'/%3E%3Ccircle cx='1150' cy='345' r='4'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-meadow #scene .f1 { display: block; opacity: 0.8;
+    background-image: radial-gradient(ellipse 5px 3px at 20% 30%, #facc15 60%, transparent 70%), radial-gradient(ellipse 5px 3px at 70% 60%, #f472b6 60%, transparent 70%), radial-gradient(ellipse 5px 3px at 45% 85%, #a78bfa 60%, transparent 70%);
+    animation: scFallSway 40s linear reverse infinite; }
+
+/* Autumn leaves: orange, red and yellow leaves tumbling down */
+.theme-autumn #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 80% 60% at 70% 0%, rgba(251, 191, 36, 0.45), transparent 70%), linear-gradient(180deg, #fed7aa 0%, #fde8c8 60%, #fcd9a8 100%); }
+.theme-autumn #scene .a2 { display: block; left: 0; right: 0; bottom: 0; height: 40vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cg fill='%23c2410c' opacity='.35'%3E%3Ccircle cx='120' cy='120' r='90'/%3E%3Ccircle cx='230' cy='150' r='70'/%3E%3Ccircle cx='980' cy='110' r='100'/%3E%3Ccircle cx='1100' cy='150' r='80'/%3E%3C/g%3E%3Cg fill='%2378350f' opacity='.45'%3E%3Crect x='112' y='190' width='16' height='110'/%3E%3Crect x='222' y='200' width='14' height='100'/%3E%3Crect x='975' y='190' width='16' height='110'/%3E%3Crect x='1094' y='210' width='14' height='90'/%3E%3C/g%3E%3Cpath d='M0 270 C300 240 700 290 1200 260 V300 H0z' fill='%23ea580c' opacity='.4'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-autumn #scene .f1, .theme-autumn #scene .f2 { display: block;
+    background-image: radial-gradient(ellipse 9px 5px at 10% 12%, #ea580c 60%, transparent 70%), radial-gradient(ellipse 8px 5px at 32% 48%, #dc2626 60%, transparent 70%), radial-gradient(ellipse 9px 6px at 55% 22%, #ca8a04 60%, transparent 70%), radial-gradient(ellipse 8px 5px at 72% 70%, #c2410c 60%, transparent 70%), radial-gradient(ellipse 9px 5px at 90% 38%, #d97706 60%, transparent 70%), radial-gradient(ellipse 7px 5px at 22% 86%, #b91c1c 60%, transparent 70%); }
+.theme-autumn #scene .f1 { animation: scFallSway 18s linear infinite; }
+.theme-autumn #scene .f2 { opacity: 0.55; animation: scFallSway 28s linear -10s infinite; }
+
+/* Pastel dream: soft floating colors and bubbles */
+.theme-pastel #scene .a1 { display: block; inset: 0; background: linear-gradient(135deg, #fbcfe8 0%, #ddd6fe 50%, #bfdbfe 100%); }
+.theme-pastel #scene .a2, .theme-pastel #scene .a3, .theme-pastel #scene .a4 { display: block; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(50px); opacity: 0.7; }
+.theme-pastel #scene .a2 { left: -15vmax; top: -15vmax; background: radial-gradient(circle, #f9a8d4, transparent 65%); animation: scFloatA 30s ease-in-out infinite alternate; }
+.theme-pastel #scene .a3 { right: -20vmax; top: 15vmax; background: radial-gradient(circle, #a5f3fc, transparent 65%); animation: scFloatB 36s ease-in-out infinite alternate; }
+.theme-pastel #scene .a4 { left: 25vmax; bottom: -30vmax; background: radial-gradient(circle, #fde68a, transparent 65%); animation: scFloatA 44s ease-in-out -15s infinite alternate; }
+.theme-pastel #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%; background-size: 100% 50%; opacity: 0.8;
+    background-image: radial-gradient(circle at 12% 30%, rgba(255,255,255,.9) 0 6px, rgba(255,255,255,.3) 7px, transparent 10px), radial-gradient(circle at 40% 70%, rgba(255,255,255,.8) 0 9px, rgba(255,255,255,.25) 10px, transparent 14px), radial-gradient(circle at 68% 20%, rgba(255,255,255,.85) 0 5px, transparent 8px), radial-gradient(circle at 86% 60%, rgba(255,255,255,.8) 0 8px, rgba(255,255,255,.25) 9px, transparent 13px);
+    animation: scBubbles 40s linear infinite; }
+
+/* Halloween: a big orange moon, bats flying past and a spooky graveyard */
+.theme-halloween #scene .s1 { display: block; opacity: 0.5; }
+.theme-halloween #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(234, 88, 12, 0.25), transparent 70%), linear-gradient(180deg, #0d0614 0%, #2e1065 100%); }
+.theme-halloween #scene .a2 { display: block; width: 34vmin; height: 34vmin; right: 12%; top: 10%; border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, #fff1d6, #fdba74 55%, #ea580c); box-shadow: 0 0 60px 10px rgba(251, 146, 60, 0.45); }
+.theme-halloween #scene .a3 { display: block; left: 0; width: 200%; top: 12%; height: 36vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 200'%3E%3Cg fill='%23000'%3E%3Cpath d='M80 60c6-8 14-10 20-4 2-6 8-6 10 0 6-6 14-4 20 4-8-2-12 2-14 6-4-4-10-4-12 0-4-4-10-4-12 0-2-4-6-8-12-6z'/%3E%3Cpath d='M330 120c5-6 11-8 16-3 1-5 6-5 8 0 5-5 11-3 16 3-6-2-10 2-11 5-3-3-8-3-10 0-3-3-8-3-10 0-1-3-5-6-9-5z'/%3E%3Cpath d='M480 40c4-5 9-6 13-2 1-4 5-4 7 0 4-4 9-3 13 2-5-1-8 1-9 4-2-2-6-2-8 0-2-2-6-2-8 0-1-3-4-5-8-4z'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 50% 100% repeat-x;
+    animation: scClouds 30s linear infinite reverse; }
+.theme-halloween #scene .a4 { display: block; left: 0; right: 0; bottom: 0; height: 30vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 250' preserveAspectRatio='none'%3E%3Cg fill='%23070310'%3E%3Cpath d='M0 200 C300 170 600 220 1200 180 V250 H0z'/%3E%3Cpath d='M150 200 v-60 a25 25 0 0 1 50 0 v60z'/%3E%3Cpath d='M320 205 v-45 a20 20 0 0 1 40 0 v45z'/%3E%3Cpath d='M820 195 v-55 a22 22 0 0 1 44 0 v55z'/%3E%3Cpath d='M1000 60 l10 140 h-20z M1000 90 l-40 -30 M1000 110 l45 -35 M1000 130 l-35 -10' stroke='%23070310' stroke-width='8'/%3E%3C/g%3E%3Cg fill='%23ea580c'%3E%3Cellipse cx='560' cy='205' rx='34' ry='26'/%3E%3Cellipse cx='660' cy='212' rx='24' ry='19'/%3E%3C/g%3E%3Cg fill='%23fde68a'%3E%3Cpath d='M546 200 l6 -8 6 8z M566 200 l6 -8 6 8z M548 214 q12 8 24 0z'/%3E%3Cpath d='M652 208 l4 -6 4 6z M664 208 l4 -6 4 6z'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-halloween #scene .a5 { display: block; left: 0; right: 0; bottom: 0; height: 30vh; background: radial-gradient(ellipse 12% 30% at 47% 82%, rgba(251, 146, 60, 0.35), transparent 70%); animation: scGlowA 2.4s ease-in-out infinite alternate; }
+
+/* Thunderstorm: dark clouds, heavy rain and lightning flashes */
+.theme-storm #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #111827 0%, #1f2937 50%, #0b1018 100%); }
+.theme-storm #scene .a3 { display: block; left: 0; width: 200%; top: -4vh; height: 40vh; background-repeat: repeat-x; background-size: 50% 100%;
+    background-image: radial-gradient(ellipse 14% 50% at 15% 30%, #374151 60%, transparent 62%), radial-gradient(ellipse 12% 44% at 32% 40%, #4b5563 60%, transparent 62%), radial-gradient(ellipse 16% 52% at 58% 26%, #374151 60%, transparent 62%), radial-gradient(ellipse 12% 40% at 80% 38%, #4b5563 60%, transparent 62%);
+    filter: blur(6px); animation: scClouds 90s linear infinite; }
+.theme-storm #scene .a2 { display: block; inset: 0; background: radial-gradient(ellipse at 30% 10%, rgba(224, 231, 255, 0.9), rgba(165, 180, 252, 0.3) 40%, transparent 70%); opacity: 0; animation: scFlash 9s linear infinite; }
+.theme-storm #scene .a4 { display: block; left: 28%; top: 6vh; width: 10vmin; height: 40vh; opacity: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 160'%3E%3Cpath d='M24 0 L8 70 H20 L10 160 L34 58 H22 L32 0z' fill='%23eef2ff'/%3E%3C/svg%3E") top / contain no-repeat;
+    filter: drop-shadow(0 0 12px #a5b4fc); animation: scFlash 9s linear infinite; }
+@keyframes scFlash { 0%, 61%, 66%, 100% { opacity: 0; } 62% { opacity: 1; } 63% { opacity: 0.2; } 64% { opacity: 0.9; } }
+.theme-storm #scene .f1 { display: block; opacity: 0.55;
+    background-image: linear-gradient(transparent 0 70%, rgba(203, 213, 225, 0.6) 70% 76%, transparent 76%);
+    background-size: 3px 90px; -webkit-mask-image: repeating-linear-gradient(100deg, #000 0 1px, transparent 1px 23px, #000 23px 24px, transparent 24px 61px); mask-image: repeating-linear-gradient(100deg, #000 0 1px, transparent 1px 23px, #000 23px 24px, transparent 24px 61px);
+    animation: scFall 0.7s linear infinite; }
+
+/* Campfire: a flickering fire under the stars, sparks floating up */
+.theme-campfire #scene .s1 { display: block; opacity: 0.7; }
+.theme-campfire #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #05070f 0%, #120a06 70%, #1c0d05 100%); }
+.theme-campfire #scene .a4 { display: block; left: 0; right: 0; bottom: 0; height: 45vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cg fill='%23050302'%3E%3Cpath d='M40 400 90 150 140 400zM200 400l40-200 40 200zM900 400l50-260 50 260zM1060 400l40-180 40 180z'/%3E%3Crect y='370' width='1200' height='30'/%3E%3C/g%3E%3Cg fill='%233f2414'%3E%3Crect x='540' y='360' width='120' height='12' rx='6' transform='rotate(-12 600 366)'/%3E%3Crect x='540' y='360' width='120' height='12' rx='6' transform='rotate(12 600 366)'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-campfire #scene .a2 { display: block; left: 50%; bottom: 4vh; width: 16vmin; height: 24vmin; margin-left: -8vmin; border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    background: radial-gradient(ellipse 50% 60% at 50% 75%, #fff7ed 0 15%, #fde047 30%, #f97316 60%, rgba(220, 38, 38, 0) 75%);
+    filter: blur(2px); transform-origin: 50% 100%; animation: scFlicker 0.9s ease-in-out infinite alternate; }
+@keyframes scFlicker { 0% { transform: scale(1, 1) skewX(0); } 33% { transform: scale(0.95, 1.08) skewX(-3deg); } 66% { transform: scale(1.04, 0.94) skewX(3deg); } 100% { transform: scale(0.98, 1.05) skewX(-1deg); } }
+.theme-campfire #scene .a3 { display: block; left: 50%; bottom: -10vh; width: 90vmin; height: 60vmin; margin-left: -45vmin; background: radial-gradient(ellipse at 50% 80%, rgba(249, 115, 22, 0.4), transparent 65%); animation: scGlowA 1.6s ease-in-out infinite alternate; }
+.theme-campfire #scene .s-bubbles { display: block; left: 40%; width: 20%; top: 0; height: 200%; background-size: 100% 50%;
+    background-image: radial-gradient(circle at 30% 30%, #fdba74 0 1.5px, transparent 2.5px), radial-gradient(circle at 60% 60%, #fde047 0 1px, transparent 2px), radial-gradient(circle at 45% 85%, #fb923c 0 1.5px, transparent 2.5px), radial-gradient(circle at 70% 15%, #fdba74 0 1px, transparent 2px);
+    animation: scBubbles 9s linear infinite; }
+
+/* Retro arcade: pixel coins, hearts and stars floating over a glowing grid */
+.theme-arcade #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse at 50% 120%, rgba(219, 39, 119, 0.35), transparent 60%), #0c0520; }
+.theme-arcade #scene .a2 { display: block; inset: 0; background-image: linear-gradient(rgba(167, 139, 250, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(167, 139, 250, 0.12) 1px, transparent 1px); background-size: 32px 32px; }
+.theme-arcade #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' shape-rendering='crispEdges'%3E%3Cg transform='translate(30 40) scale(3)'%3E%3Cpath fill='%23facc15' d='M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z'/%3E%3Cpath fill='%23fef9c3' d='M3 2h1v4H3z'/%3E%3C/g%3E%3Cg transform='translate(170 20) scale(3)'%3E%3Cpath fill='%23f43f5e' d='M1 0h2v1h2V0h2v1h1v3H7v1H6v1H5v1H3V6H2V5H1V4H0V1h1z'/%3E%3C/g%3E%3Cg transform='translate(240 140) scale(3)'%3E%3Cpath fill='%2322d3ee' d='M4 0h1v3h4v1H8v1H7v1h1v3H7V8H6V7H3v1H2v1H1V6h1V5H1V4H0V3h4z'/%3E%3C/g%3E%3Cg transform='translate(90 170) scale(3)'%3E%3Cpath fill='%23a3e635' d='M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z'/%3E%3Cpath fill='%23ecfccb' d='M3 2h1v4H3z'/%3E%3C/g%3E%3Cg transform='translate(20 240) scale(3)'%3E%3Cpath fill='%23f472b6' d='M1 0h2v1h2V0h2v1h1v3H7v1H6v1H5v1H3V6H2V5H1V4H0V1h1z'/%3E%3C/g%3E%3Cg transform='translate(180 250) scale(2)'%3E%3Cpath fill='%23fde047' d='M4 0h1v3h4v1H8v1H7v1h1v3H7V8H6V7H3v1H2v1H1V6h1V5H1V4H0V3h4z'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 300px 300px repeat;
+    opacity: 0.85; animation: scBubbles 40s linear infinite; }
+.theme-arcade #scene .s-fall { display: none; }
+.theme-arcade #scene .a5 { display: block; inset: 0; background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px); }
+.theme-arcade #scene .s1 { display: block; opacity: 0.5; }
+
+/* Desert sunset: dunes under an orange and purple sky */
+.theme-desert #scene .s1 { display: block; opacity: 0.45; -webkit-mask-image: linear-gradient(180deg, #000, transparent 40%); mask-image: linear-gradient(180deg, #000, transparent 40%); }
+.theme-desert #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #2e1065 0%, #9d174d 38%, #ea580c 62%, #fbbf24 78%); }
+.theme-desert #scene .a2 { display: block; left: 50%; top: 52%; width: 30vmin; height: 30vmin; margin: -15vmin 0 0 -15vmin; border-radius: 50%;
+    background: radial-gradient(circle, #fff7d6 0 35%, #fde047 55%, rgba(253, 224, 71, 0) 72%); animation: scSet 40s ease-in-out infinite alternate; }
+@keyframes scSet { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 6vh, 0); } }
+.theme-desert #scene .a3 { display: block; left: 0; right: 0; bottom: 0; height: 45vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cpath d='M0 150 C200 60 420 160 650 100 S1000 70 1200 130 V400 H0z' fill='%23b45309'/%3E%3Cpath d='M0 230 C260 150 520 270 800 200 S1100 190 1200 220 V400 H0z' fill='%2392400e'/%3E%3Cpath d='M0 310 C300 260 650 340 950 290 S1150 300 1200 300 V400 H0z' fill='%23451a03'/%3E%3Cg fill='%231c0d05'%3E%3Cpath d='M1000 300 v-70 a10 10 0 0 1 20 0 v70z M1000 260 h-18 v-24 a6 6 0 0 1 12 0 v12 h6z M1020 270 h16 v-20 a6 6 0 0 1 12 0 v28 h-28z'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+
+/* Group headings and previews in the scene picker */
+.scene-group { margin: 0.55rem 0 0.35rem; font-size: 12px; font-weight: 800; color: var(--text-muted); letter-spacing: 0.03em; }
+.scene-prev-clouds { background: radial-gradient(ellipse 22% 16% at 30% 55%, #fff 60%, transparent 62%), radial-gradient(ellipse 18% 13% at 42% 48%, #fff 60%, transparent 62%), radial-gradient(circle at 85% 20%, #fde68a 0 12%, transparent 13%), linear-gradient(180deg, #38bdf8, #e0f2fe) !important; color: #0c4a6e !important; }
+.scene-prev-beach { background: linear-gradient(180deg, #7dd3fc 0 45%, #06b6d4 45% 70%, #fcd34d 70%) !important; color: #134e4a !important; }
+.scene-prev-meadow { background: radial-gradient(ellipse 80% 40% at 30% 100%, #4ade80 60%, transparent 61%), radial-gradient(ellipse 70% 45% at 85% 100%, #86efac 60%, transparent 61%), linear-gradient(180deg, #60a5fa, #ecfccb) !important; color: #14532d !important; }
+.scene-prev-autumn { background: radial-gradient(ellipse 6px 4px at 25% 35%, #ea580c 60%, transparent 70%), radial-gradient(ellipse 6px 4px at 60% 60%, #dc2626 60%, transparent 70%), radial-gradient(ellipse 6px 4px at 80% 25%, #ca8a04 60%, transparent 70%), linear-gradient(180deg, #fed7aa, #fde8c8) !important; color: #7c2d12 !important; }
+.scene-prev-pastel { background: radial-gradient(circle at 25% 30%, #f9a8d4, transparent 45%), radial-gradient(circle at 75% 70%, #a5f3fc, transparent 45%), linear-gradient(135deg, #fbcfe8, #ddd6fe, #bfdbfe) !important; color: #581c87 !important; }
+.scene-pick.scene-prev-clouds span, .scene-pick.scene-prev-beach span, .scene-pick.scene-prev-meadow span, .scene-pick.scene-prev-autumn span, .scene-pick.scene-prev-pastel span { text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9); }
+.scene-prev-halloween { background: radial-gradient(circle at 78% 30%, #fdba74 0 14%, transparent 15%), radial-gradient(ellipse 10% 8% at 40% 85%, #ea580c 60%, transparent 62%), linear-gradient(180deg, #0d0614, #2e1065) !important; }
+.scene-prev-storm { background: linear-gradient(105deg, transparent 45%, rgba(238, 242, 255, 0.9) 46% 48%, transparent 49%) 0 0 / 100% 60% no-repeat, repeating-linear-gradient(100deg, transparent 0 6px, rgba(203, 213, 225, 0.3) 6px 7px), linear-gradient(180deg, #374151, #0b1018) !important; }
+.scene-prev-campfire { background: radial-gradient(ellipse 12% 22% at 50% 78%, #fde047, #f97316 50%, transparent 70%), radial-gradient(ellipse 50% 40% at 50% 90%, rgba(249, 115, 22, 0.4), transparent 70%), #0a0604 !important; }
+.scene-prev-arcade { background: radial-gradient(circle at 25% 40%, #facc15 0 5px, transparent 6px), radial-gradient(circle at 60% 60%, #f43f5e 0 5px, transparent 6px), radial-gradient(circle at 82% 30%, #22d3ee 0 5px, transparent 6px), linear-gradient(rgba(167,139,250,.18) 1px, transparent 1px) 0 0 / 10px 10px, linear-gradient(90deg, rgba(167,139,250,.18) 1px, transparent 1px) 0 0 / 10px 10px, #0c0520 !important; }
+.scene-prev-desert { background: radial-gradient(ellipse 80% 35% at 30% 100%, #92400e 60%, transparent 61%), radial-gradient(circle at 55% 62%, #fde047 0 14%, transparent 15%), linear-gradient(180deg, #2e1065, #9d174d 45%, #ea580c 70%, #fbbf24) !important; }
+
 /* Scene previews in Settings */
 .scene-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
 .theme-button.scene-pick { position: relative; height: 54px; padding: 0; overflow: hidden; display: flex; align-items: flex-end; justify-content: flex-start; color: #fff; border-color: rgba(255,255,255,.15); }
