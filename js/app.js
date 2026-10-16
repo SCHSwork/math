@@ -1642,7 +1642,7 @@ function renderOwnerPanel() {
         <label style="display:block;margin-bottom:0.35rem;">Color mode</label>
         <select id="owner-default-mode" class="settings-select"><option value="dark" ${visitorDefaults.mode === "dark" ? "selected" : ""}>Dark</option><option value="light" ${visitorDefaults.mode === "light" ? "selected" : ""}>Light</option></select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Theme</label>
-        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${theme[0].toUpperCase() + theme.slice(1)}</option>`).join("")}</select>
+        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${themeLabel(theme)}${SCENE_THEMES[theme] ? " (scene)" : ""}</option>`).join("")}</select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Font size</label>
         <select id="owner-default-font-size" class="settings-select">${["small", "medium", "large"].map(size => `<option value="${size}" ${visitorDefaults.fontSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Card size</label>
@@ -2068,7 +2068,11 @@ async function ownerResetAll() {
     renderOwnerPanel();
 }
 
-const AVAILABLE_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
+const COLOR_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
+// Scene themes have their own animated background (scenes.js) and are always dark
+const SCENE_THEMES = { space: "Outer space", andromeda: "Andromeda", nebula: "Nebula", aurora: "Aurora", synthwave: "Retro sunset", ocean: "Deep sea" };
+const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
+function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
 const TAB_CLOAK_STORAGE_KEYS = {
     title: "gnmath-tab-cloak-title",
     icon: "gnmath-tab-cloak-icon",
@@ -3296,7 +3300,12 @@ function openSettingsPanel() {
             ${row("Dark mode", "", `<button class="theme-button set-mini" onclick="Promise.resolve(darkMode()).then(openSettingsPanel)">${isDark ? "🌙 On" : "☀️ Off"}</button>`)}
             <div class="set-row set-col"><div class="set-text"><span class="set-label">Theme color</span></div>
                 <div class="theme-options set-themes">
-                    ${["red", "orange", "blue", "green", "purple", "pink", "cyan"].map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${t[0].toUpperCase() + t.slice(1)}</button>`).join("")}
+                    ${COLOR_THEMES.map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${themeLabel(t)}</button>`).join("")}
+                </div>
+            </div>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds. Scenes are always dark.</small></div>
+                <div class="scene-picks">
+                    ${Object.keys(SCENE_THEMES).map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${themeLabel(t)}</span></button>`).join("")}
                 </div>
             </div>
             ${row("Custom color", "Pick any color for buttons and highlights", `<input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)"><button class="theme-button set-mini" type="button" onclick="clearCustomPrimaryColor()">Clear</button>`)}
