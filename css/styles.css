@@ -2086,3 +2086,98 @@ html::-webkit-scrollbar-track { background: var(--sb-bg, var(--bg)); }
 /* Smaller ones inside panels and lists */
 #popupBody::-webkit-scrollbar, .owner-panel-list::-webkit-scrollbar, .status-panel::-webkit-scrollbar,
 .admin-act-list::-webkit-scrollbar, textarea::-webkit-scrollbar { width: 10px; }
+
+/* ── Motion ──────────────────────────────────────────────────────────────── */
+/* Header buttons: each icon has its own little move */
+.control-button:hover img, .control-button:hover .control-icon { transform: none; }
+#settings:hover .control-icon { transform: rotate(90deg); transition-duration: 0.5s; }
+#randomGame:hover .control-icon { animation: mDiceRoll 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
+#finderButton:hover .control-icon { animation: mTwinkle 0.9s ease-in-out infinite; }
+#panicButton:hover .control-icon { animation: mShake 0.45s ease-in-out; }
+#accountButton:hover .control-icon { animation: mBob 0.6s ease-in-out; }
+@keyframes mDiceRoll { 0% { transform: rotate(0) translateY(0); } 40% { transform: rotate(200deg) translateY(-5px); } 100% { transform: rotate(360deg) translateY(0); } }
+@keyframes mTwinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.18) rotate(12deg); } }
+@keyframes mShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-3px) rotate(-6deg); } 40% { transform: translateX(3px) rotate(6deg); } 60% { transform: translateX(-2px) rotate(-3deg); } 80% { transform: translateX(2px); } }
+@keyframes mBob { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-4px); } 70% { transform: translateY(1px); } }
+
+/* Game cards: a light sweep across the cover on hover */
+.zone-item::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -60%;
+    width: 45%;
+    aspect-ratio: 1 / 2.2;
+    background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.28) 50%, transparent 100%);
+    transform: translateX(0) skewX(-12deg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+.zone-item:hover::after { animation: mShine 0.75s ease-out; }
+@keyframes mShine { 0% { opacity: 0; transform: translateX(0) skewX(-12deg); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateX(420%) skewX(-12deg); } }
+body.cards-list .zone-item::after { display: none; }
+
+/* Pressing a button pushes it in a little */
+.settings-button, .theme-button, .finder-chip, .filter-button, .control-button, .status-pill, .omb-actions button, .fb-vote, .site-mode-check {
+    transition: transform 0.12s ease, background-color 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, filter 0.15s;
+}
+.settings-button:active, .theme-button:active, .finder-chip:active, .filter-button:active, .omb-actions button:active, .fb-vote:active, .site-mode-check:active { transform: scale(0.96); }
+.control-button:active { transform: translateY(0) scale(0.92); }
+.zone-item:active { transform: translateY(-4px) scale(0.99); transition-duration: 0.1s; }
+
+/* Favorite star pops when you turn it on */
+.zone-item button.card-fav.on { animation: mStarPop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes mStarPop { 0% { transform: scale(0.6) rotate(-30deg); } 60% { transform: scale(1.35) rotate(10deg); } 100% { transform: scale(1) rotate(0); } }
+.fb-vote.on span { display: inline-block; animation: mBob 0.45s ease-out; }
+
+/* Theme toggles: the knob springs across */
+.set-switch span::after { transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.jam-switch::after { transition-timing-function: cubic-bezier(0.3, 1.5, 0.5, 1); }
+
+/* Tabs: the new page fades in */
+.set-pane:not([hidden]), #admin-accounts:not([hidden]), #admin-submissions:not([hidden]),
+#admin-newgames:not([hidden]), #admin-feedback:not([hidden]), #fb-form, #fb-ideas { animation: mPaneIn 0.25s ease-out; }
+@keyframes mPaneIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.admin-tabs button { transition: background-color 0.2s, color 0.2s, transform 0.12s; }
+.admin-tabs button[aria-selected="true"] { animation: mTabPop 0.25s ease-out; }
+@keyframes mTabPop { 0% { transform: scale(0.94); } 100% { transform: scale(1); } }
+
+/* Popups close with a quick shrink instead of vanishing */
+#popupOverlay.closing { animation: mFadeOut 0.17s ease-in forwards; }
+#popupOverlay.closing .popup { animation: mPopOut 0.17s ease-in forwards; }
+@keyframes mFadeOut { to { opacity: 0; } }
+@keyframes mPopOut { to { opacity: 0; transform: scale(0.95) translateY(8px); } }
+
+/* Home sections slide up as you scroll to them */
+.home-section.reveal { opacity: 0; transform: translateY(24px); }
+.home-section.reveal.in-view { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Today's pick: a gentle shimmer on the Play button */
+#gotd .gotd-play { position: relative; overflow: hidden; }
+#gotd .gotd-play::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: mPlayShine 4s ease-in-out 1.5s infinite;
+    pointer-events: none;
+}
+@keyframes mPlayShine { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+#gotd img { transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.5, 1); }
+#gotd:hover img { transform: scale(1.06) rotate(-2deg); }
+
+/* Search box grows a glow when you click into it */
+#searchBar { transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease; }
+#searchBar:focus { box-shadow: 0 0 0 4px var(--primary-light), var(--shadow-lg); }
+
+/* Dark/light switch: the new look spreads out in a circle (motion.js) */
+html.vt-reveal::view-transition-old(root), html.vt-reveal::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-reveal::view-transition-new(root) { z-index: 2; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.3s; }
+
+/* Everything above stops with Reduce motion (in Settings, or on the device) */
+@media (prefers-reduced-motion: reduce) {
+    .zone-item::after, #gotd .gotd-play::after { display: none; }
+    .control-icon, .zone-item button.card-fav.on, .set-pane, #popupOverlay.closing, #popupOverlay.closing .popup { animation: none !important; }
+    .home-section.reveal { opacity: 1; transform: none; }
+}
+body.reduced-motion .home-section.reveal { opacity: 1; transform: none; }
