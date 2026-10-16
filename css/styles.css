@@ -2184,7 +2184,7 @@ body.reduced-motion .home-section.reveal { opacity: 1; transform: none; }
 
 /* ── Scene themes ────────────────────────────────────────────────────────── */
 /* Shared "always dark, glassy" look for every scene */
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) {
+body.scene-theme {
     --text: #eef2ff;
     --text-muted: #a8b3d6;
     --text-light: #7c86a8;
@@ -2202,16 +2202,16 @@ body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-syn
     background: var(--bg);
     color: var(--text);
 }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) header {
+body.scene-theme header {
     background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 32%, rgba(8, 10, 26, 0.55)), rgba(8, 10, 26, 0.55));
     border-bottom: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
     backdrop-filter: blur(14px) saturate(1.3);
     -webkit-backdrop-filter: blur(14px) saturate(1.3);
 }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) :is(.popup, .status-panel, .toast, #gameMenu) { background: rgba(13, 16, 38, 0.97); }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) footer { background: rgba(8, 10, 26, 0.82); backdrop-filter: blur(10px); }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) :is(input, select, textarea, .set-search) { color: var(--text); }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) .zone-item:hover { box-shadow: var(--shadow-xl), 0 0 24px -6px var(--primary); }
+body.scene-theme :is(.popup, .status-panel, .toast, #gameMenu) { background: rgba(13, 16, 38, 0.97); }
+body.scene-theme footer { background: rgba(8, 10, 26, 0.82); backdrop-filter: blur(10px); }
+body.scene-theme :is(input, select, textarea, .set-search) { color: var(--text); }
+body.scene-theme .zone-item:hover { box-shadow: var(--shadow-xl), 0 0 24px -6px var(--primary); }
 
 /* Each scene's colors */
 body.theme-space     { --bg: #03040b; --primary: #60a5fa; --primary-hover: #93c5fd; --primary-light: rgba(96,165,250,.18); --primary-lighter: rgba(96,165,250,.09); --gradient-primary: linear-gradient(135deg, #1e3a8a, #4f46e5); --shadow-glow: 0 0 22px rgba(96,165,250,.45); }
@@ -2223,7 +2223,7 @@ body.theme-ocean     { --bg: #021022; --primary: #22d3ee; --primary-hover: #67e8
 
 /* The background layer (js/scenes.js) */
 #scene { display: none; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; }
-body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) #scene { display: block; }
+body.scene-theme #scene { display: block; }
 /* No background work while a game is open */
 body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
 #scene.paused *, body.reduced-motion #scene * { animation-play-state: paused !important; }
@@ -2249,7 +2249,12 @@ body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
 }
 @keyframes scTwinkle { from { opacity: 1; } to { opacity: 0.35; } }
 @keyframes scDrift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-397px, 397px, 0); } }
-#scene .s-art, #scene .s-shoot, #scene .s-bubbles { display: none; }
+#scene .s-art, #scene .s-shoot, #scene .s-bubbles, #scene .s-fall { display: none; }
+#scene .sh2 { top: 30% !important; left: 40% !important; animation-delay: 8s !important; animation-duration: 14s !important; }
+/* Falling layers (snow, petals, rain, code): twice the screen height, slid down one screen and repeated */
+#scene .s-fall { left: 0; right: 0; top: -100%; height: 200%; background-size: 100% 50%; }
+@keyframes scFall { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 50%, 0); } }
+@keyframes scFallSway { 0% { transform: translate3d(0, 0, 0); } 25% { transform: translate3d(14px, 12.5%, 0); } 50% { transform: translate3d(0, 25%, 0); } 75% { transform: translate3d(-14px, 37.5%, 0); } 100% { transform: translate3d(0, 50%, 0); } }
 
 /* Outer space: stars, a faint Milky Way band, a planet glow and shooting stars */
 .theme-space #scene .s-stars { display: block; }
@@ -2335,6 +2340,230 @@ body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
     background-size: 100% 50%;
     animation: scBubbles 30s linear infinite; }
 @keyframes scBubbles { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -50%, 0); } }
+
+
+/* ── More scenes ── */
+body.theme-starry    { --bg: #02030a; --primary: #fcd34d; --primary-hover: #fde68a; --primary-light: rgba(252,211,77,.16); --primary-lighter: rgba(252,211,77,.08); --gradient-primary: linear-gradient(135deg, #1e1b4b, #a16207); --shadow-glow: 0 0 22px rgba(252,211,77,.4); }
+body.theme-blackhole { --bg: #030202; --primary: #fb923c; --primary-hover: #fdba74; --primary-light: rgba(251,146,60,.18); --primary-lighter: rgba(251,146,60,.09); --gradient-primary: linear-gradient(135deg, #431407, #c2410c); --shadow-glow: 0 0 22px rgba(251,146,60,.45); }
+body.theme-saturn    { --bg: #05040c; --primary: #f5c27a; --primary-hover: #fcd9a6; --primary-light: rgba(245,194,122,.16); --primary-lighter: rgba(245,194,122,.08); --gradient-primary: linear-gradient(135deg, #3f2d1a, #b7791f); --shadow-glow: 0 0 22px rgba(245,194,122,.4); }
+body.theme-snow      { --bg: #081428; --primary: #93c5fd; --primary-hover: #bfdbfe; --primary-light: rgba(147,197,253,.18); --primary-lighter: rgba(147,197,253,.09); --gradient-primary: linear-gradient(135deg, #1e3a5f, #3b6fb6); --shadow-glow: 0 0 22px rgba(147,197,253,.4); }
+body.theme-sakura    { --bg: #1a0b18; --primary: #f9a8d4; --primary-hover: #fbcfe8; --primary-light: rgba(249,168,212,.18); --primary-lighter: rgba(249,168,212,.09); --gradient-primary: linear-gradient(135deg, #9d174d, #f472b6); --shadow-glow: 0 0 22px rgba(249,168,212,.4); }
+body.theme-fireflies { --bg: #030d08; --primary: #bef264; --primary-hover: #d9f99d; --primary-light: rgba(190,242,100,.16); --primary-lighter: rgba(190,242,100,.08); --gradient-primary: linear-gradient(135deg, #14532d, #4d7c0f); --shadow-glow: 0 0 22px rgba(190,242,100,.4); }
+body.theme-neoncity  { --bg: #07041a; --primary: #22d3ee; --primary-hover: #67e8f9; --primary-light: rgba(34,211,238,.18); --primary-lighter: rgba(34,211,238,.09); --gradient-primary: linear-gradient(135deg, #7e22ce, #0891b2); --shadow-glow: 0 0 22px rgba(34,211,238,.45); }
+body.theme-coderain  { --bg: #000a03; --primary: #22c55e; --primary-hover: #4ade80; --primary-light: rgba(34,197,94,.18); --primary-lighter: rgba(34,197,94,.09); --gradient-primary: linear-gradient(135deg, #052e16, #15803d); --shadow-glow: 0 0 22px rgba(34,197,94,.45); }
+body.theme-lava      { --bg: #120302; --primary: #f97316; --primary-hover: #fb923c; --primary-light: rgba(249,115,22,.18); --primary-lighter: rgba(249,115,22,.09); --gradient-primary: linear-gradient(135deg, #7f1d1d, #ea580c); --shadow-glow: 0 0 22px rgba(249,115,22,.45); }
+
+/* Starry night: lots of stars, a crescent moon and two shooting stars */
+.theme-starry #scene .s-stars, .theme-starry #scene .s-shoot { display: block; }
+.theme-starry #scene .a1 { display: block; inset: -10%;
+    background-image: radial-gradient(1px 1px at 11px 17px, #fff, transparent), radial-gradient(1px 1px at 53px 71px, #fff, transparent), radial-gradient(1px 1px at 89px 33px, rgba(255,255,255,.8), transparent), radial-gradient(1px 1px at 37px 113px, #fff, transparent), radial-gradient(1px 1px at 121px 97px, rgba(255,255,255,.7), transparent);
+    background-size: 137px 137px; animation: scTwinkle 4s ease-in-out -2s infinite alternate; }
+.theme-starry #scene .a2 { display: block; inset: 0; background: radial-gradient(ellipse 80% 50% at 50% 110%, rgba(67, 56, 202, 0.35), transparent 70%), linear-gradient(180deg, #02030a 0%, #0b1033 100%); z-index: -1; }
+.theme-starry #scene .a3 { display: block; width: 12vmin; height: 12vmin; right: 12%; top: 9%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fffbea, #fde68a 60%, #facc15);
+    -webkit-mask-image: radial-gradient(circle at 72% 30%, transparent 0 42%, #000 43%); mask-image: radial-gradient(circle at 72% 30%, transparent 0 42%, #000 43%);
+    filter: drop-shadow(0 0 18px rgba(253, 230, 138, 0.7)); animation: scBob 8s ease-in-out infinite alternate; }
+@keyframes scBob { from { transform: translate3d(0, 0, 0) rotate(-4deg); } to { transform: translate3d(0, 10px, 0) rotate(4deg); } }
+
+/* Black hole: a spinning ring of glowing gas bending around a dark center */
+.theme-blackhole #scene .s1 { display: block; opacity: 0.7; }
+.theme-blackhole #scene .a1 { display: block; left: 50%; top: 42%; width: 80vmin; height: 80vmin; margin: -40vmin 0 0 -40vmin; border-radius: 50%;
+    background: conic-gradient(from 0deg, #fff7ed, #fb923c, #9a3412, #fbbf24, #fff7ed, #ea580c, #7c2d12, #fde68a, #fff7ed);
+    -webkit-mask-image: radial-gradient(circle, transparent 0 30%, #000 31% 40%, transparent 70%); mask-image: radial-gradient(circle, transparent 0 30%, #000 31% 40%, transparent 70%);
+    filter: blur(6px); transform: scaleY(0.32) rotate(0); animation: scDisk 18s linear infinite; }
+@keyframes scDisk { from { transform: scaleY(0.32) rotate(0deg); } to { transform: scaleY(0.32) rotate(360deg); } }
+.theme-blackhole #scene .a2 { display: block; left: 50%; top: 42%; width: 34vmin; height: 34vmin; margin: -17vmin 0 0 -17vmin; border-radius: 50%;
+    background: radial-gradient(circle, #000 0 56%, rgba(255, 170, 80, 0.9) 60%, rgba(251, 146, 60, 0.35) 66%, transparent 74%);
+    filter: drop-shadow(0 0 30px rgba(251, 146, 60, 0.55)); animation: scPulse 5s ease-in-out infinite alternate; }
+@keyframes scPulse { from { opacity: 0.85; transform: scale(1); } to { opacity: 1; transform: scale(1.04); } }
+.theme-blackhole #scene .a3 { display: block; inset: 0; background: radial-gradient(circle at 50% 42%, rgba(251, 146, 60, 0.12), transparent 45%); }
+
+/* Saturn: a ringed planet floating in space */
+.theme-saturn #scene .s-stars, .theme-saturn #scene .s-shoot { display: block; }
+.theme-saturn #scene .a1 { display: block; width: 46vmin; height: 46vmin; right: 8%; top: 18%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fde9c4 0%, #e2b77a 30%, #a8743d 65%, #4a2f17 100%),
+        repeating-linear-gradient(170deg, rgba(120, 70, 30, 0.25) 0 6px, transparent 6px 14px);
+    background-blend-mode: multiply; box-shadow: inset -30px -24px 60px rgba(0, 0, 0, 0.7), 0 0 60px rgba(245, 194, 122, 0.25);
+    animation: scFloat 14s ease-in-out infinite alternate; }
+.theme-saturn #scene .a2, .theme-saturn #scene .a3 { display: block; width: 100vmin; height: 100vmin; right: calc(8% - 27vmin); top: calc(18% - 27vmin); border-radius: 50%;
+    background: radial-gradient(circle, transparent 0 34%, rgba(240, 210, 160, 0.6) 35%, rgba(200, 160, 110, 0.3) 41%, transparent 42%, rgba(230, 200, 150, 0.5) 43%, rgba(180, 140, 90, 0.22) 48%, transparent 49%);
+    transform: rotate(-18deg) scaleY(0.24); animation: scRing 14s ease-in-out infinite alternate; }
+/* The back half of the ring goes behind the planet, the front half in front of it */
+.theme-saturn #scene .a2 { z-index: -1; }
+.theme-saturn #scene .a3 { -webkit-mask-image: linear-gradient(180deg, transparent 50%, #000 50%); mask-image: linear-gradient(180deg, transparent 50%, #000 50%); }
+@keyframes scFloatA { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(12vmax, 8vmax, 0) scale(1.15); } }
+@keyframes scFloatB { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-10vmax, 10vmax, 0) scale(0.95); } }
+
+/* Aurora: green and teal curtains swaying across the sky */
+.theme-aurora #scene .s1 { display: block; opacity: 0.6; }
+.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; filter: blur(40px); transform-origin: 50% 0; }
+.theme-aurora #scene .a1 { background: linear-gradient(180deg, transparent 0%, rgba(52, 211, 153, 0.55) 40%, rgba(16, 185, 129, 0.15) 75%, transparent 100%);
+    -webkit-mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%); mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%);
+    animation: scSway 14s ease-in-out infinite alternate; }
+.theme-aurora #scene .a2 { top: 5vh; background: linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.4) 45%, rgba(168, 85, 247, 0.2) 80%, transparent 100%);
+    -webkit-mask-image: repeating-linear-gradient(80deg, #000 0 6%, transparent 12% 18%); mask-image: repeating-linear-gradient(80deg, #000 0 6%, transparent 12% 18%);
+    animation: scSway 19s ease-in-out -6s infinite alternate-reverse; }
+.theme-aurora #scene .a3 { display: block; left: 0; right: 0; bottom: 0; height: 22vh; background: linear-gradient(180deg, transparent, rgba(2, 20, 30, 0.9)), radial-gradient(ellipse 60% 100% at 50% 100%, rgba(52, 211, 153, 0.12), transparent); }
+@keyframes scSway { from { transform: translate3d(-4%, 0, 0) skewX(-6deg) scaleY(1); } to { transform: translate3d(4%, 0, 0) skewX(6deg) scaleY(1.15); } }
+
+/* Retro sunset: striped sun over a moving neon grid */
+.theme-synthwave #scene .s1 { display: block; opacity: 0.5; }
+.theme-synthwave #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #12051f 0%, #3b0a4f 45%, #7a1757 62%, #12051f 63%); }
+.theme-synthwave #scene .a2 { display: block; left: 50%; top: 62%; width: 38vmin; height: 38vmin; margin: -38vmin 0 0 -19vmin; border-radius: 50%;
+    background: linear-gradient(180deg, #fde047 0%, #fb923c 45%, #ec4899 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0 52%, transparent 52% 58%, #000 58% 66%, transparent 66% 71%, #000 71% 78%, transparent 78% 82%, #000 82% 88%, transparent 88% 91%, #000 91%);
+    mask-image: linear-gradient(180deg, #000 0 52%, transparent 52% 58%, #000 58% 66%, transparent 66% 71%, #000 71% 78%, transparent 78% 82%, #000 82% 88%, transparent 88% 91%, #000 91%);
+    filter: drop-shadow(0 0 30px rgba(251, 113, 133, 0.6)); opacity: 0.75; }
+.theme-synthwave #scene .a3 { display: block; left: -50%; right: -50%; top: 62%; height: 120%;
+    background-image: linear-gradient(rgba(236, 72, 153, 0.7) 2px, transparent 2px), linear-gradient(90deg, rgba(236, 72, 153, 0.7) 2px, transparent 2px);
+    background-size: 60px 60px;
+    transform: perspective(300px) rotateX(70deg);
+    transform-origin: 50% 0;
+    animation: scGrid 2.4s linear infinite;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); }
+@keyframes scGrid { from { transform: perspective(300px) rotateX(70deg) translate3d(0, 0, 0); } to { transform: perspective(300px) rotateX(70deg) translate3d(0, 60px, 0); } }
+
+/* Deep sea: light rays from the surface and rising bubbles */
+.theme-ocean #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #0b3b60 0%, #052443 35%, #021022 80%); }
+.theme-ocean #scene .a2 { display: block; left: -10%; width: 120%; top: -10%; height: 80%;
+    background: repeating-linear-gradient(100deg, rgba(186, 230, 253, 0.16) 0 3%, transparent 3% 9%);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%); mask-image: linear-gradient(180deg, #000, transparent 85%);
+    transform-origin: 50% 0; filter: blur(6px); animation: scRays 12s ease-in-out infinite alternate; }
+@keyframes scRays { from { transform: skewX(-8deg); opacity: 0.7; } to { transform: skewX(8deg); opacity: 1; } }
+.theme-ocean #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(186, 230, 253, 0.5) 0 3px, transparent 4px), radial-gradient(circle at 35% 60%, rgba(186, 230, 253, 0.4) 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 35%, rgba(186, 230, 253, 0.45) 0 4px, transparent 5px), radial-gradient(circle at 88% 80%, rgba(186, 230, 253, 0.35) 0 2px, transparent 3px),
+        radial-gradient(circle at 55% 90%, rgba(186, 230, 253, 0.4) 0 3px, transparent 4px);
+    background-size: 100% 50%;
+    animation: scBubbles 30s linear infinite; }
+@keyframes scBubbles { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -50%, 0); } }
+
+
+/* ── More scenes ── */
+body.theme-starry    { --bg: #02030a; --primary: #fcd34d; --primary-hover: #fde68a; --primary-light: rgba(252,211,77,.16); --primary-lighter: rgba(252,211,77,.08); --gradient-primary: linear-gradient(135deg, #1e1b4b, #a16207); --shadow-glow: 0 0 22px rgba(252,211,77,.4); }
+body.theme-blackhole { --bg: #030202; --primary: #fb923c; --primary-hover: #fdba74; --primary-light: rgba(251,146,60,.18); --primary-lighter: rgba(251,146,60,.09); --gradient-primary: linear-gradient(135deg, #431407, #c2410c); --shadow-glow: 0 0 22px rgba(251,146,60,.45); }
+body.theme-saturn    { --bg: #05040c; --primary: #f5c27a; --primary-hover: #fcd9a6; --primary-light: rgba(245,194,122,.16); --primary-lighter: rgba(245,194,122,.08); --gradient-primary: linear-gradient(135deg, #3f2d1a, #b7791f); --shadow-glow: 0 0 22px rgba(245,194,122,.4); }
+body.theme-snow      { --bg: #081428; --primary: #93c5fd; --primary-hover: #bfdbfe; --primary-light: rgba(147,197,253,.18); --primary-lighter: rgba(147,197,253,.09); --gradient-primary: linear-gradient(135deg, #1e3a5f, #3b6fb6); --shadow-glow: 0 0 22px rgba(147,197,253,.4); }
+body.theme-sakura    { --bg: #1a0b18; --primary: #f9a8d4; --primary-hover: #fbcfe8; --primary-light: rgba(249,168,212,.18); --primary-lighter: rgba(249,168,212,.09); --gradient-primary: linear-gradient(135deg, #9d174d, #f472b6); --shadow-glow: 0 0 22px rgba(249,168,212,.4); }
+body.theme-fireflies { --bg: #030d08; --primary: #bef264; --primary-hover: #d9f99d; --primary-light: rgba(190,242,100,.16); --primary-lighter: rgba(190,242,100,.08); --gradient-primary: linear-gradient(135deg, #14532d, #4d7c0f); --shadow-glow: 0 0 22px rgba(190,242,100,.4); }
+body.theme-neoncity  { --bg: #07041a; --primary: #22d3ee; --primary-hover: #67e8f9; --primary-light: rgba(34,211,238,.18); --primary-lighter: rgba(34,211,238,.09); --gradient-primary: linear-gradient(135deg, #7e22ce, #0891b2); --shadow-glow: 0 0 22px rgba(34,211,238,.45); }
+body.theme-coderain  { --bg: #000a03; --primary: #22c55e; --primary-hover: #4ade80; --primary-light: rgba(34,197,94,.18); --primary-lighter: rgba(34,197,94,.09); --gradient-primary: linear-gradient(135deg, #052e16, #15803d); --shadow-glow: 0 0 22px rgba(34,197,94,.45); }
+body.theme-lava      { --bg: #120302; --primary: #f97316; --primary-hover: #fb923c; --primary-light: rgba(249,115,22,.18); --primary-lighter: rgba(249,115,22,.09); --gradient-primary: linear-gradient(135deg, #7f1d1d, #ea580c); --shadow-glow: 0 0 22px rgba(249,115,22,.45); }
+
+/* Starry night: lots of stars, a crescent moon and two shooting stars */
+.theme-starry #scene .s-stars, .theme-starry #scene .s-shoot { display: block; }
+.theme-starry #scene .a1 { display: block; inset: -10%;
+    background-image: radial-gradient(1px 1px at 11px 17px, #fff, transparent), radial-gradient(1px 1px at 53px 71px, #fff, transparent), radial-gradient(1px 1px at 89px 33px, rgba(255,255,255,.8), transparent), radial-gradient(1px 1px at 37px 113px, #fff, transparent), radial-gradient(1px 1px at 121px 97px, rgba(255,255,255,.7), transparent);
+    background-size: 137px 137px; animation: scTwinkle 4s ease-in-out -2s infinite alternate; }
+.theme-starry #scene .a2 { display: block; inset: 0; background: radial-gradient(ellipse 80% 50% at 50% 110%, rgba(67, 56, 202, 0.35), transparent 70%), linear-gradient(180deg, #02030a 0%, #0b1033 100%); z-index: -1; }
+.theme-starry #scene .a3 { display: block; width: 12vmin; height: 12vmin; right: 12%; top: 9%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fffbea, #fde68a 60%, #facc15);
+    -webkit-mask-image: radial-gradient(circle at 72% 30%, transparent 0 42%, #000 43%); mask-image: radial-gradient(circle at 72% 30%, transparent 0 42%, #000 43%);
+    filter: drop-shadow(0 0 18px rgba(253, 230, 138, 0.7)); animation: scBob 8s ease-in-out infinite alternate; }
+@keyframes scBob { from { transform: translate3d(0, 0, 0) rotate(-4deg); } to { transform: translate3d(0, 10px, 0) rotate(4deg); } }
+
+/* Black hole: a spinning ring of glowing gas bending around a dark center */
+.theme-blackhole #scene .s1 { display: block; opacity: 0.7; }
+.theme-blackhole #scene .a1 { display: block; left: 50%; top: 42%; width: 80vmin; height: 80vmin; margin: -40vmin 0 0 -40vmin; border-radius: 50%;
+    background: conic-gradient(from 0deg, #fff7ed, #fb923c, #9a3412, #fbbf24, #fff7ed, #ea580c, #7c2d12, #fde68a, #fff7ed);
+    -webkit-mask-image: radial-gradient(circle, transparent 0 30%, #000 31% 40%, transparent 70%); mask-image: radial-gradient(circle, transparent 0 30%, #000 31% 40%, transparent 70%);
+    filter: blur(6px); transform: scaleY(0.32) rotate(0); animation: scDisk 18s linear infinite; }
+@keyframes scDisk { from { transform: scaleY(0.32) rotate(0deg); } to { transform: scaleY(0.32) rotate(360deg); } }
+.theme-blackhole #scene .a2 { display: block; left: 50%; top: 42%; width: 34vmin; height: 34vmin; margin: -17vmin 0 0 -17vmin; border-radius: 50%;
+    background: radial-gradient(circle, #000 0 56%, rgba(255, 170, 80, 0.9) 60%, rgba(251, 146, 60, 0.35) 66%, transparent 74%);
+    filter: drop-shadow(0 0 30px rgba(251, 146, 60, 0.55)); animation: scPulse 5s ease-in-out infinite alternate; }
+@keyframes scPulse { from { opacity: 0.85; transform: scale(1); } to { opacity: 1; transform: scale(1.04); } }
+.theme-blackhole #scene .a3 { display: block; inset: 0; background: radial-gradient(circle at 50% 42%, rgba(251, 146, 60, 0.12), transparent 45%); }
+
+/* Saturn: a ringed planet floating in space */
+.theme-saturn #scene .s-stars, .theme-saturn #scene .s-shoot { display: block; }
+.theme-saturn #scene .a1 { display: block; width: 46vmin; height: 46vmin; right: 8%; top: 18%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fde9c4 0%, #e2b77a 30%, #a8743d 65%, #4a2f17 100%),
+        repeating-linear-gradient(170deg, rgba(120, 70, 30, 0.25) 0 6px, transparent 6px 14px);
+    background-blend-mode: multiply; box-shadow: inset -30px -24px 60px rgba(0, 0, 0, 0.7), 0 0 60px rgba(245, 194, 122, 0.25);
+    animation: scFloat 14s ease-in-out infinite alternate; }
+.theme-saturn #scene .a2 { display: block; width: 100vmin; height: 100vmin; right: calc(8% - 27vmin); top: calc(18% - 27vmin); border-radius: 50%;
+    background: radial-gradient(circle, transparent 0 34%, rgba(240, 210, 160, 0.55) 35%, rgba(200, 160, 110, 0.25) 41%, transparent 42%, rgba(230, 200, 150, 0.45) 43%, rgba(180, 140, 90, 0.2) 48%, transparent 49%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0 47%, transparent 47% 53%, #000 53%); mask-image: linear-gradient(180deg, #000 0 47%, transparent 47% 53%, #000 53%);
+    transform: rotate(-18deg) scaleY(0.24); animation: scRing 14s ease-in-out infinite alternate; }
+@keyframes scFloat { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-10px, 14px, 0); } }
+@keyframes scRing { from { transform: translate3d(0, 0, 0) rotate(-18deg) scaleY(0.24); } to { transform: translate3d(-10px, 14px, 0) rotate(-18deg) scaleY(0.24); } }
+
+/* Snowfall: snow drifting down over mountains */
+.theme-snow #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #050d1f 0%, #10264a 60%, #1d3b66 100%); }
+.theme-snow #scene .s1 { display: block; opacity: 0.6; }
+.theme-snow #scene .a2 { display: block; left: 0; right: 0; bottom: 0; height: 38vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cpath d='M0 300V170l120-90 90 60 140-120 120 100 80-50 150 130 110-80 130 90 120-110 140 120v170z' fill='%23142c50'/%3E%3Cpath d='M0 300V220l160-70 120 50 160-90 140 80 120-40 160 90 130-60 210 60v80z' fill='%230b1a33'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-snow #scene .f1 { display: block;
+    background-image: radial-gradient(circle at 8% 10%, #fff 0 2px, transparent 3px), radial-gradient(circle at 27% 40%, #fff 0 3px, transparent 4px), radial-gradient(circle at 45% 18%, rgba(255,255,255,.9) 0 2px, transparent 3px), radial-gradient(circle at 63% 66%, #fff 0 2.5px, transparent 3.5px), radial-gradient(circle at 82% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 92% 82%, rgba(255,255,255,.85) 0 3px, transparent 4px), radial-gradient(circle at 15% 78%, #fff 0 2px, transparent 3px);
+    animation: scFallSway 16s linear infinite; }
+.theme-snow #scene .f2 { display: block; opacity: 0.6;
+    background-image: radial-gradient(circle at 18% 22%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 38% 72%, #fff 0 1px, transparent 2px), radial-gradient(circle at 55% 44%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 74% 12%, #fff 0 1px, transparent 2px), radial-gradient(circle at 88% 58%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 4% 52%, #fff 0 1px, transparent 2px);
+    animation: scFallSway 26s linear -8s infinite; }
+
+/* Cherry blossom: pink petals floating down */
+.theme-sakura #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 90% 60% at 80% 0%, rgba(244, 114, 182, 0.35), transparent 70%), linear-gradient(180deg, #2a0f26 0%, #1a0b18 100%); }
+.theme-sakura #scene .a2 { display: block; right: -6vmin; top: -6vmin; width: 60vmin; height: 60vmin; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(251, 207, 232, 0.9) 0 8%, transparent 9%), radial-gradient(circle at 55% 20%, rgba(249, 168, 212, 0.85) 0 10%, transparent 11%), radial-gradient(circle at 70% 45%, rgba(251, 207, 232, 0.8) 0 9%, transparent 10%), radial-gradient(circle at 40% 55%, rgba(244, 114, 182, 0.7) 0 11%, transparent 12%), radial-gradient(circle at 80% 70%, rgba(249, 168, 212, 0.75) 0 8%, transparent 9%);
+    filter: blur(3px); opacity: 0.8; }
+.theme-sakura #scene .f1, .theme-sakura #scene .f2 { display: block;
+    background-image: radial-gradient(ellipse 7px 4px at 10% 15%, #fbcfe8 60%, transparent 70%), radial-gradient(ellipse 6px 4px at 30% 55%, #f9a8d4 60%, transparent 70%), radial-gradient(ellipse 8px 5px at 52% 25%, #fce7f3 60%, transparent 70%), radial-gradient(ellipse 6px 4px at 70% 70%, #f9a8d4 60%, transparent 70%), radial-gradient(ellipse 7px 4px at 88% 35%, #fbcfe8 60%, transparent 70%), radial-gradient(ellipse 6px 4px at 20% 88%, #fce7f3 60%, transparent 70%); }
+.theme-sakura #scene .f1 { animation: scFallSway 20s linear infinite; }
+.theme-sakura #scene .f2 { opacity: 0.6; animation: scFallSway 32s linear -12s infinite; transform-origin: 30% 50%; }
+
+/* Firefly forest: glowing dots blinking among dark trees */
+.theme-fireflies #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 100%, rgba(77, 124, 15, 0.25), transparent 70%), linear-gradient(180deg, #020806 0%, #06180e 100%); }
+.theme-fireflies #scene .a2 { display: block; left: 0; right: 0; bottom: 0; height: 55vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cg fill='%23020a05'%3E%3Cpath d='M60 400 100 120 140 400zM230 400l50-300 50 300zM420 400l35-220 35 220zM600 400l60-340 60 340zM820 400l40-250 40 250zM980 400l55-310 55 310zM1140 400l35-200 35 200z'/%3E%3Crect y='360' width='1200' height='40'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat; }
+.theme-fireflies #scene .a3, .theme-fireflies #scene .a4 { display: block; inset: 0;
+    background-image: radial-gradient(circle at 12% 62%, #d9f99d 0 2px, rgba(190, 242, 100, 0.35) 3px, transparent 9px), radial-gradient(circle at 34% 48%, #d9f99d 0 2px, rgba(190, 242, 100, 0.35) 3px, transparent 9px), radial-gradient(circle at 58% 70%, #ecfccb 0 2px, rgba(190, 242, 100, 0.35) 3px, transparent 9px), radial-gradient(circle at 76% 40%, #d9f99d 0 2px, rgba(190, 242, 100, 0.35) 3px, transparent 9px), radial-gradient(circle at 90% 66%, #ecfccb 0 2px, rgba(190, 242, 100, 0.35) 3px, transparent 9px); }
+.theme-fireflies #scene .a3 { animation: scGlowA 5s ease-in-out infinite alternate, scWander 18s ease-in-out infinite alternate; }
+.theme-fireflies #scene .a4 { transform: translate(-6%, 8%); animation: scGlowA 4s ease-in-out -2s infinite alternate-reverse, scWander 23s ease-in-out -7s infinite alternate-reverse; }
+@keyframes scGlowA { from { opacity: 0.15; } to { opacity: 1; } }
+@keyframes scWander { 0% { translate: 0 0; } 50% { translate: 3vw -4vh; } 100% { translate: -2vw -8vh; } }
+
+/* Neon city: glowing skyline in the rain */
+.theme-neoncity #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 80% 50% at 50% 100%, rgba(168, 85, 247, 0.4), transparent 70%), linear-gradient(180deg, #07041a 0%, #1a0b3d 70%, #2b0f4f 100%); }
+.theme-neoncity #scene .a2 { display: block; left: 0; right: 0; bottom: 0; height: 50vh;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cg fill='%2309051c'%3E%3Cpath d='M0 400V230h70v-60h60v100h50V140h80v130h40V90h90v180h50V200h70v-90h60v160h40V160h90v110h50V60h80v210h40V180h70v220z'/%3E%3C/g%3E%3Cg fill='%2322d3ee' opacity='.55'%3E%3Crect x='195' y='160' width='8' height='6'/%3E%3Crect x='215' y='190' width='8' height='6'/%3E%3Crect x='330' y='110' width='8' height='6'/%3E%3Crect x='350' y='150' width='8' height='6'/%3E%3Crect x='560' y='130' width='8' height='6'/%3E%3Crect x='880' y='90' width='8' height='6'/%3E%3Crect x='900' y='130' width='8' height='6'/%3E%3C/g%3E%3Cg fill='%23f472b6' opacity='.6'%3E%3Crect x='345' y='200' width='8' height='6'/%3E%3Crect x='575' y='170' width='8' height='6'/%3E%3Crect x='720' y='190' width='8' height='6'/%3E%3Crect x='890' y='170' width='8' height='6'/%3E%3Crect x='1020' y='210' width='8' height='6'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
+    filter: drop-shadow(0 -4px 18px rgba(168, 85, 247, 0.45)); }
+.theme-neoncity #scene .f1 { display: block; opacity: 0.5;
+    background-image: linear-gradient(transparent 0 60%, rgba(165, 243, 252, 0.5) 60% 64%, transparent 64%);
+    background-size: 3px 140px; -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 37px, #000 37px 38px, transparent 38px 91px); mask-image: repeating-linear-gradient(90deg, #000 0 1px, transparent 1px 37px, #000 37px 38px, transparent 38px 91px);
+    animation: scFall 1.2s linear infinite; }
+
+/* Code rain: green streaks pouring down like a hacker movie */
+.theme-coderain #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(34, 197, 94, 0.08), transparent 70%), #000a03; }
+.theme-coderain #scene .f1, .theme-coderain #scene .f2 { display: block;
+    background-image:
+        linear-gradient(transparent 0 70%, rgba(34, 197, 94, 0.9) 98%, #dcfce7 100%), linear-gradient(transparent 0 55%, rgba(34, 197, 94, 0.8) 98%, #bbf7d0 100%),
+        linear-gradient(transparent 0 80%, rgba(34, 197, 94, 0.9) 98%, #dcfce7 100%), linear-gradient(transparent 0 65%, rgba(34, 197, 94, 0.7) 98%, #bbf7d0 100%),
+        linear-gradient(transparent 0 75%, rgba(34, 197, 94, 0.85) 98%, #dcfce7 100%), linear-gradient(transparent 0 60%, rgba(34, 197, 94, 0.75) 98%, #bbf7d0 100%);
+    background-size: 3px 330px, 3px 470px, 3px 260px, 3px 390px, 3px 520px, 3px 300px;
+    background-position: 6% 0, 19% 120px, 33% 40px, 47% 210px, 61% 90px, 78% 300px;
+    background-repeat: repeat-y; }
+.theme-coderain #scene .f1 { animation: scFall 7s linear infinite; }
+.theme-coderain #scene .f2 { opacity: 0.45; background-position: 12% 50px, 26% 200px, 40% 0, 54% 150px, 70% 260px, 92% 80px; animation: scFall 11s linear -4s infinite; }
+
+/* Lava: glowing blobs rising like a lava lamp */
+.theme-lava #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 100% 50% at 50% 100%, rgba(234, 88, 12, 0.35), transparent 70%), linear-gradient(180deg, #120302, #2a0704); }
+.theme-lava #scene .a2, .theme-lava #scene .a3, .theme-lava #scene .a4 { display: block; border-radius: 50%; filter: blur(30px); opacity: 0.75; }
+.theme-lava #scene .a2 { width: 40vmax; height: 40vmax; left: 5%; bottom: -30vmax; background: radial-gradient(circle, #f97316, #b91c1c 55%, transparent 70%); animation: scRise 26s ease-in-out infinite; }
+.theme-lava #scene .a3 { width: 30vmax; height: 30vmax; left: 55%; bottom: -30vmax; background: radial-gradient(circle, #fbbf24, #ea580c 55%, transparent 70%); animation: scRise 32s ease-in-out -11s infinite; }
+.theme-lava #scene .a4 { width: 24vmax; height: 24vmax; left: 30%; bottom: -30vmax; background: radial-gradient(circle, #ef4444, #7f1d1d 55%, transparent 70%); animation: scRise 22s ease-in-out -6s infinite; }
+@keyframes scRise { 0% { transform: translate3d(0, 0, 0) scale(0.9); } 50% { transform: translate3d(4vw, -75vh, 0) scale(1.15); } 100% { transform: translate3d(-2vw, -150vh, 0) scale(0.85); } }
+
+/* Previews for the new scenes */
+.scene-prev-starry { background: radial-gradient(circle at 80% 30%, #fde68a 0 9%, transparent 10%), radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 45% 20%, #fff, transparent), radial-gradient(1px 1px at 35% 60%, #fff, transparent), radial-gradient(1px 1px at 60% 50%, #fff, transparent), linear-gradient(180deg, #02030a, #0b1033) !important; }
+.scene-prev-blackhole { background: radial-gradient(circle at 50% 45%, #000 0 14%, #fdba74 17%, rgba(251,146,60,.4) 22%, transparent 30%), radial-gradient(ellipse 45% 10% at 50% 45%, #fb923c, transparent 70%), #030202 !important; }
+.scene-prev-saturn { background: radial-gradient(ellipse 42% 10% at 62% 48%, transparent 60%, rgba(240,210,160,.8) 62%, transparent 75%), radial-gradient(circle at 62% 48%, #e2b77a 0 20%, transparent 21%), #05040c !important; }
+.scene-prev-snow { background: radial-gradient(circle at 20% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 60% 20%, #fff 0 2px, transparent 3px), radial-gradient(circle at 80% 55%, #fff 0 2px, transparent 3px), radial-gradient(circle at 40% 60%, #fff 0 1.5px, transparent 2.5px), linear-gradient(160deg, transparent 60%, #142c50 61%), linear-gradient(180deg, #050d1f, #1d3b66) !important; }
+.scene-prev-sakura { background: radial-gradient(ellipse 5px 3px at 25% 35%, #fbcfe8 60%, transparent 70%), radial-gradient(ellipse 5px 3px at 60% 60%, #f9a8d4 60%, transparent 70%), radial-gradient(ellipse 5px 3px at 45% 20%, #fce7f3 60%, transparent 70%), radial-gradient(circle at 95% 0%, rgba(244,114,182,.7), transparent 50%), #1a0b18 !important; }
+.scene-prev-fireflies { background: radial-gradient(circle at 25% 45%, #d9f99d 0 2px, transparent 6px), radial-gradient(circle at 65% 35%, #d9f99d 0 2px, transparent 6px), radial-gradient(circle at 45% 65%, #ecfccb 0 2px, transparent 6px), linear-gradient(180deg, #020806, #06180e) !important; }
+.scene-prev-neoncity { background: linear-gradient(0deg, #09051c 0 30%, transparent 30%), linear-gradient(90deg, transparent 0 10%, #09051c 10% 25%, transparent 25% 40%, #09051c 40% 50%, transparent 50% 70%, #09051c 70% 85%, transparent 85%) bottom / 100% 60% no-repeat, linear-gradient(180deg, #07041a, #2b0f4f) !important; }
+.scene-prev-coderain { background: repeating-linear-gradient(90deg, transparent 0 10px, rgba(34,197,94,.7) 10px 12px, transparent 12px 22px), linear-gradient(180deg, transparent, #000a03 85%), #000a03 !important; }
+.scene-prev-lava { background: radial-gradient(circle at 30% 70%, #f97316, transparent 30%), radial-gradient(circle at 70% 40%, #fbbf24, transparent 25%), #2a0704 !important; }
 
 /* Scene previews in Settings */
 .scene-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }

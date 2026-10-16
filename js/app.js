@@ -2070,7 +2070,11 @@ async function ownerResetAll() {
 
 const COLOR_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"];
 // Scene themes have their own animated background (scenes.js) and are always dark
-const SCENE_THEMES = { space: "Outer space", andromeda: "Andromeda", nebula: "Nebula", aurora: "Aurora", synthwave: "Retro sunset", ocean: "Deep sea" };
+const SCENE_THEMES = {
+    space: "Outer space", starry: "Starry night", andromeda: "Andromeda", blackhole: "Black hole", saturn: "Saturn",
+    nebula: "Nebula", aurora: "Aurora", snow: "Snowfall", sakura: "Cherry blossom", fireflies: "Firefly forest",
+    synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", ocean: "Deep sea"
+};
 const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
 function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
 const TAB_CLOAK_STORAGE_KEYS = {
@@ -2831,6 +2835,7 @@ function setTheme(themeName, { persist = true } = {}) {
     const safeTheme = AVAILABLE_THEMES.includes(themeName) ? themeName : "red";
     document.body.classList.remove(...AVAILABLE_THEMES.map(theme => `theme-${theme}`));
     document.body.classList.add(`theme-${safeTheme}`);
+    document.body.classList.toggle("scene-theme", !!SCENE_THEMES[safeTheme]);
     if (persist) localStorage.setItem("gnmath-theme", safeTheme);
     if (persist) clearCustomPrimaryColor();
     updateThemeButtons();
