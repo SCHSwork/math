@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 16, 2026
+
+### New
+- **Animations.** Switching dark/light mode now spreads out in a circle from where you clicked, and theme colors fade into each other. Each header button has its own little move (the gear turns, the dice rolls, the sparkle twinkles, the panic button shakes). Game covers get a light sweep when you hover them, buttons press in when clicked, the favorite star pops, popups shrink away when closed, tabs fade in, the toggles spring, Today's pick's Play button shimmers, and the All games section slides up as you scroll to it. Turn on **Settings → Look → Reduce motion** (or your device's reduce-motion setting) to switch them all off.
+
+
 ## October 15, 2026
 
 ### Changed
