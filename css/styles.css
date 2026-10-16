@@ -2181,3 +2181,171 @@ html.vt-reveal::view-transition-new(root) { z-index: 2; }
     .home-section.reveal { opacity: 1; transform: none; }
 }
 body.reduced-motion .home-section.reveal { opacity: 1; transform: none; }
+
+/* ── Scene themes ────────────────────────────────────────────────────────── */
+/* Shared "always dark, glassy" look for every scene */
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) {
+    --text: #eef2ff;
+    --text-muted: #a8b3d6;
+    --text-light: #7c86a8;
+    --bg-secondary: rgba(16, 20, 44, 0.78);
+    --surface: rgba(18, 22, 48, 0.86);
+    --surface-hover: rgba(40, 46, 90, 0.85);
+    --border: rgba(160, 175, 255, 0.18);
+    --border-light: rgba(160, 175, 255, 0.12);
+    --glass: rgba(14, 18, 40, 0.7);
+    --gradient-surface: linear-gradient(135deg, rgba(20, 24, 54, 0.72) 0%, rgba(32, 36, 74, 0.62) 100%);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 25px -5px rgb(0 0 0 / 0.6);
+    --shadow-xl: 0 20px 40px -8px rgb(0 0 0 / 0.75);
+    --accent-text: color-mix(in srgb, var(--primary) 65%, white);
+    background: var(--bg);
+    color: var(--text);
+}
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) header {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 32%, rgba(8, 10, 26, 0.55)), rgba(8, 10, 26, 0.55));
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+}
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) :is(.popup, .status-panel, .toast, #gameMenu) { background: rgba(13, 16, 38, 0.97); }
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) footer { background: rgba(8, 10, 26, 0.82); backdrop-filter: blur(10px); }
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) :is(input, select, textarea, .set-search) { color: var(--text); }
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) .zone-item:hover { box-shadow: var(--shadow-xl), 0 0 24px -6px var(--primary); }
+
+/* Each scene's colors */
+body.theme-space     { --bg: #03040b; --primary: #60a5fa; --primary-hover: #93c5fd; --primary-light: rgba(96,165,250,.18); --primary-lighter: rgba(96,165,250,.09); --gradient-primary: linear-gradient(135deg, #1e3a8a, #4f46e5); --shadow-glow: 0 0 22px rgba(96,165,250,.45); }
+body.theme-andromeda { --bg: #06031a; --primary: #c084fc; --primary-hover: #d8b4fe; --primary-light: rgba(192,132,252,.18); --primary-lighter: rgba(192,132,252,.09); --gradient-primary: linear-gradient(135deg, #6d28d9, #db2777); --shadow-glow: 0 0 22px rgba(192,132,252,.45); }
+body.theme-nebula    { --bg: #0b0418; --primary: #f472b6; --primary-hover: #f9a8d4; --primary-light: rgba(244,114,182,.18); --primary-lighter: rgba(244,114,182,.09); --gradient-primary: linear-gradient(135deg, #be185d, #0e7490); --shadow-glow: 0 0 22px rgba(244,114,182,.45); }
+body.theme-aurora    { --bg: #020c14; --primary: #34d399; --primary-hover: #6ee7b7; --primary-light: rgba(52,211,153,.18); --primary-lighter: rgba(52,211,153,.09); --gradient-primary: linear-gradient(135deg, #047857, #0e7490); --shadow-glow: 0 0 22px rgba(52,211,153,.45); }
+body.theme-synthwave { --bg: #12051f; --primary: #fb7185; --primary-hover: #fda4af; --primary-light: rgba(251,113,133,.18); --primary-lighter: rgba(251,113,133,.09); --gradient-primary: linear-gradient(135deg, #a21caf, #f97316); --shadow-glow: 0 0 22px rgba(251,113,133,.45); }
+body.theme-ocean     { --bg: #021022; --primary: #22d3ee; --primary-hover: #67e8f9; --primary-light: rgba(34,211,238,.18); --primary-lighter: rgba(34,211,238,.09); --gradient-primary: linear-gradient(135deg, #0c4a6e, #0891b2); --shadow-glow: 0 0 22px rgba(34,211,238,.45); }
+
+/* The background layer (js/scenes.js) */
+#scene { display: none; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; }
+body:is(.theme-space, .theme-andromeda, .theme-nebula, .theme-aurora, .theme-synthwave, .theme-ocean) #scene { display: block; }
+/* No background work while a game is open */
+body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
+#scene.paused *, body.reduced-motion #scene * { animation-play-state: paused !important; }
+#scene i { position: absolute; display: block; will-change: transform, opacity; }
+
+/* Star fields: tiny dots tiled at odd sizes so the pattern doesn't look repeated */
+#scene .s-stars { inset: -10%; display: none; }
+#scene .s1 {
+    background-image:
+        radial-gradient(1px 1px at 23px 41px, #fff, transparent), radial-gradient(1px 1px at 97px 13px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 151px 88px, #fff, transparent), radial-gradient(1px 1px at 61px 132px, rgba(255,255,255,.8), transparent),
+        radial-gradient(1px 1px at 180px 160px, rgba(255,255,255,.7), transparent), radial-gradient(1.5px 1.5px at 120px 190px, #cfe1ff, transparent);
+    background-size: 211px 211px;
+    animation: scTwinkle 6s ease-in-out infinite alternate;
+}
+#scene .s2 {
+    background-image:
+        radial-gradient(2px 2px at 40px 60px, #fff, transparent), radial-gradient(1.5px 1.5px at 250px 120px, #ffe9c7, transparent),
+        radial-gradient(2px 2px at 170px 300px, #dbe7ff, transparent), radial-gradient(1px 1px at 330px 220px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 90px 370px, #fff, transparent);
+    background-size: 397px 397px;
+    animation: scTwinkle 9s ease-in-out -3s infinite alternate, scDrift 240s linear infinite;
+}
+@keyframes scTwinkle { from { opacity: 1; } to { opacity: 0.35; } }
+@keyframes scDrift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-397px, 397px, 0); } }
+#scene .s-art, #scene .s-shoot, #scene .s-bubbles { display: none; }
+
+/* Outer space: stars, a faint Milky Way band, a planet glow and shooting stars */
+.theme-space #scene .s-stars { display: block; }
+.theme-space #scene .a1 { display: block; inset: -30%; background: linear-gradient(115deg, transparent 38%, rgba(140, 160, 255, 0.10) 46%, rgba(220, 200, 255, 0.14) 50%, rgba(140, 160, 255, 0.10) 54%, transparent 62%); filter: blur(30px); }
+.theme-space #scene .a2 { display: block; width: 60vmax; height: 60vmax; right: -22vmax; bottom: -30vmax; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3b5bdb 0%, #1e2a78 40%, #0b0f33 70%); box-shadow: 0 0 80px 10px rgba(80, 120, 255, 0.35), inset -40px -40px 120px rgba(0, 0, 0, 0.7); opacity: 0.9; }
+.theme-space #scene .s-shoot, .theme-andromeda #scene .s-shoot { display: block; top: 12%; left: 70%; width: 140px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.9), transparent); transform: rotate(-35deg) translateX(0); opacity: 0;
+    animation: scShoot 11s ease-in 3s infinite; }
+@keyframes scShoot { 0%, 88% { opacity: 0; transform: rotate(-35deg) translateX(0); } 90% { opacity: 1; } 100% { opacity: 0; transform: rotate(-35deg) translateX(-55vw); } }
+
+/* Andromeda: a tilted spiral galaxy that slowly turns */
+.theme-andromeda #scene .s-stars { display: block; }
+.theme-andromeda #scene .a1 { display: block; left: 60%; top: 34%; width: 110vmax; height: 110vmax; margin: -55vmax 0 0 -55vmax;
+    background:
+        radial-gradient(ellipse 5% 2.2% at 50% 50%, #fffaf0 0%, #ffe2b8 45%, transparent 100%),
+        radial-gradient(ellipse 13% 4.5% at 50% 50%, rgba(255, 210, 160, 0.85), transparent 75%),
+        radial-gradient(ellipse 26% 8.5% at 50% 50%, rgba(214, 160, 255, 0.6), transparent 72%),
+        radial-gradient(ellipse 40% 13% at 50% 50%, rgba(130, 130, 255, 0.4), transparent 72%),
+        radial-gradient(ellipse 48% 16% at 50% 50%, rgba(90, 100, 220, 0.25), transparent 75%);
+    transform: rotate(-28deg);
+    animation: scSpin 400s linear infinite; }
+/* Dust lanes: darker rings across the disc */
+.theme-andromeda #scene .a3 { display: block; left: 60%; top: 34%; width: 110vmax; height: 110vmax; margin: -55vmax 0 0 -55vmax;
+    background:
+        radial-gradient(ellipse 22% 7% at 50% 49%, transparent 80%, rgba(10, 5, 30, 0.55) 86%, transparent 92%),
+        radial-gradient(ellipse 33% 10.5% at 50% 50.5%, transparent 82%, rgba(10, 5, 30, 0.45) 88%, transparent 94%);
+    transform: rotate(-28deg);
+    animation: scSpin 400s linear infinite; }
+.theme-andromeda #scene .a2 { display: block; inset: 0; background: radial-gradient(ellipse at 60% 34%, rgba(150, 90, 255, 0.22), transparent 55%), radial-gradient(circle at 15% 85%, rgba(236, 72, 153, 0.12), transparent 40%); }
+@keyframes scSpin { from { transform: rotate(-28deg); } to { transform: rotate(332deg); } }
+
+/* Nebula: glowing gas clouds drifting past */
+.theme-nebula #scene .s1 { display: block; }
+.theme-nebula #scene .a1, .theme-nebula #scene .a2, .theme-nebula #scene .a3 { display: block; width: 80vmax; height: 80vmax; border-radius: 50%; filter: blur(60px); opacity: 0.55; }
+.theme-nebula #scene .a1 { left: -20vmax; top: -25vmax; background: radial-gradient(circle, #db2777, transparent 65%); animation: scFloatA 40s ease-in-out infinite alternate; }
+.theme-nebula #scene .a2 { right: -25vmax; top: 10vmax; background: radial-gradient(circle, #0891b2, transparent 65%); animation: scFloatB 50s ease-in-out infinite alternate; }
+.theme-nebula #scene .a3 { left: 20vmax; bottom: -40vmax; background: radial-gradient(circle, #7c3aed, transparent 65%); animation: scFloatA 60s ease-in-out -20s infinite alternate; }
+@keyframes scFloatA { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(12vmax, 8vmax, 0) scale(1.15); } }
+@keyframes scFloatB { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-10vmax, 10vmax, 0) scale(0.95); } }
+
+/* Aurora: green and teal curtains swaying across the sky */
+.theme-aurora #scene .s1 { display: block; opacity: 0.6; }
+.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; filter: blur(40px); transform-origin: 50% 0; }
+.theme-aurora #scene .a1 { background: linear-gradient(180deg, transparent 0%, rgba(52, 211, 153, 0.55) 40%, rgba(16, 185, 129, 0.15) 75%, transparent 100%);
+    -webkit-mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%); mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%);
+    animation: scSway 14s ease-in-out infinite alternate; }
+.theme-aurora #scene .a2 { top: 5vh; background: linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.4) 45%, rgba(168, 85, 247, 0.2) 80%, transparent 100%);
+    -webkit-mask-image: repeating-linear-gradient(80deg, #000 0 6%, transparent 12% 18%); mask-image: repeating-linear-gradient(80deg, #000 0 6%, transparent 12% 18%);
+    animation: scSway 19s ease-in-out -6s infinite alternate-reverse; }
+.theme-aurora #scene .a3 { display: block; left: 0; right: 0; bottom: 0; height: 22vh; background: linear-gradient(180deg, transparent, rgba(2, 20, 30, 0.9)), radial-gradient(ellipse 60% 100% at 50% 100%, rgba(52, 211, 153, 0.12), transparent); }
+@keyframes scSway { from { transform: translate3d(-4%, 0, 0) skewX(-6deg) scaleY(1); } to { transform: translate3d(4%, 0, 0) skewX(6deg) scaleY(1.15); } }
+
+/* Retro sunset: striped sun over a moving neon grid */
+.theme-synthwave #scene .s1 { display: block; opacity: 0.5; }
+.theme-synthwave #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #12051f 0%, #3b0a4f 45%, #7a1757 62%, #12051f 63%); }
+.theme-synthwave #scene .a2 { display: block; left: 50%; top: 62%; width: 38vmin; height: 38vmin; margin: -38vmin 0 0 -19vmin; border-radius: 50%;
+    background: linear-gradient(180deg, #fde047 0%, #fb923c 45%, #ec4899 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0 52%, transparent 52% 58%, #000 58% 66%, transparent 66% 71%, #000 71% 78%, transparent 78% 82%, #000 82% 88%, transparent 88% 91%, #000 91%);
+    mask-image: linear-gradient(180deg, #000 0 52%, transparent 52% 58%, #000 58% 66%, transparent 66% 71%, #000 71% 78%, transparent 78% 82%, #000 82% 88%, transparent 88% 91%, #000 91%);
+    filter: drop-shadow(0 0 30px rgba(251, 113, 133, 0.6)); opacity: 0.75; }
+.theme-synthwave #scene .a3 { display: block; left: -50%; right: -50%; top: 62%; height: 120%;
+    background-image: linear-gradient(rgba(236, 72, 153, 0.7) 2px, transparent 2px), linear-gradient(90deg, rgba(236, 72, 153, 0.7) 2px, transparent 2px);
+    background-size: 60px 60px;
+    transform: perspective(300px) rotateX(70deg);
+    transform-origin: 50% 0;
+    animation: scGrid 2.4s linear infinite;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); }
+@keyframes scGrid { from { transform: perspective(300px) rotateX(70deg) translate3d(0, 0, 0); } to { transform: perspective(300px) rotateX(70deg) translate3d(0, 60px, 0); } }
+
+/* Deep sea: light rays from the surface and rising bubbles */
+.theme-ocean #scene .a1 { display: block; inset: 0; background: linear-gradient(180deg, #0b3b60 0%, #052443 35%, #021022 80%); }
+.theme-ocean #scene .a2 { display: block; left: -10%; width: 120%; top: -10%; height: 80%;
+    background: repeating-linear-gradient(100deg, rgba(186, 230, 253, 0.16) 0 3%, transparent 3% 9%);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%); mask-image: linear-gradient(180deg, #000, transparent 85%);
+    transform-origin: 50% 0; filter: blur(6px); animation: scRays 12s ease-in-out infinite alternate; }
+@keyframes scRays { from { transform: skewX(-8deg); opacity: 0.7; } to { transform: skewX(8deg); opacity: 1; } }
+.theme-ocean #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%;
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(186, 230, 253, 0.5) 0 3px, transparent 4px), radial-gradient(circle at 35% 60%, rgba(186, 230, 253, 0.4) 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 35%, rgba(186, 230, 253, 0.45) 0 4px, transparent 5px), radial-gradient(circle at 88% 80%, rgba(186, 230, 253, 0.35) 0 2px, transparent 3px),
+        radial-gradient(circle at 55% 90%, rgba(186, 230, 253, 0.4) 0 3px, transparent 4px);
+    background-size: 100% 50%;
+    animation: scBubbles 30s linear infinite; }
+@keyframes scBubbles { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, -50%, 0); } }
+
+/* Scene previews in Settings */
+.scene-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+.theme-button.scene-pick { position: relative; height: 54px; padding: 0; overflow: hidden; display: flex; align-items: flex-end; justify-content: flex-start; color: #fff; border-color: rgba(255,255,255,.15); }
+.scene-pick span { position: relative; padding: 0.3rem 0.5rem; font-size: 12px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+.scene-pick.active, .scene-pick[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: 2px; }
+.scene-prev-space { background: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 20%, #fff, transparent), radial-gradient(1.5px 1.5px at 45% 70%, #fff, transparent), radial-gradient(circle at 110% 120%, #3b5bdb 0 35%, transparent 36%), #03040b !important; }
+.scene-prev-andromeda { background: radial-gradient(ellipse 30% 9% at 55% 45%, #fff3d6, rgba(192,132,252,.6) 40%, transparent 75%), radial-gradient(ellipse 60% 25% at 55% 45%, rgba(110,120,255,.35), transparent 70%), #06031a !important; }
+.scene-prev-nebula { background: radial-gradient(circle at 20% 30%, rgba(219,39,119,.8), transparent 50%), radial-gradient(circle at 80% 60%, rgba(8,145,178,.8), transparent 50%), #0b0418 !important; }
+.scene-prev-aurora { background: linear-gradient(170deg, transparent 10%, rgba(52,211,153,.7) 35%, rgba(56,189,248,.35) 55%, transparent 75%), #020c14 !important; }
+.scene-prev-synthwave { background: radial-gradient(circle at 50% 75%, #fde047 0 18%, #ec4899 26%, transparent 27%), linear-gradient(180deg, #3b0a4f, #7a1757 70%, #12051f 71%) !important; }
+.scene-prev-ocean { background: repeating-linear-gradient(100deg, rgba(186,230,253,.15) 0 6%, transparent 6% 14%), linear-gradient(180deg, #0b3b60, #021022) !important; }
+@media (max-width: 480px) { .scene-picks { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { #scene * { animation: none !important; } }
