@@ -1642,7 +1642,7 @@ function renderOwnerPanel() {
         <label style="display:block;margin-bottom:0.35rem;">Color mode</label>
         <select id="owner-default-mode" class="settings-select"><option value="dark" ${visitorDefaults.mode === "dark" ? "selected" : ""}>Dark</option><option value="light" ${visitorDefaults.mode === "light" ? "selected" : ""}>Light</option></select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Theme</label>
-        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${themeLabel(theme)}${SCENE_THEMES[theme] ? " (scene)" : ""}</option>`).join("")}</select>
+        <select id="owner-default-theme" class="settings-select">${AVAILABLE_THEMES.filter(t => t !== "custom").map(theme => `<option value="${theme}" ${visitorDefaults.theme === theme ? "selected" : ""}>${themeLabel(theme)}${SCENE_THEMES[theme] ? " (scene)" : ""}</option>`).join("")}</select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Font size</label>
         <select id="owner-default-font-size" class="settings-select">${["small", "medium", "large"].map(size => `<option value="${size}" ${visitorDefaults.fontSize === size ? "selected" : ""}>${size[0].toUpperCase() + size.slice(1)}</option>`).join("")}</select>
         <br><br><label style="display:block;margin-bottom:0.35rem;">Card size</label>
@@ -2074,13 +2074,14 @@ const SCENE_THEMES = {
     space: "Outer space", starry: "Starry night", andromeda: "Andromeda", blackhole: "Black hole", saturn: "Saturn", nebula: "Nebula",
     clouds: "Sunny sky", autumn: "Autumn leaves", sakura: "Cherry blossom", snow: "Snowfall", aurora: "Aurora", storm: "Thunderstorm", ocean: "Deep sea",
     confetti: "Confetti", waves: "Wavy", pastel: "Pastel dream", prism: "Prism", honeycomb: "Honeycomb", gameicons: "Game icons",
-    arcade: "Retro arcade", synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", halloween: "Halloween"
+    arcade: "Retro arcade", synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", halloween: "Halloween",
+    aura: "Spirit aura", custom: "Your own picture"
 };
 // How the scene picker groups them, and which scenes are bright (dark text on light panels)
 const SCENE_GROUPS = { "🚀 Space": ["space", "starry", "andromeda", "blackhole", "saturn", "nebula"],
     "🌦️ Sky & weather": ["clouds", "autumn", "sakura", "snow", "aurora", "storm", "ocean"],
     "🎨 Patterns": ["confetti", "waves", "pastel", "prism", "honeycomb", "gameicons"],
-    "🎉 Fun": ["arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
+    "🎉 Fun": ["aura", "arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
 const LIGHT_SCENES = new Set(["clouds", "autumn", "pastel", "confetti", "waves"]);
 const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
 function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
@@ -3332,6 +3333,16 @@ function openSettingsPanel() {
                     ${list.map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${LIGHT_SCENES.has(t) ? "☀️ " : ""}${themeLabel(t)}</span></button>`).join("")}
                 </div>`).join("")}
             </div>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">Your own background</span><small>Paste a link to any picture or GIF (no download needed), or pick one from your device. Only you see it.</small></div>
+                <div class="custom-bg">
+                    <div class="custom-bg-preview" id="custom-bg-preview" data-theme-option="custom"></div>
+                    <div class="custom-bg-controls">
+                        <div class="custom-bg-line"><input id="custom-bg-url" type="url" class="set-input" placeholder="https://… link to a picture or GIF" data-lpignore="true" data-form-type="other"><button class="theme-button set-mini" type="button" onclick="setCustomBackgroundFromInput()">Use</button></div>
+                        <div class="custom-bg-line"><button class="theme-button set-mini" type="button" onclick="document.getElementById('custom-bg-file').click()">📁 From my device</button><button class="theme-button set-mini" type="button" onclick="clearCustomBackground()">Remove</button><input id="custom-bg-file" type="file" accept="image/*" hidden onchange="setCustomBackgroundFromFile(this.files[0]); this.value=''"></div>
+                        <label class="custom-bg-dim">Darken <input id="custom-bg-dim" type="range" min="0" max="85" step="5" value="${typeof getCustomBgDim === "function" ? getCustomBgDim() : 40}" oninput="setCustomBgDim(this.value)"></label>
+                    </div>
+                </div>
+            </div>
             ${row("Custom color", "Pick any color for buttons and highlights", `<input id="custom-theme-color" type="color" value="${customPrimaryColor}" onchange="setCustomPrimaryColor(this.value)"><button class="theme-button set-mini" type="button" onclick="clearCustomPrimaryColor()">Clear</button>`)}
         </div>
         <div class="settings-section">
@@ -3415,6 +3426,7 @@ function openSettingsPanel() {
     };
     tabs.forEach(b => b.onclick = () => { const q = document.getElementById("settings-search"); if (q.value) { q.value = ""; filterSettings(""); } showTab(b.dataset.tab); });
     showTab(tab);
+    if (typeof applyCustomBackground === "function") applyCustomBackground();
     const filterSettings = q => {
         q = q.trim().toLowerCase();
         const noRes = document.getElementById("settings-noresults");

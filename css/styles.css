@@ -2743,3 +2743,36 @@ body.theme-gameicons { --bg: #0b0a1f; --primary: #818cf8; --primary-hover: #a5b4
 .scene-prev-ocean { background: repeating-linear-gradient(100deg, rgba(186,230,253,.15) 0 6%, transparent 6% 14%), linear-gradient(180deg, #0b3b60, #021022) !important; }
 @media (max-width: 480px) { .scene-picks { grid-template-columns: repeat(2, 1fr); } }
 @media (prefers-reduced-motion: reduce) { #scene * { animation: none !important; } }
+
+/* ── Your own picture ── */
+body.theme-custom { --bg: #0b0b14; --primary: #a78bfa; --primary-hover: #c4b5fd; --primary-light: rgba(167,139,250,.18); --primary-lighter: rgba(167,139,250,.09); --gradient-primary: linear-gradient(135deg, #4c1d95, #7c3aed); --shadow-glow: 0 0 22px rgba(167,139,250,.4); }
+.theme-custom #scene .a1 { display: block; inset: -3%; background: #0b0b14 center / cover no-repeat; animation: scKenBurns 40s ease-in-out infinite alternate; }
+.theme-custom #scene .a2 { display: block; inset: 0; background: rgba(5, 6, 15, var(--custom-dim, 0.4)); }
+@keyframes scKenBurns { from { transform: scale(1); } to { transform: scale(1.06) translate3d(-1%, -1%, 0); } }
+.custom-bg { display: flex; gap: 0.7rem; align-items: stretch; }
+.custom-bg-preview { flex: none; width: 96px; min-height: 84px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-secondary) center / cover no-repeat; cursor: pointer; position: relative; }
+.custom-bg-preview.empty { cursor: default; background-image: none; }
+.custom-bg-preview.empty::after { content: "🖼️"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; opacity: 0.5; }
+.custom-bg-preview.active { outline: 2px solid var(--primary); outline-offset: 2px; }
+.custom-bg-controls { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.custom-bg-line { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.custom-bg-line .set-input { flex: 1; min-width: 0; padding: 0.4rem 0.6rem; font-size: 13px; }
+.custom-bg-dim { display: flex; align-items: center; gap: 0.5rem; font-size: 12.5px; color: var(--text-muted); }
+.custom-bg-dim input { flex: 1; accent-color: var(--primary); }
+@media (max-width: 480px) { .custom-bg { flex-direction: column; } .custom-bg-preview { width: 100%; } }
+
+/* ── Spirit aura: swirling energy with flickering wisps ── */
+body.theme-aura { --bg: #05030f; --primary: #818cf8; --primary-hover: #a5b4fc; --primary-light: rgba(129,140,248,.18); --primary-lighter: rgba(129,140,248,.09); --gradient-primary: linear-gradient(135deg, #312e81, #7c3aed, #0ea5e9); --shadow-glow: 0 0 22px rgba(129,140,248,.5); }
+.theme-aura #scene .a1 { display: block; left: 50%; top: 55%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax;
+    background: conic-gradient(from 0deg, rgba(99, 102, 241, 0.5), rgba(14, 165, 233, 0.15), rgba(168, 85, 247, 0.55), rgba(30, 27, 75, 0.1), rgba(56, 189, 248, 0.45), rgba(124, 58, 237, 0.2), rgba(99, 102, 241, 0.5));
+    filter: blur(40px); -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 62%); mask-image: radial-gradient(circle, #000 15%, transparent 62%);
+    animation: scSpinPlain 24s linear infinite; }
+.theme-aura #scene .a2 { display: block; left: 0; right: 0; bottom: -10vh; height: 80vh;
+    background: radial-gradient(ellipse 18% 60% at 20% 100%, rgba(129, 140, 248, 0.45), transparent 70%), radial-gradient(ellipse 14% 70% at 50% 100%, rgba(56, 189, 248, 0.4), transparent 70%), radial-gradient(ellipse 18% 55% at 80% 100%, rgba(168, 85, 247, 0.45), transparent 70%);
+    filter: blur(10px); transform-origin: 50% 100%; animation: scFlicker 1.4s ease-in-out infinite alternate; }
+.theme-aura #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%; background-size: 100% 50%;
+    background-image: radial-gradient(ellipse 2px 14px at 15% 40%, #c7d2fe, transparent), radial-gradient(ellipse 2px 18px at 38% 70%, #bae6fd, transparent), radial-gradient(ellipse 2px 12px at 62% 30%, #e9d5ff, transparent), radial-gradient(ellipse 2px 16px at 84% 60%, #c7d2fe, transparent), radial-gradient(ellipse 2px 10px at 50% 90%, #bae6fd, transparent);
+    animation: scBubbles 6s linear infinite; }
+.theme-aura #scene .a3 { display: block; inset: 0; background: radial-gradient(circle at 50% 55%, rgba(199, 210, 254, 0.35), transparent 30%); opacity: 0; animation: scFlash 6s linear infinite; }
+.theme-aura #scene .s1 { display: block; opacity: 0.35; }
+.scene-prev-aura { background: radial-gradient(ellipse 25% 60% at 30% 100%, rgba(129,140,248,.8), transparent 70%), radial-gradient(ellipse 20% 70% at 65% 100%, rgba(56,189,248,.7), transparent 70%), radial-gradient(circle at 50% 40%, rgba(168,85,247,.5), transparent 50%), #05030f !important; }
