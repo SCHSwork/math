@@ -3320,6 +3320,12 @@ function openSettingsPanel() {
 
     <div class="set-pane" data-pane="look">
         <div class="settings-section">
+            <h4>Site style</h4>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">How the whole site looks</span><small>Changes fonts, buttons, cards and the header. Colors and scenes below work with Default and Glass.</small></div>
+                <div class="skin-picks">${typeof siteSkinPickerHtml === "function" ? siteSkinPickerHtml() : ""}</div>
+            </div>
+        </div>
+        <div class="settings-section">
             <h4>Colors</h4>
             ${row("Dark mode", "", `<button class="theme-button set-mini" onclick="Promise.resolve(darkMode()).then(openSettingsPanel)">${isDark ? "🌙 On" : "☀️ Off"}</button>`)}
             <div class="set-row set-col"><div class="set-text"><span class="set-label">Theme color</span></div>
