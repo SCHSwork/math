@@ -5,6 +5,9 @@ All the changes to GN 2.0, newest first.
 
 ## October 16, 2026
 
+### Fixed
+- With a site style like Glass on, the scene previews in Settings lost their pictures and turned into blank gray pills. They now keep their picture and readable labels in every style.
+
 ### New
 - **Site styles** that change how the whole site looks, not just its colors: fonts, buttons, cards and the header. In **Settings → Look → Site style**: **Glass** (frosted see-through panels, works with any color or scene), **Hacker terminal** (green text on black with scanlines), **Retro desktop** (gray 90s computer windows), **Bold** (thick black outlines and bright blocks), **Notebook** (lined paper, taped photos and sticky notes), **Pixel** (chunky 8-bit game style) and **Comic book** (halftone dots and speech bubbles). Default keeps the normal look.
 - **Your own background.** In Settings → Look → Your own background, paste a link to any picture or GIF and it becomes the site's background, with no download needed (handy on school computers that block downloads). You can also pick a picture from your device. A **Darken** slider keeps the text readable. Only you see it; it's saved on your device and in your cloud save.
