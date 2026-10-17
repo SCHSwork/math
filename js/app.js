@@ -820,7 +820,7 @@ function openRandomZone() {
 
 function openZone(file) {
     if (isZoneDisabled(file.id)) {
-        notify("This game has been turned off by the site owner.");
+        notify(takedownRemovedIds.has(String(file.id)) ? "This game was removed after a request from its owner." : "This game has been turned off by the site owner.");
         return;
     }
 
@@ -1151,8 +1151,11 @@ function setDisabledZoneIds(disabledIds) {
     setJsonStorage(OWNER_STORAGE_KEYS.disabledZones, Array.from(disabledIds));
 }
 
+// Games removed after a copyright takedown (takedown.js keeps this up to date)
+let takedownRemovedIds = (() => { try { return new Set((JSON.parse(localStorage.getItem("gnmath-takedown-removed") || "{}").ids || []).map(String)); } catch { return new Set(); } })();
+
 function isZoneDisabled(zoneId) {
-    return cardCached("disabled", getDisabledZoneIds).has(String(zoneId));
+    return takedownRemovedIds.has(String(zoneId)) || cardCached("disabled", getDisabledZoneIds).has(String(zoneId));
 }
 
 function setZoneDisabled(zoneId, isDisabled) {
@@ -3539,11 +3542,20 @@ function loadPrivacy() {
 
 function loadTerms() {
     legalPopup("Terms of Use", `
-        <p><b>Effective October 9, 2026</b></p>
+        <p><b>Effective October 17, 2026</b></p>
         <p>By using GN 2.0 you agree to these terms. If you don't agree, please don't use the site.</p>
 
         <h3>Games and content</h3>
-        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. Games marked <span class="ad-badge">AD</span> are <b>partner games</b> from html5games.com (Famobi) or Playgama: they are linked, not copied, load from those platforms' servers under their own terms, and may show their ads, which GN 2.0 doesn't control or profit from. We don't claim ownership of any game, and we aren't responsible for third-party content. If you own a game and want it removed from this site, see the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page.</p>
+        <p>The games listed here are made by and belong to their respective creators and owners. This site does not create them. Most game files are loaded from third-party sources; games in the <b>GN Originals</b> row are open-source games shared under their creators' licenses, with each game's license and credit kept with it and shown in its Info panel. Games marked <span class="ad-badge">AD</span> are <b>partner games</b> from html5games.com (Famobi) or Playgama: they are linked, not copied, load from those platforms' servers under their own terms, and may show their ads, which GN 2.0 doesn't control or profit from. We don't claim ownership of any game.</p>
+
+        <h3>No affiliation</h3>
+        <p>Game titles, characters, pictures, logos and trademarks belong to their owners. GN 2.0 isn't affiliated with, sponsored by or endorsed by any game's creator, publisher or platform, and using a name here doesn't suggest that it is.</p>
+
+        <h3>Third-party content</h3>
+        <p>Library, partner and community games come from outside sources that GN 2.0 doesn't run. We remove the ad and tracking code we know about, but we don't control what's inside third-party games and can't promise they're accurate, appropriate, safe or free of errors. Links to other sites are provided for convenience; we aren't responsible for their content or practices. If something looks wrong, use <a href="#" onclick="openFeedback('bug'); return false;">Report a problem</a>.</p>
+
+        <h3>Copyright and takedowns</h3>
+        <p>We respect creators' rights. If you own a game listed here and didn't allow it, send a <a href="#" onclick="openTakedownForm(); return false;">takedown request</a>. It goes straight to the site's admins, who review it and remove the game for everyone once ownership is confirmed. See the <a href="#" onclick="loadDMCA(); return false;">DMCA</a> page for details.</p>
 
         <h3>Using the site</h3>
         <ul>
@@ -3553,11 +3565,11 @@ function loadTerms() {
             <li>You're responsible for keeping your password safe. Lost passwords can't be recovered.</li>
         </ul>
 
-        <h3>No warranty</h3>
-        <p>The site and all games are provided "as is" and "as available," without warranties of any kind. Games may stop working, be removed, or lose progress at any time, and cloud saves may be lost. Keep your own backups (Export Data) of anything important.</p>
+        <h3>Provided "as is"</h3>
+        <p>The site and all games are provided "as is" and "as available," without warranties of any kind, express or implied. We don't promise that any game will work, stay available, or keep its progress. Games may stop working or be removed at any time, and cloud saves may be lost. Keep your own backups (Export Data) of anything important.</p>
 
         <h3>Limitation of liability</h3>
-        <p>To the fullest extent allowed by law, the site owner is not liable for any damages or losses from using, or not being able to use, the site, its games, or its accounts and saves.</p>
+        <p>To the fullest extent allowed by law, the site owner and admins are not liable for any damages or losses from using, or not being able to use, the site, its games, or its accounts and saves, including lost progress or problems caused by third-party games or sites.</p>
 
         <h3>Changes</h3>
         <p>We may change these terms or the site at any time. Continuing to use the site means you accept the current terms. See also the <a href="#" onclick="loadPrivacy(); return false;">Privacy Policy</a>.</p>
@@ -3570,28 +3582,32 @@ function loadDMCA() {
     popupBody.innerHTML = `
         <div class="dmca-content">
             <p>
-                GN 2.0 doesn't host any game files. They're loaded from the gn-math game library,
-                which is run by its own owner. If you own or developed a game shown here
-                and would like it removed, please do the following:
+                GN 2.0 respects the rights of game creators. If you own or developed a game shown here
+                and didn't allow it, you can ask for it to be taken down.
             </p>
-            <ol>
-                <li>
-                    Email me at 
-                    <a href="mailto:gn.math.business@gmail.com">gn.math.business@gmail.com</a> 
-                    with the subject starting with <code>!DMCA</code>.
-                </li>
-            </ol>
+            <p><button type="button" class="settings-button" onclick="openTakedownForm()">Send a takedown request</button></p>
             <p>
-                If you are going to do an email, please show proof you own the game before I have to ask.
+                Requests go straight to the site's admins. You don't need an account. Please include
+                a link to your original game and a way for us to confirm you own it (for example, an email
+                from the domain on the official site, or the store page that lists you as the publisher).
+                Once it's confirmed, the game is removed for every visitor, usually within minutes of review.
+            </p>
+            <p>
+                You can also email <a href="mailto:gn.math.business@gmail.com?subject=!DMCA">gn.math.business@gmail.com</a>
+                with the subject starting with <code>!DMCA</code>.
             </p>
             <p>
                 <b>GN Originals</b> are open-source games copied, with their licenses, into
                 <a href="https://github.com/SCHSwork/GN-originals" target="_blank" rel="noopener">github.com/SCHSwork/GN-originals</a>.
-                To have one of those removed or its credit corrected, open an issue on that repository.
+                To have one of those removed or its credit corrected, use the takedown request or open an issue on that repository.
             </p>
             <p>
                 <b>Partner games</b> (marked AD) aren't copied here at all; they're linked from html5games.com or Playgama and
-                play from their servers. To have one removed from this list, use the email above.
+                play from their servers. To have one removed from this list, use the takedown request.
+            </p>
+            <p style="font-size:13px;color:var(--text-muted);">
+                Game names, pictures and trademarks belong to their owners. GN 2.0 isn't affiliated with or endorsed by them.
+                See the <a href="#" onclick="loadTerms(); return false;">Terms</a>.
             </p>
         </div>
     `;

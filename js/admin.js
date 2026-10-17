@@ -117,6 +117,7 @@ async function openAdminPanel() {
         <div class="admin-tabs" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
             <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports &amp; ideas</button>
+            <button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
             <button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>
         </div>
@@ -137,13 +138,16 @@ async function openAdminPanel() {
         </div>
         <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
         <div id="admin-newgames" hidden></div>
-        <div id="admin-feedback" hidden></div>`;
+        <div id="admin-feedback" hidden></div>
+        <div id="admin-takedowns" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
         document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
         document.getElementById("admin-newgames").hidden = b.dataset.tab !== "newgames";
         document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
+        document.getElementById("admin-takedowns").hidden = b.dataset.tab !== "takedowns";
+        if (b.dataset.tab === "takedowns" && typeof renderModTakedowns === "function") renderModTakedowns();
         if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
         if (b.dataset.tab === "newgames") renderNewLibraryGames();
         if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
@@ -154,6 +158,14 @@ async function openAdminPanel() {
             if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
             if (!modFeedbackCache.length) modFeedbackCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             updateFeedbackTabCount();
+        }).catch(() => {});
+    }
+    // Takedown requests waiting, shown on their tab
+    if (typeof updateTakedownTabCount === "function") {
+        cloudDb.collection("takedowns").where("status", "in", ["open", "info"]).get().then(snap => {
+            if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
+            if (!modTakedowns.length) modTakedowns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            updateTakedownTabCount();
         }).catch(() => {});
     }
     document.getElementById("admin-search").addEventListener("input", renderAdminList);
