@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 17, 2026
+
+### New
+- **3 more backup game sources.** Besides jsDelivr, GitHub and githack, games and pictures can now also load from jsDelivr's backup addresses on other networks (fastly.jsdelivr.net, gcore.jsdelivr.net and testingcf.jsdelivr.net). School filters that block the main jsDelivr address often miss these, and the site switches to them by itself. Games that load their own files from jsDelivr are pointed at a working backup too.
+
+
 ## October 16, 2026
 
 ### Fixed

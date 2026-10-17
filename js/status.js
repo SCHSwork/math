@@ -14,7 +14,7 @@ const STATUS_HEADLINES = {
     degraded: "Running with some issues",
     down: "Major outage"
 };
-const MIRROR_NAMES = { jsdelivr: "jsDelivr", github: "GitHub", githack: "githack" };
+const MIRROR_NAMES = { jsdelivr: "jsDelivr", github: "GitHub", githack: "githack", fastly: "jsDelivr (Fastly)", gcore: "jsDelivr (G-Core)", testingcf: "jsDelivr (Cloudflare)" };
 
 function getShowSiteStatus() { try { return localStorage.getItem(SHOW_STATUS_KEY) !== "false"; } catch { return true; } }
 function setShowSiteStatus(on) {
@@ -34,12 +34,17 @@ function collectStatusChecks() {
     const down = typeof mirrorDown !== "undefined" ? [...mirrorDown] : [];
     const listState = typeof libraryListState !== "undefined" ? libraryListState : "live";
     let lib;
+    const primary = typeof PRIMARY_MIRRORS !== "undefined" ? PRIMARY_MIRRORS : ["jsdelivr", "github", "githack"];
+    const backups = typeof BACKUP_MIRRORS !== "undefined" ? BACKUP_MIRRORS : [];
+    const mainDown = down.filter(m => primary.includes(m));
+    const backupsUp = backups.filter(m => !down.includes(m));
     if (listState === "failed") lib = { level: "down", detail: "Can't reach any game source from this network." };
-    else if (down.length >= 3) lib = { level: "degraded", detail: "All 3 game sources are having trouble, so some games or covers may not load." };
+    else if (mainDown.length >= primary.length && backupsUp.length) lib = { level: "degraded", detail: `The main game sources are blocked here, so games load from backup jsDelivr addresses.` };
+    else if (mainDown.length >= primary.length) lib = { level: "degraded", detail: "All game sources are having trouble, so some games or covers may not load." };
     else if (listState === "cache") lib = { level: "degraded", detail: "Using the game list saved on this device. Some games may not load." };
-    else if (down.length) lib = { level: "degraded", detail: `Running on backup sources (${down.map(m => MIRROR_NAMES[m] || m).join(", ")} unreachable).` };
+    else if (mainDown.length) lib = { level: "degraded", detail: `Running on backup sources (${mainDown.map(m => MIRROR_NAMES[m] || m).join(", ")} unreachable).` };
     else if (listState === "loading") lib = { level: "loading", detail: "Loading the game list…" };
-    else lib = { level: "ok", detail: "All 3 game sources working" };
+    else lib = { level: "ok", detail: `All 3 game sources working${backups.length ? `, plus ${backups.length} backups` : ""}` };
     checks.push({ name: "Game library", ...lib });
 
     const og = typeof originalsState !== "undefined" ? originalsState : "live";
