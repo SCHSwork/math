@@ -76,9 +76,17 @@ const htmlURLFallbacks = [
 const MIRRORS = {
     jsdelivr: (o, r, ref, p) => `https://cdn.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
     github:   (o, r, ref, p) => `https://raw.githubusercontent.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`,
-    githack:  (o, r, ref, p) => `https://rawcdn.githack.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`
+    githack:  (o, r, ref, p) => `https://rawcdn.githack.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`,
+    // Backup addresses for jsDelivr itself, run on other networks (Fastly, G-Core,
+    // Cloudflare). A school filter that blocks cdn.jsdelivr.net often misses these.
+    fastly:   (o, r, ref, p) => `https://fastly.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
+    gcore:    (o, r, ref, p) => `https://gcore.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
+    testingcf:(o, r, ref, p) => `https://testingcf.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`
 };
-const MIRROR_HOSTS = { "cdn.jsdelivr.net": "jsdelivr", "raw.githubusercontent.com": "github", "rawcdn.githack.com": "githack" };
+const PRIMARY_MIRRORS = ["jsdelivr", "github", "githack"];
+const BACKUP_MIRRORS = ["fastly", "gcore", "testingcf"];
+const MIRROR_HOSTS = { "cdn.jsdelivr.net": "jsdelivr", "raw.githubusercontent.com": "github", "rawcdn.githack.com": "githack",
+    "fastly.jsdelivr.net": "fastly", "gcore.jsdelivr.net": "gcore", "testingcf.jsdelivr.net": "testingcf" };
 const mirrorDown = new Set((() => { try { return JSON.parse(sessionStorage.getItem("gnmath-mirror-down") || "[]"); } catch { return []; } })());
 function markMirror(name, ok) {
     if (!name) return;
@@ -112,8 +120,9 @@ function suspectMirror(name) {
     probeMirror(name);
 }
 function mirrorUrls(owner, repo, ref, path) {
-    const order = ["jsdelivr", "github", "githack"];
-    order.sort((a, b) => mirrorDown.has(a) - mirrorDown.has(b)); // working sources first
+    // The three main sources first, then the jsDelivr backups; working ones first
+    const order = [...PRIMARY_MIRRORS, ...BACKUP_MIRRORS];
+    order.sort((a, b) => mirrorDown.has(a) - mirrorDown.has(b));
     return order.map(k => MIRRORS[k](owner, repo, ref, path));
 }
 function mirrorOf(url) { try { return MIRROR_HOSTS[new URL(url).hostname]; } catch { return null; } }
@@ -148,6 +157,9 @@ async function fetchFirst(urls, { timeoutMs = 15000, validate, track = true, cac
 // When jsDelivr is unreachable, point the jsDelivr links inside a game at backups
 function rewriteForMirrors(html) {
     if (!mirrorDown.has("jsdelivr") || typeof html !== "string") return html;
+    // A working jsDelivr backup address takes the exact same links (including npm)
+    const alt = BACKUP_MIRRORS.find(m => !mirrorDown.has(m));
+    if (alt) return html.replace(/https?:\/\/cdn\.jsdelivr\.net\//g, `https://${alt}.jsdelivr.net/`);
     return html
         .replace(/https?:\/\/cdn\.jsdelivr\.net\/gh\/([^\/@\s"'`<>]+)\/([^\/@\s"'`<>]+)(?:@([^\/\s"'`<>]+))?\//g,
             (m, o, r, ref) => `https://rawcdn.githack.com/${o}/${r}/${!ref || ref === "latest" ? "HEAD" : ref}/`)
