@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 17, 2026 — Takedown requests and updated Terms
+
+- **Takedown requests go to the admins.** Game owners can send a copyright takedown request from the DMCA page, the Terms, or a game's ⋯ menu ("Copyright takedown…"), with no account needed. Requests show up in Admin Panel → **Takedowns**, where admins can check the proof, reply by email, and **Remove game**, which hides it for every visitor within about 10 minutes (no GitHub token needed). Removed games can be restored.
+- **Terms of Use updated:** no-affiliation notice, third-party content, the takedown process, and a clearer "as is" / limitation of liability section. The DMCA page now points to the request form.
+- Needs the new `takedowns` and `removals` rules in `config/firestore.rules` published in the Firebase console.
+
 ## October 17, 2026
 
 ### New

@@ -2993,3 +2993,6 @@ body:not(#z) .theme-button.scene-pick { border-radius: 10px !important; box-shad
 body:not(#z) .theme-button.scene-pick span { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
 body:not(#z) :is(.scene-prev-clouds, .scene-prev-autumn, .scene-prev-pastel, .scene-prev-confetti, .scene-prev-waves) span { color: #0f172a; text-shadow: 0 1px 3px rgba(255,255,255,.95); }
 body:not(#z) .theme-button.scene-pick.active { outline: 2px solid var(--primary) !important; outline-offset: 2px; }
+
+/* Takedown form footer links */
+.td-foot a, .submit-error a { color: inherit; text-decoration: underline; }

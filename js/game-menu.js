@@ -162,6 +162,7 @@ function toggleGameMenu(ev) {
         "-",
         ["⚠", "Report broken", () => reportCurrentZone()],
         ["📝", "Report a problem…", () => openFeedback("bug")],
+        ["©", "Copyright takedown…", () => openTakedownForm(zone)],
         ["🗑", `Clear this game's data${tracked ? "" : "…"}`, () => clearCurrentGameData(), true]
     ];
     for (const it of items) {
