@@ -16,3 +16,92 @@
     // Pause everything while the tab isn't visible
     document.addEventListener("visibilitychange", () => scene.classList.toggle("paused", document.hidden));
 })();
+
+// ── "Your own picture": any picture or GIF as the background ────────────────
+// Paste a link (nothing is downloaded, which matters on school computers that
+// block downloads) or pick a file. Saved only on this device (and in your cloud
+// save if you're signed in). Links stay links; files are shrunk to fit.
+const CUSTOM_BG_KEY = "gnmath-custom-bg", CUSTOM_BG_DIM_KEY = "gnmath-custom-bg-dim";
+function getCustomBg() { try { return localStorage.getItem(CUSTOM_BG_KEY) || ""; } catch { return ""; } }
+function getCustomBgDim() { try { const v = Number(localStorage.getItem(CUSTOM_BG_DIM_KEY)); return Number.isFinite(v) && localStorage.getItem(CUSTOM_BG_DIM_KEY) !== null ? Math.min(85, Math.max(0, v)) : 40; } catch { return 40; } }
+function safeBgUrl(src) {
+    if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,[a-z0-9+/=]+$/i.test(src)) return src;
+    try { const u = new URL(src); return /^https?:$/.test(u.protocol) ? u.href : ""; } catch { return ""; }
+}
+function applyCustomBackground() {
+    const scene = document.getElementById("scene");
+    const preview = document.getElementById("custom-bg-preview");
+    const src = safeBgUrl(getCustomBg());
+    const css = src ? `url("${src.replace(/["\\\n\r]/g, c => encodeURIComponent(c))}")` : "";
+    if (scene) {
+        const pic = scene.querySelector(".a1");
+        if (document.body.classList.contains("theme-custom") && css) pic.style.backgroundImage = css;
+        else pic.style.removeProperty("background-image");
+        scene.style.setProperty("--custom-dim", String(getCustomBgDim() / 100));
+    }
+    if (preview) {
+        preview.style.backgroundImage = css;
+        preview.classList.toggle("empty", !css);
+        preview.title = css ? "Use this picture" : "No picture yet";
+        preview.onclick = () => { if (css) setTheme("custom"); };
+    }
+}
+function saveCustomBg(src) {
+    try { localStorage.setItem(CUSTOM_BG_KEY, src); }
+    catch { notify("That picture is too big to save on this device. Try a smaller one, or paste a link instead.", { type: "error" }); return false; }
+    setTheme("custom");
+    applyCustomBackground();
+    notify("Background set! Use “Darken” if the text is hard to read.", { type: "success" });
+    return true;
+}
+// Check the link really is a picture before using it
+function setCustomBackgroundFromInput() {
+    const input = document.getElementById("custom-bg-url");
+    const src = safeBgUrl((input?.value || "").trim());
+    if (!src) { notify("Paste a full link that starts with https://", { type: "error" }); return; }
+    const img = new Image();
+    img.onload = () => saveCustomBg(src);
+    img.onerror = () => notify("Couldn't load a picture from that link. It may not be a direct picture link (try right-click → Copy image address), or the site may be blocked here.", { type: "error", duration: 8000 });
+    img.src = src;
+}
+function setCustomBackgroundFromFile(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const data = String(reader.result || "");
+        // Small GIFs stay as they are so they keep moving
+        if (/^data:image\/gif/.test(data) && data.length < 2.5e6) return saveCustomBg(data);
+        const img = new Image();
+        img.onload = () => {
+            const scale = Math.min(1, 1920 / Math.max(img.width, img.height));
+            const c = document.createElement("canvas");
+            c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+            // (toDataURL is switched off site-wide, so encode with toBlob)
+            const encode = q => c.toBlob(blob => {
+                if (!blob) { notify("That file couldn't be opened as a picture.", { type: "error" }); return; }
+                if (blob.size > 1.3e6 && q > 0.35) return encode(q - 0.15);
+                const fr = new FileReader();
+                fr.onload = () => saveCustomBg(String(fr.result || ""));
+                fr.readAsDataURL(blob);
+            }, "image/jpeg", q);
+            encode(0.85);
+        };
+        img.onerror = () => notify("That file couldn't be opened as a picture.", { type: "error" });
+        img.src = data;
+    };
+    reader.readAsDataURL(file);
+}
+function clearCustomBackground() {
+    try { localStorage.removeItem(CUSTOM_BG_KEY); } catch {}
+    if (document.body.classList.contains("theme-custom")) setTheme("red");
+    applyCustomBackground();
+}
+function setCustomBgDim(v) {
+    try { localStorage.setItem(CUSTOM_BG_DIM_KEY, String(v)); } catch {}
+    applyCustomBackground();
+}
+// Re-apply whenever the theme changes (and once Settings draws its preview)
+const watchBody = () => new MutationObserver(applyCustomBackground).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+if (document.body) watchBody(); else document.addEventListener("DOMContentLoaded", watchBody);
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyCustomBackground); else applyCustomBackground();
