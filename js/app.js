@@ -2072,15 +2072,16 @@ const COLOR_THEMES = ["red", "orange", "blue", "green", "purple", "pink", "cyan"
 // Scene themes have their own animated background (scenes.js) and are always dark
 const SCENE_THEMES = {
     space: "Outer space", starry: "Starry night", andromeda: "Andromeda", blackhole: "Black hole", saturn: "Saturn", nebula: "Nebula",
-    clouds: "Sunny sky", beach: "Tropical beach", meadow: "Meadow", autumn: "Autumn leaves", sakura: "Cherry blossom", snow: "Snowfall",
-    aurora: "Aurora", fireflies: "Firefly forest", campfire: "Campfire", storm: "Thunderstorm", desert: "Desert sunset", ocean: "Deep sea",
-    pastel: "Pastel dream", arcade: "Retro arcade", synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", halloween: "Halloween"
+    clouds: "Sunny sky", autumn: "Autumn leaves", sakura: "Cherry blossom", snow: "Snowfall", aurora: "Aurora", storm: "Thunderstorm", ocean: "Deep sea",
+    confetti: "Confetti", waves: "Wavy", pastel: "Pastel dream", prism: "Prism", honeycomb: "Honeycomb", gameicons: "Game icons",
+    arcade: "Retro arcade", synthwave: "Retro sunset", neoncity: "Neon city", coderain: "Code rain", lava: "Lava", halloween: "Halloween"
 };
 // How the scene picker groups them, and which scenes are bright (dark text on light panels)
 const SCENE_GROUPS = { "🚀 Space": ["space", "starry", "andromeda", "blackhole", "saturn", "nebula"],
-    "🌿 Nature": ["clouds", "beach", "meadow", "autumn", "sakura", "snow", "aurora", "fireflies", "campfire", "storm", "desert", "ocean"],
-    "🎉 Fun": ["pastel", "arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
-const LIGHT_SCENES = new Set(["clouds", "beach", "meadow", "autumn", "pastel"]);
+    "🌦️ Sky & weather": ["clouds", "autumn", "sakura", "snow", "aurora", "storm", "ocean"],
+    "🎨 Patterns": ["confetti", "waves", "pastel", "prism", "honeycomb", "gameicons"],
+    "🎉 Fun": ["arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
+const LIGHT_SCENES = new Set(["clouds", "autumn", "pastel", "confetti", "waves"]);
 const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
 function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
 const TAB_CLOAK_STORAGE_KEYS = {
