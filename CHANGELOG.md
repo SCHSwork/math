@@ -5,7 +5,7 @@ All the changes to GN 2.0, newest first.
 
 ## October 18, 2026 — New Frutiger Aero background
 
-- **Frutiger Aero** has a new background: sunny sky and clouds over a water line, with a little tree on a grassy island, and underwater light rays, bubbles, fish and tall grass with daisies below. The drifting bubbles now stay underwater. It's one drawing that comes with the site (`assets/aero/scene.svg`).
+- **Frutiger Aero** has a new, realistic-looking background: a sunny sky with fluffy clouds over a water line, and underwater light rays, bubbles, distant fish and deep grass below. The drifting bubbles stay underwater. It's painted by code that comes with the site (`tools/paint_aero_background.py`), with no outside photos, so it can't get a copyright claim.
 
 ## October 18, 2026 — Frutiger Aero
 

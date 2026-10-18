@@ -3108,8 +3108,8 @@ body.st-aero:not(#z) {
     --gloss-soft: linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 50%);
     --glass-panel: linear-gradient(180deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.5) 48%, rgba(255,255,255,.36) 52%, rgba(255,255,255,.5) 100%);
     font-family: "Segoe UI", "Frutiger", "Myriad Pro", "Lucida Grande", Tahoma, sans-serif;
-    /* sky over water, fish, bubbles and grass (assets/aero/scene.svg, drawn for this site) */
-    background: url("../assets/aero/scene.svg") center / cover no-repeat, linear-gradient(180deg, #2f8fe6 0 47%, #2f93e0 47% 85%, #3a9a26 85%) !important;
+    /* sky over water, underwater light and grass (assets/aero/scene.webp, painted by tools/paint_aero_background.py) */
+    background: url("../assets/aero/scene.webp") center / cover no-repeat, linear-gradient(180deg, #2f8fe6 0 47%, #2f93e0 47% 85%, #3a9a26 85%) !important;
     background-attachment: fixed !important; background-size: cover !important; color: var(--text);
 }
 /* Bubbles drifting up behind the page: one slow loop, still with reduced motion or while a game is open */
