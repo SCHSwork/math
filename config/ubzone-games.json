@@ -1,0 +1,259 @@
+{
+ "repo": "s0n-1m-cr1n3/sc13nc3",
+ "ref": "3096333fcce4d7a42ce18f59725abb62d5811116",
+ "scanned": "2026-10-17",
+ "games": [
+  {
+   "id": 300000,
+   "name": "-3 Remastred (minus 3)",
+   "path": "assets/html/main/minus3remastred.html",
+   "cover": "assets/img/main/minus3remastred.png"
+  },
+  {
+   "id": 300001,
+   "name": "Baldi's Creepy Run",
+   "path": "assets/html/main/baldicreepyrun.html",
+   "cover": "assets/img/main/baldicreepyrun.png"
+  },
+  {
+   "id": 300002,
+   "name": "Bendy Clicker",
+   "path": "assets/html/main/bendyclicker.html",
+   "cover": "assets/img/main/bendyclicker.png"
+  },
+  {
+   "id": 300003,
+   "name": "CCM Client 1.5.2",
+   "path": "assets/html/main/ccm152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300004,
+   "name": "CoderCraft Client 1.5.2",
+   "path": "assets/html/main/codercraft152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300005,
+   "name": "EaglerCraft 0.3.0 (WASM)",
+   "path": "assets/html/main/wasm030.html",
+   "cover": "assets/img/main/030.png"
+  },
+  {
+   "id": 300006,
+   "name": "Eaglercraft 1.12 (WASM)",
+   "path": "assets/html/main/wasm112.html",
+   "cover": "assets/img/main/112.png"
+  },
+  {
+   "id": 300007,
+   "name": "EaglerCraft 1.25 (JS)",
+   "path": "assets/html/main/js125.html",
+   "cover": "assets/img/main/125.png"
+  },
+  {
+   "id": 300008,
+   "name": "EaglerCraft 1.8.8 (JS)",
+   "path": "assets/html/main/js18.html",
+   "cover": "assets/img/main/188.png"
+  },
+  {
+   "id": 300009,
+   "name": "EaglerCraft 1.8.8 (WASM)",
+   "path": "assets/html/main/wasm18.html",
+   "cover": "assets/img/main/188.png"
+  },
+  {
+   "id": 300010,
+   "name": "EaglerCraft Alpha 1.2.6",
+   "path": "assets/html/main/alpha126.html",
+   "cover": "assets/img/main/126.png"
+  },
+  {
+   "id": 300011,
+   "name": "EaglerCraft Beta 1.3_01 (JS)",
+   "path": "assets/html/main/js13.html",
+   "cover": "assets/img/main/13.png"
+  },
+  {
+   "id": 300012,
+   "name": "EaglerCraft Beta 1.7.3 (JS)",
+   "path": "assets/html/main/js173.html",
+   "cover": "assets/img/main/173.png"
+  },
+  {
+   "id": 300013,
+   "name": "Femboy Clicker",
+   "path": "assets/html/main/femboyclicker.html",
+   "cover": "assets/img/main/femboyclicker.png"
+  },
+  {
+   "id": 300014,
+   "name": "FNAF (Scratch)",
+   "link": "https://scratch.mit.edu/projects/1287361673/fullscreen/",
+   "cover": "assets/img/main/fnafscratch.png"
+  },
+  {
+   "id": 300015,
+   "name": "FNF vs Bside",
+   "path": "assets/html/main/fnfbside.html",
+   "cover": "assets/img/main/fnfvsbside.png"
+  },
+  {
+   "id": 300016,
+   "name": "FNF vs Garcello",
+   "path": "assets/html/main/fnfgarcello.html",
+   "cover": "assets/img/main/fnfvsgarcello.png"
+  },
+  {
+   "id": 300017,
+   "name": "FNF vs Hex",
+   "path": "assets/html/main/fnfhex.html",
+   "cover": "assets/img/main/fnfvshex.png"
+  },
+  {
+   "id": 300018,
+   "name": "FNF vs Hit Single Real",
+   "path": "assets/html/main/fnfhitsingle.html",
+   "cover": "assets/img/main/fnfvshitsingle.png"
+  },
+  {
+   "id": 300019,
+   "name": "FNF vs Mid Fight",
+   "path": "assets/html/main/fnfmidfight.html",
+   "cover": "assets/img/main/fnfvsmidfight.png"
+  },
+  {
+   "id": 300020,
+   "name": "FNF vs Miku",
+   "path": "assets/html/main/fnfmiku.html",
+   "cover": "assets/img/main/fnfvsmiku.png"
+  },
+  {
+   "id": 300021,
+   "name": "FNF vs Neo",
+   "path": "assets/html/main/fnfneo.html",
+   "cover": "assets/img/main/fnfvsneo.png"
+  },
+  {
+   "id": 300022,
+   "name": "FNF vs Shaggy",
+   "path": "assets/html/main/fnfshaggy.html",
+   "cover": "assets/img/main/fnfvsshaggy.png"
+  },
+  {
+   "id": 300023,
+   "name": "FNF vs Sky",
+   "path": "assets/html/main/fnfsky.html",
+   "cover": "assets/img/main/fnfvssky.png"
+  },
+  {
+   "id": 300024,
+   "name": "FNF vs Whitty",
+   "path": "assets/html/main/fnfwhitty.html",
+   "cover": "assets/img/main/fnfvswhitty.png"
+  },
+  {
+   "id": 300025,
+   "name": "Fuchsiax Client 1.5.2",
+   "path": "assets/html/main/fuchsiax152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300026,
+   "name": "Fuchsiax x Ghost Client 1.5.2",
+   "path": "assets/html/main/fuchsiaxghost152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300027,
+   "name": "Geometry Dash Subzero (Scratch)",
+   "link": "https://scratch.mit.edu/projects/1288073971/fullscreen/",
+   "cover": "assets/img/main/geometrydashsubzeroscratch.png"
+  },
+  {
+   "id": 300028,
+   "name": "Google Snake (Scratch)",
+   "link": "https://scratch.mit.edu/projects/1283303860/fullscreen/",
+   "cover": "assets/img/main/googlesnake.png"
+  },
+  {
+   "id": 300029,
+   "name": "Infinite Craft",
+   "path": "assets/html/main/infinite.html",
+   "cover": "assets/img/main/infinitecraft.png"
+  },
+  {
+   "id": 300030,
+   "name": "N0VA Client 1.5.2",
+   "path": "assets/html/main/n0va152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300031,
+   "name": "Nebula Client 1.5.2",
+   "path": "assets/html/main/nebula152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300032,
+   "name": "NIT Client 1.5.2",
+   "path": "assets/html/main/nitclient152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300033,
+   "name": "Odd Future Client 1.5.2",
+   "path": "assets/html/main/oddfuture152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300034,
+   "name": "Pi Client 1.8.8",
+   "path": "assets/html/main/pi18.html",
+   "cover": "assets/img/main/client188.png"
+  },
+  {
+   "id": 300035,
+   "name": "Pneumonoultramicroscopicsilicovolcanoconiosis",
+   "path": "assets/html/main/Pneumonoultramicroscopicsilicovolcanoconiosis.html",
+   "cover": "assets/img/main/pneumonoultramicroscopicsilicovolcanoconiosis.png"
+  },
+  {
+   "id": 300036,
+   "name": "PreCCM Client 1.5.2",
+   "path": "assets/html/main/preccm152.html",
+   "cover": "assets/img/main/client152.png"
+  },
+  {
+   "id": 300037,
+   "name": "Shadow Client 1.8.8",
+   "path": "assets/html/main/shadow18.html",
+   "cover": "assets/img/main/client188.png"
+  },
+  {
+   "id": 300038,
+   "name": "The Math is Leaking",
+   "path": "assets/html/main/themathisleaking.html",
+   "cover": "assets/img/main/themathisleaking.png"
+  },
+  {
+   "id": 300039,
+   "name": "three",
+   "path": "assets/html/main/three.html",
+   "cover": "assets/img/main/three.png"
+  },
+  {
+   "id": 300040,
+   "name": "UwU Client 1.8.8",
+   "path": "assets/html/main/uwu18.html",
+   "cover": "assets/img/main/client188.png"
+  },
+  {
+   "id": 300041,
+   "name": "Where's Baldi",
+   "path": "assets/html/main/wheresbaldi.html",
+   "cover": "assets/img/main/whereisbaldi.png"
+  }
+ ]
+}

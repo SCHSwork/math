@@ -258,6 +258,7 @@ const TYPE_LABELS = { port: "Ports", flash: "Flash", emulator: "Emulator", fnf: 
 async function listZones() {
     const originalsPromise = typeof loadOriginals === "function" ? loadOriginals() : Promise.resolve([]);
     const partnersPromise = typeof loadPartners === "function" ? loadPartners().catch(() => []) : Promise.resolve([]);
+    const ubzonePromise = typeof loadUbzone === "function" ? loadUbzone().catch(() => []) : Promise.resolve([]);
     try {
       // Look up the latest commit SHA so jsDelivr serves a fresh zones.json.
       // sha.txt on raw.githubusercontent.com has no per-IP rate limit, so try it
@@ -303,6 +304,8 @@ async function listZones() {
         // GN Originals already have are marked "libraryDuplicate" in their list.
         const partners = await partnersPromise;
         zones = zones.concat(partners.filter(z => !libraryIds.has(String(z.id)) && !z.libraryDuplicate));
+        // UBZone games (checked games from the unblockedzone site that weren't here yet)
+        zones = zones.concat((await ubzonePromise).filter(z => !libraryIds.has(String(z.id))));
         if (typeof applyJamPreference === "function") zones = applyJamPreference(zones);
         // Show games right away using cached play counts, then refresh them
         const popularityFresh = loadCachedPopularity();
@@ -365,7 +368,7 @@ async function listZones() {
     } catch (error) {
         console.error(error);
         // The main library is down, but the GN Originals may still work
-        const originals = (await originalsPromise).concat(await partnersPromise);
+        const originals = (await originalsPromise).concat(await partnersPromise, await ubzonePromise);
         if (originals.length) {
             zones = typeof applyJamPreference === "function" ? applyJamPreference(originals) : originals;
             sortZones();
@@ -795,7 +798,12 @@ function cleanGameHtml(html) {
 
 async function fetchWithFallback(rawUrl) {
     // GN Originals: "gh:owner/repo@sha/path"
-    if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) return rewriteForMirrors(await fetchOriginalHtml(rawUrl));
+    if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) {
+        let html = await fetchOriginalHtml(rawUrl);
+        // UBZone games: keep their own links on the checked version (ubzone.js)
+        if (typeof isUbzoneGhUrl === "function" && isUbzoneGhUrl(rawUrl)) html = pinUbzoneRefs(html);
+        return rewriteForMirrors(html);
+    }
     // Game pages: try every source (jsDelivr, GitHub, githack), working ones first
     const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "").replace(/^\//, "");
     const isHtml = rawUrl.includes("{HTML_URL}");
@@ -3692,6 +3700,8 @@ function showZoneInfo() {
     if (original) { showOriginalInfo(original); return; }
     const partner = typeof isPartnerZone === "function" && isPartnerZone(id) ? zones.find(z => Number(z.id) === id) : null;
     if (partner) { showPartnerInfo(partner); return; }
+    const ubz = typeof isUbzoneZone === "function" && isUbzoneZone(id) ? zones.find(z => Number(z.id) === id) : null;
+    if (ubz) { showUbzoneInfo(ubz); return; }
     fetch(`https://api.github.com/repos/freebuisness/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
         let stats = await getStats (id);
         idjson = zones.filter(a=>a.id===id)[0]

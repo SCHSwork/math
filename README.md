@@ -36,6 +36,13 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - GN 2.0 doesn't earn anything from these ads and sends Famobi nothing about players.
 - The list is `config/partner-games.json` (ids 200000+; `pkg` is the Famobi game id, `thumb` the cover file name). Entries with `"libraryDuplicate": true` are games the library or GN Originals already has, so they're hidden. To remove one, delete its entry.
 
+**UBZone games**
+- About 40 games from the unblockedzone site ([s0n-1m-cr1n3/sc13nc3](https://github.com/s0n-1m-cr1n3/sc13nc3)) that GN 2.0 didn't already have: Eaglercraft versions and clients, FNF mods, Baldi games, Infinite Craft and more. Pick **UBZone games** under Source to see just them.
+- The list is `config/ubzone-games.json` (ids 300000+). It's pinned to one checked commit (`ref`), so the games always load the version that was scanned, never a newer one. Their links to their own site are pointed at that version too (`js/ubzone.js`).
+- Every game file, and every outside folder it loads from, was scanned before it was listed. Left out: games with trackers, ads or hidden data calls (Google Analytics, AdSense, Apps Script), games that load code from repos or sites that can change at any time (`@main`, `@latest` or another site), a missing file, and two kidnapping/abuse joke games.
+- The 3 Scratch games open on scratch.mit.edu in a new tab.
+- To add more later, scan the new files the same way and bump `ref` only to a commit you've checked.
+
 **Reliable**
 - Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, links inside games are rewritten when jsDelivr is down, and the last game list is kept as an offline backup.
 
