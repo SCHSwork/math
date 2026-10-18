@@ -3108,29 +3108,13 @@ body.st-aero:not(#z) {
     --gloss-soft: linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 50%);
     --glass-panel: linear-gradient(180deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.5) 48%, rgba(255,255,255,.36) 52%, rgba(255,255,255,.5) 100%);
     font-family: "Segoe UI", "Frutiger", "Myriad Pro", "Lucida Grande", Tahoma, sans-serif;
-    background:
-        /* sun glare */
-        radial-gradient(circle at 88% 7%, #fff 0 1.6%, rgba(255,255,255,.75) 3%, rgba(255,255,255,.25) 9%, transparent 22%),
-        radial-gradient(circle at 76% 18%, rgba(255,255,255,.35) 0 .8%, transparent 1.4%),
-        radial-gradient(circle at 70% 24%, rgba(190,240,255,.3) 0 1.6%, transparent 2.4%),
-        /* sweeping light streaks */
-        radial-gradient(ellipse 130% 70% at 0% 112%, transparent 60%, rgba(255,255,255,.55) 61.2%, rgba(255,255,255,.12) 63.5%, transparent 65%),
-        radial-gradient(ellipse 120% 64% at 8% 118%, transparent 62%, rgba(180,245,255,.45) 63%, transparent 65.5%),
-        /* rolling green hills */
-        radial-gradient(ellipse 85% 34% at 22% 110%, #9cf06a 0 40%, #49c23a 62%, #2a9a2c 73%, transparent 74%),
-        radial-gradient(ellipse 75% 30% at 86% 114%, #b6f57d 0 42%, #5ccf44 64%, #34a834 74%, transparent 75%),
-        /* clouds */
-        radial-gradient(ellipse 16% 5% at 20% 20%, rgba(255,255,255,.95), transparent 70%),
-        radial-gradient(ellipse 10% 4.5% at 27% 17%, rgba(255,255,255,.9), transparent 70%),
-        radial-gradient(ellipse 14% 4% at 58% 34%, rgba(255,255,255,.75), transparent 70%),
-        radial-gradient(ellipse 9% 3.5% at 64% 31%, rgba(255,255,255,.7), transparent 70%),
-        /* sky */
-        linear-gradient(180deg, #0762c8 0%, #2b97ec 30%, #7cc8f8 60%, #c9eeff 82%, #e6f8ff 100%) !important;
+    /* sky over water, fish, bubbles and grass (assets/aero/scene.svg, drawn for this site) */
+    background: url("../assets/aero/scene.svg") center / cover no-repeat, linear-gradient(180deg, #2f8fe6 0 47%, #2f93e0 47% 85%, #3a9a26 85%) !important;
     background-attachment: fixed !important; background-size: cover !important; color: var(--text);
 }
 /* Bubbles drifting up behind the page: one slow loop, still with reduced motion or while a game is open */
 body.st-aero:not(#z)::before {
-    content: ""; position: fixed; left: 0; right: 0; top: 0; height: 200vh; z-index: -1; pointer-events: none;
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
         radial-gradient(circle 6px at 52px 70px, rgba(255,255,255,.95), transparent),
         radial-gradient(circle 26px at 60px 80px, rgba(255,255,255,0) 0, rgba(200,240,255,.12) 62%, rgba(255,255,255,.75) 90%, rgba(255,255,255,0) 100%),
@@ -3141,9 +3125,11 @@ body.st-aero:not(#z)::before {
         radial-gradient(circle 4px at 118px 430px, rgba(255,255,255,.9), transparent),
         radial-gradient(circle 16px at 123px 435px, rgba(255,255,255,0) 0, rgba(200,240,255,.12) 62%, rgba(255,255,255,.7) 90%, rgba(255,255,255,0) 100%);
     background-size: 380px 520px; background-repeat: repeat;
+    /* bubbles only underwater: hidden above the water line (about 47% down the screen) */
+    -webkit-mask-image: linear-gradient(180deg, transparent 49%, #000 55%); mask-image: linear-gradient(180deg, transparent 49%, #000 55%);
     animation: stAeroBubbles 70s linear infinite;
 }
-@keyframes stAeroBubbles { to { transform: translateY(-520px); } }
+@keyframes stAeroBubbles { to { background-position-y: -520px; } }
 body.reduced-motion.st-aero:not(#z)::before, body.st-aero:not(#z):has(#zoneViewer[style*="flex"])::before { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { body.st-aero:not(#z)::before { animation: none; } }
 
@@ -3155,9 +3141,9 @@ body.st-aero:not(#z) :is(.popup, .status-panel, .toast) { background: linear-gra
 body.st-aero:not(#z) .zone-item:hover { box-shadow: 0 12px 30px rgba(0,60,120,.28), 0 0 0 2px rgba(120,220,255,.9), inset 0 1px 0 #fff !important; transform: translateY(-3px); }
 body.st-aero:not(#z) .zone-item img { border-bottom: 1px solid rgba(255,255,255,.8); }
 body.st-aero:not(#z) .zone-item button { color: #08284a; }
-body.st-aero:not(#z) .section-title { color: #fff; text-shadow: 0 1px 3px rgba(0,40,100,.75), 0 0 12px rgba(0,60,140,.35); }
-body.st-aero:not(#z) .section-title .section-count { color: rgba(255,255,255,.92) !important; }
-body.st-aero:not(#z) summary.section-title::after { border-color: rgba(255,255,255,.92); }
+body.st-aero:not(#z) .section-title { color: #fff; text-shadow: 0 1px 2px rgba(0,30,80,.95), 0 0 8px rgba(0,40,110,.75), 0 0 18px rgba(0,50,130,.5); }
+body.st-aero:not(#z) .section-title .section-count { color: #fff !important; text-shadow: inherit; }
+body.st-aero:not(#z) summary.section-title::after { border-color: #fff; filter: drop-shadow(0 1px 2px rgba(0,30,80,.9)); }
 /* glossy orb buttons: green for the main action, aqua glass for the rest */
 body.st-aero:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--gloss), linear-gradient(180deg, #86e655, #2fae22 55%, #1b8f16) !important; color: #fff !important; border: 1px solid #13760f !important; border-radius: 999px !important; box-shadow: 0 3px 8px rgba(10,90,20,.35), inset 0 -2px 4px rgba(0,60,0,.25) !important; text-shadow: 0 1px 1px rgba(0,60,0,.55); }
 body.st-aero:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: var(--gloss), linear-gradient(180deg, rgba(225,246,255,.9), rgba(140,205,245,.85)) !important; color: #08284a !important; border: 1px solid rgba(255,255,255,.95) !important; border-radius: 999px !important; box-shadow: 0 2px 6px rgba(0,60,120,.25) !important; }
