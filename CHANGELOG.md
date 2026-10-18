@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 17, 2026 — UBZone games
+
+- **42 new games from unblockedzone**, including 13 Eaglercraft versions and clients, 10 FNF mods, Baldi's Creepy Run, Where's Baldi, Infinite Craft and 3 Scratch games. Choose **UBZone games** under Source to see just them.
+- Each one was checked first: every game file and the outside folders they load were scanned for the October 11 script, trackers, ads and hidden data calls. The games load only that checked version, so later changes to their site can't reach GN 2.0.
+- Of that site's 187 games, 79 were already here. 66 of the other 108 weren't added: they had trackers or ads, loaded code that could change at any time, had a missing file, or (two of them) were kidnapping/abuse joke games.
+
 ## October 17, 2026 — Takedown requests and updated Terms
 
 - **Takedown requests go to the admins.** Game owners can send a copyright takedown request from the DMCA page, the Terms, or a game's ⋯ menu ("Copyright takedown…"), with no account needed. Requests show up in Admin Panel → **Takedowns**, where admins can check the proof, reply by email, and **Remove game**, which hides it for every visitor within about 10 minutes (no GitHub token needed). Removed games can be restored.
