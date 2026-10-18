@@ -3,6 +3,11 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 18, 2026 — UBZone games in the status light
+
+- The **status light** has a **UBZone games** row: whether their list loaded and whether their files can be reached from your network. It turns yellow if they can't.
+- The **GN Status** page now tracks the UBZone games list, every repo their files come from (at the checked versions), and the three backup jsDelivr addresses (Fastly, G-Core, Cloudflare) the site switches to when jsDelivr is blocked.
+
 ## October 17, 2026 — Takedowns for UBZone games
 
 - **Takedown requests now link UBZone games back to their original repos.** When someone picks a UBZone game on the takedown form, it shows the GitHub repos the game's files come from, with a link to GitHub's DMCA form, so the owner can have the files themselves taken down too. Admins see the same links on the request in Admin Panel → Takedowns.

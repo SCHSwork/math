@@ -15,6 +15,11 @@ const UBZONE_ID_BASE = 300000;
 const UBZONE_TAG = "ubzone";
 const UBZONE_SITE = "https://github.com/s0n-1m-cr1n3/sc13nc3";
 let ubzoneRef = null;   // the checked commit, from the list
+// Read by the status light (status.js)
+let ubzoneState = "loading";      // loading | live | cache | failed
+let ubzoneFilesState = "unchecked"; // unchecked | checking | ok | down
+let ubzoneGameCount = 0;
+let ubzoneProbes = {};            // "owner/repo@commit" → a small file in it (from the list)
 
 function isUbzoneZone(zoneOrId) {
     const id = zoneOrId && typeof zoneOrId === "object" ? zoneOrId.id : zoneOrId;
@@ -82,12 +87,14 @@ async function loadUbzone() {
         if (!res.ok) throw new Error("UBZone list " + res.status);
         data = await res.json();
         try { localStorage.setItem(UBZONE_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
+        ubzoneState = "live";
     } catch (err) {
         try { data = JSON.parse(localStorage.getItem(UBZONE_CACHE_KEY))?.data; } catch (e) {}
-        if (!data) { console.warn("UBZone list unavailable", err); return []; }
+        if (!data) { ubzoneState = "failed"; console.warn("UBZone list unavailable", err); return []; }
+        ubzoneState = "cache";
     }
     // Only ever load the checked version: a full commit id, never a branch name
-    if (!data || !/^[0-9a-f]{40}$/.test(data.ref || "") || !/^[\w.-]+\/[\w.-]+$/.test(data.repo || "") || !Array.isArray(data.games)) return [];
+    if (!data || !/^[0-9a-f]{40}$/.test(data.ref || "") || !/^[\w.-]+\/[\w.-]+$/.test(data.repo || "") || !Array.isArray(data.games)) { ubzoneState = "failed"; return []; }
     ubzoneRef = data.ref;
     ubzonePins = {};
     for (const [repo, sha] of Object.entries(data.pins || {})) {
@@ -95,9 +102,37 @@ async function loadUbzone() {
     }
     const safePath = p => typeof p === "string" && /^[\w./-]+$/.test(p) && !p.includes("..");
     const safeLink = l => typeof l === "string" && /^https:\/\/scratch\.mit\.edu\/projects\/\d+\/fullscreen\/?$/.test(l);
-    return data.games
+    ubzoneProbes = {};
+    for (const [key, path] of Object.entries(data.probes || {})) {
+        if (/^[\w.-]+\/[\w.-]+@[0-9a-f]{40}$/.test(key) && safePath(path)) ubzoneProbes[key] = path;
+    }
+    const out = data.games
         .filter(g => g && isUbzoneZone(g.id) && g.name && (safePath(g.path) || safeLink(g.link)) && (!g.cover || safePath(g.cover)))
         .map(g => toUbzoneZone(g, data.repo, data.ref));
+    ubzoneGameCount = out.length;
+    setTimeout(checkUbzoneFiles, 4000);
+    return out;
+}
+
+// Status light: can this network reach the UBZone game files? One small file
+// from the unblockedzone repo, through the same sources games use (jsDelivr,
+// GitHub, githack, then the jsDelivr backups). The GN Status page checks every
+// repo the games use; this is just a quick check from the player's network.
+async function checkUbzoneFiles() {
+    if (ubzoneFilesState === "checking" || typeof fetchFirst !== "function" || typeof mirrorUrls !== "function") return;
+    const key = Object.keys(ubzoneProbes).find(k => k.toLowerCase().startsWith("s0n-1m-cr1n3/sc13nc3@")) || Object.keys(ubzoneProbes)[0];
+    if (!key) return;
+    const [repo, sha] = key.split("@");
+    const [owner, name] = repo.split("/");
+    ubzoneFilesState = "checking";
+    try {
+        await fetchFirst(mirrorUrls(owner, name, sha, ubzoneProbes[key]), { timeoutMs: 10000, track: false, cache: "no-store", validate: async res => { await res.arrayBuffer(); return true; } });
+        ubzoneFilesState = "ok";
+    } catch (e) {
+        ubzoneFilesState = "down";
+        setTimeout(checkUbzoneFiles, 5 * 60 * 1000);   // try again later
+    }
+    if (typeof updateSiteStatus === "function") updateSiteStatus();
 }
 
 // Where a UBZone game's files really live: its page on unblockedzone plus every

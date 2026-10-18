@@ -43,6 +43,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - Every game file and every outside folder it loads (including compressed Unity code) was scanned before it was listed. Still left out: ad SDKs built into the game code, games that redirect to Yandex, developer site locks, repos that are deleted or private, games whose Unity files load more code from a branch at run time, a broken file, a missing file, and two kidnapping/abuse joke games.
 - The 3 Scratch games open on scratch.mit.edu in a new tab.
 - Each game lists its `sources`: the exact repos (and commits) its files come from. They're shown in the game's Info panel, on the takedown form when someone picks a UBZone game, and on the request in Admin Panel → Takedowns, so rights holders can also go to the original repos or file a DMCA notice with GitHub.
+- `probes` lists one small file in every repo (at its pinned commit). The status light checks the unblockedzone one from the player's network; the GN Status page ([SCHSwork/Homework-](https://github.com/SCHSwork/Homework-)) checks all of them every minute in the browser and every 10 minutes from its server monitor. When you change `ref` or `pins`, update `probes` to match.
 - To add more later, scan the new files the same way and only point `ref` or `pins` at commits you've checked.
 
 **Reliable**
