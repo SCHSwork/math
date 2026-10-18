@@ -3,6 +3,17 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 18, 2026 — 5 new site styles
+
+### New
+- **Five more site styles** in **Settings → Look → Site style** (12 in all), each changing fonts, buttons, cards and the header:
+  - **Chalkboard**: chalk handwriting on a green classroom board with a wooden frame.
+  - **Blueprint**: white lines on blue drafting paper with a grid; cards light up in yellow when you point at them.
+  - **Aero**: glossy 2000s sky with shiny bubble buttons.
+  - **Neon sign**: glowing pink and cyan tubes on a dark brick wall, with a script logo that flickers on (it stays still with Reduce motion).
+  - **Handheld**: a 4-shade green handheld game screen; game covers turn green until you point at them.
+- Chalkboard and Neon sign use two fonts that come with the site (Gochi Hand and Yellowtail, both free licenses), so they look the same on Chromebooks and phones and can't be blocked by school filters.
+
 ## October 18, 2026 — Readable search text
 
 ### Fixed

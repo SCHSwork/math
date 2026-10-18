@@ -12,7 +12,12 @@ const SITE_SKINS = {
     bold:     { label: "Bold",           note: "Thick black outlines and bright blocks" },
     paper:    { label: "Notebook",       note: "Lined paper, sticky notes and photos" },
     pixel:    { label: "Pixel",          note: "Chunky 8-bit game style" },
-    comic:    { label: "Comic book",     note: "Halftone dots and speech bubbles" }
+    comic:    { label: "Comic book",     note: "Halftone dots and speech bubbles" },
+    chalk:    { label: "Chalkboard",     note: "Chalk writing on a green classroom board" },
+    blueprint:{ label: "Blueprint",      note: "White lines on blue drafting paper" },
+    aero:     { label: "Aero",           note: "Glossy 2000s sky and bubble buttons" },
+    neon:     { label: "Neon sign",      note: "Glowing tubes on a dark brick wall" },
+    lcd:      { label: "Handheld",       note: "A 4-shade green handheld game screen" }
 };
 const SKIN_KEY = "gnmath-site-skin";
 function getSiteSkin() {
