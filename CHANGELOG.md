@@ -3,6 +3,11 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 18, 2026 — Readable search text
+
+### Fixed
+- Typed text in the search box was nearly invisible with the **Glass** site style (dark see-through text on a see-through box) and invisible with **Notebook** (white on white) while typing. Both now keep readable text in every color, mode and scene. Checked across all 328 style, theme and mode combinations.
+
 ## October 18, 2026 — Ro16
 
 - **Ro16 [DEMO]** added to UBZone games (91 now). It's a big game (about 300 MB) that needs browser features the normal player can't give it, so it opens in its own tab. The first load takes a while; after that the browser keeps a copy.

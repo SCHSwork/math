@@ -2900,6 +2900,8 @@ body.st-paper:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #256
 body.st-paper:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { border-radius: 12px 3px 10px 4px !important; font-family: inherit; }
 body.st-paper:not(#z) .section-title { text-decoration: underline wavy #ef4444 2px; text-underline-offset: 6px; }
 body.st-paper:not(#z) #searchBar { background: #fff !important; border-radius: 4px; }
+/* The box stays white when focused, so keep dark text (the default focus style turns it white) */
+body.st-paper:not(#z) #searchBar, body.st-paper:not(#z) #searchBar:focus { color: var(--text) !important; caret-color: var(--text); }
 
 /* ── Pixel: chunky 8-bit look ── */
 body.st-pixel:not(#z) {
@@ -2963,6 +2965,10 @@ body.st-glass:not(#z) :is(.popup, .status-panel) { background: color-mix(in srgb
 body.st-glass:not(#z) :is(.settings-button, #gotd .gotd-play) { border-radius: 999px !important; box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.35) !important; }
 body.st-glass:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: rgba(255,255,255,.14) !important; border: 1px solid rgba(255,255,255,.25) !important; border-radius: 999px !important; }
 body.st-glass:not(#z) #searchBar { background: rgba(255,255,255,.16) !important; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; }
+/* Glass keeps its see-through box when focused, so the text keeps the normal text color
+   (the default focus style swaps to a translucent --glass color, unreadable here) */
+body.st-glass:not(#z) #searchBar, body.st-glass:not(#z) #searchBar:focus { color: var(--text) !important; caret-color: var(--text); }
+body.st-glass:not(#z) #searchBar::placeholder { color: color-mix(in srgb, var(--text) 72%, transparent); }
 
 /* Style picker in Settings */
 .skin-picks { display: grid; grid-template-columns: repeat(4, 1fr); gap: .45rem; }
