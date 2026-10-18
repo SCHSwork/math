@@ -27,15 +27,38 @@ function isUbzoneGhUrl(url) {
     return !!g && (g.owner + "/" + g.repo).toLowerCase() === "s0n-1m-cr1n3/sc13nc3";
 }
 
-// Game files point at their own site with "@latest" (or no version) and at
-// quantil.jsdelivr.net. Point them at the checked version instead, on the main
-// jsDelivr address so the usual backups (fastly, gcore, githack) still work.
+// Other repos some games load their files from, each pinned to the commit that
+// was scanned (the list's "pins"). Links that already name an exact commit are
+// left alone; they were scanned at that commit.
+let ubzonePins = {};
+// Tracker and ad tags some game pages carry. GN 2.0 has no trackers, so these
+// are removed before the page runs. The games don't need them to play.
+const UBZONE_TRACKER_HOSTS = "(?:www\\.)?googletagmanager\\.com|(?:www\\.)?google-analytics\\.com|pagead2\\.googlesyndication\\.com|static\\.cloudflareinsights\\.com|hb-bluewizard\\.s3\\.us-east-2\\.amazonaws\\.com";
+const UBZONE_TRACKER_TAGS = new RegExp(`<(script|iframe)\\b[^>]*\\bsrc\\s*=\\s*["']https?://(?:${UBZONE_TRACKER_HOSTS})[^"']*["'][^>]*>\\s*</\\1>`, "gi");
+const UBZONE_TRACKER_INLINE = /<script\b(?![^>]*\bsrc=)[^>]*>(?:(?!<\/script>)[\s\S])*?(?:googletagmanager\.com\/gtm\.js|google-analytics\.com\/analytics\.js)(?:(?!<\/script>)[\s\S])*?<\/script>/gi;
+// Leftover gtag()/ga() calls in the games then just do nothing
+const UBZONE_TRACKER_STUB = "<script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){};window.ga=window.ga||function(){};</script>";
+
+function pinRepoLinks(html, repo, sha) {
+    const [o, r] = repo.split("/").map(s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    return html
+        // jsDelivr: gh/owner/repo/…, gh/owner/repo@main/…, @latest, @13 … (but not @<commit>)
+        .replace(new RegExp(`(https?://[a-z0-9-]*\\.?jsdelivr\\.net/gh/${o}/${r})(?:@(?![0-9a-f]{40}/)[^/\\s"'\`<>]+)?/`, "gi"), `https://cdn.jsdelivr.net/gh/${repo}@${sha}/`)
+        // GitHub / githack: owner/repo/<branch>/…
+        .replace(new RegExp(`https?://(?:raw\\.githubusercontent\\.com|rawcdn\\.githack\\.com|raw\\.githack\\.com)/${o}/${r}/(?![0-9a-f]{40}/)[^/\\s"'\`<>]+/`, "gi"), `https://cdn.jsdelivr.net/gh/${repo}@${sha}/`);
+}
+
+// Point a UBZone game page at the checked versions of everything it loads, on the
+// main jsDelivr address so the usual backups (fastly, gcore, githack) still work,
+// and take out tracker tags.
 function pinUbzoneRefs(html) {
     if (typeof html !== "string" || !ubzoneRef) return html;
-    return html
-        .replace(/https?:\/\/[a-z0-9-]*\.?jsdelivr\.net\/gh\/s0n-1m-cr1n3\/sc13nc3(?:@[^\/\s"'`<>]+)?\//gi,
-            `https://cdn.jsdelivr.net/gh/s0n-1m-cr1n3/sc13nc3@${ubzoneRef}/`)
-        .replace(/https?:\/\/(?:quantil|originfastly)\.jsdelivr\.net\//gi, "https://cdn.jsdelivr.net/");
+    html = pinRepoLinks(html, "s0n-1m-cr1n3/sc13nc3", ubzoneRef);
+    for (const [repo, sha] of Object.entries(ubzonePins)) html = pinRepoLinks(html, repo, sha);
+    html = html.replace(/https?:\/\/(?:quantil|originfastly)\.jsdelivr\.net\//gi, "https://cdn.jsdelivr.net/");
+    const cleaned = html.replace(UBZONE_TRACKER_TAGS, "").replace(UBZONE_TRACKER_INLINE, "");
+    if (cleaned === html) return html;
+    return /<head\b[^>]*>/i.test(cleaned) ? cleaned.replace(/<head\b[^>]*>/i, m => m + UBZONE_TRACKER_STUB) : UBZONE_TRACKER_STUB + cleaned;
 }
 
 function toUbzoneZone(g, repo, ref) {
@@ -65,6 +88,10 @@ async function loadUbzone() {
     // Only ever load the checked version: a full commit id, never a branch name
     if (!data || !/^[0-9a-f]{40}$/.test(data.ref || "") || !/^[\w.-]+\/[\w.-]+$/.test(data.repo || "") || !Array.isArray(data.games)) return [];
     ubzoneRef = data.ref;
+    ubzonePins = {};
+    for (const [repo, sha] of Object.entries(data.pins || {})) {
+        if (/^[\w.-]+\/[\w.-]+$/.test(repo) && /^[0-9a-f]{40}$/.test(sha)) ubzonePins[repo] = sha;
+    }
     const safePath = p => typeof p === "string" && /^[\w./-]+$/.test(p) && !p.includes("..");
     const safeLink = l => typeof l === "string" && /^https:\/\/scratch\.mit\.edu\/projects\/\d+\/fullscreen\/?$/.test(l);
     return data.games

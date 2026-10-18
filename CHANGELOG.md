@@ -3,6 +3,13 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 17, 2026 — 48 more UBZone games
+
+- **48 more UBZone games** (90 in all), including Bendy, Undertale, Subway Surfers, Minecraft P.E, Bloodmoney 2, Brotato, C.S. 1.6, GDWEB+, Wave Dash and 15 more FNF mods.
+- These load files from other repos too. Each of those repos is now pinned to the exact version that was scanned, so the games can't pick up later changes.
+- Game pages with Google Analytics or ad-bidding tags have them removed before the game runs.
+- 15 are still left out: ad code built into the game, Yandex redirects, developer site locks, deleted repos, Unity files that load more code from a branch, a broken file, a missing file and the two Epstein games.
+
 ## October 17, 2026 — UBZone games
 
 - **42 new games from unblockedzone**, including 13 Eaglercraft versions and clients, 10 FNF mods, Baldi's Creepy Run, Where's Baldi, Infinite Craft and 3 Scratch games. Choose **UBZone games** under Source to see just them.
