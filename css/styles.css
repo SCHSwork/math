@@ -2996,3 +2996,9 @@ body:not(#z) .theme-button.scene-pick.active { outline: 2px solid var(--primary)
 
 /* Takedown form footer links */
 .td-foot a, .submit-error a { color: inherit; text-decoration: underline; }
+
+/* UBZone games: where the files come from (info panel, takedown form) */
+.td-ubzone { border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.75rem; background: var(--bg-secondary); font-size: 13px; }
+.td-ubzone p { margin: 0 0 0.35rem; }
+.ubzone-sources { margin: 0.25rem 0 0.6rem; padding-left: 1.2rem; font-size: 13px; word-break: break-word; }
+.ubzone-sources li { margin: 0.15rem 0; }

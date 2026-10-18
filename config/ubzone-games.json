@@ -7,541 +7,890 @@
    "id": 300000,
    "name": "-3 Remastred (minus 3)",
    "path": "assets/html/main/minus3remastred.html",
-   "cover": "assets/img/main/minus3remastred.png"
+   "cover": "assets/img/main/minus3remastred.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/minus3remastred.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/minusthreev2"
+   ]
   },
   {
    "id": 300001,
    "name": "Baldi's Creepy Run",
    "path": "assets/html/main/baldicreepyrun.html",
-   "cover": "assets/img/main/baldicreepyrun.png"
+   "cover": "assets/img/main/baldicreepyrun.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/baldicreepyrun.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300002,
    "name": "Bendy Clicker",
    "path": "assets/html/main/bendyclicker.html",
-   "cover": "assets/img/main/bendyclicker.png"
+   "cover": "assets/img/main/bendyclicker.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/bendyclicker.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300003,
    "name": "CCM Client 1.5.2",
    "path": "assets/html/main/ccm152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/ccm152.html"
+   ]
   },
   {
    "id": 300004,
    "name": "CoderCraft Client 1.5.2",
    "path": "assets/html/main/codercraft152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/codercraft152.html"
+   ]
   },
   {
    "id": 300005,
    "name": "EaglerCraft 0.3.0 (WASM)",
    "path": "assets/html/main/wasm030.html",
-   "cover": "assets/img/main/030.png"
+   "cover": "assets/img/main/030.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wasm030.html"
+   ]
   },
   {
    "id": 300006,
    "name": "Eaglercraft 1.12 (WASM)",
    "path": "assets/html/main/wasm112.html",
-   "cover": "assets/img/main/112.png"
+   "cover": "assets/img/main/112.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wasm112.html"
+   ]
   },
   {
    "id": 300007,
    "name": "EaglerCraft 1.25 (JS)",
    "path": "assets/html/main/js125.html",
-   "cover": "assets/img/main/125.png"
+   "cover": "assets/img/main/125.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/js125.html"
+   ]
   },
   {
    "id": 300008,
    "name": "EaglerCraft 1.8.8 (JS)",
    "path": "assets/html/main/js18.html",
-   "cover": "assets/img/main/188.png"
+   "cover": "assets/img/main/188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/js18.html"
+   ]
   },
   {
    "id": 300009,
    "name": "EaglerCraft 1.8.8 (WASM)",
    "path": "assets/html/main/wasm18.html",
-   "cover": "assets/img/main/188.png"
+   "cover": "assets/img/main/188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wasm18.html"
+   ]
   },
   {
    "id": 300010,
    "name": "EaglerCraft Alpha 1.2.6",
    "path": "assets/html/main/alpha126.html",
-   "cover": "assets/img/main/126.png"
+   "cover": "assets/img/main/126.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/alpha126.html"
+   ]
   },
   {
    "id": 300011,
    "name": "EaglerCraft Beta 1.3_01 (JS)",
    "path": "assets/html/main/js13.html",
-   "cover": "assets/img/main/13.png"
+   "cover": "assets/img/main/13.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/js13.html"
+   ]
   },
   {
    "id": 300012,
    "name": "EaglerCraft Beta 1.7.3 (JS)",
    "path": "assets/html/main/js173.html",
-   "cover": "assets/img/main/173.png"
+   "cover": "assets/img/main/173.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/js173.html"
+   ]
   },
   {
    "id": 300013,
    "name": "Femboy Clicker",
    "path": "assets/html/main/femboyclicker.html",
-   "cover": "assets/img/main/femboyclicker.png"
+   "cover": "assets/img/main/femboyclicker.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/femboyclicker.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300014,
    "name": "FNAF (Scratch)",
    "link": "https://scratch.mit.edu/projects/1287361673/fullscreen/",
-   "cover": "assets/img/main/fnafscratch.png"
+   "cover": "assets/img/main/fnafscratch.png",
+   "sources": [
+    "https://scratch.mit.edu/projects/1287361673/"
+   ]
   },
   {
    "id": 300015,
    "name": "FNF vs Bside",
    "path": "assets/html/main/fnfbside.html",
-   "cover": "assets/img/main/fnfvsbside.png"
+   "cover": "assets/img/main/fnfvsbside.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfbside.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/bside"
+   ]
   },
   {
    "id": 300016,
    "name": "FNF vs Garcello",
    "path": "assets/html/main/fnfgarcello.html",
-   "cover": "assets/img/main/fnfvsgarcello.png"
+   "cover": "assets/img/main/fnfvsgarcello.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfgarcello.html",
+    "waycrosspublicmedia/maths@19a7910572966b9604b81bf6e9b85cacacc785ab/garcello"
+   ]
   },
   {
    "id": 300017,
    "name": "FNF vs Hex",
    "path": "assets/html/main/fnfhex.html",
-   "cover": "assets/img/main/fnfvshex.png"
+   "cover": "assets/img/main/fnfvshex.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfhex.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/hex"
+   ]
   },
   {
    "id": 300018,
    "name": "FNF vs Hit Single Real",
    "path": "assets/html/main/fnfhitsingle.html",
-   "cover": "assets/img/main/fnfvshitsingle.png"
+   "cover": "assets/img/main/fnfvshitsingle.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfhitsingle.html",
+    "waycrosspublicmedia/fnf@00d21c48bb912e5b6b3373ca21c793c135aae5d8/hits"
+   ]
   },
   {
    "id": 300019,
    "name": "FNF vs Mid Fight",
    "path": "assets/html/main/fnfmidfight.html",
-   "cover": "assets/img/main/fnfvsmidfight.png"
+   "cover": "assets/img/main/fnfvsmidfight.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfmidfight.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/sarventes"
+   ]
   },
   {
    "id": 300020,
    "name": "FNF vs Miku",
    "path": "assets/html/main/fnfmiku.html",
-   "cover": "assets/img/main/fnfvsmiku.png"
+   "cover": "assets/img/main/fnfvsmiku.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfmiku.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/miku"
+   ]
   },
   {
    "id": 300021,
    "name": "FNF vs Neo",
    "path": "assets/html/main/fnfneo.html",
-   "cover": "assets/img/main/fnfvsneo.png"
+   "cover": "assets/img/main/fnfvsneo.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfneo.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/neo"
+   ]
   },
   {
    "id": 300022,
    "name": "FNF vs Shaggy",
    "path": "assets/html/main/fnfshaggy.html",
-   "cover": "assets/img/main/fnfvsshaggy.png"
+   "cover": "assets/img/main/fnfvsshaggy.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfshaggy.html",
+    "mll-enh/die@fe0e5b08118dacdefc79f2b1427b283be80a9447/shaggy"
+   ]
   },
   {
    "id": 300023,
    "name": "FNF vs Sky",
    "path": "assets/html/main/fnfsky.html",
-   "cover": "assets/img/main/fnfvssky.png"
+   "cover": "assets/img/main/fnfvssky.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfsky.html",
+    "waycrosspublicmedia/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/sky"
+   ]
   },
   {
    "id": 300024,
    "name": "FNF vs Whitty",
    "path": "assets/html/main/fnfwhitty.html",
-   "cover": "assets/img/main/fnfvswhitty.png"
+   "cover": "assets/img/main/fnfvswhitty.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfwhitty.html",
+    "bubbls/fnf-mods@6b6680f79ab8c4e8349a920c2a240c5e7ee689ea/whitty"
+   ]
   },
   {
    "id": 300025,
    "name": "Fuchsiax Client 1.5.2",
    "path": "assets/html/main/fuchsiax152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fuchsiax152.html"
+   ]
   },
   {
    "id": 300026,
    "name": "Fuchsiax x Ghost Client 1.5.2",
    "path": "assets/html/main/fuchsiaxghost152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fuchsiaxghost152.html"
+   ]
   },
   {
    "id": 300027,
    "name": "Geometry Dash Subzero (Scratch)",
    "link": "https://scratch.mit.edu/projects/1288073971/fullscreen/",
-   "cover": "assets/img/main/geometrydashsubzeroscratch.png"
+   "cover": "assets/img/main/geometrydashsubzeroscratch.png",
+   "sources": [
+    "https://scratch.mit.edu/projects/1288073971/"
+   ]
   },
   {
    "id": 300028,
    "name": "Google Snake (Scratch)",
    "link": "https://scratch.mit.edu/projects/1283303860/fullscreen/",
-   "cover": "assets/img/main/googlesnake.png"
+   "cover": "assets/img/main/googlesnake.png",
+   "sources": [
+    "https://scratch.mit.edu/projects/1283303860/"
+   ]
   },
   {
    "id": 300029,
    "name": "Infinite Craft",
    "path": "assets/html/main/infinite.html",
-   "cover": "assets/img/main/infinitecraft.png"
+   "cover": "assets/img/main/infinitecraft.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/infinite.html"
+   ]
   },
   {
    "id": 300030,
    "name": "N0VA Client 1.5.2",
    "path": "assets/html/main/n0va152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/n0va152.html"
+   ]
   },
   {
    "id": 300031,
    "name": "Nebula Client 1.5.2",
    "path": "assets/html/main/nebula152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/nebula152.html"
+   ]
   },
   {
    "id": 300032,
    "name": "NIT Client 1.5.2",
    "path": "assets/html/main/nitclient152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/nitclient152.html"
+   ]
   },
   {
    "id": 300033,
    "name": "Odd Future Client 1.5.2",
    "path": "assets/html/main/oddfuture152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/oddfuture152.html"
+   ]
   },
   {
    "id": 300034,
    "name": "Pi Client 1.8.8",
    "path": "assets/html/main/pi18.html",
-   "cover": "assets/img/main/client188.png"
+   "cover": "assets/img/main/client188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/pi18.html"
+   ]
   },
   {
    "id": 300035,
    "name": "Pneumonoultramicroscopicsilicovolcanoconiosis",
    "path": "assets/html/main/Pneumonoultramicroscopicsilicovolcanoconiosis.html",
-   "cover": "assets/img/main/pneumonoultramicroscopicsilicovolcanoconiosis.png"
+   "cover": "assets/img/main/pneumonoultramicroscopicsilicovolcanoconiosis.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/Pneumonoultramicroscopicsilicovolcanoconiosis.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/pneumonoultramicroscopicsilicovolcanoconiosis"
+   ]
   },
   {
    "id": 300036,
    "name": "PreCCM Client 1.5.2",
    "path": "assets/html/main/preccm152.html",
-   "cover": "assets/img/main/client152.png"
+   "cover": "assets/img/main/client152.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/preccm152.html"
+   ]
   },
   {
    "id": 300037,
    "name": "Shadow Client 1.8.8",
    "path": "assets/html/main/shadow18.html",
-   "cover": "assets/img/main/client188.png"
+   "cover": "assets/img/main/client188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/shadow18.html"
+   ]
   },
   {
    "id": 300038,
    "name": "The Math is Leaking",
    "path": "assets/html/main/themathisleaking.html",
-   "cover": "assets/img/main/themathisleaking.png"
+   "cover": "assets/img/main/themathisleaking.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/themathisleaking.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/themathisleaking"
+   ]
   },
   {
    "id": 300039,
    "name": "three",
    "path": "assets/html/main/three.html",
-   "cover": "assets/img/main/three.png"
+   "cover": "assets/img/main/three.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/three.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/three"
+   ]
   },
   {
    "id": 300040,
    "name": "UwU Client 1.8.8",
    "path": "assets/html/main/uwu18.html",
-   "cover": "assets/img/main/client188.png"
+   "cover": "assets/img/main/client188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/uwu18.html"
+   ]
   },
   {
    "id": 300041,
    "name": "Where's Baldi",
    "path": "assets/html/main/wheresbaldi.html",
-   "cover": "assets/img/main/whereisbaldi.png"
+   "cover": "assets/img/main/whereisbaldi.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wheresbaldi.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300042,
    "name": "Antidisestablishmentarianism",
    "path": "assets/html/main/Antidisestablishmentarianism.html",
-   "cover": "assets/img/main/antidisestablishmentarianism.png"
+   "cover": "assets/img/main/antidisestablishmentarianism.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/Antidisestablishmentarianism.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/Antidisestablishmentarianism"
+   ]
   },
   {
    "id": 300043,
    "name": "Basketball Bros",
    "path": "assets/html/main/basketbros.html",
-   "cover": "assets/img/main/basketbros.png"
+   "cover": "assets/img/main/basketbros.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/basketbros.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/basketballbros",
+    "brodeliver/bb@218ccbe4ccc8e0ee39831d4754e709f0e39e4ac5/assets"
+   ]
   },
   {
    "id": 300044,
    "name": "Bendy",
    "path": "assets/html/main/bendy.html",
-   "cover": "assets/img/main/bendy.png"
+   "cover": "assets/img/main/bendy.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/bendy.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/bendy"
+   ]
   },
   {
    "id": 300045,
    "name": "Bhop",
    "path": "assets/html/main/bhop.html",
-   "cover": "assets/img/main/bhop.png"
+   "cover": "assets/img/main/bhop.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/bhop.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/bhop"
+   ]
   },
   {
    "id": 300046,
    "name": "Bloodmoney 2",
    "path": "assets/html/main/bloodmoney2.html",
-   "cover": "assets/img/main/bloodmoney2.png"
+   "cover": "assets/img/main/bloodmoney2.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/bloodmoney2.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/bloodmoney2"
+   ]
   },
   {
    "id": 300047,
    "name": "Brotato New Dawn",
    "path": "assets/html/main/brotatonewdawn.html",
-   "cover": "assets/img/main/brotatonewdawn.png"
+   "cover": "assets/img/main/brotatonewdawn.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/brotatonewdawn.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/brotato"
+   ]
   },
   {
    "id": 300048,
    "name": "Brotato Paws",
    "path": "assets/html/main/brotatopaws.html",
-   "cover": "assets/img/main/brotatopawsandclaws.png"
+   "cover": "assets/img/main/brotatopawsandclaws.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/brotatopaws.html",
+    "gzuidhof/coi-serviceworker@7b1d2a092d0d2dd2b7270b6f12f13605de26f214",
+    "shayderrr/newports@49e46a50c1dbf11f78c7c9ee2659218d534ace63"
+   ]
   },
   {
    "id": 300049,
    "name": "C.S. 1.6",
    "path": "assets/html/main/cs.html",
-   "cover": "assets/img/main/cs16.png"
+   "cover": "assets/img/main/cs16.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/cs.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300050,
    "name": "Caseoh Basic's",
    "path": "assets/html/main/caseohbasics.html",
-   "cover": "assets/img/main/caseohbasics.png"
+   "cover": "assets/img/main/caseohbasics.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/caseohbasics.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300051,
    "name": "Cat Burglar",
    "path": "assets/html/main/catburgular.html",
-   "cover": "assets/img/main/catburgular.png"
+   "cover": "assets/img/main/catburgular.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/catburgular.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/quiz",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/robcat"
+   ]
   },
   {
    "id": 300052,
    "name": "Cheese Champers 3D",
    "path": "assets/html/main/cheese.html",
-   "cover": "assets/img/main/cheesechompers.png"
+   "cover": "assets/img/main/cheesechompers.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/cheese.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/cheese"
+   ]
   },
   {
    "id": 300053,
    "name": "Chicken War",
    "path": "assets/html/main/chicken.html",
-   "cover": "assets/img/main/chickenwar.png"
+   "cover": "assets/img/main/chickenwar.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/chicken.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300054,
    "name": "Clash Royale",
    "path": "assets/html/main/clash.html",
-   "cover": "assets/img/main/clashroyale.png"
+   "cover": "assets/img/main/clashroyale.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/clash.html",
+    "ertemr33/vahvah@f28bb46d318addbf08b44c0dc40f377271d8d192"
+   ]
   },
   {
    "id": 300055,
    "name": "Crazy Cattle",
    "path": "assets/html/main/crazycattle.html",
-   "cover": "assets/img/main/crazycattle3d.png"
+   "cover": "assets/img/main/crazycattle3d.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/crazycattle.html",
+    "kuzresema/wwwwww@0a47d5b77724afa24e38bd71ed710c4b39a2f813"
+   ]
   },
   {
    "id": 300057,
    "name": "Dash.IO",
    "path": "assets/html/main/dashio.html",
-   "cover": "assets/img/main/dashio.png"
+   "cover": "assets/img/main/dashio.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/dashio.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5",
+    "netclassroom/5567799@83c34088fe846f5e879640da16902795beb64a28/Build"
+   ]
   },
   {
    "id": 300058,
    "name": "Drive in Russia",
    "path": "assets/html/main/russia.html",
-   "cover": "assets/img/main/driveinrussia.png"
+   "cover": "assets/img/main/driveinrussia.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/russia.html",
+    "karala-ar/vaydanam@45f2826ccf4a05e09426a428608143ea77047443",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300059,
    "name": "Flying Gorilla",
    "path": "assets/html/main/flyinggorilla.html",
-   "cover": "assets/img/main/flyinggorilla.png"
+   "cover": "assets/img/main/flyinggorilla.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/flyinggorilla.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/gorilla"
+   ]
   },
   {
    "id": 300060,
    "name": "FNAE Last Breath",
    "path": "assets/html/main/fnaelastbreath.html",
-   "cover": "assets/img/main/fivenightsatTHEBIGElastbreath.png"
+   "cover": "assets/img/main/fivenightsatTHEBIGElastbreath.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnaelastbreath.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/lastbreath"
+   ]
   },
   {
    "id": 300061,
    "name": "FNF vs BFDI26",
    "path": "assets/html/main/fnfbfdi26.html",
-   "cover": "assets/img/main/fnfvsbfdi26.png"
+   "cover": "assets/img/main/fnfvsbfdi26.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfbfdi26.html",
+    "waycrosspublicmedia/waycrosspublicmedia.github.io@155005f1bd737dab1ff21649e33d0d74b7d3a02d/bdfi26"
+   ]
   },
   {
    "id": 300062,
    "name": "FNF vs Indie Cross",
    "path": "assets/html/main/fnfindiecross.html",
-   "cover": "assets/img/main/fnfvsindiecross.png"
+   "cover": "assets/img/main/fnfvsindiecross.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfindiecross.html",
+    "waycrosspublicmedia/fnfmods@8679c0fe47a99f5657f04958fd06c5abdaa4a6b9/indie"
+   ]
   },
   {
    "id": 300063,
    "name": "FNF vs Kapi",
    "path": "assets/html/main/fnfkapi.html",
-   "cover": "assets/img/main/fnfvskapi.png"
+   "cover": "assets/img/main/fnfvskapi.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfkapi.html",
+    "mll-enh/die@fe0e5b08118dacdefc79f2b1427b283be80a9447/kapi"
+   ]
   },
   {
    "id": 300064,
    "name": "FNF vs Lullaby",
    "path": "assets/html/main/fnflullaby.html",
-   "cover": "assets/img/main/fnfvslullaby.png"
+   "cover": "assets/img/main/fnfvslullaby.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnflullaby.html",
+    "bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/hypno-v2"
+   ]
   },
   {
    "id": 300065,
    "name": "FNF vs Mario",
    "path": "assets/html/main/fnfmario.html",
-   "cover": "assets/img/main/fnfvsmariomadness.png"
+   "cover": "assets/img/main/fnfvsmariomadness.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfmario.html",
+    "mll-enh/diesmosfilehost@8679c0fe47a99f5657f04958fd06c5abdaa4a6b9/MM"
+   ]
   },
   {
    "id": 300066,
    "name": "FNF vs Ourple",
    "path": "assets/html/main/fnfourple.html",
-   "cover": "assets/img/main/fnfvsourpleguy.png"
+   "cover": "assets/img/main/fnfvsourpleguy.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfourple.html",
+    "bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/ourple-guy-v2"
+   ]
   },
   {
    "id": 300067,
    "name": "FNF vs Pibby",
    "path": "assets/html/main/fnfpibby.html",
-   "cover": "assets/img/main/fnfvspibby.png"
+   "cover": "assets/img/main/fnfvspibby.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfpibby.html",
+    "waycrosspublicmedia/maths@19a7910572966b9604b81bf6e9b85cacacc785ab/pibby2"
+   ]
   },
   {
    "id": 300068,
    "name": "FNF vs QT",
    "path": "assets/html/main/fnfqt.html",
-   "cover": "assets/img/main/fnfvsqt.png"
+   "cover": "assets/img/main/fnfvsqt.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfqt.html",
+    "waycrosspublicmedia/fnf@3d3a75f09cc25b4591d679ff89e6a4d71c619714/qt"
+   ]
   },
   {
    "id": 300069,
    "name": "FNF vs Soft",
    "path": "assets/html/main/fnfsoft.html",
-   "cover": "assets/img/main/fnfvssoft.png"
+   "cover": "assets/img/main/fnfvssoft.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfsoft.html",
+    "mll-enh/die@fe0e5b08118dacdefc79f2b1427b283be80a9447/soft"
+   ]
   },
   {
    "id": 300070,
    "name": "FNF vs Sonic.exe",
    "path": "assets/html/main/fnfsonicexe.html",
-   "cover": "assets/img/main/fnfvssonicexe.png"
+   "cover": "assets/img/main/fnfvssonicexe.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnfsonicexe.html",
+    "bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/sonic-exe-4"
+   ]
   },
   {
    "id": 300071,
    "name": "FNF vs Tails",
    "path": "assets/html/main/fnftails.html",
-   "cover": "assets/img/main/fnfvstailsgetstrolled4.png"
+   "cover": "assets/img/main/fnfvstailsgetstrolled4.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnftails.html",
+    "bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/tails-gets-trolledv2"
+   ]
   },
   {
    "id": 300072,
    "name": "FNF vs Tricky",
    "path": "assets/html/main/fnftricky.html",
-   "cover": "assets/img/main/fnfvstricky.png"
+   "cover": "assets/img/main/fnfvstricky.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/fnftricky.html",
+    "mll-enh/die@fe0e5b08118dacdefc79f2b1427b283be80a9447/tricky"
+   ]
   },
   {
    "id": 300073,
    "name": "Fragzone",
    "path": "assets/html/main/frag.html",
-   "cover": "assets/img/main/frageb.png"
+   "cover": "assets/img/main/frageb.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/frag.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5",
+    "testamalame/xh677z@bf714c1f5de9bf137a266174ae19861a6fa62abc"
+   ]
   },
   {
    "id": 300074,
    "name": "GDWEB+ (Stable)",
    "path": "assets/html/main/gdweb.html",
-   "cover": "assets/img/main/gdwebplus.png"
+   "cover": "assets/img/main/gdwebplus.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/gdweb.html",
+    "ihavenoidea212/geometry-dash@57e2fe958baa9dd1136a9412d81536ef9b0a3450"
+   ]
   },
   {
    "id": 300075,
    "name": "GTA Mods",
    "path": "assets/html/main/gtamods.html",
-   "cover": "assets/img/main/gtamods.png"
+   "cover": "assets/img/main/gtamods.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/gtamods.html",
+    "centerclassroom/mc55@15956d6b7577dd52ca7a454d562eda475d381453",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300076,
    "name": "Indian Truck Driving",
    "path": "assets/html/main/indiantruckdriving.html",
-   "cover": "assets/img/main/indiantruckdriving.png"
+   "cover": "assets/img/main/indiantruckdriving.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/indiantruckdriving.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/truck/TemplateData",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/truck/Build"
+   ]
   },
   {
    "id": 300078,
    "name": "Lobotomy Dash",
    "path": "assets/html/main/lobotomy.html",
-   "cover": "assets/img/main/lobtomoydash.png"
+   "cover": "assets/img/main/lobtomoydash.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/lobotomy.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/platformer"
+   ]
   },
   {
    "id": 300079,
    "name": "Minecraft P.E",
    "path": "assets/html/main/pocketediton.html",
-   "cover": "assets/img/main/minecraftpocketedition.png"
+   "cover": "assets/img/main/minecraftpocketedition.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/pocketediton.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/mcpe"
+   ]
   },
   {
    "id": 300080,
    "name": "Nitro Clash",
    "path": "assets/html/main/nitroclash.html",
-   "cover": "assets/img/main/nitroclash.png"
+   "cover": "assets/img/main/nitroclash.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/nitroclash.html",
+    "ftbaldana/77uu77@eb4cbb7652e577e198ca40ff5a488b8a7c6c7442"
+   ]
   },
   {
    "id": 300081,
    "name": "One Piece Fighting",
    "path": "assets/html/main/onepiece.html",
-   "cover": "assets/img/main/onepiece.png"
+   "cover": "assets/img/main/onepiece.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/onepiece.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300082,
    "name": "Snowball.IO",
    "path": "assets/html/main/snowballio.html",
-   "cover": "assets/img/main/snowballio.png"
+   "cover": "assets/img/main/snowballio.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/snowballio.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300083,
    "name": "Soccer Bros",
    "path": "assets/html/main/soccerbros.html",
-   "cover": "assets/img/main/soccerbros.png"
+   "cover": "assets/img/main/soccerbros.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/soccerbros.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/soccerbros"
+   ]
   },
   {
    "id": 300084,
    "name": "Sprinter",
    "path": "assets/html/main/sprinter.html",
-   "cover": "assets/img/main/sprinter.png"
+   "cover": "assets/img/main/sprinter.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/sprinter.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/quiz",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/sprint"
+   ]
   },
   {
    "id": 300085,
    "name": "Subway Surfers",
    "path": "assets/html/main/subway.html",
-   "cover": "assets/img/main/subwaysurfers.png"
+   "cover": "assets/img/main/subwaysurfers.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/subway.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/subway2"
+   ]
   },
   {
    "id": 300086,
    "name": "The Ultimate Baldi's Basic's Decompile",
    "path": "assets/html/main/baldisdecompile.html",
-   "cover": "assets/img/main/baldisbasicsdecompile.png"
+   "cover": "assets/img/main/baldisbasicsdecompile.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/baldisdecompile.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/ultimate"
+   ]
   },
   {
    "id": 300087,
    "name": "Tung Tung Sahur Obby",
    "path": "assets/html/main/tripletobby.html",
-   "cover": "assets/img/main/tripletobby.png"
+   "cover": "assets/img/main/tripletobby.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/tripletobby.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/obby"
+   ]
   },
   {
    "id": 300088,
    "name": "Undertale",
    "path": "assets/html/main/undertale.html",
-   "cover": "assets/img/main/undertale.png"
+   "cover": "assets/img/main/undertale.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/undertale.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/tale"
+   ]
   },
   {
    "id": 300089,
    "name": "Unfair Mario",
    "path": "assets/html/main/unfairmario.html",
-   "cover": "assets/img/main/unfairmario.png"
+   "cover": "assets/img/main/unfairmario.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/unfairmario.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/quiz",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/unfairmario"
+   ]
   },
   {
    "id": 300090,
    "name": "Wave Dash",
    "path": "assets/html/main/gdwave.html",
-   "cover": "assets/img/main/wavedash.png"
+   "cover": "assets/img/main/wavedash.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/gdwave.html",
+    "okyesgoogl/why@a48567576e34d715155acbf7c4769c2885092c84",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5"
+   ]
   },
   {
    "id": 300091,
    "name": "Wave Road 3D",
    "path": "assets/html/main/gdwave3d.html",
-   "cover": "assets/img/main/waveroad3d.png"
+   "cover": "assets/img/main/waveroad3d.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/gdwave3d.html",
+    "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5",
+    "emrsdahclassroom/dashdas@04d9e3d3f1573a1a229d75ac8a8845d35a4538e2/Build",
+    "emrsdahclassroom/dashdas@04d9e3d3f1573a1a229d75ac8a8845d35a4538e2/js"
+   ]
   }
  ],
  "pins": {

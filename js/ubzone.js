@@ -70,7 +70,8 @@ function toUbzoneZone(g, repo, ref) {
         authorLink: UBZONE_SITE,
         url: g.path ? ghUrl(g.path) : g.link,
         cover: g.cover ? ghUrl(g.cover) : "",
-        special: [UBZONE_TAG, ...(g.link ? ["scratch"] : [])]
+        special: [UBZONE_TAG, ...(g.link ? ["scratch"] : [])],
+        sources: Array.isArray(g.sources) ? g.sources.filter(s => typeof s === "string").slice(0, 8) : []
     };
 }
 
@@ -99,6 +100,33 @@ async function loadUbzone() {
         .map(g => toUbzoneZone(g, data.repo, data.ref));
 }
 
+// Where a UBZone game's files really live: its page on unblockedzone plus every
+// repo it loads files from, each at the commit that was checked. Used by the
+// info panel, the takedown form and the admins' takedown list, so rights
+// holders can also go to the original repos.
+function ubzoneSourceLinks(zone) {
+    const out = [];
+    for (const s of (zone && zone.sources) || []) {
+        if (/^https:\/\/scratch\.mit\.edu\/projects\/\d+\/?$/.test(s)) { out.push({ url: s, label: "Scratch project " + s.match(/\d+/)[0] }); continue; }
+        const m = /^([\w.-]+)\/([\w.-]+)@([0-9a-f]{40})(?:\/([\w.\/-]*))?$/.exec(s);
+        if (!m) continue;
+        const [, owner, repo, sha, path] = m;
+        out.push({
+            url: `https://github.com/${owner}/${repo}/tree/${sha}${path ? "/" + path : ""}`,
+            label: `${owner}/${repo}${path ? "/" + path : ""}`,
+            repoUrl: `https://github.com/${owner}/${repo}`
+        });
+    }
+    return out;
+}
+// The same links as HTML (escaped), for popups
+function ubzoneSourceListHtml(zone) {
+    const esc = typeof escapeHtmlText === "function" ? escapeHtmlText : s => String(s ?? "");
+    const links = ubzoneSourceLinks(zone);
+    if (!links.length) return `<a href="${UBZONE_SITE}" target="_blank" rel="noopener">${UBZONE_SITE.replace("https://", "")}</a>`;
+    return `<ul class="ubzone-sources">${links.map(l => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>${l.repoUrl ? ` · <a href="${esc(l.repoUrl)}/issues" target="_blank" rel="noopener noreferrer">issues</a>` : ""}</li>`).join("")}</ul>`;
+}
+
 // Game info panel for a UBZone game
 function showUbzoneInfo(zone) {
     const body = document.getElementById("popupBody");
@@ -111,5 +139,7 @@ function showUbzoneInfo(zone) {
         ${scratch ? `<b>Plays on</b>: <a href="${esc(zone.url)}" target="_blank" rel="noopener">Scratch</a> (opens in a new tab)<br>` : ""}
         ${ubzoneRef && !scratch ? `<b>Version</b>: <code>${esc(ubzoneRef.slice(0, 7))}</code> (checked October 17, 2026)<br>` : ""}
         </p>
-        <p style="color:var(--text-muted);font-size:13px;">This game comes from the unblockedzone collection. Its files were checked for trackers, ads and hidden scripts before it was added, and it always loads that checked version. All credit goes to the game's creators.</p>`;
+        <p style="margin-bottom:0.25rem;"><b>Original files</b> (the version GN 2.0 loads):</p>
+        ${ubzoneSourceListHtml(zone)}
+        <p style="color:var(--text-muted);font-size:13px;">This game comes from the unblockedzone collection. Its files were checked for trackers, ads and hidden scripts before it was added, and it always loads that checked version. All credit goes to the game's creators. Own this game? <a href="#" onclick="openTakedownForm(zones.find(z => z.id === ${Number(zone.id)})); return false;">Send a takedown request</a>.</p>`;
 }

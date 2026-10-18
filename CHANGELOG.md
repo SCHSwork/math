@@ -3,6 +3,12 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 17, 2026 — Takedowns for UBZone games
+
+- **Takedown requests now link UBZone games back to their original repos.** When someone picks a UBZone game on the takedown form, it shows the GitHub repos the game's files come from, with a link to GitHub's DMCA form, so the owner can have the files themselves taken down too. Admins see the same links on the request in Admin Panel → Takedowns.
+- Each UBZone game's **Info** panel lists its original files and has a "Send a takedown request" link.
+- The DMCA page explains UBZone games and where their files are hosted.
+
 ## October 17, 2026 — 48 more UBZone games
 
 - **48 more UBZone games** (90 in all), including Bendy, Undertale, Subway Surfers, Minecraft P.E, Bloodmoney 2, Brotato, C.S. 1.6, GDWEB+, Wave Dash and 15 more FNF mods.

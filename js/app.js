@@ -3613,6 +3613,14 @@ function loadDMCA() {
                 <b>Partner games</b> (marked AD) aren't copied here at all; they're linked from html5games.com or Playgama and
                 play from their servers. To have one removed from this list, use the takedown request.
             </p>
+            <p>
+                <b>UBZone games</b> come from the unblockedzone collection
+                (<a href="https://github.com/s0n-1m-cr1n3/sc13nc3" target="_blank" rel="noopener">github.com/s0n-1m-cr1n3/sc13nc3</a>)
+                and the GitHub repos it uses. GN 2.0 doesn't host their files; it loads them from those repos.
+                Use the takedown request to have one removed from GN 2.0. The form, and each game's Info panel,
+                lists the exact repos its files come from, so you can contact them or send
+                <a href="https://github.com/contact/dmca" target="_blank" rel="noopener noreferrer">GitHub a DMCA notice</a> to have the files themselves taken down.
+            </p>
             <p style="font-size:13px;color:var(--text-muted);">
                 Game names, pictures and trademarks belong to their owners. GN 2.0 isn't affiliated with or endorsed by them.
                 See the <a href="#" onclick="loadTerms(); return false;">Terms</a>.

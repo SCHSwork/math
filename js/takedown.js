@@ -80,6 +80,7 @@ function openTakedownForm(zone = null) {
             ${field("Email for replies *", `<input id="td-email" type="email" maxlength="120" required placeholder="you@example.com">`, "Only the admins can see this. We'll use it only about this request.")}
             ${field("Company or studio", `<input id="td-org" maxlength="120" placeholder="Optional">`)}
             ${field("Game on this site *", `<input id="td-game" maxlength="80" list="td-game-list" required placeholder="Start typing the game's name" value="${zone ? escapeHtmlText(zone.name) : ""}"><datalist id="td-game-list"></datalist>`)}
+            <div id="td-ubzone" class="td-ubzone" hidden></div>
             ${field("Your original game *", `<input id="td-work" maxlength="300" required placeholder="Link to the official page, store page or website">`)}
             ${field("How can we confirm you own it? *", `<textarea id="td-proof" maxlength="500" rows="3" required placeholder="e.g. email from the domain on the official site, a link to your developer account, or the store page that lists you as the publisher"></textarea>`)}
             ${field("Anything else", `<textarea id="td-details" maxlength="1000" rows="2" placeholder="Optional"></textarea>`)}
@@ -96,6 +97,20 @@ function openTakedownForm(zone = null) {
         const hits = q.length < 2 || typeof zones === "undefined" ? [] : zones.filter(z => z.name.toLowerCase().includes(q)).slice(0, 15);
         list.innerHTML = hits.map(z => `<option value="${escapeHtmlText(z.name)}">`).join("");
     });
+    // UBZone games are copies of files in other people's GitHub repos: show
+    // those repos so the owner can go to the source too.
+    const ubBox = body.querySelector("#td-ubzone");
+    const showUbzoneSource = () => {
+        if (!ubBox) return;
+        const q = input.value.trim().toLowerCase();
+        const g = zone && zone.name.toLowerCase() === q ? zone : (typeof zones !== "undefined" ? zones.find(z => z.name.toLowerCase() === q) : null);
+        const isUb = g && typeof isUbzoneZone === "function" && isUbzoneZone(g);
+        ubBox.hidden = !isUb;
+        ubBox.innerHTML = isUb ? `<p><b>Where this copy comes from.</b> GN 2.0 loads this game from these GitHub repos (from the unblockedzone collection). Your request here removes it from GN 2.0; to have the files themselves taken down, contact those repos too or send GitHub a DMCA notice at <a href="https://github.com/contact/dmca" target="_blank" rel="noopener noreferrer">github.com/contact/dmca</a>.</p>${ubzoneSourceListHtml(g)}` : "";
+    };
+    input.addEventListener("input", showUbzoneSource);
+    input.addEventListener("change", showUbzoneSource);
+    showUbzoneSource();
     body.querySelector("#td-form").onsubmit = e => { e.preventDefault(); sendTakedown(zone); };
     document.getElementById("popupOverlay").style.display = "flex";
     setTimeout(() => body.querySelector("#td-name")?.focus(), 50);
@@ -226,6 +241,17 @@ function drawModTakedowns() {
         row.appendChild(work);
         const proof = el("p", ""); proof.append(el("b", "", "Proof: "), t.proof || ""); row.appendChild(proof);
         if (t.details) row.appendChild(el("p", "", t.details));
+        // UBZone games: link the repos the files really come from
+        if (z && typeof isUbzoneZone === "function" && isUbzoneZone(z)) {
+            const src = el("p", "");
+            src.append(el("b", "", "Files from: "));
+            ubzoneSourceLinks(z).forEach((l, i) => {
+                if (i) src.append(", ");
+                const a = el("a", "", l.label); a.href = l.url; a.target = "_blank"; a.rel = "noopener noreferrer"; src.appendChild(a);
+            });
+            src.append(" (UBZone game; tell the requester they can also contact these repos or GitHub)");
+            row.appendChild(src);
+        }
         if (t.uid) row.appendChild(el("small", "fb-ctx", "Sent while signed in to a GN 2.0 account."));
         const status = el("small", "submit-status", (TAKEDOWN_STATUS[t.status] || t.status) + (t.reviewedBy ? ` (by ${t.reviewedBy})` : ""));
         const note = el("input", "submit-note");
