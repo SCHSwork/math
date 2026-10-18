@@ -3,6 +3,10 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 18, 2026 — Frutiger Aero
+
+- The **Aero** site style is now a full **Frutiger Aero** look: a bright blue sky with clouds and a sun glare, rolling green hills, sweeping light streaks, bubbles slowly drifting up behind the page, frosted glass cards, and glossy green and aqua orb buttons. The bubbles stay still with Reduce motion and while a game is open.
+
 ## October 18, 2026 — 5 new site styles
 
 ### New
