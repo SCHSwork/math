@@ -3,6 +3,11 @@
 All the changes to GN 2.0, newest first.
 
 
+## October 18, 2026 — Ro16
+
+- **Ro16 [DEMO]** added to UBZone games (91 now). It's a big game (about 300 MB) that needs browser features the normal player can't give it, so it opens in its own tab. The first load takes a while; after that the browser keeps a copy.
+- Like the other UBZone games, it only loads the checked version of its files, and it can't send anything anywhere: every web request except its own game files is blocked.
+
 ## October 18, 2026 — UBZone games in the status light
 
 - The **status light** has a **UBZone games** row: whether their list loaded and whether their files can be reached from your network. It turns yellow if they can't.

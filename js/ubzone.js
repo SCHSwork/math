@@ -73,9 +73,14 @@ function toUbzoneZone(g, repo, ref) {
         name: g.name,
         author: "unblockedzone",
         authorLink: UBZONE_SITE,
-        url: g.path ? ghUrl(g.path) : g.link,
-        cover: g.cover ? ghUrl(g.cover) : "",
+        // path: a page in the unblockedzone repo (plays in the normal player)
+        // link: a Scratch project; play: a page of GN 2.0's own (play/<name>/) for games
+        // that need a full tab. Both open in a new tab.
+        url: g.path ? ghUrl(g.path) : g.play ? new URL(g.play, location.href).href : g.link,
+        // A cover is a path in the unblockedzone repo, or "owner/repo@commit/path" in another checked repo
+        cover: !g.cover ? "" : /@[0-9a-f]{40}\//.test(g.cover) ? "gh:" + g.cover : ghUrl(g.cover),
         special: [UBZONE_TAG, ...(g.link ? ["scratch"] : [])],
+        newTab: !!(g.play || g.link),
         sources: Array.isArray(g.sources) ? g.sources.filter(s => typeof s === "string").slice(0, 8) : []
     };
 }
@@ -102,12 +107,14 @@ async function loadUbzone() {
     }
     const safePath = p => typeof p === "string" && /^[\w./-]+$/.test(p) && !p.includes("..");
     const safeLink = l => typeof l === "string" && /^https:\/\/scratch\.mit\.edu\/projects\/\d+\/fullscreen\/?$/.test(l);
+    const safePlay = p => typeof p === "string" && /^play\/[\w-]+\/$/.test(p);
     ubzoneProbes = {};
     for (const [key, path] of Object.entries(data.probes || {})) {
         if (/^[\w.-]+\/[\w.-]+@[0-9a-f]{40}$/.test(key) && safePath(path)) ubzoneProbes[key] = path;
     }
     const out = data.games
-        .filter(g => g && isUbzoneZone(g.id) && g.name && (safePath(g.path) || safeLink(g.link)) && (!g.cover || safePath(g.cover)))
+        .filter(g => g && isUbzoneZone(g.id) && g.name && (safePath(g.path) || safeLink(g.link) || safePlay(g.play))
+            && (!g.cover || safePath(g.cover) || /^[\w.-]+\/[\w.-]+@[0-9a-f]{40}\/[\w./-]+$/.test(g.cover)))
         .map(g => toUbzoneZone(g, data.repo, data.ref));
     ubzoneGameCount = out.length;
     setTimeout(checkUbzoneFiles, 4000);
@@ -168,11 +175,13 @@ function showUbzoneInfo(zone) {
     document.getElementById("popupTitle").textContent = `${zone.name} Info`;
     const esc = typeof escapeHtmlText === "function" ? escapeHtmlText : s => String(s ?? "");
     const scratch = zone.url.startsWith("https://scratch.mit.edu/");
+    const ownPage = zone.newTab && !scratch;
     body.innerHTML = `
         <p>
         <b>From</b>: <a href="${UBZONE_SITE}" target="_blank" rel="noopener">unblockedzone</a><br>
         ${scratch ? `<b>Plays on</b>: <a href="${esc(zone.url)}" target="_blank" rel="noopener">Scratch</a> (opens in a new tab)<br>` : ""}
-        ${ubzoneRef && !scratch ? `<b>Version</b>: <code>${esc(ubzoneRef.slice(0, 7))}</code> (checked October 17, 2026)<br>` : ""}
+        ${ownPage ? `<b>Plays in</b>: its own tab, because it needs browser features the normal player can't give it<br>` : ""}
+        ${ubzoneRef && !zone.newTab ? `<b>Version</b>: <code>${esc(ubzoneRef.slice(0, 7))}</code> (checked October 17, 2026)<br>` : ""}
         </p>
         <p style="margin-bottom:0.25rem;"><b>Original files</b> (the version GN 2.0 loads):</p>
         ${ubzoneSourceListHtml(zone)}
