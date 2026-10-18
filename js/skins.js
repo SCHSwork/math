@@ -15,7 +15,7 @@ const SITE_SKINS = {
     comic:    { label: "Comic book",     note: "Halftone dots and speech bubbles" },
     chalk:    { label: "Chalkboard",     note: "Chalk writing on a green classroom board" },
     blueprint:{ label: "Blueprint",      note: "White lines on blue drafting paper" },
-    aero:     { label: "Aero",           note: "Glossy 2000s sky and bubble buttons" },
+    aero:     { label: "Frutiger Aero",  note: "Blue sky, green hills, bubbles and glossy glass" },
     neon:     { label: "Neon sign",      note: "Glowing tubes on a dark brick wall" },
     lcd:      { label: "Handheld",       note: "A 4-shade green handheld game screen" }
 };
