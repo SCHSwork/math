@@ -54,6 +54,20 @@ function collectStatusChecks() {
         detail: og === "failed" ? "Couldn't load the GN Originals list." : og === "cache" ? "Using the list saved on this device." : og === "loading" ? "Loading…" : "Working"
     });
 
+    // UBZone games (ubzone.js): their list, and whether their files can be reached
+    if (typeof ubzoneState !== "undefined") {
+        const st = ubzoneState, files = typeof ubzoneFilesState !== "undefined" ? ubzoneFilesState : "unchecked";
+        const n = typeof ubzoneGameCount === "number" && ubzoneGameCount ? `${ubzoneGameCount} games` : "";
+        let row;
+        if (st === "failed") row = { level: "degraded", detail: "Couldn't load the UBZone games list." };
+        else if (st === "loading") row = { level: "loading", detail: "Loading…" };
+        else if (files === "down") row = { level: "degraded", detail: "Can't reach the UBZone game files from this network, so those games may not load." };
+        else if (st === "cache") row = { level: "degraded", detail: `Using the list saved on this device${n ? ` (${n})` : ""}.` };
+        else if (files === "ok") row = { level: "ok", detail: `${n ? n + ", " : ""}files reachable, locked to the checked versions` };
+        else row = { level: "ok", detail: n ? `${n}, checking their files…` : "Working" };
+        checks.push({ name: "UBZone games", ...row });
+    }
+
     // Accounts and cloud saves (Firebase)
     const cloudFail = typeof cloudStatus === "string" && /couldn't load/i.test(cloudStatus);
     const cloudOk = typeof cloudDb !== "undefined" && cloudDb;
@@ -79,7 +93,9 @@ function collectStatusChecks() {
         checks.push({ name: "Database use", ...fbPaceSummary() });
     }
 
-    checks.push({ name: "Game protection", level: "ok", detail: "Library locked to the checked, clean version" });
+    checks.push({ name: "Game protection", level: "ok", detail: typeof ubzoneState !== "undefined" && ubzoneState !== "failed"
+        ? "Library and UBZone games locked to their checked, clean versions"
+        : "Library locked to the checked, clean version" });
     return checks;
 }
 
