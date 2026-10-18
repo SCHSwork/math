@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ro16 [DEMO]</title>
+<!--
+  Ro16 (Web '16, formerly WebBlox) — a UBZone game (see js/ubzone.js, config/ubzone-games.json).
+  Credit: the Web '16 dev team (98Corbins, q8j, bread, chill. dude and others). Files ported to
+  github.com/matheveryday25/math by UNBLOCKEDZONE.
+
+  Why this page exists instead of the normal game player:
+  - The game uses threads, which need the page to be "cross-origin isolated". GitHub Pages can't
+    send those headers, so coi-serviceworker.js (MIT, gzuidhof/coi-serviceworker) adds them. A
+    service worker only works on the site's own address, and only for a full tab, so this opens
+    in its own tab instead of inside the player.
+  - Browsers won't start threads from a file on another site, so rblx.js is downloaded and run
+    from a blob: address here.
+  - Every file comes from the exact checked commit below, never from @main/@latest.
+  - The engine still contains the original game's analytics addresses, so all web requests except
+    the game's own files are blocked, in the page and in every thread.
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; color: #fff; font-family: Arial, sans-serif; }
+  canvas#canvas { display: block; width: 100vw; height: 100vh; }
+  #loading { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; z-index: 9999; padding: 16px; text-align: center; }
+  #logo { width: min(400px, 80vw); }
+  #loading-text { font-size: 22px; }
+  #loading-note { font-size: 14px; color: #aaa; max-width: 520px; line-height: 1.4; }
+  #loading-note a { color: #8cf; }
+</style>
+</head>
+<body>
+<div id="loading">
+  <img id="logo" alt="" crossorigin="anonymous">
+  <div id="loading-text">Starting…</div>
+  <div id="loading-note">A big game (about 300 MB). The first load can take a few minutes; after that your browser keeps a copy.</div>
+</div>
+<canvas id="canvas" oncontextmenu="return false"></canvas>
+<script>
+(async function () {
+  const REPO = "matheveryday25/math";
+  const SHA = "d499da713cdc25bb556bf42921dc8dc80f241ef5";   // checked version, see config/ubzone-games.json
+  const DIR = "ro16/";
+  // The same sources GN 2.0 uses for games: jsDelivr, its backup addresses, then githack
+  const BASES = [
+    `https://cdn.jsdelivr.net/gh/${REPO}@${SHA}/${DIR}`,
+    `https://fastly.jsdelivr.net/gh/${REPO}@${SHA}/${DIR}`,
+    `https://gcore.jsdelivr.net/gh/${REPO}@${SHA}/${DIR}`,
+    `https://testingcf.jsdelivr.net/gh/${REPO}@${SHA}/${DIR}`,
+    `https://rawcdn.githack.com/${REPO}/${SHA}/${DIR}`
+  ];
+  const CHUNK_COUNT = 18, WASM_PARTS = 2;
+  const text = document.getElementById("loading-text");
+  const note = document.getElementById("loading-note");
+  const fail = (msg, html) => { text.textContent = msg; if (html) note.innerHTML = html; };
+  window.addEventListener("error", e => console.error("[ro16]", e.message));
+
+  // ── 1. Cross-origin isolation (needed for threads) ───────────────────────
+  if (!window.crossOriginIsolated) {
+    if (!window.isSecureContext || !navigator.serviceWorker) {
+      return fail("This game can't run here.", "It needs a browser feature that's turned off (private/incognito windows often block it). Try a normal Chrome or Edge window.");
+    }
+    const tries = Number(sessionStorage.getItem("ro16-coi-tries") || 0);
+    if (tries >= 2) {
+      sessionStorage.removeItem("ro16-coi-tries");
+      return fail("This game can't run in this browser.", "It needs cross-origin isolation, which this browser or network didn't allow. Try Chrome or Edge, not in a private window.");
+    }
+    try {
+      text.textContent = "Getting ready…";
+      const swUrl = new URL("coi-serviceworker.js", location.href).href;
+      await navigator.serviceWorker.register(swUrl);
+      const reg = await navigator.serviceWorker.ready;
+      sessionStorage.setItem("ro16-coi-tries", String(tries + 1));
+      // Reload so the page comes through the service worker with the right headers
+      if (reg.active) location.reload();
+      else navigator.serviceWorker.addEventListener("controllerchange", () => location.reload());
+    } catch (e) {
+      fail("This game can't run here.", "Its helper couldn't start (" + (e && e.message || e) + "). Try a normal Chrome or Edge window.");
+    }
+    return;
+  }
+  sessionStorage.removeItem("ro16-coi-tries");
+
+  // ── 2. Only the game's own files may be loaded ───────────────────────────
+  // Runs here and, through the blob below, in every thread the game starts.
+  const SHIM = `(function(){var A=${JSON.stringify(BASES)};
+    function ok(u){try{u=String(u&&u.url||u);if(/^(blob|data):/.test(u))return true;var x=new URL(u,self.location.href);
+      if(x.origin===self.location.origin)return true;for(var i=0;i<A.length;i++)if(x.href.indexOf(A[i])===0)return true;}catch(e){}
+      u=String(u&&u.url||u);(self.__ro16Blocked=self.__ro16Blocked||[]).push(u);try{console.warn("[ro16] blocked a request to "+u.slice(0,120));}catch(e){}return false;}
+    var F=self.fetch;if(F)self.fetch=function(r,i){return ok(r)?F.call(this,r,i):Promise.reject(new TypeError("blocked by GN 2.0"));};
+    var X=self.XMLHttpRequest;if(X){var o=X.prototype.open;X.prototype.open=function(m,u){if(!ok(u))u="data:,";return o.apply(this,[m,u].concat([].slice.call(arguments,2)));};}
+    var W=self.WebSocket;if(W){self.WebSocket=function(u,p){if(!ok(u))throw new DOMException("blocked by GN 2.0","SecurityError");return p?new W(u,p):new W(u);};self.WebSocket.prototype=W.prototype;}
+    if(self.navigator&&navigator.sendBeacon)navigator.sendBeacon=function(){return false;};
+  })();\n`;
+  (0, eval)(SHIM);
+
+  // ── 3. Download the game, trying each source in turn ─────────────────────
+  let base = 0;
+  async function get(name) {
+    let lastErr;
+    for (let i = 0; i < BASES.length; i++) {
+      const b = (base + i) % BASES.length;
+      try {
+        const r = await fetch(BASES[b] + name, { mode: "cors" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const buf = await r.arrayBuffer();
+        base = b;   // stick with a source that works
+        return buf;
+      } catch (e) { lastErr = e; }
+    }
+    throw new Error(name + ": " + (lastErr && lastErr.message || "failed"));
+  }
+  document.getElementById("logo").src = BASES[0] + "WebBlox.png";
+  const total = CHUNK_COUNT + WASM_PARTS;
+  let loaded = 0;
+  const tick = () => { loaded++; text.textContent = "Loading " + Math.round(loaded / total * 100) + "%"; };
+  const join = (parts, type) => {
+    const out = new Uint8Array(parts.reduce((s, p) => s + p.byteLength, 0));
+    let off = 0;
+    for (const p of parts) { out.set(new Uint8Array(p), off); off += p.byteLength; }
+    return URL.createObjectURL(new Blob([out], { type }));
+  };
+  // A few downloads at a time, so school wifi isn't flooded
+  async function all(names) {
+    const out = new Array(names.length);
+    let next = 0;
+    await Promise.all(Array.from({ length: 4 }, async () => {
+      while (next < names.length) { const i = next++; out[i] = await get(names[i]); tick(); }
+    }));
+    return out;
+  }
+  let dataUrl, wasmUrl, scriptText;
+  try {
+    text.textContent = "Loading 0%";
+    const [data, wasm, js] = await Promise.all([
+      all(Array.from({ length: CHUNK_COUNT }, (_, i) => "rblx.data." + i)),
+      all(Array.from({ length: WASM_PARTS }, (_, i) => "rblx.wasm." + i)),
+      get("rblx.js")
+    ]);
+    dataUrl = join(data, "application/octet-stream");
+    wasmUrl = join(wasm, "application/wasm");
+    scriptText = new TextDecoder().decode(js);
+  } catch (e) {
+    return fail("Couldn't download the game.", "Check your connection and reload. (" + e.message + ")");
+  }
+  text.textContent = "Starting the game…";
+
+  // ── 4. Start it ──────────────────────────────────────────────────────────
+  const origFetch = window.fetch;
+  window.fetch = function (resource, init) {
+    const url = typeof resource === "string" ? resource : (resource && resource.url) || "";
+    if (/rblx\.data(\?|$)/.test(url)) return origFetch(dataUrl, init);
+    if (/rblx\.wasm(\?|$)/.test(url)) return origFetch(wasmUrl, init);
+    return origFetch.call(this, resource, init);
+  };
+  const scriptBlob = new Blob([SHIM, scriptText], { type: "text/javascript" });
+  const loadingDiv = document.getElementById("loading");
+  window.Module = {
+    canvas: document.getElementById("canvas"),
+    mainScriptUrlOrBlob: scriptBlob,   // threads start from this same-origin copy
+    locateFile: path => /rblx\.(data|wasm)$/.test(path) ? path : BASES[base] + path,
+    print: () => {},
+    printErr: t => { if (/error|exception/i.test(t)) console.error("[rblx]", t); },
+    setStatus: t => { if (!t) loadingDiv.style.display = "none"; },
+    onRuntimeInitialized: () => { loadingDiv.style.display = "none"; }
+  };
+  const s = document.createElement("script");
+  s.src = URL.createObjectURL(scriptBlob);
+  s.onerror = () => fail("The game didn't start.", "Reload to try again.");
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>
