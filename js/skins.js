@@ -23,7 +23,11 @@ const SITE_SKINS = {
     candy:    { label: "Candy",          note: "Pastel sprinkles and squishy jelly buttons" },
     quest:    { label: "Fantasy quest",  note: "Parchment cards in gold frames on a stone wall" },
     web99:    { label: "Web 1999",       note: "An old-school starry homepage with a rainbow logo" },
-    sheet:    { label: "Spreadsheet",    note: "Looks like a work spreadsheet" }
+    sheet:    { label: "Spreadsheet",    note: "Looks like a work spreadsheet" },
+    minimal:  { label: "Minimalist",     note: "Clean and spacious, just covers and names (uses your color theme and light/dark mode)" },
+    semiflat: { label: "Semi-Flat",      note: "Friendly flat colors and soft shadows (uses your color theme and light/dark mode)" },
+    neu:      { label: "Neumorphism",    note: "Soft buttons and cards that look pressed out of the page" },
+    cyber:    { label: "Cyberpunk",      note: "Hazard yellow, hot pink and cyan with angled cuts" }
 };
 const SKIN_KEY = "gnmath-site-skin";
 function getSiteSkin() {

@@ -6,6 +6,17 @@ All the changes to GN 2.0, newest first.
 
 
 
+
+## October 19, 2026 — Minimalist, Semi-Flat, Neumorphism and Cyberpunk
+
+### New
+- **Four more site styles** (23 in all), in Settings → Look → Site style:
+  - **Minimalist**: lots of space and no boxes or shadows; games are just the cover and the name. Uses your color theme and follows light/dark mode.
+  - **Semi-Flat**: friendly flat colors in your theme color with soft shadows and rounded cards. Follows light/dark mode.
+  - **Neumorphism**: soft gray buttons and cards that look pressed out of the page, and press in when tapped.
+  - **Cyberpunk**: hazard yellow, hot pink and cyan on black, with angled cuts, hazard stripes under the header and a logo glitch when you point at it (off with Reduce motion).
+- Glassmorphism and Neo-Brutalism are already here as **Glass** and **Bold**.
+
 ## October 18, 2026 — 5 more site styles
 
 ### New
