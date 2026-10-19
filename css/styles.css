@@ -3261,3 +3261,86 @@ body.st-aero:not(#z) footer { box-shadow: 0 -4px 18px rgba(0,40,20,.25); }
 /* Full-look styles hide the scene, so their footer uses their own colors (not a scene's footer bar) */
 :is(body.st-paper, body.st-comic, body.st-pixel, body.st-bold):not(#z) footer { background: var(--bg-secondary) !important; border-top: 2px solid var(--border); }
 body.st-comic:not(#z) footer { border-top: 3px solid #111; }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Dock: a slim colored top bar with a pixel logo, a dark desktop, and a dock
+   of section buttons along the bottom with a clock (js/skins.js builds it).
+   ═════════════════════════════════════════════════════════════════════════ */
+@font-face { font-family: "GN Pixel"; src: url("../assets/fonts/silkscreen.woff2") format("woff2"); font-display: swap; }
+body.st-dock:not(#z) #scene { display: none !important; }
+body.st-dock:not(#z) {
+    --primary: #ef5a73; --primary-hover: #f47c90; --primary-light: rgba(239,90,115,.16); --primary-lighter: rgba(239,90,115,.08);
+    --text: #e8ebf2; --text-muted: #a3acbd; --text-light: #8a94a8; --accent-text: #f58ea0;
+    --bg: #121722; --bg-secondary: #1a2130; --surface: #1c2433; --surface-hover: #232d40; --border: #2b3549; --border-light: #232c3e;
+    --glass: #1a2130; --gradient-surface: #1c2433; --gradient-primary: linear-gradient(90deg, #e94a66, #ef5f78);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.3); --shadow: 0 6px 18px rgba(0,0,0,.35); --shadow-lg: 0 10px 28px rgba(0,0,0,.4); --shadow-xl: 0 14px 36px rgba(0,0,0,.45);
+    --radius: 12px; --radius-sm: 9px; --radius-lg: 14px; --radius-xl: 18px;
+    --dock-h: 78px;
+    /* faint cube outlines scattered over a dark desktop */
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='420'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='2' stroke-linejoin='round'%3E%3Cg transform='translate(70 60) rotate(-12)'%3E%3Cpath d='M0 14 L24 0 L48 14 L24 28 Z M0 14 V42 L24 56 V28 M48 14 V42 L24 56'/%3E%3C/g%3E%3Cg transform='translate(380 250) rotate(18)'%3E%3Cpath d='M0 14 L24 0 L48 14 L24 28 Z M0 14 V42 L24 56 V28 M48 14 V42 L24 56'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0 / 520px 420px,
+        radial-gradient(ellipse 60% 50% at 50% 0%, #1b2233, transparent 70%),
+        #121722 !important;
+    background-attachment: fixed !important; color: var(--text);
+    padding-bottom: calc(var(--dock-h) + 24px);
+}
+body.st-dock:not(#z) header { background: linear-gradient(90deg, #e94a66, #ef5f78) !important; box-shadow: 0 2px 14px rgba(0,0,0,.35) !important; backdrop-filter: none; }
+body.st-dock:not(#z) .logo { font-family: "GN Pixel", "Courier New", monospace; font-weight: 400; font-size: 1.7rem; letter-spacing: .02em; color: #fff; -webkit-text-fill-color: #fff; background: none; text-transform: lowercase; }
+/* The dock takes over the header buttons; only panic stays up top (it must always be one click away) */
+body.st-dock:not(#z) header .control-button:not(#panicButton) { display: none !important; }
+body.st-dock:not(#z) #panicButton { background: rgba(255,255,255,.14) !important; border: 1px solid rgba(255,255,255,.55) !important; border-radius: 10px !important; color: #fff !important; box-shadow: none !important; }
+body.st-dock:not(#z) #searchBar, body.st-dock:not(#z) #searchBar:focus { background: rgba(255,255,255,.95) !important; color: #1c2433 !important; border: 0 !important; caret-color: #e94a66; }
+body.st-dock:not(#z) #searchBar::placeholder { color: #5b6478; }
+body.st-dock:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(255,255,255,.45) !important; }
+body.st-dock:not(#z) header .filter-button { background: rgba(255,255,255,.14) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.5) !important; }
+body.st-dock:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #1c2433 !important; border: 1px solid #2b3549 !important; box-shadow: 0 4px 14px rgba(0,0,0,.3) !important; }
+body.st-dock:not(#z) :is(.popup, .status-panel, .toast) { background: #1a2130 !important; border: 1px solid #2b3549 !important; }
+body.st-dock:not(#z) .zone-item:hover { border-color: #ef5a73 !important; transform: translateY(-3px); }
+body.st-dock:not(#z) .zone-item button { color: #e8ebf2; }
+body.st-dock:not(#z) .section-title { color: #f2f4f8; }
+body.st-dock:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #ef5a73 !important; color: #fff !important; border: 0 !important; box-shadow: none !important; }
+body.st-dock:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button:not(header .filter-button), .control-button:not(header .control-button)) { background: #232d40 !important; color: #e8ebf2 !important; border: 1px solid #2b3549 !important; }
+body.st-dock:not(#z) :is(input, select, textarea, .set-search):not(#searchBar) { background: #121722 !important; color: #e8ebf2 !important; border: 1px solid #2b3549 !important; }
+body.st-dock:not(#z) .popup-header { background: linear-gradient(90deg, #e94a66, #ef5f78) !important; color: #fff !important; }
+body.st-dock:not(#z) footer { background: #161c29 !important; border-top: 1px solid #2b3549; }
+/* the status light and scroll button sit above the dock */
+body.st-dock:not(#z) #siteStatus { bottom: calc(var(--dock-h) + 22px); }
+body.st-dock:not(#z) #scrollJump { bottom: calc(var(--dock-h) + 22px); }
+
+/* the dock itself */
+#gnDock { display: none; }
+body.st-dock:not(#z) #gnDock {
+    display: flex; align-items: center; gap: 4px;
+    position: fixed; left: 12px; right: 12px; bottom: 10px; z-index: 950; height: var(--dock-h);
+    padding: 0 14px; border-radius: 18px;
+    background: rgba(28,36,51,.94); border: 1px solid #2b3549; box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    backdrop-filter: blur(12px);
+}
+body.st-dock:has(#zoneViewer[style*="flex"]) #gnDock { display: none !important; }
+#gnDock .dock-home { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 12px; border: 0; cursor: pointer;
+    background: linear-gradient(135deg, #f0607a, #e23d5b); color: #fff; font: 400 18px/1 "GN Pixel", "Courier New", monospace; box-shadow: 0 4px 12px rgba(233,74,102,.4); }
+#gnDock .dock-sep { width: 1px; height: 34px; background: #2b3549; margin: 0 10px; flex: none; }
+#gnDock .dock-items { display: flex; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#gnDock .dock-items::-webkit-scrollbar { display: none; }
+#gnDock .dock-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; flex: none;
+    width: 70px; height: 58px; border-radius: 12px; border: 0; background: transparent; color: #a3acbd; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 500; line-height: 1.1; text-align: center; }
+#gnDock .dock-item svg { width: 21px; height: 21px; }
+#gnDock .dock-item:hover { background: #232d40; color: #e8ebf2; }
+#gnDock .dock-item:focus-visible { outline: 2px solid #ef5a73; outline-offset: 1px; }
+#gnDock .dock-item.active { background: rgba(239,90,115,.14); color: #f58ea0; }
+#gnDock .dock-item.active::after { content: ""; position: absolute; bottom: 3px; left: 50%; width: 18px; height: 3px; margin-left: -9px; border-radius: 3px; background: #ef5a73; }
+#gnDock .dock-item[hidden] { display: none; }
+#gnDock .dock-clock { flex: none; text-align: right; color: #e8ebf2; line-height: 1.25; margin-left: 10px; font-variant-numeric: tabular-nums; }
+#gnDock .dock-clock b { display: block; font-size: 17px; font-weight: 600; }
+#gnDock .dock-clock span { font-size: 13px; color: #c3cad8; }
+@media (max-width: 760px) {
+    body.st-dock:not(#z) { --dock-h: 64px; }
+    body.st-dock:not(#z) #gnDock { left: 6px; right: 6px; bottom: 6px; padding: 0 8px; border-radius: 16px; }
+    #gnDock .dock-clock, #gnDock .dock-sep { display: none; }
+    #gnDock .dock-home { width: 40px; height: 40px; font-size: 15px; margin-right: 6px; }
+    #gnDock .dock-item { width: 52px; height: 52px; font-size: 9.5px; gap: 4px; }
+    #gnDock .dock-item[data-dock="search"] { display: none; }   /* search is right at the top on phones */
+    #gnDock .dock-items { justify-content: space-between; }
+    #gnDock .dock-item svg { width: 19px; height: 19px; }
+}
+.skin-prev-dock .skin-art { background: #121722; } .skin-prev-dock i:nth-child(1) { background: linear-gradient(90deg, #e94a66, #ef5f78); } .skin-prev-dock i:nth-child(2) { background: #1c2433; border: 1px solid #2b3549; border-radius: 4px; } .skin-prev-dock i:nth-child(3) { left: 4px; right: 4px; top: auto; bottom: 3px; width: auto; height: 8px; background: #1c2433; border: 1px solid #2b3549; border-radius: 4px; }
