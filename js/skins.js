@@ -18,7 +18,12 @@ const SITE_SKINS = {
     aero:     { label: "Frutiger Aero",  note: "Blue sky, green hills, bubbles and glossy glass" },
     neon:     { label: "Neon sign",      note: "Glowing tubes on a dark brick wall" },
     lcd:      { label: "Handheld",       note: "A 4-shade green handheld game screen" },
-    dock:     { label: "Dock",           note: "Dark desktop with a dock of buttons and a clock along the bottom" }
+    dock:     { label: "Dock",           note: "Dark desktop with a dock of buttons and a clock along the bottom" },
+    hud:      { label: "Sci-fi HUD",     note: "A spaceship console with glowing cyan panels" },
+    candy:    { label: "Candy",          note: "Pastel sprinkles and squishy jelly buttons" },
+    quest:    { label: "Fantasy quest",  note: "Parchment cards in gold frames on a stone wall" },
+    web99:    { label: "Web 1999",       note: "An old-school starry homepage with a rainbow logo" },
+    sheet:    { label: "Spreadsheet",    note: "Looks like a work spreadsheet" }
 };
 const SKIN_KEY = "gnmath-site-skin";
 function getSiteSkin() {
