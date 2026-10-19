@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 19, 2026 — Trading cards, VHS shelf and Patches on denim
+
+### New
+- **Trading cards** style: each game is a collectible card on a felt table. Rarity comes from real play counts over the last year (top 2% Legendary, next 8% Epic, next 20% Rare, the rest Common). The holo foil follows your pointer, and cards tilt slightly unless reduced motion is on. Games outside the main library have no play counts, so they show as Common.
+- **VHS shelf** style: games stand as tape spines on wooden shelves. Hover or tab to one and it slides out to show the cover.
+- **Patches on denim** style: games are sewn-on patches in five colors on denim, with a stitched leather header.
+
 ## October 19, 2026 — Minimalist, Semi-Flat, Neumorphism and Cyberpunk
 
 ### New

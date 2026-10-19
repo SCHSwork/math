@@ -419,6 +419,7 @@ async function fetchPopularity(duration) {
 }
 async function refreshPopularity() {
     const results = await Promise.all(["year", "month", "week", "day"].map(fetchPopularity));
+    tagCardRarity();   // cards drawn before the play counts arrived
     if (results.some(Boolean)) {
         try { localStorage.setItem(POPULARITY_CACHE_KEY, JSON.stringify({ t: Date.now(), data: popularityData })); } catch {}
     }
@@ -458,9 +459,31 @@ function sortZones() {
     if (typeof updateFilterCounts === "function") updateFilterCounts();
 }
 
+// Rarity from real play counts (this year), used by the Trading cards style:
+// top 2% of played games are legendary, next 8% epic, next 20% rare, the rest common.
+let rarityCache = null, raritySource = null;
+function zoneRarity(id) {
+    const plays = popularityData["year"];
+    if (!plays) return "common";
+    if (raritySource !== plays) {
+        raritySource = plays;
+        const counts = Object.values(plays).filter(n => n > 0).sort((a, b) => b - a);
+        const at = f => counts[Math.max(0, Math.floor(counts.length * f) - 1)] ?? Infinity;
+        rarityCache = counts.length ? { legendary: at(.02), epic: at(.10), rare: at(.30) } : null;
+    }
+    const n = plays[id] || 0;
+    if (!rarityCache || n <= 0) return "common";
+    return n >= rarityCache.legendary ? "legendary" : n >= rarityCache.epic ? "epic" : n >= rarityCache.rare ? "rare" : "common";
+}
+function tagCardRarity() {
+    document.querySelectorAll(".zone-item[data-id]").forEach(c => { c.dataset.rarity = zoneRarity(c.dataset.id); });
+}
+
 function createZoneCard(file) {
     const zoneItem = document.createElement("div");
     zoneItem.className = "zone-item";
+    zoneItem.dataset.id = file.id;
+    zoneItem.dataset.rarity = zoneRarity(file.id);
     zoneItem.onclick = () => openZone(file);
 
     const img = document.createElement("img");
