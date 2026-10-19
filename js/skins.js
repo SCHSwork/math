@@ -33,7 +33,19 @@ function applySiteSkin(skin = getSiteSkin()) {
     if (skin !== "default") b.classList.add("st-" + skin);
     document.querySelectorAll("[data-skin]").forEach(el => el.classList.toggle("active", el.dataset.skin === skin));
     if (skin === "dock") buildDock();
+    placeStatusLight();
 }
+// The Dock style shows the status light inside the dock, by the clock; other styles keep it in its corner
+function placeStatusLight() {
+    const light = document.getElementById("siteStatus");
+    if (!light) return;
+    const dock = document.getElementById("gnDock");
+    const inDock = document.body.classList.contains("st-dock") && dock;
+    if (inDock && light.parentElement !== dock) dock.insertBefore(light, dock.querySelector(".dock-clock"));
+    else if (!inDock && light.parentElement !== document.body) document.body.appendChild(light);
+}
+// the status light is created by status.js, possibly after this runs
+setInterval(placeStatusLight, 1500);
 
 // ── Dock style: section buttons along the bottom. Each one presses the site's own
 // button for that feature, so everything (sign-in, random options...) works the same.
@@ -80,6 +92,7 @@ function buildDock() {
     };
     tick();
     setInterval(tick, 15000);
+    placeStatusLight();
     document.addEventListener("visibilitychange", tick);
 }
 

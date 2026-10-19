@@ -8,7 +8,7 @@ All the changes to GN 2.0, newest first.
 ## October 18, 2026 — Dock site style
 
 ### New
-- **Dock** site style (Settings → Look → Site style): a coral top bar with a pixel-font logo, a dark desktop, and a dock along the bottom with Games, Search, Your games, Random, Find a game, Account and Settings, plus a clock and date. The panic button stays in the top bar. The dock hides while you play a game. The pixel font (Silkscreen, free license) comes with the site.
+- **Dock** site style (Settings → Look → Site style): a coral top bar with the GN 2.0 logo, a dark desktop, and a dock along the bottom with Games, Search, Your games, Random, Find a game, Account and Settings, plus the status light and a clock and date. Tap the status light for details. The panic button stays in the top bar. The dock hides while you play a game.
 
 ## October 18, 2026 — Readable footer and a scroll button
 
