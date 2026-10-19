@@ -1394,17 +1394,16 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
     transform: translateY(-1px);
 }
 
+/* The footer sits at the end of the page (not pinned to the screen, where it
+   would cover games on phones). Its bar gives the links a solid background in
+   every theme, scene and site style. */
 footer {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border);
-    padding: 1rem 1rem;
+    padding: 1rem 1rem 4.5rem;   /* room for the status light and scroll button */
     text-align: center;
-
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 100;
+    position: relative;
+    z-index: 1;
 }
 
 .footer-links {
@@ -1415,7 +1414,7 @@ footer {
 }
 
 .footer-links a {
-    color: var(--accent-text);
+    color: var(--text);   /* the theme's main text color always contrasts with the footer bar */
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;
@@ -3154,7 +3153,7 @@ body.st-aero:not(#z) #searchBar { border-radius: 999px; }
 body.st-aero:not(#z) #searchBar:focus { box-shadow: inset 0 2px 5px rgba(0,60,120,.18), 0 0 0 3px rgba(120,220,255,.75), 0 0 14px rgba(120,220,255,.7) !important; }
 body.st-aero:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #3f6283; }
 body.st-aero:not(#z) .popup-header { background: var(--gloss-soft), linear-gradient(180deg, #2a9cec, #0662bf) !important; color: #fff !important; }
-body.st-aero:not(#z) footer { background: var(--gloss-soft), linear-gradient(180deg, rgba(60,175,60,.85), rgba(25,120,30,.9)) !important; backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,.7); color: #fff; }
+body.st-aero:not(#z) footer { background: var(--gloss-soft), rgba(240,250,255,.88) !important; backdrop-filter: blur(14px) saturate(1.4); border-top: 1px solid #fff; color: #08284a; }
 
 /* ── Neon sign: glowing tubes on dark brick ── */
 body.st-neon:not(#z) {
@@ -3238,3 +3237,27 @@ body.st-lcd:not(#z) footer { background: #c9c6bf !important; border-top: 6px sol
 .skin-prev-aero .skin-art { background: radial-gradient(ellipse 70% 40% at 25% 115%, #7ee04a 0 60%, #2a9a2c 72%, transparent 73%), radial-gradient(ellipse 60% 36% at 90% 120%, #a6f070 0 60%, #34a834 72%, transparent 73%), radial-gradient(circle at 85% 20%, #fff 0 5%, transparent 22%), linear-gradient(180deg, #0b6fd8, #7cc8f8); } .skin-prev-aero i:nth-child(1) { background: linear-gradient(180deg, rgba(255,255,255,.5) 0 45%, transparent 50%), linear-gradient(180deg, #1f8fe6, #0662bf); } .skin-prev-aero i:nth-child(n+2) { background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.45)); border: 1px solid #fff; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,60,120,.3); }
 .skin-prev-neon .skin-art { background: #1a0f14; } .skin-prev-neon i:nth-child(1) { background: #0e060a; border-bottom: 1px solid #ff3ea5; box-shadow: 0 0 6px #ff3ea5; } .skin-prev-neon i:nth-child(2) { border: 1.5px solid #3ef0ff; border-radius: 5px; box-shadow: 0 0 6px #3ef0ff; } .skin-prev-neon i:nth-child(3) { border: 1.5px solid #ff3ea5; border-radius: 5px; box-shadow: 0 0 6px #ff3ea5; }
 .skin-prev-lcd .skin-art { background: #9bbc0f; } .skin-prev-lcd i:nth-child(1) { background: #c9c6bf; border-bottom: 2px solid #8f8c84; } .skin-prev-lcd i:nth-child(n+2) { background: #8bac0f; border: 2px solid #0f380f; box-shadow: 2px 2px 0 #306230; }
+
+/* ── Scroll button (bottom right): to the bottom, or back to the top once there ── */
+#scrollJump {
+    position: fixed; right: 16px; bottom: 16px; z-index: 900;
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer;
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    box-shadow: var(--shadow); opacity: .9;
+    transition: opacity .2s ease, transform .2s ease;
+}
+#scrollJump:hover { opacity: 1; transform: translateY(-2px); }
+#scrollJump:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+#scrollJump svg { width: 22px; height: 22px; transition: transform .25s ease; }
+#scrollJump.up svg { transform: rotate(180deg); }
+#scrollJump[hidden] { display: none; }
+body.reduced-motion #scrollJump, body.reduced-motion #scrollJump svg { transition: none; }
+body:has(#zoneViewer[style*="flex"]) #scrollJump { display: none; }
+/* Frutiger Aero: a glossy bubble */
+body.st-aero:not(#z) #scrollJump { background: var(--gloss), linear-gradient(180deg, rgba(225,246,255,.95), rgba(120,195,245,.9)); color: #08284a; border: 1px solid #fff; }
+body.st-aero:not(#z) footer { box-shadow: 0 -4px 18px rgba(0,40,20,.25); }
+
+/* Full-look styles hide the scene, so their footer uses their own colors (not a scene's footer bar) */
+:is(body.st-paper, body.st-comic, body.st-pixel, body.st-bold):not(#z) footer { background: var(--bg-secondary) !important; border-top: 2px solid var(--border); }
+body.st-comic:not(#z) footer { border-top: 3px solid #111; }

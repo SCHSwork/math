@@ -3,6 +3,15 @@
 All the changes to GN 2.0, newest first.
 
 
+
+## October 18, 2026 — Readable footer and a scroll button
+
+### New
+- **Scroll button** in the bottom-right corner: jumps to the bottom of the page (it keeps up while All games is still filling in), and turns into **back to top** once you're there. It hides while a game is open.
+
+### Fixed
+- The footer links (DMCA, Terms, Changelog…) had no background, so they were hard to read on top of scenes and backgrounds like Frutiger Aero's grass. The page was missing the footer's opening tag; now the footer has its own bar in every theme, and its links use the theme's main text color. Checked in all 533 style, theme and scene combinations.
+
 ## October 18, 2026 — New Frutiger Aero background
 
 - **Frutiger Aero** has a new, realistic-looking background: a sunny sky with fluffy clouds over a water line, and underwater light rays, bubbles, distant fish and deep grass below. The drifting bubbles stay underwater. It's painted by code that comes with the site (`tools/paint_aero_background.py`), with no outside photos, so it can't get a copyright claim.

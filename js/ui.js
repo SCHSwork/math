@@ -235,3 +235,57 @@
     // Search boxes added later (game finder, admin search) get the same treatment
     window.protectFromAutofill = el => { if (el) { el.setAttribute("data-no-autofill", ""); if (document.activeElement !== el) el.readOnly = true; } };
 })();
+
+// ── Scroll button: jumps to the bottom of the page; near the bottom it turns
+// into "back to top". Hidden when the page is too short to scroll.
+(function () {
+    function setup() {
+        const btn = document.createElement("button");
+        btn.id = "scrollJump";
+        btn.type = "button";
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+        document.body.appendChild(btn);
+        const smooth = () => document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
+        const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+        function update() {
+            const scrollable = document.documentElement.scrollHeight > window.innerHeight * 1.5;
+            btn.hidden = !scrollable;
+            const up = atBottom();
+            btn.classList.toggle("up", up);
+            const label = up ? "Back to top" : "Scroll to the bottom";
+            btn.setAttribute("aria-label", label); btn.title = label;
+        }
+        // Long distances jump instantly; a smooth scroll over thousands of cards takes ages
+        const behaviorFor = top => Math.abs(top - window.scrollY) > window.innerHeight * 3 ? "auto" : smooth();
+        // All games keeps adding cards for a few seconds after the page loads, so after
+        // jumping down, keep following the bottom until it settles (or the person scrolls).
+        let followUntil = 0, followCap = 0, lastHeight = 0;
+        const stopFollowing = () => { followUntil = 0; };
+        ["wheel", "touchstart", "keydown", "mousedown"].forEach(ev => window.addEventListener(ev, e => { if (e.target !== btn && !btn.contains(e.target)) stopFollowing(); }, { passive: true }));
+        btn.addEventListener("click", () => {
+            // do what the button shows, even if more cards arrived since it last updated
+            if (btn.classList.contains("up")) { stopFollowing(); window.scrollTo({ top: 0, behavior: behaviorFor(0) }); return; }
+            const bottom = document.documentElement.scrollHeight;
+            window.scrollTo({ top: bottom, behavior: behaviorFor(bottom) });
+            // keep following while the page is still growing: 2s after the last growth, 20s at most
+            followCap = Date.now() + 20000; followUntil = Date.now() + 2000; lastHeight = bottom;
+        });
+        const follow = () => {
+            if (!followUntil) return;
+            const now = Date.now(), h = document.documentElement.scrollHeight;
+            if (h !== lastHeight) { lastHeight = h; followUntil = Math.min(followCap, now + 2000); }
+            if (now > followUntil) { followUntil = 0; return; }
+            if (!atBottom()) window.scrollTo({ top: h, behavior: "auto" });
+        };
+        // growth stops firing scroll events, so check on a timer while following
+        setInterval(() => { if (followUntil) schedule(); }, 250);
+        let pending = false;
+        const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; follow(); update(); }); } };
+        window.addEventListener("scroll", schedule, { passive: true });
+        window.addEventListener("resize", schedule);
+        // the page grows as game lists load
+        if (typeof ResizeObserver !== "undefined") new ResizeObserver(schedule).observe(document.body);
+        update();
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setup();
+})();
