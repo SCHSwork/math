@@ -5,6 +5,18 @@ All the changes to GN 2.0, newest first.
 
 
 
+
+## October 18, 2026 — 5 more site styles
+
+### New
+- **Five more site styles** in Settings → Look → Site style (19 in all):
+  - **Sci-fi HUD**: a spaceship console with dark glass panels, cut corners, cyan outlines and corner brackets.
+  - **Candy**: pastel pink with sprinkles, extra-round cards and squishy jelly buttons that bounce.
+  - **Fantasy quest**: a stone wall with parchment cards in gold frames and red wax-seal buttons.
+  - **Web 1999**: an old-school starry homepage with a rainbow logo, glowing table borders and blue underlined links.
+  - **Spreadsheet**: looks like a work spreadsheet, with gridlines, a formula bar and cells.
+- Sci-fi HUD and Candy use two fonts that come with the site (Orbitron and Fredoka, both free licenses).
+
 ## October 18, 2026 — Dock site style
 
 ### New
