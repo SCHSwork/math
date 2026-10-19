@@ -27,7 +27,10 @@ const SITE_SKINS = {
     minimal:  { label: "Minimalist",     note: "Clean and spacious, just covers and names (uses your color theme and light/dark mode)" },
     semiflat: { label: "Semi-Flat",      note: "Friendly flat colors and soft shadows (uses your color theme and light/dark mode)" },
     neu:      { label: "Neumorphism",    note: "Soft buttons and cards that look pressed out of the page" },
-    cyber:    { label: "Cyberpunk",      note: "Hazard yellow, hot pink and cyan with angled cuts" }
+    cyber:    { label: "Cyberpunk",      note: "Hazard yellow, hot pink and cyan with angled cuts" },
+    cards:    { label: "Trading cards",  note: "Games as collectible cards; the frame shows how often it's played (common to legendary)" },
+    vhs:      { label: "VHS shelf",      note: "Games as tapes on wooden shelves; point at one to slide it out" },
+    denim:    { label: "Patches on denim", note: "Games as stitched-on patches on a jeans background" }
 };
 const SKIN_KEY = "gnmath-site-skin";
 function getSiteSkin() {
@@ -120,3 +123,22 @@ function siteSkinPickerHtml() {
         `<button type="button" class="skin-pick skin-prev-${k}${k === cur ? " active" : ""}" data-skin="${k}" onclick="setSiteSkin('${k}')" title="${s.note}"><span class="skin-art" aria-hidden="true"><i></i><i></i><i></i></span><b>${s.label}</b></button>`).join("");
 }
 if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLoaded", () => applySiteSkin());
+
+// Trading cards: the holo foil and a slight tilt follow the pointer (no tilt with reduced motion)
+(function () {
+    let last = null;
+    const reset = c => { if (c) { c.style.removeProperty("--rx"); c.style.removeProperty("--ry"); c.style.removeProperty("--mx"); c.style.removeProperty("--my"); } };
+    document.addEventListener("pointermove", e => {
+        if (!document.body.classList.contains("st-cards")) return;
+        const card = e.target.closest && e.target.closest(".zone-item");
+        if (card !== last) { reset(last); last = card; }
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+        card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+        const still = document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+        if (!still) { card.style.setProperty("--rx", ((x - .5) * 14).toFixed(1) + "deg"); card.style.setProperty("--ry", ((.5 - y) * 14).toFixed(1) + "deg"); }
+    }, { passive: true });
+    document.addEventListener("pointerleave", () => { reset(last); last = null; });
+})();
