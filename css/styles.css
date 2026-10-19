@@ -3266,7 +3266,6 @@ body.st-comic:not(#z) footer { border-top: 3px solid #111; }
    Dock: a slim colored top bar with a pixel logo, a dark desktop, and a dock
    of section buttons along the bottom with a clock (js/skins.js builds it).
    ═════════════════════════════════════════════════════════════════════════ */
-@font-face { font-family: "GN Pixel"; src: url("../assets/fonts/silkscreen.woff2") format("woff2"); font-display: swap; }
 body.st-dock:not(#z) #scene { display: none !important; }
 body.st-dock:not(#z) {
     --primary: #ef5a73; --primary-hover: #f47c90; --primary-light: rgba(239,90,115,.16); --primary-lighter: rgba(239,90,115,.08);
@@ -3285,7 +3284,8 @@ body.st-dock:not(#z) {
     padding-bottom: calc(var(--dock-h) + 24px);
 }
 body.st-dock:not(#z) header { background: linear-gradient(90deg, #e94a66, #ef5f78) !important; box-shadow: 0 2px 14px rgba(0,0,0,.35) !important; backdrop-filter: none; }
-body.st-dock:not(#z) .logo { font-family: "GN Pixel", "Courier New", monospace; font-weight: 400; font-size: 1.7rem; letter-spacing: .02em; color: #fff; -webkit-text-fill-color: #fff; background: none; text-transform: lowercase; }
+/* the normal GN 2.0 logo, white on the coral bar */
+body.st-dock:not(#z) .logo { color: #fff; -webkit-text-fill-color: #fff; background: none; text-shadow: 0 1px 2px rgba(120,20,40,.35); }
 /* The dock takes over the header buttons; only panic stays up top (it must always be one click away) */
 body.st-dock:not(#z) header .control-button:not(#panicButton) { display: none !important; }
 body.st-dock:not(#z) #panicButton { background: rgba(255,255,255,.14) !important; border: 1px solid rgba(255,255,255,.55) !important; border-radius: 10px !important; color: #fff !important; box-shadow: none !important; }
@@ -3303,9 +3303,11 @@ body.st-dock:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-b
 body.st-dock:not(#z) :is(input, select, textarea, .set-search):not(#searchBar) { background: #121722 !important; color: #e8ebf2 !important; border: 1px solid #2b3549 !important; }
 body.st-dock:not(#z) .popup-header { background: linear-gradient(90deg, #e94a66, #ef5f78) !important; color: #fff !important; }
 body.st-dock:not(#z) footer { background: #161c29 !important; border-top: 1px solid #2b3549; }
-/* the status light and scroll button sit above the dock */
-body.st-dock:not(#z) #siteStatus { bottom: calc(var(--dock-h) + 22px); }
+/* the scroll button sits above the dock; the status light lives inside it, by the clock */
 body.st-dock:not(#z) #scrollJump { bottom: calc(var(--dock-h) + 22px); }
+#gnDock #siteStatus { position: relative; left: auto; bottom: auto !important; flex: none; margin-left: 8px; z-index: 1; }
+#gnDock #siteStatus .status-pill { background: #232d40; border-color: #2b3549; color: #e8ebf2; opacity: 1; }
+#gnDock #siteStatus .status-panel { left: auto; right: 0; bottom: calc(100% + 18px); max-height: calc(100vh - var(--dock-h) - 60px); overflow-y: auto; }
 
 /* the dock itself */
 #gnDock { display: none; }
@@ -3318,7 +3320,7 @@ body.st-dock:not(#z) #gnDock {
 }
 body.st-dock:has(#zoneViewer[style*="flex"]) #gnDock { display: none !important; }
 #gnDock .dock-home { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 12px; border: 0; cursor: pointer;
-    background: linear-gradient(135deg, #f0607a, #e23d5b); color: #fff; font: 400 18px/1 "GN Pixel", "Courier New", monospace; box-shadow: 0 4px 12px rgba(233,74,102,.4); }
+    background: linear-gradient(135deg, #f0607a, #e23d5b); color: #fff; font-family: inherit; font-size: 17px; font-weight: 800; letter-spacing: -.02em; box-shadow: 0 4px 12px rgba(233,74,102,.4); }
 #gnDock .dock-sep { width: 1px; height: 34px; background: #2b3549; margin: 0 10px; flex: none; }
 #gnDock .dock-items { display: flex; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 #gnDock .dock-items::-webkit-scrollbar { display: none; }
@@ -3338,9 +3340,13 @@ body.st-dock:has(#zoneViewer[style*="flex"]) #gnDock { display: none !important;
     body.st-dock:not(#z) #gnDock { left: 6px; right: 6px; bottom: 6px; padding: 0 8px; border-radius: 16px; }
     #gnDock .dock-clock, #gnDock .dock-sep { display: none; }
     #gnDock .dock-home { width: 40px; height: 40px; font-size: 15px; margin-right: 6px; }
-    #gnDock .dock-item { width: 52px; height: 52px; font-size: 9.5px; gap: 4px; }
+    #gnDock .dock-item { width: 47px; height: 52px; font-size: 9px; gap: 4px; }
+    #gnDock { gap: 2px; }
     #gnDock .dock-item[data-dock="search"] { display: none; }   /* search is right at the top on phones */
     #gnDock .dock-items { justify-content: space-between; }
+    /* just the colored dot on phones; tap it for the details */
+    #gnDock #siteStatus .status-pill { padding: .55rem; gap: 0; }
+    #gnDock #siteStatus :is(.status-text, .status-online) { display: none; }
     #gnDock .dock-item svg { width: 19px; height: 19px; }
 }
 .skin-prev-dock .skin-art { background: #121722; } .skin-prev-dock i:nth-child(1) { background: linear-gradient(90deg, #e94a66, #ef5f78); } .skin-prev-dock i:nth-child(2) { background: #1c2433; border: 1px solid #2b3549; border-radius: 4px; } .skin-prev-dock i:nth-child(3) { left: 4px; right: 4px; top: auto; bottom: 3px; width: auto; height: 8px; background: #1c2433; border: 1px solid #2b3549; border-radius: 4px; }
