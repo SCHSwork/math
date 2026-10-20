@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 19, 2026 — Vending machine, Art museum, Receipt and Subway map
+
+### New
+- **Vending machine** style: games sit on metal coils behind glass in a red machine. Each has a slot code and a price on a green display (more-played games cost more). Point at one and it tips forward off its coil. The search box is the machine's display.
+- **Art museum** style: every game hangs in a gold, wood or silver frame under its own little spotlight, with a placard below it.
+- **Receipt** style: the page is a long torn store receipt. Games are line items with prices, the rows at the top are clip-out coupons, and there's a barcode at the end.
+- **Subway map** style: games are stations on colored train lines, one line per row, with "Mind the gap" in the footer.
+
 ## October 19, 2026 — Trading cards, VHS shelf and Patches on denim
 
 ### New
