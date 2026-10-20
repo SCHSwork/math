@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 19, 2026 — Aquarium, Arcade and Pop-up book
+
+### New
+- **Aquarium** style: fish, glowing jellyfish, light rays, bubbles and swaying seaweed swim live behind the page. Games float in glass cards that bob gently, and bubbles rise from the one you point at. The header is the rippling water surface and the footer is the sandy bottom. The animation stops while a game is open or the tab is hidden, and holds still with reduced motion.
+- **Arcade** style: every game is an arcade cabinet with a backlit marquee, a CRT screen with scanlines and a joystick and buttons. Point at one and the screen brightens, INSERT COIN blinks and the joystick tilts. Chasing marquee bulbs line the header over a loud arcade carpet.
+- **Pop-up book** style: the page is an open storybook on a desk. Games are paper cut-outs that fold up off the page as you scroll to them, with their names on paper ribbons.
+
 ## October 19, 2026 — Vending machine, Art museum, Receipt and Subway map
 
 ### New

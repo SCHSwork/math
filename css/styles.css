@@ -4151,3 +4151,223 @@ body.st-metro:not(#z) footer a { color: #f1f2f4; }
     body.st-museum:not(#z) .zone-item img { padding: 5px; border-width: 8px; }
     body.st-museum:not(#z) .zone-item > button:not(.card-fav) { width: 94%; font-size: 12px; }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Aquarium, Arcade, Pop-up book
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) #scene { display: none !important; }
+:is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+#stFx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; display: none; }
+body.st-aqua:not(#z) #stFx { display: block; }
+
+/* ── Aquarium: fish, jellyfish, light rays and bubbles are drawn live behind the page (skins.js) ── */
+body.st-aqua:not(#z) {
+    --primary: #4fe0ff; --primary-hover: #8aeeff; --primary-light: rgba(79,224,255,.16); --primary-lighter: rgba(79,224,255,.08);
+    --text: #eafcff; --text-muted: #b5e4ef; --text-light: #a3d8e6; --accent-text: #8aeeff;
+    --bg: #05304d; --bg-secondary: #073a5c; --surface: #08405f; --surface-hover: #0b4d70; --border: rgba(150,235,255,.3); --border-light: rgba(150,235,255,.18);
+    --glass: #073a5c; --gradient-surface: #08405f; --gradient-primary: linear-gradient(180deg, #22c3e6, #0a7fb0);
+    --shadow-sm: 0 4px 12px rgba(0,20,40,.35); --shadow: 0 8px 20px rgba(0,20,40,.4); --shadow-lg: 0 12px 28px rgba(0,20,40,.45); --shadow-xl: 0 18px 40px rgba(0,20,40,.5);
+    --radius: 18px; --radius-sm: 12px; --radius-lg: 20px; --radius-xl: 26px;
+    font-family: "GN Candy", "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(180deg, #0f7fa8 0%, #0a5b85 22%, #063a5e 55%, #03213a 85%, #021829 100%) !important; background-attachment: fixed !important; color: var(--text);
+}
+/* the water's surface, rippling */
+body.st-aqua:not(#z) header { background: linear-gradient(180deg, rgba(160,240,255,.95), rgba(40,170,215,.92)) !important; border-bottom: 0; box-shadow: none !important; }
+body.st-aqua:not(#z) header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -14px; height: 14px; pointer-events: none;
+    background: radial-gradient(14px 10px at 50% 0, rgba(40,170,215,.92) 98%, transparent) 0 0 / 40px 14px repeat-x, radial-gradient(18px 8px at 50% 0, rgba(255,255,255,.35) 60%, transparent 62%) 20px 0 / 56px 10px repeat-x;
+    animation: stAquaWave 6s linear infinite; }
+@keyframes stAquaWave { to { background-position: 40px 0, -36px 0; } }
+body.st-aqua:not(#z) .logo { color: #043a57; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,.7); }
+body.st-aqua:not(#z) header .control-button { background: rgba(255,255,255,.55) !important; color: #043a57 !important; border: 1px solid rgba(255,255,255,.8) !important; box-shadow: none !important; }
+body.st-aqua:not(#z) header .control-button .control-icon { color: #043a57; }
+/* glassy cards that bob in the water; only the first screenful bobs, to keep it smooth */
+body.st-aqua:not(#z) .zone-item { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 40%, rgba(120,220,255,.08)) !important; border: 1px solid rgba(170,240,255,.45) !important; border-radius: 20px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 26px rgba(0,15,35,.45) !important; overflow: hidden; }
+body.st-aqua:not(#z) :is(#container .zone-item:nth-child(-n+36), .shelf .zone-item) { animation: stAquaBob 5.5s ease-in-out infinite; }
+body.st-aqua:not(#z) .zone-item:nth-child(3n+1) { animation-delay: -1.8s !important; animation-duration: 6.4s !important; }
+body.st-aqua:not(#z) .zone-item:nth-child(3n+2) { animation-delay: -3.3s !important; animation-duration: 4.9s !important; }
+@keyframes stAquaBob { 0%, 100% { transform: translateY(0) rotate(-.6deg); } 50% { transform: translateY(-7px) rotate(.6deg); } }
+body.st-aqua:not(#z) .zone-item:hover { animation-play-state: paused; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(120,230,255,.8), 0 0 30px rgba(80,220,255,.45), 0 14px 30px rgba(0,15,35,.5) !important; }
+body.st-aqua:not(#z) .zone-item img { border-radius: 14px; margin: 8px 8px 0; width: calc(100% - 16px); }
+body.st-aqua:not(#z) .zone-item button { color: #eafcff; font-weight: 600; }
+body.st-aqua:not(#z) .zone-item:hover > button:not(.card-fav) { color: #fff; background: transparent; }
+/* bubbles rise out of a card you point at */
+body.st-aqua:not(#z) .zone-item::after { content: ""; left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 100%; aspect-ratio: auto; transform: none; opacity: 0; z-index: 3;
+    background: radial-gradient(circle 5px at 20% 100%, rgba(255,255,255,.85) 0 2px, rgba(255,255,255,.25) 3px 4px, transparent 5px), radial-gradient(circle 7px at 55% 100%, rgba(255,255,255,.7) 0 2px, rgba(255,255,255,.2) 4px 6px, transparent 7px), radial-gradient(circle 4px at 80% 100%, rgba(255,255,255,.85) 0 1.5px, rgba(255,255,255,.3) 2px 3px, transparent 4px);
+    background-repeat: no-repeat; }
+body.st-aqua:not(#z) .zone-item:hover::after { animation: stAquaBubbles 1.6s ease-out infinite; }
+@keyframes stAquaBubbles { 0% { opacity: 0; background-position: 0 0, 0 0, 0 0; } 15% { opacity: 1; } 100% { opacity: 0; background-position: 6px -260px, -8px -200px, 4px -300px; } }
+body.st-aqua:not(#z) .zone-item::before { background: radial-gradient(ellipse at 50% 0, rgba(140,235,255,.25), transparent 70%); }
+body.st-aqua:not(#z) .section-title { color: #eafcff; text-shadow: 0 2px 8px rgba(0,20,40,.6); }
+body.st-aqua:not(#z) .section-title .section-count { color: #b5e4ef; }
+body.st-aqua:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: rgba(6,50,80,.82) !important; border: 1px solid rgba(150,235,255,.35) !important; }
+body.st-aqua:not(#z) :is(.popup, .status-panel, .toast) { background: #063553 !important; border: 1px solid rgba(150,235,255,.4) !important; }
+body.st-aqua:not(#z) :is(.settings-button, #gotd .gotd-play) { background: linear-gradient(180deg, #ffd166, #ff9f43) !important; color: #3a1d00 !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 4px 0 #b8691a !important; font-weight: 700; }
+body.st-aqua:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { background: rgba(255,255,255,.12) !important; color: #eafcff !important; border: 1px solid rgba(170,240,255,.45) !important; border-radius: 999px !important; box-shadow: none !important; }
+body.st-aqua:not(#z) header .filter-button { background: rgba(255,255,255,.55) !important; color: #043a57 !important; border-color: rgba(255,255,255,.8) !important; }
+body.st-aqua:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #f2fdff !important; color: #043a57 !important; border: 1px solid rgba(255,255,255,.9) !important; caret-color: #0a7fb0; box-shadow: inset 0 2px 4px rgba(0,60,90,.15) !important; }
+body.st-aqua:not(#z) #searchBar { border-radius: 999px; }
+body.st-aqua:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(255,209,102,.8) !important; }
+body.st-aqua:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #3d6f85; }
+body.st-aqua:not(#z) .popup-header { background: linear-gradient(180deg, #22c3e6, #0a7fb0) !important; color: #fff !important; }
+/* the sandy bottom */
+body.st-aqua:not(#z) footer { background: radial-gradient(circle at 30% 40%, rgba(120,90,40,.35) 0 1px, transparent 2px) 0 0 / 9px 9px, linear-gradient(180deg, #d9bf86, #b8995c) !important; border-top: 0; color: #2e2108; }
+body.st-aqua:not(#z) footer a { color: #2e2108; }
+body.reduced-motion.st-aqua:not(#z) :is(.zone-item, .zone-item::after, header::after) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { body.st-aqua:not(#z) :is(.zone-item, .zone-item::after, header::after) { animation: none !important; } }
+
+/* ── Arcade: every game is a cabinet with a lit marquee, a CRT screen and a control panel ── */
+body.st-arcade:not(#z) {
+    --primary: #ff2bd6; --primary-hover: #ff66e3; --primary-light: rgba(255,43,214,.16); --primary-lighter: rgba(255,43,214,.08);
+    --text: #f4f1ff; --text-muted: #c9c2e6; --text-light: #b8b0d8; --accent-text: #5ff4ff;
+    --bg: #0b0716; --bg-secondary: #140d26; --surface: #170f2c; --surface-hover: #1f1538; --border: #3a2b63; --border-light: #2a1f4a;
+    --glass: #140d26; --gradient-surface: #170f2c; --gradient-primary: linear-gradient(90deg, #ff2bd6, #5ff4ff);
+    --shadow-sm: none; --shadow: 0 6px 16px rgba(0,0,0,.5); --shadow-lg: 0 10px 26px rgba(0,0,0,.55); --shadow-xl: 0 16px 36px rgba(0,0,0,.6);
+    --radius: 8px; --radius-sm: 6px; --radius-lg: 10px; --radius-xl: 14px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    /* that loud arcade carpet, dimmed by the room */
+    background:
+        linear-gradient(rgba(8,5,18,.62), rgba(8,5,18,.62)),
+        radial-gradient(circle at 18% 22%, #ff2bd6 0 5px, transparent 6px) 0 0 / 150px 150px,
+        radial-gradient(circle at 72% 64%, #5ff4ff 0 4px, transparent 5px) 0 0 / 150px 150px,
+        radial-gradient(circle at 46% 84%, transparent 0 8px, #ffe14d 8px 11px, transparent 12px) 0 0 / 150px 150px,
+        radial-gradient(circle at 84% 18%, transparent 0 6px, #7cff4f 6px 8px, transparent 9px) 0 0 / 150px 150px,
+        linear-gradient(135deg, transparent 0 46%, #ff7a1a 46% 54%, transparent 54%) 40px 92px / 22px 22px no-repeat,
+        radial-gradient(circle at 30% 70%, #8a5bff 0 4px, transparent 5px) 0 0 / 110px 110px,
+        radial-gradient(circle at 80% 40%, transparent 0 5px, #ff2bd6 5px 7px, transparent 8px) 0 0 / 110px 110px,
+        #0b0716 !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* header: marquee bulbs chasing along the bottom */
+body.st-arcade:not(#z) header { background: #0d0820 !important; border-bottom: 0; box-shadow: 0 6px 24px rgba(255,43,214,.25) !important; }
+body.st-arcade:not(#z) header::after { content: ""; display: block; height: 12px; background: radial-gradient(circle 4px, #fff6c2 0 2px, #ffcf3f 3px, transparent 4.5px) 0 50% / 24px 12px repeat-x, radial-gradient(circle 4px, #6b4a12 0 3px, transparent 4.5px) 12px 50% / 24px 12px repeat-x, #1a0f30;
+    box-shadow: 0 0 14px rgba(255,207,63,.45); animation: stArcadeChase .5s steps(1) infinite; }
+@keyframes stArcadeChase { 50% { background-position: 12px 50%, 0 50%, 0 0; } }
+body.st-arcade:not(#z) .logo { font-family: "GN HUD", "Segoe UI", sans-serif; font-weight: 900; color: #ff8ef0; text-shadow: 0 0 6px #ff2bd6, 0 0 18px #ff2bd6, 0 0 36px rgba(255,43,214,.6); letter-spacing: .06em; }
+body.st-arcade:not(#z) #container { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)) !important; gap: 2rem 1.4rem !important; }
+body.st-arcade:not(#z) .zone-item {
+    --cab: #ff2bd6; padding: 0 14px; overflow: visible; border: 0 !important; border-radius: 12px 12px 4px 4px !important;
+    background: linear-gradient(90deg, var(--cab) 0 5px, #17121f 5px calc(100% - 5px), var(--cab) calc(100% - 5px)) !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 18px 30px rgba(0,0,0,.6), 0 0 26px color-mix(in srgb, var(--cab) 35%, transparent) !important; }
+body.st-arcade:not(#z) .zone-item:nth-child(4n+2) { --cab: #5ff4ff; }
+body.st-arcade:not(#z) .zone-item:nth-child(4n+3) { --cab: #ffcf3f; }
+body.st-arcade:not(#z) .zone-item:nth-child(4n+4) { --cab: #7cff4f; }
+body.st-arcade:not(#z) .zone-item:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 22px 34px rgba(0,0,0,.65), 0 0 44px color-mix(in srgb, var(--cab) 60%, transparent) !important; }
+/* the backlit marquee with the game's name */
+body.st-arcade:not(#z) .zone-item > button:not(.card-fav) { order: -1; display: block !important; height: 44px; min-height: 0; max-height: none; margin: 12px 0 8px; padding: 0 8px; line-height: 44px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp: unset; text-align: center; border-radius: 4px;
+    background: linear-gradient(180deg, #fffdf2, #ffeeb8) !important; color: #1b0f2e !important; font: 800 14px/44px "Segoe UI", system-ui, sans-serif; letter-spacing: .02em;
+    box-shadow: 0 0 0 3px #0d0820, 0 0 16px color-mix(in srgb, var(--cab) 75%, transparent), inset 0 -6px 10px color-mix(in srgb, var(--cab) 30%, transparent); }
+/* the CRT: thick black bezel, rounded glass */
+body.st-arcade:not(#z) .zone-item img { box-sizing: border-box; border: 10px solid #050308; border-radius: 16px; background: #000; filter: saturate(1.25) contrast(1.05); box-shadow: inset 0 0 0 1px #333; }
+body.st-arcade:not(#z) .zone-item:hover img { transform: none; filter: saturate(1.4) contrast(1.1) brightness(1.08); }
+/* scanlines, a curved-glass shine, and INSERT COIN when you point at it */
+body.st-arcade:not(#z) .zone-item::before { content: "INSERT COIN"; position: absolute; top: 74px; left: 24px; right: 24px; bottom: auto; aspect-ratio: 1; height: auto; inset-inline: 24px; opacity: 1; z-index: 2; border-radius: 8px; pointer-events: none;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; box-sizing: border-box;
+    font: 700 11px/1 "GN HUD", monospace; letter-spacing: .12em; color: transparent;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px), radial-gradient(ellipse 120% 90% at 50% 50%, transparent 60%, rgba(0,0,0,.55)), linear-gradient(135deg, rgba(255,255,255,.18), transparent 35%); }
+body.st-arcade:not(#z) .zone-item:is(:hover, :focus-within)::before { color: #ffe14d; text-shadow: 0 0 6px #ffb800, 0 1px 0 #000; animation: stArcadeBlink 1s steps(1) infinite; }
+@keyframes stArcadeBlink { 50% { color: transparent; text-shadow: none; } }
+/* control panel: joystick and buttons */
+body.st-arcade:not(#z) .zone-item::after { content: ""; position: static; order: 10; display: block; width: auto; height: 46px; aspect-ratio: auto; margin: 8px -14px 0; transform: none; opacity: 1; animation: none !important; border-radius: 0 0 4px 4px;
+    background:
+        radial-gradient(circle 9px at 24% 34%, #ff6b6b, #b30000 70%, transparent 74%),
+        linear-gradient(90deg, transparent calc(24% - 2px), #999 calc(24% - 2px) calc(24% + 2px), transparent calc(24% + 2px)) 0 0 / 100% 70% no-repeat,
+        radial-gradient(ellipse 14px 6px at 24% 72%, #000 60%, transparent 64%),
+        radial-gradient(circle 7px at 56% 50%, #ffe14d 0 5px, #8a6d00 6px, transparent 7.5px),
+        radial-gradient(circle 7px at 70% 50%, #5ff4ff 0 5px, #127a85 6px, transparent 7.5px),
+        radial-gradient(circle 7px at 84% 50%, #ff2bd6 0 5px, #851170 6px, transparent 7.5px),
+        linear-gradient(180deg, #3a3150, #1b1528 60%, #120d1c); }
+body.st-arcade:not(#z) .zone-item:is(:hover, :focus-within)::after { background-position: 6px 2px, 6px 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+body.st-arcade:not(#z) .zone-item .card-meta { display: none; }
+body.st-arcade:not(#z) .zone-item button.card-fav { top: 64px; left: 22px; }
+body.st-arcade:not(#z) .zone-item .card-badges { top: 64px; right: 22px; }
+body.st-arcade:not(#z) .shelf { grid-auto-columns: 168px; gap: 1.2rem !important; padding-top: 1rem; padding-bottom: 1.2rem; }
+body.st-arcade:not(#z) .shelf .zone-item:hover { transform: translateY(-4px); }
+body.st-arcade:not(#z) .section-title { font-family: "GN HUD", "Segoe UI", sans-serif; color: #b9fbff; text-shadow: 0 0 6px #5ff4ff, 0 0 18px rgba(95,244,255,.6); letter-spacing: .05em; }
+body.st-arcade:not(#z) .section-title .section-count { color: #ffcff6; text-shadow: none; }
+body.st-arcade:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #140d26 !important; border: 1px solid #3a2b63 !important; }
+body.st-arcade:not(#z) :is(.popup, .status-panel, .toast) { background: #140d26 !important; border: 1px solid #ff2bd6 !important; box-shadow: 0 0 30px rgba(255,43,214,.3) !important; }
+body.st-arcade:not(#z) :is(.settings-button, #gotd .gotd-play) { background: radial-gradient(circle at 40% 35%, #ff7a7a, #e00000 70%) !important; color: #fff !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 4px 0 #7a0000, 0 0 14px rgba(255,60,60,.5) !important; font-weight: 800; text-shadow: 0 1px 0 #7a0000; }
+body.st-arcade:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #1b1430 !important; color: #f4f1ff !important; border: 1px solid #4a3a7a !important; box-shadow: none !important; }
+body.st-arcade:not(#z) .control-button .control-icon { color: #5ff4ff; }
+body.st-arcade:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #050308 !important; color: #b9fbff !important; border: 2px solid #5ff4ff !important; caret-color: #ff2bd6; box-shadow: 0 0 10px rgba(95,244,255,.35) !important; font-family: "GN HUD", monospace; }
+body.st-arcade:not(#z) #searchBar:focus { border-color: #ff2bd6 !important; box-shadow: 0 0 14px rgba(255,43,214,.55) !important; }
+body.st-arcade:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #7fb3bd; }
+body.st-arcade:not(#z) .popup-header { background: #0d0820 !important; color: #ff8ef0 !important; }
+body.st-arcade:not(#z) footer { background: #0d0820 !important; border-top: 2px solid #ff2bd6; color: #f4f1ff; }
+body.st-arcade:not(#z) footer a { color: #f4f1ff; }
+body.reduced-motion.st-arcade:not(#z) :is(header::after, .zone-item::before) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { body.st-arcade:not(#z) :is(header::after, .zone-item::before) { animation: none !important; } }
+
+/* ── Pop-up book: the page is an open book and games fold up off it as you scroll to them ── */
+body.st-popup:not(#z) {
+    --primary: #b8322c; --primary-hover: #93241f; --primary-light: rgba(184,50,44,.12); --primary-lighter: rgba(184,50,44,.06);
+    --text: #3a2614; --text-muted: #5e4630; --text-light: #6e553c; --accent-text: #93241f;
+    --bg: #f6ead0; --bg-secondary: #fbf3e0; --surface: #fffaf0; --surface-hover: #fbf1dc; --border: #d8c39b; --border-light: #e8d8b6;
+    --glass: #fbf3e0; --gradient-surface: #fffaf0; --gradient-primary: #6b1d1d;
+    --shadow-sm: 0 2px 4px rgba(80,50,20,.15); --shadow: 0 6px 14px rgba(80,50,20,.2); --shadow-lg: 0 10px 22px rgba(80,50,20,.25); --shadow-xl: 0 14px 30px rgba(80,50,20,.3);
+    --radius: 6px; --radius-sm: 4px; --radius-lg: 8px; --radius-xl: 12px;
+    font-family: "GN Candy", "Trebuchet MS", sans-serif;
+    /* a wooden desk */
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px, rgba(255,255,255,.04) 9px 11px, transparent 11px 23px), linear-gradient(180deg, #7a4b2a, #5c3519) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* the book's cover is the header: red leather with gold stamping */
+body.st-popup:not(#z) header { background: radial-gradient(circle at 30% 40%, rgba(255,255,255,.05) 0 1px, transparent 2px) 0 0 / 5px 5px, linear-gradient(180deg, #7d2222, #5a1414) !important; border-bottom: 3px solid #c9a24a; box-shadow: 0 6px 18px rgba(0,0,0,.4) !important; }
+body.st-popup:not(#z) .logo { color: #f3cf6b; font-family: "GN Candy", sans-serif; font-weight: 700; text-shadow: 0 1px 0 #6b4a0a, 0 0 10px rgba(243,207,107,.35); }
+body.st-popup:not(#z) header .control-button { background: rgba(0,0,0,.2) !important; color: #f3cf6b !important; border: 1px solid #c9a24a !important; box-shadow: none !important; }
+body.st-popup:not(#z) header .control-button .control-icon { color: #f3cf6b; }
+/* the open pages, with a shadow down the middle and a stack of pages underneath */
+body.st-popup:not(#z) main { max-width: 1320px; margin: 28px auto 40px; padding: 2.4rem 2.2rem 3rem; border-radius: 6px;
+    background: linear-gradient(90deg, #e9d9b6 0, #fbf3e0 2.5%, #f6ead0 46%, #d9c49c 49.6%, #b9a27a 50%, #d9c49c 50.4%, #f6ead0 54%, #fbf3e0 97.5%, #e9d9b6 100%) !important;
+    box-shadow: 0 2px 0 #e7d6b0, 0 4px 0 #cdb78c, 0 6px 0 #e7d6b0, 0 8px 0 #c4ad80, 0 24px 40px rgba(0,0,0,.45); }
+@media (max-width: 760px) { body.st-popup:not(#z) main { margin: 14px 8px 30px; padding: 1.6rem 1rem 2rem; background: linear-gradient(90deg, #d9c49c 0, #f6ead0 4%, #fbf3e0 96%, #e9d9b6) !important; } }
+body.st-popup:not(#z) #container { gap: 2.4rem 1.6rem !important; padding: 10px 4px 20px; }
+body.st-popup:not(#z) .shelf { padding-top: 1.2rem; padding-bottom: 1.8rem; }
+/* each game is a paper cut-out hinged at the bottom */
+body.st-popup:not(#z) .zone-item { --rib: #b8322c; overflow: visible; padding: 8px 8px 0; background: #fffdf6 !important; border: 0 !important; border-radius: 5px !important; transform-origin: 50% 100%;
+    box-shadow: 0 1px 0 #e3d3b0, 0 14px 14px -8px rgba(70,40,10,.35) !important; transition: translate .25s ease, box-shadow .25s ease; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+2) { --rib: #2f69b8; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+3) { --rib: #23804a; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+4) { --rib: #a8520a; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+5) { --rib: #7a46b8; }
+body.st-popup:not(#z) .zone-item:hover { transform: none; translate: 0 -8px; box-shadow: 0 1px 0 #e3d3b0, 0 24px 20px -10px rgba(70,40,10,.4) !important; }
+body.st-popup:not(#z) .zone-item img { border-radius: 3px; }
+body.st-popup:not(#z) .zone-item:hover img { transform: none; }
+/* title on a paper ribbon with notched ends that hangs past the card's edges */
+body.st-popup:not(#z) .zone-item > button:not(.card-fav) { margin: 10px -16px 12px; padding: 8px 22px; min-height: 0; color: #fff !important; background: var(--rib) !important; font-family: "GN Candy", sans-serif; font-weight: 700; font-size: 14px; line-height: 1.25;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%); filter: drop-shadow(0 2px 0 rgba(0,0,0,.25)); }
+body.st-popup:not(#z) .shelf .zone-item > button:not(.card-fav) { max-height: none; display: block; -webkit-line-clamp: unset; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a glued paper tab at the hinge */
+body.st-popup:not(#z) .zone-item::after { content: ""; top: auto; bottom: -9px; left: 22%; width: 56%; height: 9px; aspect-ratio: auto; transform: none; opacity: 1; animation: none !important; background: #e4d2ab; clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%); z-index: 0; }
+body.st-popup:not(#z) .zone-item::before { display: none; }
+body.st-popup:not(#z) .zone-item .card-meta { margin: -4px 0 0; padding: 0 0 8px; color: #6e553c; }
+@supports (animation-timeline: view()) {
+    body.st-popup:not(#z) :is(#container, .shelf) .zone-item { animation: stPopUp linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+    body.st-popup:not(#z) .shelf .zone-item { animation-timeline: view(block); }
+}
+@keyframes stPopUp {
+    from { transform: perspective(700px) rotateX(80deg); box-shadow: 0 1px 0 #e3d3b0, 0 0 0 rgba(70,40,10,0) !important; filter: brightness(.82); }
+    to { transform: perspective(700px) rotateX(0deg); filter: none; }
+}
+body.reduced-motion.st-popup:not(#z) .zone-item { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { body.st-popup:not(#z) .zone-item { animation: none !important; } }
+body.st-popup:not(#z) .section-title { color: #6b1d1d; font-weight: 700; font-size: 1.5rem; text-shadow: 0 1px 0 #fff; }
+body.st-popup:not(#z) .section-title .section-count { color: #6e553c; }
+body.st-popup:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #fffdf6 !important; border: 1px solid #d8c39b !important; box-shadow: 0 10px 14px -8px rgba(70,40,10,.3) !important; }
+body.st-popup:not(#z) :is(.popup, .status-panel, .toast) { background: #fbf3e0 !important; border: 1px solid #c9a24a !important; }
+body.st-popup:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #b8322c !important; color: #fff !important; border: 0 !important; box-shadow: 0 3px 0 #6b1d1d !important; font-family: "GN Candy", sans-serif; font-weight: 700; }
+body.st-popup:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { background: #fffdf6 !important; color: #3a2614 !important; border: 1px solid #c9b088 !important; box-shadow: 0 2px 0 #d8c39b !important; }
+body.st-popup:not(#z) header .filter-button { background: rgba(0,0,0,.2) !important; color: #f3cf6b !important; border-color: #c9a24a !important; box-shadow: none !important; }
+body.st-popup:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fffaf0 !important; color: #3a2614 !important; border: 1px solid #c9a24a !important; caret-color: #b8322c; box-shadow: inset 0 1px 3px rgba(80,50,20,.15) !important; font-family: "GN Candy", sans-serif; }
+body.st-popup:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(243,207,107,.7) !important; }
+body.st-popup:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #7a6044; }
+body.st-popup:not(#z) .popup-header { background: #6b1d1d !important; color: #f3cf6b !important; }
+body.st-popup:not(#z) footer { background: #3e2410 !important; border-top: 0; color: #f6ead0; }
+body.st-popup:not(#z) footer a { color: #f6ead0; }
+
+/* picker previews */
+.skin-prev-aqua .skin-art { background: linear-gradient(180deg, #0f7fa8, #03213a); } .skin-prev-aqua i:nth-child(1) { background: linear-gradient(180deg, #a0f0ff, #28aad7); } .skin-prev-aqua i:nth-child(n+2) { background: rgba(255,255,255,.18); border: 1px solid rgba(170,240,255,.6); border-radius: 7px; } .skin-prev-aqua i:nth-child(3) { top: 13px; }
+.skin-prev-arcade .skin-art { background: #0b0716; } .skin-prev-arcade i:nth-child(1) { background: radial-gradient(circle 2px, #ffcf3f 0 1.5px, transparent 2px) 0 50% / 6px 100% repeat-x, #0d0820; } .skin-prev-arcade i:nth-child(n+2) { top: 14px; height: 28px; background: linear-gradient(180deg, #fff3c4 0 5px, #000 5px 19px, #3a3150 19px); border-left: 2px solid #ff2bd6; border-right: 2px solid #ff2bd6; box-shadow: 0 0 6px #ff2bd6; } .skin-prev-arcade i:nth-child(3) { border-color: #5ff4ff; box-shadow: 0 0 6px #5ff4ff; }
+.skin-prev-popup .skin-art { background: linear-gradient(90deg, #fbf3e0, #f6ead0 48%, #b9a27a 50%, #f6ead0 52%, #fbf3e0); } .skin-prev-popup i:nth-child(1) { background: #6b1d1d; border-bottom: 1px solid #c9a24a; } .skin-prev-popup i:nth-child(n+2) { background: #fff; border-bottom: 5px solid #b8322c; box-shadow: 0 4px 4px -2px rgba(70,40,10,.4); transform: perspective(60px) rotateX(14deg); transform-origin: bottom; } .skin-prev-popup i:nth-child(3) { border-bottom-color: #2f69b8; }
