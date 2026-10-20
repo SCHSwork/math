@@ -30,7 +30,11 @@ const SITE_SKINS = {
     cyber:    { label: "Cyberpunk",      note: "Hazard yellow, hot pink and cyan with angled cuts" },
     cards:    { label: "Trading cards",  note: "Games as collectible cards; the frame shows how often it's played (common to legendary)" },
     vhs:      { label: "VHS shelf",      note: "Games as tapes on wooden shelves; point at one to slide it out" },
-    denim:    { label: "Patches on denim", note: "Games as stitched-on patches on a jeans background" }
+    denim:    { label: "Patches on denim", note: "Games as stitched-on patches on a jeans background" },
+    vend:     { label: "Vending machine", note: "Games on coils behind glass, each with a slot number and a price" },
+    museum:   { label: "Art museum",     note: "Games hang in frames under spotlights, with a placard" },
+    receipt:  { label: "Receipt",        note: "The page is a long store receipt and games are line items" },
+    metro:    { label: "Subway map",     note: "Games are stations along colored train lines" }
 };
 const SKIN_KEY = "gnmath-site-skin";
 function getSiteSkin() {

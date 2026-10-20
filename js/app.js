@@ -484,6 +484,8 @@ function createZoneCard(file) {
     zoneItem.className = "zone-item";
     zoneItem.dataset.id = file.id;
     zoneItem.dataset.rarity = zoneRarity(file.id);
+    // short vending-machine code (row letter + number) for the Vending machine style
+    { const n = Math.abs(parseInt(file.id, 10) || 0); zoneItem.dataset.slot = "ABCDEFGH"[n % 8] + (10 + (Math.floor(n / 8) % 90)); }
     zoneItem.onclick = () => openZone(file);
 
     const img = document.createElement("img");
