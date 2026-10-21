@@ -56,6 +56,7 @@ function applySiteSkin(skin = getSiteSkin()) {
     document.querySelectorAll("[data-skin]").forEach(el => el.classList.toggle("active", el.dataset.skin === skin));
     if (skin === "dock") buildDock();
     if (window.stAquaFx) window.stAquaFx();
+    if (window.stPopupFx) window.stPopupFx();
     placeStatusLight();
 }
 // The Dock style shows the status light inside the dock, by the clock; other styles keep it in its corner
@@ -154,11 +155,11 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
     document.addEventListener("pointerleave", () => { reset(last); last = null; });
 })();
 
-// Aquarium: fish, jellyfish, light rays, bubbles and seaweed drawn on a canvas behind the page.
+// Aquarium: fish, jellyfish, bubbles and seaweed drawn on a canvas behind the page (the light rays are CSS).
 // Runs only while the Aquarium style is on, stops while a game is open or the tab is hidden,
 // and draws one still frame with reduced motion.
 (function () {
-    let cv = null, cx = null, raf = 0, W = 0, H = 0, last = 0, fish = [], jellies = [], bubbles = [], weeds = [];
+    let cv = null, cx = null, raf = 0, W = 0, H = 0, last = 0, lastScroll = 0, fish = [], jellies = [], bubbles = [], weeds = [];
     const on = () => document.body.classList.contains("st-aqua");
     const still = () => document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     const gameOpen = () => { const v = document.getElementById("zoneViewer"); return !!v && getComputedStyle(v).display !== "none"; };
@@ -173,7 +174,7 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         const n = Math.round(Math.max(6, Math.min(16, W / 95)));
         fish = Array.from({ length: n }, () => newFish(true)).sort((a, b) => a.depth - b.depth);
         jellies = Array.from({ length: W < 700 ? 1 : 3 }, (_, i) => ({ x: rnd(W * .1, W * .9), y: rnd(H * .2, H * .9), r: rnd(16, 30), phase: rnd(0, 6.28), hue: [320, 280, 195][i % 3] }));
-        bubbles = Array.from({ length: Math.round(W / 40) }, () => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.5, 4.5), v: rnd(20, 55), ph: rnd(0, 6.28) }));
+        bubbles = Array.from({ length: Math.round(W / 60) }, () => ({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.5, 4.5), v: rnd(20, 55), ph: rnd(0, 6.28) }));
         weeds = Array.from({ length: Math.round(W / 70) }, (_, i) => ({ x: (i + rnd(.1, .9)) * 70, h: rnd(60, 170), w: rnd(5, 9), ph: rnd(0, 6.28), c: Math.random() < .5 ? "#1f8a52" : "#2fa866" }));
     }
     function resize() {
@@ -193,8 +194,8 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         // top fin
         cx.beginPath(); cx.moveTo(-s * .3, -s * .42); cx.quadraticCurveTo(s * .05, -s * .9, s * .35, -s * .38); cx.closePath(); cx.fill();
         // body
-        const g = cx.createLinearGradient(0, -s * .5, 0, s * .5); g.addColorStop(0, f.c1); g.addColorStop(1, f.c2);
-        cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, s, s * .52, 0, 0, Math.PI * 2); cx.fill();
+        if (!f.grad) { f.grad = cx.createLinearGradient(0, -s * .5, 0, s * .5); f.grad.addColorStop(0, f.c1); f.grad.addColorStop(1, f.c2); }
+        cx.fillStyle = f.grad; cx.beginPath(); cx.ellipse(0, 0, s, s * .52, 0, 0, Math.PI * 2); cx.fill();
         if (f.stripes) {
             cx.save(); cx.clip(); cx.fillStyle = "rgba(255,255,255,.92)";
             cx.fillRect(s * .25, -s, s * .22, s * 2); cx.fillRect(-s * .4, -s, s * .2, s * 2);
@@ -207,13 +208,18 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         cx.restore();
     }
     function drawJelly(j, t) {
-        const pulse = (Math.sin(t * 1.6 + j.phase) + 1) / 2, r = j.r * (1 + pulse * .12), y = j.y;
-        cx.save(); cx.translate(j.x, y);
-        const g = cx.createRadialGradient(0, -r * .2, r * .1, 0, 0, r * 1.2);
-        g.addColorStop(0, `hsla(${j.hue},100%,85%,.75)`); g.addColorStop(1, `hsla(${j.hue},100%,65%,.08)`);
-        cx.shadowColor = `hsla(${j.hue},100%,70%,.8)`; cx.shadowBlur = 18;
-        cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, r, r * (.75 - pulse * .1), 0, Math.PI, 0); cx.quadraticCurveTo(r * .5, r * .18, 0, r * .12); cx.quadraticCurveTo(-r * .5, r * .18, -r, 0); cx.fill();
-        cx.shadowBlur = 0; cx.strokeStyle = `hsla(${j.hue},100%,80%,.45)`; cx.lineWidth = 1.5;
+        const pulse = (Math.sin(t * 1.6 + j.phase) + 1) / 2, r = j.r, y = j.y;
+        cx.save(); cx.translate(j.x, y); cx.scale(1 + pulse * .12, 1 - pulse * .08);
+        if (!j.g) {
+            j.g = cx.createRadialGradient(0, -r * .2, r * .1, 0, 0, r * 1.2);
+            j.g.addColorStop(0, `hsla(${j.hue},100%,85%,.75)`); j.g.addColorStop(1, `hsla(${j.hue},100%,65%,.08)`);
+            // soft glow (a gradient; canvas shadows are slow)
+            j.glow = cx.createRadialGradient(0, 0, r * .3, 0, 0, r * 1.9);
+            j.glow.addColorStop(0, `hsla(${j.hue},100%,70%,.28)`); j.glow.addColorStop(1, `hsla(${j.hue},100%,70%,0)`);
+        }
+        cx.fillStyle = j.glow; cx.fillRect(-r * 1.9, -r * 1.9, r * 3.8, r * 3.8);
+        cx.fillStyle = j.g; cx.beginPath(); cx.ellipse(0, 0, r, r * .7, 0, Math.PI, 0); cx.quadraticCurveTo(r * .5, r * .18, 0, r * .12); cx.quadraticCurveTo(-r * .5, r * .18, -r, 0); cx.fill();
+        cx.strokeStyle = `hsla(${j.hue},100%,80%,.45)`; cx.lineWidth = 1.5;
         for (let k = -2; k <= 2; k++) {
             cx.beginPath(); cx.moveTo(k * r * .3, r * .1);
             for (let s = 1; s <= 6; s++) cx.lineTo(k * r * .3 + Math.sin(t * 2 + s * .8 + k + j.phase) * 4, r * .1 + s * r * .28);
@@ -223,14 +229,6 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
     }
     function draw(t) {
         cx.clearRect(0, 0, W, H);
-        // light rays from the surface
-        cx.save(); cx.globalCompositeOperation = "lighter";
-        for (let i = 0; i < 6; i++) {
-            const x = W * (i + .5) / 6 + Math.sin(t * .25 + i * 1.7) * 40, lean = Math.sin(t * .2 + i) * 60 + 80, w = 40 + (i % 3) * 30;
-            const g = cx.createLinearGradient(0, 0, 0, H * .85); g.addColorStop(0, "rgba(190,245,255,.13)"); g.addColorStop(1, "rgba(190,245,255,0)");
-            cx.fillStyle = g; cx.beginPath(); cx.moveTo(x, 0); cx.lineTo(x + w, 0); cx.lineTo(x + w * 2.6 + lean, H * .85); cx.lineTo(x + lean, H * .85); cx.closePath(); cx.fill();
-        }
-        cx.restore();
         // seaweed swaying along the bottom
         weeds.forEach(w => {
             cx.strokeStyle = w.c; cx.lineWidth = w.w; cx.lineCap = "round";
@@ -262,11 +260,14 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         if (!on() || !cv) return;
         const t = ms / 1000, dt = Math.min(.05, last ? t - last : 0); last = t;
         if (document.hidden || gameOpen()) { last = 0; setTimeout(() => { if (!raf) raf = requestAnimationFrame(frame); }, 600); return; }
-        step(dt, t); draw(t);
-        if (!still()) raf = requestAnimationFrame(frame);
+        // while you scroll, the page gets the computer's full attention; the fish catch up after
+        if (ms - lastScroll > 180) { step(dt, t); draw(t); } else last = 0;
+        // about 30 frames a second is plenty for drifting fish, and the gaps leave
+        // the browser time for everything else (like building more game cards)
+        if (!still()) { raf = -1; setTimeout(() => { if (raf === -1) raf = requestAnimationFrame(frame); }, 26); }
     }
     window.stAquaFx = function () {
-        if (!on()) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
+        if (!on()) { if (raf > 0) cancelAnimationFrame(raf); raf = 0; return; }
         if (!cv) {
             cv = document.createElement("canvas"); cv.id = "stFx"; cv.setAttribute("aria-hidden", "true");
             document.body.prepend(cv); cx = cv.getContext("2d"); addEventListener("resize", resize); resize();
@@ -275,5 +276,39 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         if (!raf) { last = 0; raf = requestAnimationFrame(frame); }
     };
     document.addEventListener("visibilitychange", () => { if (!document.hidden) window.stAquaFx(); });
+    addEventListener("scroll", () => { if (raf) lastScroll = performance.now(); }, { passive: true });
     window.stAquaFx();
+})();
+
+// Pop-up book: each card folds up the first time it scrolls into view. One shared
+// watcher that lets go of each card once it has popped up (much lighter than a
+// scroll-linked animation on every card).
+(function () {
+    let io = null, mo = null;
+    const on = () => document.body.classList.contains("st-popup");
+    const still = () => document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const AREAS = "#container, .shelf";
+    function watch(root) {
+        (root || document).querySelectorAll(":is(#container, .shelf) > .zone-item:not(.pu-in):not(.pu-watch)").forEach(c => { c.classList.add("pu-watch"); io.observe(c); });
+    }
+    function stop() {
+        if (io) io.disconnect(); if (mo) mo.disconnect(); io = mo = null;
+        document.body.classList.remove("pu-ready");
+        document.querySelectorAll(".zone-item.pu-watch, .zone-item.pu-in").forEach(c => { c.classList.remove("pu-watch", "pu-in"); c.style.removeProperty("--pu-delay"); });
+    }
+    window.stPopupFx = function () {
+        if (!on() || still() || !("IntersectionObserver" in window)) { stop(); return; }
+        if (io) return;
+        io = new IntersectionObserver(entries => {
+            // cards that arrive together pop up one after another, left to right
+            const hits = entries.filter(e => e.isIntersecting).sort((a, b) => (a.boundingClientRect.top - b.boundingClientRect.top) || (a.boundingClientRect.left - b.boundingClientRect.left));
+            hits.forEach((e, i) => { const c = e.target; c.style.setProperty("--pu-delay", Math.min(i, 10) * 55 + "ms"); c.classList.add("pu-in"); c.classList.remove("pu-watch"); io.unobserve(c); });
+        }, { rootMargin: "0px 0px -6% 0px" });
+        document.body.classList.add("pu-ready");
+        watch();
+        // new cards arrive as you scroll, search or switch tabs
+        mo = new MutationObserver(muts => { if (muts.some(m => m.addedNodes.length)) watch(); });
+        document.querySelectorAll(AREAS).forEach(el => mo.observe(el, { childList: true }));
+    };
+    window.stPopupFx();
 })();

@@ -622,14 +622,53 @@ function displayFeaturedZones(featuredZones) {
     observeLazyZoneImages('#featuredZones img.lazy-zone-img');
     if (typeof renderOriginalsShelf === "function") renderOriginalsShelf();
 }
-// All games is drawn in pieces: the first screenful right away, the rest in
-// small batches whenever the browser has a spare moment, so the page never
-// locks up building ~2,000 cards in one go. A newer draw cancels an older one.
+// All games is drawn in pieces: the first screenful right away, then more only as
+// you scroll toward the end of the list. Keeping the page small (instead of all
+// ~2,000 cards at once) makes hovering, scrolling and animated styles much
+// smoother on slow computers. renderAllZones() builds the rest at once, for the
+// scroll-to-bottom button and the browser's find (Ctrl+F). A newer draw cancels an older one.
 const FIRST_CARD_BATCH = 48;
+const MORE_CARD_BATCH = 40;
 let zonesDrawId = 0;
+let zonesRest = null;          // the cards not built yet: { list, next, add }
+let zonesSentinel = null, zonesSentinelObserver = null;
+function zonesSentinelEl() {
+    if (zonesSentinel) return zonesSentinel;
+    zonesSentinel = document.createElement("div");
+    zonesSentinel.id = "zonesMore";
+    zonesSentinel.setAttribute("aria-hidden", "true");
+    container.after(zonesSentinel);
+    if ("IntersectionObserver" in window) {
+        // start building the next batch well before you reach the end
+        zonesSentinelObserver = new IntersectionObserver(entries => {
+            if (entries.some(e => e.isIntersecting)) renderMoreZones();
+        }, { rootMargin: "0px 0px 1600px 0px" });
+        zonesSentinelObserver.observe(zonesSentinel);
+    }
+    return zonesSentinel;
+}
+function renderMoreZones(count = MORE_CARD_BATCH) {
+    const rest = zonesRest;
+    if (!rest || rest.next >= rest.list.length) return;
+    rest.add(count);
+    if (rest.next >= rest.list.length) { zonesRest = null; zonesSentinelEl().hidden = true; }
+    else {
+        // still on screen after this batch (tall window or a fast scroll): keep going
+        requestAnimationFrame(() => {
+            if (zonesRest !== rest || !zonesSentinel) return;
+            const r = zonesSentinel.getBoundingClientRect();
+            if (r.top < innerHeight + 1600 && r.bottom > -1600) renderMoreZones();
+        });
+    }
+}
+function renderAllZones() { if (zonesRest) renderMoreZones(Infinity); }
+window.renderAllZones = renderAllZones;
 function displayZones(zones) {
     const drawId = ++zonesDrawId;
+    zonesRest = null;
     clearCards(container);
+    const sentinel = zonesSentinelEl();
+    sentinel.hidden = true;
     const visibleZones = zones.filter(file => !isZoneDisabled(file.id));
     if (!visibleZones.length) {
         container.textContent = "No games found.";
@@ -637,32 +676,33 @@ function displayZones(zones) {
     }
     setSectionTitle(document.getElementById("allSummary"), "All games", visibleZones.length);
 
-    let next = 0;
-    const addCards = (shouldStop) => withCardCache(() => {
+    const rest = { list: visibleZones, next: 0 };
+    rest.add = count => withCardCache(() => {
+        if (drawId !== zonesDrawId) return;
         const frag = document.createDocumentFragment();
         const imgs = [];
-        let built = 0;
-        while (next < visibleZones.length && !shouldStop(built)) {
-            const card = createZoneCard(visibleZones[next++]);
+        const stop = Math.min(visibleZones.length, rest.next + count);
+        while (rest.next < stop) {
+            const card = createZoneCard(visibleZones[rest.next++]);
             const img = card.querySelector("img.lazy-zone-img");
             if (img) imgs.push(img);
             frag.appendChild(card);
-            built++;
         }
         container.appendChild(frag);
         observeLazyImages(imgs);
     });
-    addCards(built => built >= FIRST_CARD_BATCH);
-
-    const idle = window.requestIdleCallback || (cb => setTimeout(() => cb({ timeRemaining: () => 8 }), 16));
-    const step = deadline => {
-        if (drawId !== zonesDrawId || next >= visibleZones.length) return;
-        // At least a few cards per step so it always finishes, more when the browser is free
-        addCards(built => built >= 12 && deadline.timeRemaining() < 3);
-        if (next < visibleZones.length) idle(step);
-    };
-    idle(step);
+    rest.add(FIRST_CARD_BATCH);
+    if (rest.next < visibleZones.length) {
+        zonesRest = rest;
+        sentinel.hidden = false;
+        // if the first batch doesn't fill the window, the observer fires right away
+        if (!zonesSentinelObserver) renderAllZones();
+    }
 }
+// The browser's find (Ctrl+F / Cmd+F) can only find games that are on the page
+document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "f" || e.key === "F")) renderAllZones();
+}, true);
 
 // ── Search ──────────────────────────────────────────────────────────────────
 // Search and the tag filter work together. Matching ignores case, accents and
