@@ -198,6 +198,12 @@ function liteFxNote() {
 if (document.body) applyLiteFx(); else document.addEventListener("DOMContentLoaded", applyLiteFx);
 
 (function autoDetect() {
+    // Turned on because of the hardware: say so once, so a still background isn't a mystery
+    if (getLiteFxMode() === "auto" && !liteFxDetected() && weakHardware()) {
+        let noted = false;
+        try { noted = localStorage.getItem("gnmath-lite-fx-hw-noted") === "1"; localStorage.setItem("gnmath-lite-fx-hw-noted", "1"); } catch {}
+        if (!noted) setTimeout(() => { if (typeof notify === "function") notify("GN 2.0 turned on Lighter effects because this device is on the lighter side: moving backgrounds and endless animations are paused. You can change this in Settings → Look → Lighter effects."); }, 4000);
+    }
     if (getLiteFxMode() !== "auto" || liteFxActive()) return;
     // Watch frames for 2s; choppy = slow on average or many long stalls
     const sample = () => new Promise(resolve => {

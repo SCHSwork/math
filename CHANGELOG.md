@@ -11,7 +11,7 @@ All the changes to GN 2.0, newest first.
 
 ### New
 - **Lighter effects** (Settings → Look → Layout): pauses moving backgrounds and other endless animations (scenes, the aquarium's fish, bubbles, blinking lights). One-time animations like cards appearing still play.
-  - **Auto** (the default) turns it on by itself if this device seems to struggle. After the page settles it watches how smoothly the screen updates, twice, and only acts if both checks are clearly choppy. A short note says when it does. Devices with very little memory or only two processor cores start with it on.
+  - **Auto** (the default) turns it on by itself if this device seems to struggle. After the page settles it watches how smoothly the screen updates, twice, and only acts if both checks are clearly choppy. A short note says when it does. Devices with very little memory or only two processor cores start with it on, with a one-time note saying why.
   - **On** and **Off** override Auto.
 
 ### Changed
