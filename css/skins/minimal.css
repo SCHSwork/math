@@ -1,0 +1,48 @@
+/* GN 2.0 site style: Minimalist
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   UI-trend site styles: Minimalist, Semi-Flat, Neumorphism, Cyberpunk.
+   Minimalist and Semi-Flat keep the color theme's accent and follow
+   light/dark mode; Neumorphism and Cyberpunk are full looks.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) #scene { display: none !important; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .zone-item::before { display: none; }
+/* ── Minimalist: space, type and one accent; no boxes or shadows ── */
+body.st-minimal:not(#z) {
+    --text: #141414; --text-muted: #5c5c5c; --text-light: #6b6b6b; --accent-text: color-mix(in srgb, var(--primary) 75%, black);
+    --bg: #fafafa; --bg-secondary: #f2f2f2; --surface: #ffffff; --surface-hover: #f2f2f2; --border: #e3e3e3; --border-light: #ececec;
+    --glass: #ffffff; --gradient-surface: transparent; --gradient-primary: #fafafa;
+    --shadow-sm: none; --shadow: none; --shadow-lg: 0 10px 30px rgba(0,0,0,.08); --shadow-xl: 0 16px 40px rgba(0,0,0,.1);
+    --radius: 10px; --radius-sm: 8px; --radius-lg: 10px; --radius-xl: 14px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #fafafa !important; color: var(--text);
+}
+body.st-minimal.dark-mode:not(#z) {
+    --text: #f0f0f0; --text-muted: #a8a8a8; --text-light: #969696; --accent-text: color-mix(in srgb, var(--primary) 65%, white);
+    --bg: #0f0f0f; --bg-secondary: #161616; --surface: #161616; --surface-hover: #1d1d1d; --border: #2a2a2a; --border-light: #222;
+    --glass: #161616; --gradient-primary: #0f0f0f;
+    background: #0f0f0f !important;
+}
+body.st-minimal:not(#z) header { background: var(--bg) !important; border-bottom: 1px solid var(--border); box-shadow: none !important; backdrop-filter: none; color: var(--text); }
+body.st-minimal:not(#z) .logo { color: var(--text); font-weight: 700; font-size: 1.35rem; letter-spacing: -.03em; }
+body.st-minimal:not(#z) :is(.zone-item, #gotd) { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+body.st-minimal:not(#z) :is(.settings-section, .filter-menu, .popup, .status-panel, .toast) { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow-lg) !important; }
+body.st-minimal:not(#z) .zone-item img { border-radius: 10px; transition: transform .25s ease; }
+body.st-minimal:not(#z) .zone-item:hover { transform: none; box-shadow: none !important; }
+body.st-minimal:not(#z) .zone-item:hover img { transform: scale(1.03); }
+body.st-minimal:not(#z) .zone-item button { color: var(--text); font-weight: 500; text-align: left; padding-left: 2px; }
+body.st-minimal:not(#z) #container { gap: 2.25rem 1.75rem; }
+body.st-minimal:not(#z) .section-title { color: var(--text); font-weight: 600; font-size: 1.15rem; letter-spacing: -.01em; }
+body.st-minimal:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--text) !important; color: var(--bg) !important; border: 0 !important; border-radius: 999px !important; box-shadow: none !important; font-weight: 600; }
+body.st-minimal:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: transparent !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 999px !important; box-shadow: none !important; }
+body.st-minimal:not(#z) header .control-button { border-color: transparent !important; }
+body.st-minimal:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):hover { background: var(--surface-hover) !important; }
+body.st-minimal:not(#z) .control-button .control-icon { color: var(--text); }
+body.st-minimal:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: var(--bg-secondary) !important; color: var(--text) !important; border: 1px solid transparent !important; caret-color: var(--text); box-shadow: none !important; }
+body.st-minimal:not(#z) #searchBar { border-radius: 999px; }
+body.st-minimal:not(#z) #searchBar:focus { border-color: var(--text) !important; }
+body.st-minimal:not(#z) :is(#searchBar, input, textarea)::placeholder { color: var(--text-light); }
+body.st-minimal:not(#z) .popup-header { background: var(--surface) !important; color: var(--text) !important; border-bottom: 1px solid var(--border); }
+body.st-minimal:not(#z) footer { background: var(--bg) !important; border-top: 1px solid var(--border); }

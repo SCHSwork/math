@@ -1,0 +1,70 @@
+/* GN 2.0 site style: Subway map
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Vending machine, Art museum, Receipt, Subway map
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) #scene { display: none !important; }
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── Subway map: games are stations along colored lines ── */
+body.st-metro:not(#z) {
+    --row-h: 148px; --row-gap: 14px; --pitch: calc(var(--row-h) + var(--row-gap)); --ring: 76px; --ring-top: 14px;
+    --primary: #0a3d91; --primary-hover: #072f70; --primary-light: rgba(10,61,145,.1); --primary-lighter: rgba(10,61,145,.05);
+    --text: #14171c; --text-muted: #3f4650; --text-light: #4f5762; --accent-text: #0a3d91;
+    --bg: #f5f4ef; --bg-secondary: #ffffff; --surface: #ffffff; --surface-hover: #f0f2f6; --border: #cfd3da; --border-light: #e3e6eb;
+    --glass: #ffffff; --gradient-surface: #ffffff; --gradient-primary: #0a3d91;
+    --shadow-sm: none; --shadow: 0 4px 12px rgba(20,30,50,.12); --shadow-lg: 0 8px 20px rgba(20,30,50,.15); --shadow-xl: 0 12px 30px rgba(20,30,50,.18);
+    --radius: 10px; --radius-sm: 8px; --radius-lg: 12px; --radius-xl: 16px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /* map paper with faint street grid */
+    background: linear-gradient(rgba(10,61,145,.05) 1px, transparent 1px) 0 0 / 46px 46px, linear-gradient(90deg, rgba(10,61,145,.05) 1px, transparent 1px) 0 0 / 46px 46px, #f5f4ef !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+@media (max-width: 600px) {
+    body.st-metro:not(#z) { --row-h: 132px; --row-gap: 10px; --ring: 60px; }
+}
+body.st-metro:not(#z) header { background: #0a3d91 !important; border-bottom: 0; box-shadow: 0 4px 14px rgba(10,30,70,.3) !important; }
+/* a strip of every line color under the header */
+body.st-metro:not(#z) header::after { content: ""; display: block; height: 7px; background: linear-gradient(90deg, #e1251b 0 20%, #f39200 20% 40%, #00a650 40% 60%, #0099d8 60% 80%, #8e44ad 80%); }
+body.st-metro:not(#z) .logo { color: #fff; font-weight: 800; letter-spacing: .01em; }
+/* each row of stations is one line; colors cycle red, orange, green, blue, purple */
+body.st-metro:not(#z) #container { --y: calc(var(--ring-top) + var(--ring) / 2); grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)) !important; grid-auto-rows: var(--row-h); gap: var(--row-gap) 4px !important;
+    background: repeating-linear-gradient(180deg,
+        transparent 0 calc(var(--y) - 5px), #e1251b calc(var(--y) - 5px) calc(var(--y) + 5px), transparent calc(var(--y) + 5px) calc(var(--pitch) + var(--y) - 5px),
+        #f39200 calc(var(--pitch) + var(--y) - 5px) calc(var(--pitch) + var(--y) + 5px), transparent calc(var(--pitch) + var(--y) + 5px) calc(2 * var(--pitch) + var(--y) - 5px),
+        #00a650 calc(2 * var(--pitch) + var(--y) - 5px) calc(2 * var(--pitch) + var(--y) + 5px), transparent calc(2 * var(--pitch) + var(--y) + 5px) calc(3 * var(--pitch) + var(--y) - 5px),
+        #0099d8 calc(3 * var(--pitch) + var(--y) - 5px) calc(3 * var(--pitch) + var(--y) + 5px), transparent calc(3 * var(--pitch) + var(--y) + 5px) calc(4 * var(--pitch) + var(--y) - 5px),
+        #8e44ad calc(4 * var(--pitch) + var(--y) - 5px) calc(4 * var(--pitch) + var(--y) + 5px), transparent calc(4 * var(--pitch) + var(--y) + 5px) calc(5 * var(--pitch))); }
+body.st-metro:not(#z) .shelf { --y: calc(var(--ring-top) + var(--ring) / 2 + .35rem); grid-auto-columns: 124px; gap: 4px !important;
+    background: linear-gradient(180deg, transparent calc(var(--y) - 5px), #0a3d91 calc(var(--y) - 5px) calc(var(--y) + 5px), transparent calc(var(--y) + 5px)) !important; }
+body.st-metro:not(#z) #originalsZones { background: linear-gradient(180deg, transparent calc(var(--y) - 5px), #e1251b calc(var(--y) - 5px) calc(var(--y) + 5px), transparent calc(var(--y) + 5px)) !important; }
+body.st-metro:not(#z) .shelf-small { background: linear-gradient(180deg, transparent calc(var(--y) - 5px), #8e44ad calc(var(--y) - 5px) calc(var(--y) + 5px), transparent calc(var(--y) + 5px)) !important; }
+body.st-metro:not(#z) .zone-item { height: var(--row-h); background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; padding: var(--ring-top) 2px 0; align-items: center; contain-intrinsic-size: auto var(--row-h); }
+body.st-metro:not(#z) .shelf .zone-item { height: var(--row-h); }
+body.st-metro:not(#z) .zone-item:hover { transform: none; }
+/* the station: a white ring around the cover */
+body.st-metro:not(#z) .zone-item img { flex: none; width: var(--ring) !important; height: var(--ring) !important; aspect-ratio: 1; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 0 0 3px #14171c; box-sizing: border-box; background: #fff; transition: transform .2s ease, box-shadow .2s ease; }
+body.st-metro:not(#z) .zone-item:is(:hover, :focus-within) img { transform: scale(1.12); box-shadow: 0 0 0 4px #0a3d91, 0 6px 14px rgba(10,30,70,.3); }
+body.st-metro:not(#z) .zone-item > button:not(.card-fav) { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; max-height: none; min-height: 0; margin: 9px 0 0; padding: 2px 6px;
+    background: rgba(245,244,239,.92) !important; color: #14171c !important; border-radius: 4px; font-size: 12.5px; font-weight: 800; line-height: 1.25; text-align: center; }
+body.st-metro:not(#z) .zone-item:is(:hover, :focus-within) > button:not(.card-fav) { background: #0a3d91 !important; color: #fff !important; }
+body.st-metro:not(#z) .zone-item::before, body.st-metro:not(#z) .zone-item::after, body.st-metro:not(#z) .zone-item .card-meta { display: none !important; }
+body.st-metro:not(#z) .zone-item button.card-fav { top: 4px; left: calc(50% - var(--ring) / 2 - 20px); width: 26px; height: 26px; line-height: 26px; font-size: 14px; }
+body.st-metro:not(#z) .zone-item .card-badges { top: 0; right: 0; transform: scale(.85); transform-origin: top right; }
+/* section names as line badges */
+body.st-metro:not(#z) .section-title .section-count { color: #cfe0ff; }
+body.st-metro:not(#z) .section-title { color: #fff; background: #0a3d91; border-radius: 999px; padding: 4px 14px 4px 10px; width: fit-content; font-weight: 800; gap: 8px; }
+body.st-metro:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #fff !important; border: 2px solid #14171c !important; }
+body.st-metro:not(#z) :is(.popup, .status-panel, .toast) { background: #fff !important; border: 2px solid #14171c !important; }
+body.st-metro:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { background: #fff !important; color: #14171c !important; border: 2px solid #14171c !important; border-radius: 999px !important; box-shadow: none !important; font-weight: 700; }
+body.st-metro:not(#z) .control-button { background: rgba(255,255,255,.12) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.35) !important; box-shadow: none !important; }
+body.st-metro:not(#z) .control-button .control-icon { color: #fff; }
+body.st-metro:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #0a3d91 !important; color: #fff !important; border: 0 !important; border-radius: 999px !important; box-shadow: none !important; font-weight: 800; }
+body.st-metro:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fff !important; color: #14171c !important; border: 2px solid #14171c !important; caret-color: #0a3d91; box-shadow: none !important; }
+body.st-metro:not(#z) #searchBar { border-radius: 999px; }
+body.st-metro:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px #f39200 !important; }
+body.st-metro:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #4f5762; }
+body.st-metro:not(#z) .popup-header { background: #0a3d91 !important; color: #fff !important; }
+body.st-metro:not(#z) footer { background: #14171c !important; border-top: 7px solid #f3c300; color: #f1f2f4; }
+body.st-metro:not(#z) footer::before { content: "MIND THE GAP"; display: block; margin: 0 auto 12px; font-weight: 800; letter-spacing: .3em; font-size: 12px; color: #f3c300; }
+body.st-metro:not(#z) footer a { color: #f1f2f4; }

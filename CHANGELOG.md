@@ -7,6 +7,16 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 21, 2026 — Lighter effects, and only the style you use is loaded
+
+### New
+- **Lighter effects** (Settings → Look → Layout): pauses moving backgrounds and other endless animations (scenes, the aquarium's fish, bubbles, blinking lights). One-time animations like cards appearing still play.
+  - **Auto** (the default) turns it on by itself if this device seems to struggle. After the page settles it watches how smoothly the screen updates, twice, and only acts if both checks are clearly choppy. A short note says when it does. Devices with very little memory or only two processor cores start with it on.
+  - **On** and **Off** override Auto.
+
+### Changed
+- **Each site style's look is now its own file** (css/skins/), and only the one you're using is downloaded. The main stylesheet went from 352 KB to 186 KB, so every page load has less to read, and hovering over cards takes about 20–25% less work. The saved style still loads before the page appears, so it never flashes, and a style's file starts loading as soon as you point at it in the picker, so switching is instant.
+
 ## October 21, 2026 — Much lighter on the graphics chip
 
 Having the site open no longer makes the rest of the browser (other tabs too) choppy. The screen was being redrawn 60 times a second even when nothing was happening, and on some scenes it had to redo large blurs every time. Counting screen redraws per second with the page sitting still:

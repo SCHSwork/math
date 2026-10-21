@@ -1,0 +1,43 @@
+/* GN 2.0 site style: Candy
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) #scene { display: none !important; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .zone-item::before { display: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+/* ── Candy: pastel sprinkles, extra-round cards, squishy jelly buttons ── */
+body.st-candy:not(#z) {
+    --primary: #ff5fa2; --primary-hover: #ff3d8b; --primary-light: rgba(255,95,162,.16); --primary-lighter: rgba(255,95,162,.08);
+    --text: #5a2546; --text-muted: #8a4f73; --text-light: #8a4f73; --accent-text: #c4185f;
+    --bg: #ffe6f2; --bg-secondary: #fff5fa; --surface: #ffffff; --surface-hover: #fff0f7; --border: #ffc2dd; --border-light: #ffd9ea;
+    --glass: #ffffff; --gradient-surface: #ffffff; --gradient-primary: linear-gradient(90deg, #ff8ac0, #b48cff);
+    --shadow-sm: 0 4px 0 #ffc2dd; --shadow: 0 6px 0 #ffb3d4; --shadow-lg: 0 8px 0 #ffb3d4; --shadow-xl: 0 10px 0 #ffa6cc;
+    --radius: 22px; --radius-sm: 16px; --radius-lg: 26px; --radius-xl: 32px;
+    font-family: "GN Candy", "Trebuchet MS", sans-serif;
+    /* sprinkles */
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M20 30l10 6' stroke='%23ff8ac0'/%3E%3Cpath d='M90 20l-4 11' stroke='%2391e3ff'/%3E%3Cpath d='M150 45l11 2' stroke='%23ffd36e'/%3E%3Cpath d='M40 100l3 11' stroke='%23b48cff'/%3E%3Cpath d='M120 95l9-7' stroke='%237ee0a8'/%3E%3Cpath d='M70 150l11 4' stroke='%23ff9f7a'/%3E%3Cpath d='M160 140l-6 9' stroke='%23ff8ac0'/%3E%3Cpath d='M10 165l8-8' stroke='%2391e3ff'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 180px 180px,
+        linear-gradient(180deg, #ffe6f2, #f3e8ff) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-candy:not(#z) header { background: linear-gradient(90deg, #ff8ac0, #c79bff) !important; border-bottom: 0; box-shadow: 0 6px 0 rgba(199,155,255,.45) !important; }
+body.st-candy:not(#z) .logo { color: #fff; font-weight: 600; font-size: 2rem; text-shadow: 0 3px 0 #e0559a, 0 6px 10px rgba(160,40,110,.25); }
+body.st-candy:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #fff !important; border: 3px solid #ffc2dd !important; box-shadow: 0 6px 0 #ffb3d4 !important; }
+body.st-candy:not(#z) :is(.popup, .status-panel, .toast) { background: #fff !important; border: 3px solid #ffc2dd !important; box-shadow: 0 10px 0 #ffb3d4, 0 20px 40px rgba(160,40,110,.2) !important; }
+body.st-candy:not(#z) .zone-item:hover { transform: translateY(-4px) rotate(-1deg); box-shadow: 0 10px 0 #ff8ac0 !important; border-color: #ff8ac0 !important; }
+body.st-candy:not(#z) .zone-item img { border-radius: 18px 18px 0 0; }
+body.st-candy:not(#z) .zone-item button { color: #5a2546; font-weight: 600; }
+body.st-candy:not(#z) .section-title { color: #c4185f; font-weight: 600; }
+body.st-candy:not(#z) :is(.settings-button, #gotd .gotd-play) { background: linear-gradient(180deg, rgba(255,255,255,.45) 0 30%, transparent 45%), #ff5fa2 !important; color: #fff !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 5px 0 #d63c80, inset 0 -3px 0 rgba(0,0,0,.08) !important; font-weight: 600; transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s; }
+body.st-candy:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: linear-gradient(180deg, rgba(255,255,255,.6) 0 30%, transparent 45%), #ffe0ef !important; color: #8a1f55 !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 4px 0 #ffb3d4 !important; transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s; }
+body.st-candy:not(#z) header .control-button { background: linear-gradient(180deg, rgba(255,255,255,.6) 0 30%, transparent 45%), #fff !important; color: #c4185f !important; }
+body.st-candy:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button, #gotd .gotd-play):hover { transform: translateY(-2px) scale(1.04); }
+body.st-candy:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button, #gotd .gotd-play):active { transform: translateY(3px) scale(.97); box-shadow: 0 1px 0 #d63c80 !important; }
+body.st-candy:not(#z) .control-button .control-icon { color: inherit; }
+body.st-candy:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fff !important; color: #5a2546 !important; border: 3px solid #ffc2dd !important; caret-color: #ff5fa2; box-shadow: none !important; }
+body.st-candy:not(#z) #searchBar { border-radius: 999px; }
+body.st-candy:not(#z) #searchBar:focus { border-color: #ff8ac0 !important; box-shadow: 0 0 0 4px rgba(255,138,192,.3) !important; }
+body.st-candy:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #8a4f73; }
+body.st-candy:not(#z) .popup-header { background: linear-gradient(90deg, #ff8ac0, #c79bff) !important; color: #fff !important; }
+body.st-candy:not(#z) footer { background: #fff5fa !important; border-top: 3px solid #ffc2dd; }
+body.reduced-motion.st-candy:not(#z) * { transition: none !important; }

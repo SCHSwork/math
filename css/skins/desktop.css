@@ -1,0 +1,42 @@
+/* GN 2.0 site style: Retro desktop
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Site styles (js/skins.js). ":not(#z)" makes these win over color themes
+   and scenes. Full-look styles hide the scene background.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-terminal:not(#z), body.st-desktop:not(#z), body.st-bold:not(#z), body.st-paper:not(#z), body.st-pixel:not(#z), body.st-comic:not(#z)) #scene { display: none !important; }
+/* ── Retro desktop: gray 90s windows ── */
+body.st-desktop:not(#z) {
+    --primary: #000080; --primary-hover: #1084d0; --primary-light: rgba(0,0,128,.12); --primary-lighter: rgba(0,0,128,.06);
+    --text: #000; --text-muted: #333; --text-light: #555; --accent-text: #000080;
+    --bg: #008080; --bg-secondary: #c0c0c0; --surface: #c0c0c0; --surface-hover: #d4d0c8; --border: #808080; --border-light: #a0a0a0;
+    --glass: #fff; --gradient-surface: #c0c0c0; --gradient-primary: linear-gradient(90deg, #000080, #1084d0);
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    --bevel-out: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+    --bevel-in: inset -1px -1px #fff, inset 1px 1px #0a0a0a, inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+    font-family: Tahoma, "MS Sans Serif", Verdana, Geneva, sans-serif; font-size: 13px;
+    background: #008080 !important; color: #000;
+}
+body.st-desktop:not(#z) header { background: #c0c0c0 !important; box-shadow: var(--bevel-out) !important; color: #000; backdrop-filter: none; }
+body.st-desktop:not(#z) .logo { background: linear-gradient(90deg, #000080, #1084d0); color: #fff; padding: 2px 10px; font-size: 18px; }
+body.st-desktop:not(#z) :is(.zone-item, .popup, #gotd, .settings-section, .filter-menu, .status-panel, .toast, .admin-act-sec) { background: #c0c0c0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: var(--bevel-out) !important; color: #000; }
+body.st-desktop:not(#z) .zone-item { padding: 3px; }
+body.st-desktop:not(#z) .zone-item:hover { transform: none; outline: 1px dotted #000; outline-offset: -5px; }
+body.st-desktop:not(#z) .zone-item img { box-shadow: var(--bevel-in); border-radius: 0; }
+body.st-desktop:not(#z) .zone-item::before, body.st-desktop:not(#z) .zone-item::after { display: none; }
+body.st-desktop:not(#z) .zone-item button { color: #000; }
+body.st-desktop:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button, #gotd .gotd-play, .omb-actions button) { background: #c0c0c0 !important; color: #000 !important; border: 0 !important; border-radius: 0 !important; box-shadow: var(--bevel-out) !important; text-shadow: none !important; }
+body.st-desktop:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):active { box-shadow: var(--bevel-in) !important; transform: none !important; }
+body.st-desktop:not(#z) .control-button .control-icon { color: #000; }
+body.st-desktop:not(#z) :is(#searchBar, input, select, textarea, .set-search) { background: #fff !important; color: #000 !important; border: 0 !important; border-radius: 0 !important; box-shadow: var(--bevel-in) !important; }
+body.st-desktop:not(#z) .popup-header { background: linear-gradient(90deg, #000080, #1084d0) !important; color: #fff !important; padding: 4px 8px !important; }
+body.st-desktop:not(#z) .popup-header button { background: #c0c0c0 !important; color: #000 !important; border-radius: 0 !important; box-shadow: var(--bevel-out) !important; width: 22px; height: 20px; }
+body.st-desktop:not(#z) .section-title { color: #fff; text-shadow: 1px 1px #000; }
+body.st-desktop:not(#z) footer { background: #c0c0c0 !important; box-shadow: var(--bevel-out); color: #000; }
+body.st-desktop:not(#z) .set-switch span { border-radius: 0; box-shadow: var(--bevel-in); background: #fff; }
+body.st-desktop:not(#z) .set-switch span::after { border-radius: 0; background: #c0c0c0; box-shadow: var(--bevel-out); }
+body.st-desktop:not(#z) .set-switch input:checked + span { background: #000080; }
+/* Styles that restyle the logo need normal text instead of the gradient-clipped default */
+:is(body.st-terminal, body.st-desktop, body.st-bold, body.st-pixel, body.st-comic):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; }

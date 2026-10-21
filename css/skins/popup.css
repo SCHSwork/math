@@ -1,0 +1,70 @@
+/* GN 2.0 site style: Pop-up book
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Aquarium, Arcade, Pop-up book
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) #scene { display: none !important; }
+:is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── Pop-up book: the page is an open book and games fold up off it as you scroll to them ── */
+body.st-popup:not(#z) {
+    --primary: #b8322c; --primary-hover: #93241f; --primary-light: rgba(184,50,44,.12); --primary-lighter: rgba(184,50,44,.06);
+    --text: #3a2614; --text-muted: #5e4630; --text-light: #6e553c; --accent-text: #93241f;
+    --bg: #f6ead0; --bg-secondary: #fbf3e0; --surface: #fffaf0; --surface-hover: #fbf1dc; --border: #d8c39b; --border-light: #e8d8b6;
+    --glass: #fbf3e0; --gradient-surface: #fffaf0; --gradient-primary: #6b1d1d;
+    --shadow-sm: 0 2px 4px rgba(80,50,20,.15); --shadow: 0 6px 14px rgba(80,50,20,.2); --shadow-lg: 0 10px 22px rgba(80,50,20,.25); --shadow-xl: 0 14px 30px rgba(80,50,20,.3);
+    --radius: 6px; --radius-sm: 4px; --radius-lg: 8px; --radius-xl: 12px;
+    font-family: "GN Candy", "Trebuchet MS", sans-serif;
+    /* a wooden desk */
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 2px, transparent 2px 9px, rgba(255,255,255,.04) 9px 11px, transparent 11px 23px), linear-gradient(180deg, #7a4b2a, #5c3519) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* the book's cover is the header: red leather with gold stamping */
+body.st-popup:not(#z) header { background: radial-gradient(circle at 30% 40%, rgba(255,255,255,.05) 0 1px, transparent 2px) 0 0 / 5px 5px, linear-gradient(180deg, #7d2222, #5a1414) !important; border-bottom: 3px solid #c9a24a; box-shadow: 0 6px 18px rgba(0,0,0,.4) !important; }
+body.st-popup:not(#z) .logo { color: #f3cf6b; font-family: "GN Candy", sans-serif; font-weight: 700; text-shadow: 0 1px 0 #6b4a0a, 0 0 10px rgba(243,207,107,.35); }
+body.st-popup:not(#z) header .control-button { background: rgba(0,0,0,.2) !important; color: #f3cf6b !important; border: 1px solid #c9a24a !important; box-shadow: none !important; }
+body.st-popup:not(#z) header .control-button .control-icon { color: #f3cf6b; }
+/* the open pages, with a shadow down the middle and a stack of pages underneath */
+body.st-popup:not(#z) main { max-width: 1320px; margin: 28px auto 40px; padding: 2.4rem 2.2rem 3rem; border-radius: 6px;
+    background: linear-gradient(90deg, #e9d9b6 0, #fbf3e0 2.5%, #f6ead0 46%, #d9c49c 49.6%, #b9a27a 50%, #d9c49c 50.4%, #f6ead0 54%, #fbf3e0 97.5%, #e9d9b6 100%) !important;
+    box-shadow: 0 2px 0 #e7d6b0, 0 4px 0 #cdb78c, 0 6px 0 #e7d6b0, 0 8px 0 #c4ad80, 0 24px 40px rgba(0,0,0,.45); }
+@media (max-width: 760px) {
+    body.st-popup:not(#z) main { margin: 14px 8px 30px; padding: 1.6rem 1rem 2rem; background: linear-gradient(90deg, #d9c49c 0, #f6ead0 4%, #fbf3e0 96%, #e9d9b6) !important; }
+}
+body.st-popup:not(#z) #container { gap: 2.4rem 1.6rem !important; padding: 10px 4px 20px; }
+body.st-popup:not(#z) .shelf { padding-top: 1.2rem; padding-bottom: 1.8rem; }
+/* each game is a paper cut-out hinged at the bottom */
+body.st-popup:not(#z) .zone-item { --rib: #b8322c; overflow: visible; padding: 8px 8px 0; background: #fffdf6 !important; border: 0 !important; border-radius: 5px !important; transform-origin: 50% 100%;
+    box-shadow: 0 1px 0 #e3d3b0, 0 14px 14px -8px rgba(70,40,10,.35) !important; transition: translate .25s ease, box-shadow .25s ease; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+2) { --rib: #2f69b8; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+3) { --rib: #23804a; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+4) { --rib: #a8520a; }
+body.st-popup:not(#z) .zone-item:nth-child(5n+5) { --rib: #7a46b8; }
+body.st-popup:not(#z) .zone-item:hover { transform: none; translate: 0 -8px; box-shadow: 0 1px 0 #e3d3b0, 0 24px 20px -10px rgba(70,40,10,.4) !important; }
+body.st-popup:not(#z) .zone-item img { border-radius: 3px; }
+body.st-popup:not(#z) .zone-item:hover img { transform: none; }
+/* title on a paper ribbon with notched ends that hangs past the card's edges */
+body.st-popup:not(#z) .zone-item > button:not(.card-fav) { margin: 10px -16px 12px; padding: 8px 22px; min-height: 0; color: #fff !important; background: var(--rib) !important; font-family: "GN Candy", sans-serif; font-weight: 700; font-size: 14px; line-height: 1.25;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%); filter: drop-shadow(0 2px 0 rgba(0,0,0,.25)); }
+body.st-popup:not(#z) .shelf .zone-item > button:not(.card-fav) { max-height: none; display: block; -webkit-line-clamp: unset; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a glued paper tab at the hinge */
+body.st-popup:not(#z) .zone-item::after { content: ""; top: auto; bottom: -9px; left: 22%; width: 56%; height: 9px; aspect-ratio: auto; transform: none; opacity: 1; animation: none !important; background: #e4d2ab; clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%); z-index: 0; }
+body.st-popup:not(#z) .zone-item::before { display: none; }
+body.st-popup:not(#z) .zone-item .card-meta { margin: -4px 0 0; padding: 0 0 8px; color: #6e553c; }
+/* cards start folded flat and spring up the first time they scroll into view (skins.js adds .pu-in) */
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item { animation: none; transition: transform .75s cubic-bezier(.25, 1.45, .45, 1), filter .5s ease, translate .25s ease, box-shadow .25s ease; transition-delay: var(--pu-delay, 0ms); }
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item:not(.pu-in) { transform: perspective(700px) rotateX(80deg); filter: brightness(.82); box-shadow: 0 1px 0 #e3d3b0 !important; }
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item.pu-in { transform: perspective(700px) rotateX(0deg); }
+body.st-popup:not(#z) .section-title { color: #6b1d1d; font-weight: 700; font-size: 1.5rem; text-shadow: 0 1px 0 #fff; }
+body.st-popup:not(#z) .section-title .section-count { color: #6e553c; }
+body.st-popup:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #fffdf6 !important; border: 1px solid #d8c39b !important; box-shadow: 0 10px 14px -8px rgba(70,40,10,.3) !important; }
+body.st-popup:not(#z) :is(.popup, .status-panel, .toast) { background: #fbf3e0 !important; border: 1px solid #c9a24a !important; }
+body.st-popup:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #b8322c !important; color: #fff !important; border: 0 !important; box-shadow: 0 3px 0 #6b1d1d !important; font-family: "GN Candy", sans-serif; font-weight: 700; }
+body.st-popup:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { background: #fffdf6 !important; color: #3a2614 !important; border: 1px solid #c9b088 !important; box-shadow: 0 2px 0 #d8c39b !important; }
+body.st-popup:not(#z) header .filter-button { background: rgba(0,0,0,.2) !important; color: #f3cf6b !important; border-color: #c9a24a !important; box-shadow: none !important; }
+body.st-popup:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fffaf0 !important; color: #3a2614 !important; border: 1px solid #c9a24a !important; caret-color: #b8322c; box-shadow: inset 0 1px 3px rgba(80,50,20,.15) !important; font-family: "GN Candy", sans-serif; }
+body.st-popup:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(243,207,107,.7) !important; }
+body.st-popup:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #7a6044; }
+body.st-popup:not(#z) .popup-header { background: #6b1d1d !important; color: #f3cf6b !important; }
+body.st-popup:not(#z) footer { background: #3e2410 !important; border-top: 0; color: #f6ead0; }
+body.st-popup:not(#z) footer a { color: #f6ead0; }

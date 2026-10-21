@@ -1,0 +1,41 @@
+/* GN 2.0 site style: Comic book
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Site styles (js/skins.js). ":not(#z)" makes these win over color themes
+   and scenes. Full-look styles hide the scene background.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-terminal:not(#z), body.st-desktop:not(#z), body.st-bold:not(#z), body.st-paper:not(#z), body.st-pixel:not(#z), body.st-comic:not(#z)) #scene { display: none !important; }
+/* ── Comic book: halftone dots, outlines and speech bubbles ── */
+body.st-comic:not(#z) {
+    --primary: #e11d48; --primary-hover: #be123c; --primary-light: rgba(225,29,72,.15); --primary-lighter: rgba(225,29,72,.08);
+    --text: #111; --text-muted: #333; --text-light: #555; --accent-text: #e11d48;
+    --bg: #fde047; --bg-secondary: #fff; --surface: #fff; --surface-hover: #fffbea; --border: #111; --border-light: #111;
+    --glass: #fff; --gradient-surface: #fff; --gradient-primary: #2563eb;
+    --shadow-sm: 3px 3px 0 #111; --shadow: 4px 4px 0 #111; --shadow-lg: 5px 5px 0 #111; --shadow-xl: 7px 7px 0 #111;
+    --radius: 6px; --radius-sm: 6px; --radius-lg: 10px; --radius-xl: 14px;
+    font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive;
+    background: #fde047 radial-gradient(circle, rgba(225,29,72,.35) 2px, transparent 2.5px) 0 0 / 14px 14px !important; color: #111;
+}
+body.st-comic:not(#z) header { background: #2563eb radial-gradient(circle, rgba(255,255,255,.22) 2px, transparent 2.5px) 0 0 / 10px 10px !important; border-bottom: 4px solid #111; }
+body.st-comic:not(#z) .logo { font-family: Impact, "Arial Black", sans-serif; font-size: 30px; color: #fde047; -webkit-text-stroke: 2px #111; text-shadow: 3px 3px 0 #111; transform: rotate(-4deg); letter-spacing: .03em; }
+body.st-comic:not(#z) :is(.zone-item, .popup, #gotd, .settings-section, .filter-menu, .status-panel, .toast) { border: 3px solid #111 !important; box-shadow: 5px 5px 0 #111 !important; background: #fff !important; }
+body.st-comic:not(#z) .zone-item:hover { transform: rotate(-1.5deg) scale(1.04); box-shadow: 8px 8px 0 #111 !important; }
+body.st-comic:not(#z) .zone-item::before { display: none; }
+body.st-comic:not(#z) .zone-item img { border-bottom: 3px solid #111; }
+body.st-comic:not(#z) .zone-item button { color: #111; font-weight: 700; }
+body.st-comic:not(#z) .section-title { position: relative; background: #fff; border: 3px solid #111; border-radius: 18px; padding: .15rem .9rem; box-shadow: 4px 4px 0 #111; font-family: Impact, "Arial Black", sans-serif; letter-spacing: .03em; text-transform: uppercase; display: inline-flex; }
+body.st-comic:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #e11d48 !important; color: #fff !important; border: 3px solid #111 !important; box-shadow: 4px 4px 0 #111 !important; font-family: Impact, "Arial Black", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+body.st-comic:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #fff !important; color: #111 !important; border: 3px solid #111 !important; box-shadow: 3px 3px 0 #111 !important; }
+body.st-comic:not(#z) .control-button .control-icon { color: #111; }
+body.st-comic:not(#z) #searchBar { background: #fff !important; color: #111 !important; border: 3px solid #111 !important; border-radius: 22px; }
+body.st-comic:not(#z) .popup-header { background: #2563eb !important; border-bottom: 3px solid #111; }
+body.st-comic:not(#z) .popup-header h2, body.st-comic:not(#z) #popupTitle { font-family: Impact, "Arial Black", sans-serif; letter-spacing: .03em; }
+/* Styles that restyle the logo need normal text instead of the gradient-clipped default */
+:is(body.st-terminal, body.st-desktop, body.st-bold, body.st-pixel, body.st-comic):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; }
+body.st-comic:not(#z) .logo { background: none; }
+body.st-comic:not(#z) .logo { -webkit-text-fill-color: #fde047; }
+:is(body.st-bold, body.st-comic):not(#z) .zone-item img { background: #f3f4f6; }
+/* Full-look styles hide the scene, so their footer uses their own colors (not a scene's footer bar) */
+:is(body.st-paper, body.st-comic, body.st-pixel, body.st-bold):not(#z) footer { background: var(--bg-secondary) !important; border-top: 2px solid var(--border); }
+body.st-comic:not(#z) footer { border-top: 3px solid #111; }

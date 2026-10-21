@@ -1,0 +1,73 @@
+/* GN 2.0 site style: Receipt
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Vending machine, Art museum, Receipt, Subway map
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) #scene { display: none !important; }
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── Receipt: the whole page is a long store receipt; games are line items ── */
+body.st-receipt:not(#z) {
+    --primary: #1f1f1f; --primary-hover: #000; --primary-light: rgba(0,0,0,.08); --primary-lighter: rgba(0,0,0,.04);
+    --text: #1f1f1f; --text-muted: #4a4a4a; --text-light: #5a5a5a; --accent-text: #000;
+    --bg: #fffef8; --bg-secondary: #f4f2ea; --surface: #fffef8; --surface-hover: #f4f2ea; --border: #c9c5b8; --border-light: #e0dccf;
+    --glass: #fffef8; --gradient-surface: #fffef8; --gradient-primary: #1f2328;
+    --shadow-sm: none; --shadow: 0 4px 12px rgba(0,0,0,.15); --shadow-lg: 0 8px 20px rgba(0,0,0,.18); --shadow-xl: 0 12px 30px rgba(0,0,0,.2);
+    --radius: 0px; --radius-sm: 0px; --radius-lg: 0px; --radius-xl: 0px;
+    font-family: "Courier New", Courier, ui-monospace, monospace;
+    /* a speckled store counter, darker under the paper */
+    background: radial-gradient(circle at 20% 30%, rgba(0,0,0,.06) 0 1px, transparent 1.5px) 0 0 / 7px 7px, radial-gradient(circle at 70% 60%, rgba(255,255,255,.35) 0 1px, transparent 1.5px) 0 0 / 9px 9px,
+        radial-gradient(ellipse 40% 100% at 50% 50%, #9aa3ad, #b7bec6 70%) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* the cash register */
+body.st-receipt:not(#z) header { background: #1f2328 !important; border-bottom: 4px solid #0f1114; box-shadow: 0 4px 14px rgba(0,0,0,.35) !important; }
+body.st-receipt:not(#z) .logo { color: #7dffa8; font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; letter-spacing: .08em; text-shadow: 0 0 8px rgba(125,255,168,.6); }
+/* the paper strip, with torn zig-zag ends */
+body.st-receipt:not(#z) main { max-width: 640px; margin: 26px auto 40px; padding: 2.4rem 1.3rem 2.6rem; background: #fffef8 !important; color: #1f1f1f;
+    background-image: linear-gradient(90deg, rgba(0,0,0,.04), transparent 6%, transparent 94%, rgba(0,0,0,.04)) !important;
+    -webkit-mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) top / 16px 10px repeat-x, linear-gradient(#000 0 0) center / 100% calc(100% - 20px) no-repeat, conic-gradient(from 135deg at 50% 0, #000 90deg, #0000 0) bottom / 16px 10px repeat-x;
+            mask: conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) top / 16px 10px repeat-x, linear-gradient(#000 0 0) center / 100% calc(100% - 20px) no-repeat, conic-gradient(from 135deg at 50% 0, #000 90deg, #0000 0) bottom / 16px 10px repeat-x; }
+body.st-receipt:not(#z) main::before { content: "GN 2.0 GAME MART\A STORE #002   REG 01   CASHIER: YOU\A ================================"; display: block; white-space: pre-wrap; text-align: center; font-weight: 700; line-height: 1.5; margin-bottom: 1.4rem; font-size: 13px; }
+body.st-receipt:not(#z) main::after { content: "================================\A ALL GAMES FREE TODAY\A *** THANK YOU FOR PLAYING ***"; display: block; white-space: pre-wrap; text-align: center; font-weight: 700; line-height: 1.6; font-size: 13px; margin-top: 1.4rem; padding-bottom: 64px;
+    background: repeating-linear-gradient(90deg, #1f1f1f 0 2px, transparent 2px 4px, #1f1f1f 4px 5px, transparent 5px 8px, #1f1f1f 8px 11px, transparent 11px 12px, #1f1f1f 12px 13px, transparent 13px 16px) center bottom / 220px 46px no-repeat; }
+body.st-receipt:not(#z) .section-title .section-count { color: #4a4a4a; }
+body.st-receipt:not(#z) .section-title { justify-content: center; text-align: center; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: #1f1f1f; border-top: 2px dashed #1f1f1f; border-bottom: 2px dashed #1f1f1f; padding: 6px 0; }
+/* line items */
+body.st-receipt:not(#z) #container { grid-template-columns: 1fr !important; gap: 0 !important; }
+body.st-receipt:not(#z) #container .zone-item { display: grid; grid-template-columns: 38px 1fr auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; padding: 7px 4px; overflow: visible;
+    background: transparent !important; border: 0 !important; border-bottom: 1px dashed #b5b1a4 !important; border-radius: 0 !important; box-shadow: none !important; animation: none; contain-intrinsic-size: auto 54px; }
+body.st-receipt:not(#z) #container .zone-item:hover { transform: none; background: linear-gradient(180deg, transparent 12%, rgba(255,230,0,.5) 12% 88%, transparent 88%) !important; }
+body.st-receipt:not(#z) #container .zone-item img { grid-column: 1; grid-row: 1 / span 2; width: 38px; height: 38px; filter: grayscale(1) contrast(1.35) brightness(1.05); border-radius: 0; }
+body.st-receipt:not(#z) #container .zone-item:hover img { transform: none; }
+body.st-receipt:not(#z) #container .zone-item > button:not(.card-fav) { grid-column: 2; grid-row: 1; display: block; min-height: 0; padding: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: none !important; color: #1f1f1f !important; font: 700 14px/1.3 "Courier New", Courier, monospace; text-transform: uppercase; }
+body.st-receipt:not(#z) #container .zone-item .card-meta { grid-column: 2 / span 2; grid-row: 2; justify-content: flex-start; padding: 0; margin: 0; font-size: 11.5px; color: #4a4a4a; }
+/* the price; it goes up with how often it's played */
+body.st-receipt:not(#z) #container .zone-item::after { content: "0.75"; position: static; grid-column: 3; grid-row: 1; width: auto; aspect-ratio: auto; background: none; transform: none; animation: none !important; opacity: 1; font-weight: 700; font-size: 14px; }
+body.st-receipt:not(#z) #container .zone-item[data-rarity="rare"]::after { content: "1.00"; }
+body.st-receipt:not(#z) #container .zone-item[data-rarity="epic"]::after { content: "1.50"; }
+body.st-receipt:not(#z) #container .zone-item[data-rarity="legendary"]::after { content: "2.00 *"; }
+body.st-receipt:not(#z) #container .zone-item::before { display: none; }
+body.st-receipt:not(#z) .zone-item .card-badges { top: 2px; right: auto; left: 2px; transform: scale(.8); transform-origin: top left; }
+/* the rows at the top are clip-out coupons */
+body.st-receipt:not(#z) .shelf .zone-item { background: #fffef8 !important; border: 2px dashed #1f1f1f !important; border-radius: 0 !important; box-shadow: none !important; padding: 6px; }
+body.st-receipt:not(#z) .shelf .zone-item:hover { transform: none; background: #fff7c2 !important; }
+body.st-receipt:not(#z) .shelf .zone-item img { filter: grayscale(1) contrast(1.3); border-radius: 0; }
+body.st-receipt:not(#z) .shelf .zone-item:hover img { transform: none; }
+body.st-receipt:not(#z) .shelf .zone-item > button:not(.card-fav) { color: #1f1f1f !important; background: none !important; text-transform: uppercase; font-weight: 700; font-family: "Courier New", Courier, monospace; }
+body.st-receipt:not(#z) .shelf .zone-item::before { content: "✂ COUPON"; position: static; order: -1; display: block; inset: auto; width: auto; height: auto; opacity: 1; background: none; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-align: center; margin-bottom: 4px; }
+body.st-receipt:not(#z) .shelf .zone-item::after { display: none; }
+body.st-receipt:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #fffef8 !important; border: 2px dashed #1f1f1f !important; box-shadow: none !important; }
+body.st-receipt:not(#z) :is(.popup, .status-panel, .toast) { background: #fffef8 !important; border: 2px solid #1f1f1f !important; }
+body.st-receipt:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button) { background: #fffef8 !important; color: #1f1f1f !important; border: 1.5px solid #1f1f1f !important; box-shadow: none !important; font-family: "Courier New", monospace; font-weight: 700; }
+body.st-receipt:not(#z) .control-button { background: #2d3238 !important; color: #e6e9ec !important; border: 1px solid #454b53 !important; box-shadow: 0 2px 0 #0f1114 !important; }
+body.st-receipt:not(#z) .control-button .control-icon { color: #e6e9ec; }
+body.st-receipt:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #1f1f1f !important; color: #fffef8 !important; border: 0 !important; box-shadow: none !important; font-family: "Courier New", monospace; font-weight: 700; text-transform: uppercase; }
+body.st-receipt:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fffef8 !important; color: #1f1f1f !important; border: 1.5px solid #1f1f1f !important; caret-color: #1f1f1f; box-shadow: none !important; font-family: "Courier New", monospace; font-weight: 700; }
+body.st-receipt:not(#z) header :is(#searchBar, #searchBar:focus) { background: #0f1a12 !important; color: #7dffa8 !important; border-color: #2e4a33 !important; caret-color: #7dffa8; }
+body.st-receipt:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #5a5a5a; }
+body.st-receipt:not(#z) header #searchBar::placeholder { color: #5fae78; }
+body.st-receipt:not(#z) .popup-header { background: #1f2328 !important; color: #fffef8 !important; }
+body.st-receipt:not(#z) footer { background: #1f2328 !important; border-top: 0; color: #e6e9ec; }
+body.st-receipt:not(#z) footer a { color: #e6e9ec; }

@@ -112,28 +112,130 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
 // whole browser (other tabs too) choppy on school laptops. These loops are slow,
 // so moving them in small steps 15 times a second (30 for falling snow, rain,
 // shooting stars and anything quick) looks the same and costs a fraction as much.
-// One-off animations (cards appearing, buttons pressing) stay smooth.
+// With Lighter effects on, looping animations are paused instead.
+// One-off animations (cards appearing, buttons pressing) are never touched.
 (function () {
     const FAST = ".s-fall, .s-shoot, .s-bubbles, .zone-item";
-    function slowDown() {
+    const pausedByUs = new WeakSet();
+    const isLoop = a => {
+        if (typeof CSSAnimation === "undefined" || !(a instanceof CSSAnimation) || !a.effect || !a.effect.target) return false;
+        const t = a.effect.getComputedTiming();
+        return t.iterations === Infinity && t.duration && isFinite(t.duration);
+    };
+    function update() {
         if (typeof document.getAnimations !== "function") return;
+        const lite = document.body.classList.contains("lite-fx");
         for (const a of document.getAnimations()) {
-            if (a.gnStepped || typeof CSSAnimation === "undefined" || !(a instanceof CSSAnimation) || !a.effect) continue;
+            if (!isLoop(a)) continue;
+            if (lite) {
+                if (a.playState === "running") { a.pause(); pausedByUs.add(a); }
+                continue;
+            }
+            if (pausedByUs.has(a)) { pausedByUs.delete(a); a.play(); }
+            if (a.gnStepped) continue;
             a.gnStepped = true;
-            const t = a.effect.target, timing = a.effect.getComputedTiming();
-            if (!t || timing.iterations !== Infinity || !timing.duration || !isFinite(timing.duration)) continue;
+            const t = a.effect.target, dur = a.effect.getComputedTiming().duration;
             // 30 is a multiple of 15, so both rates tick on the same frames
-            const fps = (t.matches && t.matches(FAST)) || timing.duration < 2500 ? 30 : 15;
-            try { a.effect.updateTiming({ easing: `steps(${Math.max(2, Math.round(timing.duration / 1000 * fps))})` }); } catch {}
+            const fps = (t.matches && t.matches(FAST)) || dur < 2500 ? 30 : 15;
+            try { a.effect.updateTiming({ easing: `steps(${Math.max(2, Math.round(dur / 1000 * fps))})` }); } catch {}
         }
     }
     let queued = false;
     const queue = () => {
         if (queued) return;
         queued = true;
-        requestAnimationFrame(() => { queued = false; slowDown(); });
+        requestAnimationFrame(() => { queued = false; update(); });
     };
+    window.gnUpdateLoops = queue;
     // every CSS animation announces itself when it starts (new theme, hover effects...)
     document.addEventListener("animationstart", queue, true);
     if (document.body) queue(); else document.addEventListener("DOMContentLoaded", queue);
+})();
+
+// ── Lighter effects ─────────────────────────────────────────────────────────
+// Pauses moving backgrounds and other endless animations (the scene, the
+// aquarium's fish, a style's bubbles or blinking lights). Auto turns it on by
+// itself when this device seems to struggle: after the page settles it watches
+// how smoothly the screen updates for two seconds, twice, and only acts if both
+// checks were clearly choppy. Devices with very little memory or very few
+// processor cores start with it on. The person can always choose On or Off.
+const LITE_KEY = "gnmath-lite-fx", LITE_DETECTED_KEY = "gnmath-lite-fx-detected";
+function getLiteFxMode() {
+    let v = "auto";
+    try { v = localStorage.getItem(LITE_KEY) || "auto"; } catch {}
+    return ["auto", "on", "off"].includes(v) ? v : "auto";
+}
+function liteFxDetected() { try { return localStorage.getItem(LITE_DETECTED_KEY) === "1"; } catch { return false; } }
+function weakHardware() {
+    const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+    return (typeof mem === "number" && mem > 0 && mem <= 2) || (typeof cores === "number" && cores > 0 && cores <= 2);
+}
+function liteFxActive() {
+    const mode = getLiteFxMode();
+    return mode === "on" || (mode === "auto" && (liteFxDetected() || weakHardware()));
+}
+function applyLiteFx() {
+    if (!document.body) return;
+    const on = liteFxActive();
+    const changed = document.body.classList.contains("lite-fx") !== on;
+    document.body.classList.toggle("lite-fx", on);
+    if (!changed) return;
+    if (window.gnUpdateLoops) window.gnUpdateLoops();
+    if (window.stAquaFx) window.stAquaFx();
+    if (window.stPopupFx) window.stPopupFx();
+}
+function setLiteFxMode(mode) {
+    try { localStorage.setItem(LITE_KEY, mode); } catch {}
+    applyLiteFx();
+    if (typeof openSettingsPanel === "function" && document.getElementById("settings-search")) openSettingsPanel();
+}
+function liteFxNote() {
+    const mode = getLiteFxMode();
+    if (mode === "on") return "On: moving backgrounds and endless animations are paused";
+    if (mode === "off") return "Off: full effects";
+    return liteFxActive() ? "Auto: on, because this device seemed to struggle" : "Auto: turns on by itself if this device seems to struggle";
+}
+if (document.body) applyLiteFx(); else document.addEventListener("DOMContentLoaded", applyLiteFx);
+
+(function autoDetect() {
+    if (getLiteFxMode() !== "auto" || liteFxActive()) return;
+    // Watch frames for 2s; choppy = slow on average or many long stalls
+    const sample = () => new Promise(resolve => {
+        const times = [];
+        let start = 0;
+        const tick = now => {
+            if (!start) start = now;
+            times.push(now);
+            if (now - start < 2000) requestAnimationFrame(tick); else resolve(times);
+        };
+        requestAnimationFrame(tick);
+    });
+    const choppy = times => {
+        if (times.length < 2) return false;
+        const span = times[times.length - 1] - times[0];
+        let stalls = 0;
+        for (let i = 1; i < times.length; i++) if (times[i] - times[i - 1] > 50) stalls++;
+        const fps = (times.length - 1) / (span / 1000);
+        // Chrome's Energy Saver runs at a steady 30 a second; that's fine and isn't counted
+        return fps < 24 || stalls / (times.length - 1) > 0.15;
+    };
+    // Only judge while someone is looking at the page and nothing else (a game, a hidden tab) is in the way
+    const ready = () => !document.hidden && document.hasFocus() && !(typeof zoneViewer !== "undefined" && zoneViewer && zoneViewer.style.display === "flex");
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    async function check() {
+        for (let tries = 0; tries < 20; tries++) {
+            await wait(tries ? 5000 : 6000);
+            if (getLiteFxMode() !== "auto" || liteFxActive()) return;
+            if (!ready()) continue;
+            if (!choppy(await sample())) return;          // smooth: nothing to do
+            await wait(8000);
+            if (!ready()) continue;
+            if (!choppy(await sample())) return;          // a one-off hiccup
+            try { localStorage.setItem(LITE_DETECTED_KEY, "1"); } catch {}
+            applyLiteFx();
+            if (typeof notify === "function") notify("This device seemed to be struggling, so GN 2.0 paused the moving backgrounds and other endless animations. You can change this in Settings → Look → Lighter effects.");
+            return;
+        }
+    }
+    if (document.readyState === "complete") check(); else addEventListener("load", check, { once: true });
 })();

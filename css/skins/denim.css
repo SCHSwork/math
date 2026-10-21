@@ -1,0 +1,58 @@
+/* GN 2.0 site style: Patches on denim
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Trading cards, VHS shelf, Patches on denim
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-cards, body.st-vhs, body.st-denim):not(#z) #scene { display: none !important; }
+:is(body.st-cards, body.st-vhs, body.st-denim):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── Patches on denim: games are stitched-on patches ── */
+body.st-denim:not(#z) {
+    --primary: #c0392b; --primary-hover: #a93226; --primary-light: rgba(192,57,43,.15); --primary-lighter: rgba(192,57,43,.08);
+    --text: #f4efe4; --text-muted: #d5dbe6; --text-light: #c3cad8; --accent-text: #ffd36e;
+    --bg: #2f4a73; --bg-secondary: #f4efe4; --surface: #f4efe4; --surface-hover: #faf6ee; --border: #b9ad97; --border-light: #d8cfbd;
+    --glass: #f4efe4; --gradient-surface: #f4efe4; --gradient-primary: #5a3720;
+    --shadow-sm: 0 3px 0 rgba(0,0,0,.25); --shadow: 0 6px 14px rgba(0,0,0,.35); --shadow-lg: 0 10px 24px rgba(0,0,0,.4); --shadow-xl: 0 16px 34px rgba(0,0,0,.45);
+    --radius: 16px; --radius-sm: 12px; --radius-lg: 18px; --radius-xl: 22px;
+    --stitch: 2px dashed rgba(255,255,255,.8);
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    /* denim twill */
+    background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 2px, transparent 2px 5px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,.12) 0 1px, transparent 1px 4px),
+        radial-gradient(ellipse 70% 50% at 50% 20%, #3d5d8c, #2f4a73 60%, #243a5c) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* header: a leather tag with stitching */
+body.st-denim:not(#z) header { background: linear-gradient(#e8c48a, #e8c48a) left 10px bottom 7px / calc(100% - 20px) 2px no-repeat, radial-gradient(ellipse at 50% 0%, #8a5634, #5a3720) !important;
+    -webkit-mask: none; box-shadow: 0 4px 0 #3a2312, 0 8px 18px rgba(0,0,0,.35) !important; }
+body.st-denim:not(#z) header { background-image: repeating-linear-gradient(90deg, #e8c48a 0 9px, transparent 9px 15px), radial-gradient(ellipse at 50% 0%, #8a5634, #5a3720) !important; background-size: calc(100% - 20px) 2px, 100% 100% !important; background-position: 10px calc(100% - 7px), 0 0 !important; background-repeat: no-repeat !important; }
+body.st-denim:not(#z) .logo { color: #ffd36e; font-weight: 900; text-shadow: 0 1px 0 #8a5a12, 1px 2px 0 #3a2312; letter-spacing: .02em; }
+/* patches in five colors, slightly tilted, with a stitched edge */
+body.st-denim:not(#z) .zone-item { --patch: #c0392b; --ink: #fff; padding: 8px 8px 4px; border: 0 !important; border-radius: 18px !important;
+    background: var(--patch) !important; outline: var(--stitch); outline-offset: -5px; box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.3) !important; transform: rotate(-1deg); }
+body.st-denim:not(#z) .zone-item:nth-child(5n+2) { --patch: #f2b134; --ink: #3a2a00; transform: rotate(1.2deg); }
+body.st-denim:not(#z) .zone-item:nth-child(5n+3) { --patch: #2f855a; transform: rotate(-.5deg); }
+body.st-denim:not(#z) .zone-item:nth-child(5n+4) { --patch: #f2a7c3; --ink: #3a0f22; transform: rotate(.8deg); }
+body.st-denim:not(#z) .zone-item:nth-child(5n+5) { --patch: #2b6cb0; transform: rotate(-1.4deg); }
+body.st-denim:not(#z) .zone-item:hover { transform: rotate(0) translateY(-3px) !important; box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 14px 22px rgba(0,0,0,.35) !important; }
+body.st-denim:not(#z) .zone-item::before { display: none; }
+body.st-denim:not(#z) .zone-item img { border-radius: 12px; }
+body.st-denim:not(#z) .zone-item button { color: var(--ink); font-weight: 800; }
+body.reduced-motion.st-denim:not(#z) .zone-item { transform: none !important; }
+body.st-denim:not(#z) .section-title { color: #f4efe4; font-weight: 900; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+body.st-denim:not(#z) .section-title .section-count { color: #ffd36e; }
+body.st-denim:not(#z) summary.section-title::after { border-color: #ffd36e; }
+/* light canvas panels for everything you read */
+body.st-denim:not(#z) :is(#gotd, .settings-section, .filter-menu, .popup, .status-panel, .toast) { --text: #2a2a2a; --text-muted: #4f4a40; --text-light: #5c564b; --accent-text: #9b2c20;
+    background: #f4efe4 !important; color: #2a2a2a; border: 0 !important; outline: 2px dashed #b9ad97; outline-offset: -6px; box-shadow: 0 6px 16px rgba(0,0,0,.35) !important; }
+body.st-denim:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #c0392b !important; color: #fff !important; border: 0 !important; border-radius: 999px !important; outline: var(--stitch); outline-offset: -4px; box-shadow: 0 3px 0 #7d241b !important; font-weight: 800; }
+body.st-denim:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #243a5c !important; color: #f4efe4 !important; border: 0 !important; outline: 2px dashed rgba(244,239,228,.6); outline-offset: -4px; box-shadow: 0 3px 0 rgba(0,0,0,.3) !important; }
+body.st-denim:not(#z) header :is(.control-button, .filter-button) { background: #6b4226 !important; outline-color: #e8c48a; }
+body.st-denim:not(#z) .control-button .control-icon { color: #ffd36e; }
+body.st-denim:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #f4efe4 !important; color: #2a2a2a !important; border: 0 !important; caret-color: #c0392b; box-shadow: inset 0 2px 4px rgba(0,0,0,.2) !important; }
+body.st-denim:not(#z) #searchBar:focus { outline: 2px dashed #c0392b; outline-offset: -5px; }
+body.st-denim:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #5c564b; }
+body.st-denim:not(#z) .popup-header { background: #5a3720 !important; color: #ffd36e !important; }
+body.st-denim:not(#z) footer { background: #243a5c !important; border-top: 0; box-shadow: inset 0 3px 0 rgba(255,255,255,.08); }
+body.st-denim:not(#z) footer::before { content: ""; display: block; height: 2px; margin: -8px 10px 12px; background: repeating-linear-gradient(90deg, rgba(244,239,228,.7) 0 9px, transparent 9px 15px); }

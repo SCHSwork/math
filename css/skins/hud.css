@@ -1,0 +1,46 @@
+/* GN 2.0 site style: Sci-fi HUD
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) #scene { display: none !important; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .zone-item::before { display: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+/* ── Sci-fi HUD: a ship's console. Panels with cut corners, cyan lines, brackets ── */
+body.st-hud:not(#z) {
+    --primary: #36e3ff; --primary-hover: #8af0ff; --primary-light: rgba(54,227,255,.14); --primary-lighter: rgba(54,227,255,.07);
+    --text: #d9f6ff; --text-muted: #8fb9c8; --text-light: #7aa6b6; --accent-text: #36e3ff;
+    --bg: #050b14; --bg-secondary: #08131f; --surface: #0a1826; --surface-hover: #0f2234; --border: rgba(54,227,255,.45); --border-light: rgba(54,227,255,.2);
+    --glass: #08131f; --gradient-surface: #0a1826; --gradient-primary: #08131f;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    --cut: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+    --cut-sm: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    font-family: "Segoe UI", system-ui, sans-serif; letter-spacing: .02em;
+    background:
+        linear-gradient(rgba(54,227,255,.05) 1px, transparent 1px) 0 0 / 100% 4px,
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(54,227,255,.12), transparent 70%),
+        radial-gradient(circle at 50% 120%, rgba(54,120,255,.12), transparent 50%),
+        #050b14 !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-hud:not(#z) header { background: rgba(5,11,20,.92) !important; border-bottom: 1px solid rgba(54,227,255,.6); box-shadow: 0 0 22px rgba(54,227,255,.18) !important; }
+body.st-hud:not(#z) .logo { font-family: "GN HUD", "Segoe UI", sans-serif; font-weight: 700; color: #d9f6ff; letter-spacing: .14em; text-shadow: 0 0 10px rgba(54,227,255,.7); }
+body.st-hud:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) {
+    background: linear-gradient(#36e3ff, #36e3ff) 0 0 / 16px 2px no-repeat, linear-gradient(#36e3ff, #36e3ff) 0 0 / 2px 16px no-repeat,
+                linear-gradient(#36e3ff, #36e3ff) 100% 100% / 16px 2px no-repeat, linear-gradient(#36e3ff, #36e3ff) 100% 100% / 2px 16px no-repeat,
+                linear-gradient(180deg, rgba(14,34,52,.92), rgba(8,19,31,.92)) !important;
+    border: 1px solid rgba(54,227,255,.35) !important; box-shadow: none !important; clip-path: var(--cut); }
+body.st-hud:not(#z) :is(.popup, .status-panel, .toast) { background: #08131f !important; border: 1px solid rgba(54,227,255,.6) !important; box-shadow: 0 0 30px rgba(54,227,255,.2) !important; }
+body.st-hud:not(#z) .zone-item:hover { border-color: #36e3ff !important; background-color: #0f2234 !important; transform: translateY(-2px); filter: drop-shadow(0 0 10px rgba(54,227,255,.35)); }
+body.st-hud:not(#z) .zone-item img { filter: saturate(.9) contrast(1.05); }
+body.st-hud:not(#z) .zone-item button { color: #d9f6ff; }
+body.st-hud:not(#z) .section-title { font-family: "GN HUD", "Segoe UI", sans-serif; color: #d9f6ff; letter-spacing: .12em; text-transform: uppercase; font-size: 1.05rem; }
+body.st-hud:not(#z) .section-title::before { content: "//"; color: #36e3ff; margin-right: .3rem; }
+body.st-hud:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #36e3ff !important; color: #04121c !important; border: 0 !important; border-radius: 0 !important; box-shadow: 0 0 14px rgba(54,227,255,.45) !important; clip-path: var(--cut-sm); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+body.st-hud:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: rgba(54,227,255,.06) !important; color: #d9f6ff !important; border: 1px solid rgba(54,227,255,.6) !important; border-radius: 0 !important; box-shadow: none !important; clip-path: var(--cut-sm); }
+body.st-hud:not(#z) .control-button .control-icon { color: #36e3ff; }
+body.st-hud:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: rgba(4,12,20,.95) !important; color: #d9f6ff !important; border: 1px solid rgba(54,227,255,.6) !important; border-radius: 0 !important; caret-color: #36e3ff; box-shadow: none !important; }
+body.st-hud:not(#z) #searchBar:focus { border-color: #36e3ff !important; box-shadow: 0 0 12px rgba(54,227,255,.4) !important; }
+body.st-hud:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #7aa6b6; }
+body.st-hud:not(#z) .popup-header { background: #0a1826 !important; border-bottom: 1px solid rgba(54,227,255,.6); color: #d9f6ff; font-family: "GN HUD", sans-serif; letter-spacing: .06em; }
+body.st-hud:not(#z) footer { background: rgba(5,11,20,.95) !important; border-top: 1px solid rgba(54,227,255,.5); }

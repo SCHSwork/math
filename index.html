@@ -50,7 +50,17 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=46810d1fce">
+    <link rel="stylesheet" href="css/styles.css?v=3776509bf9">
+    <script>
+    // Each site style's look is in its own file (css/skins/), so only the one in use
+    // is loaded. Load the saved one now, before the page is drawn, so it never flashes.
+    // The versions are filled in by tools/stamp_versions.py.
+    window.GN_SKIN_CSS = /*SKIN_CSS_VERSIONS*/{"aero":"65b0f2f0b4","aqua":"d7ffe8b20c","arcade":"896aae5058","blueprint":"ede5885f32","bold":"8c84d09d0c","candy":"f60d5f0287","cards":"938145d9fa","chalk":"eadba87eeb","comic":"8cde286843","cyber":"ec4b468a36","denim":"6f5eb90f5f","desktop":"e4eebf86ee","dock":"dea4505477","glass":"a464ca09bf","hud":"83d171ad19","lcd":"3e73faf038","metro":"698b210a0b","minimal":"e633cdf6d0","museum":"3def6245a4","neon":"a7a6e16871","neu":"6399ba2e78","paper":"8e6ecadd8f","pixel":"30a35e66a4","popup":"1a07ae989a","quest":"9c4b73a5a8","receipt":"8ab7b74b9d","semiflat":"8c08643bf1","sheet":"43743cd8b0","terminal":"e244e83a0f","vend":"de687a372a","vhs":"9e4a570e74","web99":"2efd1427da"}/*END*/;
+    (function () {
+        var k; try { k = localStorage.getItem("gnmath-site-skin"); } catch (e) {}
+        if (k && /^[a-z0-9]+$/.test(k) && window.GN_SKIN_CSS[k]) document.write('<link rel="stylesheet" id="skin-css-' + k + '" href="css/skins/' + k + '.css?v=' + window.GN_SKIN_CSS[k] + '">');
+    })();
+    </script>
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
@@ -267,7 +277,7 @@
     <script src="js/partners.js?v=e5acc0456e"></script>
 
     <script src="js/ubzone.js?v=e74cf1d9fb"></script>
-    <script src="js/app.js?v=ff9dcad18e"></script>
+    <script src="js/app.js?v=395f74a8af"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/firebase-pace.js?v=45d6769e77"></script>
@@ -283,8 +293,8 @@
 <script src="js/admin.js?v=ae17046f0e"></script>
 <script src="js/presence.js?v=cb7f69b7d9"></script>
 <script src="js/status.js?v=c623f313c3"></script>
-<script src="js/skins.js?v=87268fe003"></script>
-<script src="js/scenes.js?v=54deb15f92"></script>
+<script src="js/skins.js?v=72dda489fb"></script>
+<script src="js/scenes.js?v=544b9e7599"></script>
 <script src="js/motion.js?v=8e99f8e575"></script>
 </body>
 </html>
