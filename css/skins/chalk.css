@@ -1,0 +1,37 @@
+/* GN 2.0 site style: Chalkboard
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) #scene { display: none !important; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .zone-item::before { display: none; }
+/* ── Chalkboard: green slate, wooden frame, chalk writing ── */
+body.st-chalk:not(#z) {
+    --primary: #f7e48b; --primary-hover: #fff3b8; --primary-light: rgba(247,228,139,.16); --primary-lighter: rgba(247,228,139,.08);
+    --text: #f4f1e8; --text-muted: #c9d6cc; --text-light: #a9bcb0; --accent-text: #f7e48b;
+    --bg: #1f3a2e; --bg-secondary: #26473a; --surface: #234235; --surface-hover: #2b4f40; --border: rgba(244,241,232,.55); --border-light: rgba(244,241,232,.3);
+    --glass: #183026; --gradient-surface: #234235; --gradient-primary: #8a5a2b;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 10px; --radius-sm: 8px; --radius-lg: 12px; --radius-xl: 16px;
+    --chalk-font: "GN Chalk", "Chalkboard SE", "Segoe Print", "Comic Sans MS", cursive;
+    font-size: 1.05em;
+    font-family: var(--chalk-font);
+    /* faint eraser smudges on the slate */
+    background: radial-gradient(ellipse 40% 18% at 20% 30%, rgba(255,255,255,.05), transparent 70%), radial-gradient(ellipse 30% 14% at 75% 65%, rgba(255,255,255,.045), transparent 70%), radial-gradient(ellipse 50% 20% at 55% 15%, rgba(255,255,255,.03), transparent 70%), #1f3a2e !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-chalk:not(#z) header { background: #1a3328 !important; border-bottom: 12px solid #8a5a2b; box-shadow: inset 0 -3px 0 #6b4220, 0 3px 0 #4a2d14 !important; backdrop-filter: none; }
+body.st-chalk:not(#z) .logo { color: #f4f1e8; font-weight: 700; letter-spacing: .02em; text-shadow: 0 0 2px rgba(244,241,232,.7), 1px 1px 0 rgba(244,241,232,.25); }
+body.st-chalk:not(#z) :is(.zone-item, .popup, #gotd, .settings-section, .filter-menu, .status-panel, .toast) { background: #234235 !important; border: 2px dashed rgba(244,241,232,.55) !important; box-shadow: none !important; }
+body.st-chalk:not(#z) .zone-item:hover { border-color: #f7e48b !important; border-style: solid !important; transform: rotate(-.6deg); }
+body.st-chalk:not(#z) .zone-item img { filter: saturate(.85) contrast(.95); }
+body.st-chalk:not(#z) .zone-item button { color: #f4f1e8; }
+body.st-chalk:not(#z) .section-title { color: #f4f1e8; text-decoration: underline wavy rgba(247,228,139,.8) 2px; text-underline-offset: 7px; }
+body.st-chalk:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #f7e48b !important; color: #1f3a2e !important; border: 0 !important; border-radius: 10px 4px 12px 5px !important; box-shadow: none !important; font-family: inherit; }
+body.st-chalk:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: transparent !important; color: #f4f1e8 !important; border: 2px solid rgba(244,241,232,.7) !important; border-radius: 12px 5px 10px 4px !important; box-shadow: none !important; }
+body.st-chalk:not(#z) .control-button .control-icon { color: #f4f1e8; }
+body.st-chalk:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #183026 !important; color: #f4f1e8 !important; border: 2px solid rgba(244,241,232,.5) !important; caret-color: #f7e48b; box-shadow: none !important; }
+body.st-chalk:not(#z) #searchBar:focus { border-color: #f7e48b !important; }
+body.st-chalk:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #a9bcb0; }
+body.st-chalk:not(#z) .popup-header { background: #1a3328 !important; border-bottom: 6px solid #8a5a2b; color: #f4f1e8; }
+body.st-chalk:not(#z) footer { background: #1a3328 !important; border-top: 8px solid #8a5a2b; }

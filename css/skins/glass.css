@@ -1,0 +1,16 @@
+/* GN 2.0 site style: Glass
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ── Glass: frosted panels (works with colors and scenes) ── */
+body.st-glass:not(#z) { --radius: 18px; --radius-sm: 12px; --radius-lg: 22px; --radius-xl: 28px; }
+body.st-glass:not(#z):not(.scene-theme) { background: radial-gradient(circle at 15% 20%, color-mix(in srgb, var(--primary) 45%, transparent), transparent 45%), radial-gradient(circle at 85% 70%, color-mix(in srgb, var(--accent, #8b5cf6) 40%, transparent), transparent 45%), var(--bg) !important; background-attachment: fixed !important; }
+body.st-glass:not(#z) header { background: color-mix(in srgb, var(--surface) 40%, transparent) !important; backdrop-filter: blur(18px) saturate(1.5); border-bottom: 1px solid rgba(255,255,255,.18); }
+body.st-glass:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: color-mix(in srgb, var(--surface) 45%, transparent) !important; border: 1px solid rgba(255,255,255,.22) !important; box-shadow: 0 8px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.25) !important; }
+body.st-glass:not(#z) :is(.popup, .status-panel) { background: color-mix(in srgb, var(--surface) 70%, transparent) !important; backdrop-filter: blur(24px) saturate(1.4); border: 1px solid rgba(255,255,255,.25) !important; }
+body.st-glass:not(#z) :is(.settings-button, #gotd .gotd-play) { border-radius: 999px !important; box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.35) !important; }
+body.st-glass:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: rgba(255,255,255,.14) !important; border: 1px solid rgba(255,255,255,.25) !important; border-radius: 999px !important; }
+body.st-glass:not(#z) #searchBar { background: rgba(255,255,255,.16) !important; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; }
+/* Glass keeps its see-through box when focused, so the text keeps the normal text color
+   (the default focus style swaps to a translucent --glass color, unreadable here) */
+body.st-glass:not(#z) #searchBar, body.st-glass:not(#z) #searchBar:focus { color: var(--text) !important; caret-color: var(--text); }
+body.st-glass:not(#z) #searchBar::placeholder { color: color-mix(in srgb, var(--text) 72%, transparent); }

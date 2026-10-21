@@ -1,0 +1,70 @@
+/* GN 2.0 site style: Frutiger Aero
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) #scene { display: none !important; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .zone-item::before { display: none; }
+/* ── Frutiger Aero: blue sky, green hills, bubbles, glossy glass ── */
+body.st-aero:not(#z) {
+    --primary: #0a84d6; --primary-hover: #0670b8; --primary-light: rgba(10,132,214,.14); --primary-lighter: rgba(10,132,214,.07);
+    --text: #08284a; --text-muted: #2c4d6e; --text-light: #3f6283; --accent-text: #0663a3;
+    --bg: #7cc8f8; --bg-secondary: rgba(255,255,255,.7); --surface: #ffffff; --surface-hover: #f1f9ff; --border: rgba(255,255,255,.85); --border-light: rgba(255,255,255,.6);
+    --glass: #ffffff; --gradient-surface: rgba(255,255,255,.6); --gradient-primary: linear-gradient(180deg, #5cc8ff, #0a84d6);
+    --shadow-sm: 0 2px 8px rgba(0,60,120,.16); --shadow: 0 6px 16px rgba(0,60,120,.2); --shadow-lg: 0 10px 26px rgba(0,60,120,.22); --shadow-xl: 0 16px 38px rgba(0,60,120,.26);
+    --radius: 16px; --radius-sm: 12px; --radius-lg: 18px; --radius-xl: 24px;
+    /* the shine on top of every glossy surface: bright upper half, sharp edge in the middle */
+    --gloss: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.4) 46%, rgba(255,255,255,.06) 50%, rgba(255,255,255,0) 100%);
+    --gloss-soft: linear-gradient(180deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.16) 46%, rgba(255,255,255,0) 50%);
+    --glass-panel: linear-gradient(180deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.5) 48%, rgba(255,255,255,.36) 52%, rgba(255,255,255,.5) 100%);
+    font-family: "Segoe UI", "Frutiger", "Myriad Pro", "Lucida Grande", Tahoma, sans-serif;
+    /* sky over water, underwater light and grass (assets/aero/scene.webp, painted by tools/paint_aero_background.py) */
+    background: url("../../assets/aero/scene.webp") center / cover no-repeat, linear-gradient(180deg, #2f8fe6 0 47%, #2f93e0 47% 85%, #3a9a26 85%) !important;
+    background-attachment: fixed !important; background-size: cover !important; color: var(--text);
+}
+/* Bubbles drifting up behind the page: one slow loop, still with reduced motion or while a game is open */
+body.st-aero:not(#z)::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+        radial-gradient(circle 6px at 52px 70px, rgba(255,255,255,.95), transparent),
+        radial-gradient(circle 26px at 60px 80px, rgba(255,255,255,0) 0, rgba(200,240,255,.12) 62%, rgba(255,255,255,.75) 90%, rgba(255,255,255,0) 100%),
+        radial-gradient(circle 3px at 196px 300px, rgba(255,255,255,.9), transparent),
+        radial-gradient(circle 12px at 200px 304px, rgba(255,255,255,0) 0, rgba(200,240,255,.12) 60%, rgba(255,255,255,.7) 90%, rgba(255,255,255,0) 100%),
+        radial-gradient(circle 9px at 300px 150px, rgba(255,255,255,.9), transparent),
+        radial-gradient(circle 38px at 312px 162px, rgba(255,255,255,0) 0, rgba(200,240,255,.1) 64%, rgba(255,255,255,.65) 91%, rgba(255,255,255,0) 100%),
+        radial-gradient(circle 4px at 118px 430px, rgba(255,255,255,.9), transparent),
+        radial-gradient(circle 16px at 123px 435px, rgba(255,255,255,0) 0, rgba(200,240,255,.12) 62%, rgba(255,255,255,.7) 90%, rgba(255,255,255,0) 100%);
+    background-size: 380px 520px; background-repeat: repeat;
+    /* bubbles only underwater: hidden above the water line (about 47% down the screen) */
+    -webkit-mask-image: linear-gradient(180deg, transparent 49%, #000 55%); mask-image: linear-gradient(180deg, transparent 49%, #000 55%);
+    animation: stAeroBubbles 70s linear infinite;
+}
+body.reduced-motion.st-aero:not(#z)::before, body.st-aero:not(#z):has(#zoneViewer[style*="flex"])::before { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+    body.st-aero:not(#z)::before { animation: none; }
+}
+body.st-aero:not(#z) header { background: var(--gloss-soft), linear-gradient(180deg, rgba(20,140,230,.82), rgba(4,90,180,.86)) !important; backdrop-filter: blur(14px) saturate(1.4); border-bottom: 1px solid rgba(255,255,255,.7); box-shadow: 0 4px 18px rgba(0,50,110,.3), inset 0 1px 0 rgba(255,255,255,.6) !important; }
+body.st-aero:not(#z) .logo { color: #fff; text-shadow: 0 1px 2px rgba(0,40,100,.7), 0 0 14px rgba(160,230,255,.8); }
+/* frosted glass panels with a highlight along the top edge */
+body.st-aero:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: var(--glass-panel) !important; background-color: rgba(220,240,255,.35) !important; border: 1px solid rgba(255,255,255,.9) !important; box-shadow: 0 8px 22px rgba(0,60,120,.2), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255,255,255,.35) !important; }
+body.st-aero:not(#z) :is(.popup, .status-panel, .toast) { background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(240,250,255,.93)) !important; backdrop-filter: blur(18px); border: 1px solid #fff !important; box-shadow: 0 18px 44px rgba(0,50,110,.35) !important; }
+body.st-aero:not(#z) .zone-item:hover { box-shadow: 0 12px 30px rgba(0,60,120,.28), 0 0 0 2px rgba(120,220,255,.9), inset 0 1px 0 #fff !important; transform: translateY(-3px); }
+body.st-aero:not(#z) .zone-item img { border-bottom: 1px solid rgba(255,255,255,.8); }
+body.st-aero:not(#z) .zone-item button { color: #08284a; }
+body.st-aero:not(#z) .section-title { color: #fff; text-shadow: 0 1px 2px rgba(0,30,80,.95), 0 0 8px rgba(0,40,110,.75), 0 0 18px rgba(0,50,130,.5); }
+body.st-aero:not(#z) .section-title .section-count { color: #fff !important; text-shadow: inherit; }
+body.st-aero:not(#z) summary.section-title::after { border-color: #fff; filter: drop-shadow(0 1px 2px rgba(0,30,80,.9)); }
+/* glossy orb buttons: green for the main action, aqua glass for the rest */
+body.st-aero:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--gloss), linear-gradient(180deg, #86e655, #2fae22 55%, #1b8f16) !important; color: #fff !important; border: 1px solid #13760f !important; border-radius: 999px !important; box-shadow: 0 3px 8px rgba(10,90,20,.35), inset 0 -2px 4px rgba(0,60,0,.25) !important; text-shadow: 0 1px 1px rgba(0,60,0,.55); }
+body.st-aero:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: var(--gloss), linear-gradient(180deg, rgba(225,246,255,.9), rgba(140,205,245,.85)) !important; color: #08284a !important; border: 1px solid rgba(255,255,255,.95) !important; border-radius: 999px !important; box-shadow: 0 2px 6px rgba(0,60,120,.25) !important; }
+body.st-aero:not(#z) header .control-button { color: #08284a !important; }
+body.st-aero:not(#z) .control-button .control-icon { color: #08284a; }
+body.st-aero:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: rgba(255,255,255,.96) !important; color: #08284a !important; border: 1px solid rgba(255,255,255,.95) !important; caret-color: #0a84d6; box-shadow: inset 0 2px 5px rgba(0,60,120,.18) !important; }
+body.st-aero:not(#z) #searchBar { border-radius: 999px; }
+body.st-aero:not(#z) #searchBar:focus { box-shadow: inset 0 2px 5px rgba(0,60,120,.18), 0 0 0 3px rgba(120,220,255,.75), 0 0 14px rgba(120,220,255,.7) !important; }
+body.st-aero:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #3f6283; }
+body.st-aero:not(#z) .popup-header { background: var(--gloss-soft), linear-gradient(180deg, #2a9cec, #0662bf) !important; color: #fff !important; }
+body.st-aero:not(#z) footer { background: var(--gloss-soft), rgba(240,250,255,.88) !important; backdrop-filter: blur(14px) saturate(1.4); border-top: 1px solid #fff; color: #08284a; }
+/* Frutiger Aero: a glossy bubble */
+body.st-aero:not(#z) #scrollJump { background: var(--gloss), linear-gradient(180deg, rgba(225,246,255,.95), rgba(120,195,245,.9)); color: #08284a; border: 1px solid #fff; }
+body.st-aero:not(#z) footer { box-shadow: 0 -4px 18px rgba(0,40,20,.25); }

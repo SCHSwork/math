@@ -1,0 +1,39 @@
+/* GN 2.0 site style: Pixel
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Site styles (js/skins.js). ":not(#z)" makes these win over color themes
+   and scenes. Full-look styles hide the scene background.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-terminal:not(#z), body.st-desktop:not(#z), body.st-bold:not(#z), body.st-paper:not(#z), body.st-pixel:not(#z), body.st-comic:not(#z)) #scene { display: none !important; }
+/* ── Pixel: chunky 8-bit look ── */
+body.st-pixel:not(#z) {
+    --primary: #ff004d; --primary-hover: #ff77a8; --primary-light: rgba(255,0,77,.18); --primary-lighter: rgba(255,0,77,.09);
+    --text: #fff1e8; --text-muted: #c2c3c7; --text-light: #83769c; --accent-text: #ffec27;
+    --bg: #1d2b53; --bg-secondary: #29366f; --surface: #29366f; --surface-hover: #3b4b8f; --border: #000; --border-light: #000;
+    --glass: #29366f; --gradient-surface: #29366f; --gradient-primary: #7e2553;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    --px: 0 -4px 0 0 #000, 0 4px 0 0 #000, -4px 0 0 0 #000, 4px 0 0 0 #000;
+    font-family: "Courier New", ui-monospace, monospace; font-weight: 700; letter-spacing: .02em;
+    background: #1d2b53 !important; color: #fff1e8;
+}
+body.st-pixel:not(#z) * { image-rendering: pixelated; }
+body.st-pixel:not(#z) header { background: #7e2553 !important; box-shadow: 0 4px 0 #000 !important; }
+body.st-pixel:not(#z) .logo { color: #ffec27; text-shadow: 3px 3px 0 #000; font-size: 26px; }
+body.st-pixel:not(#z) :is(.zone-item, .popup, #gotd, .settings-section, .filter-menu, .status-panel, .toast) { border: 0 !important; border-radius: 0 !important; box-shadow: var(--px), 6px 6px 0 4px rgba(0,0,0,.35) !important; background: #29366f !important; margin: 4px; }
+body.st-pixel:not(#z) .zone-item:hover { transform: translateY(-4px); box-shadow: 0 -4px 0 0 #ffec27, 0 4px 0 0 #ffec27, -4px 0 0 0 #ffec27, 4px 0 0 0 #ffec27 !important; }
+body.st-pixel:not(#z) .zone-item::before, body.st-pixel:not(#z) .zone-item::after { display: none; }
+body.st-pixel:not(#z) .zone-item img { border-radius: 0; }
+body.st-pixel:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button, #gotd .gotd-play) { border: 0 !important; border-radius: 0 !important; box-shadow: var(--px) !important; margin: 4px; font-family: inherit; text-transform: uppercase; }
+body.st-pixel:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #ff004d !important; color: #fff1e8 !important; }
+body.st-pixel:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #008751 !important; color: #fff1e8 !important; }
+body.st-pixel:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):active { transform: translateY(4px) !important; }
+body.st-pixel:not(#z) .section-title { color: #ffec27; text-shadow: 3px 3px 0 #000; text-transform: uppercase; }
+body.st-pixel:not(#z) #searchBar { background: #000 !important; color: #00e436 !important; border-radius: 0; box-shadow: var(--px) !important; }
+body.st-pixel:not(#z) .popup-header { background: #7e2553 !important; }
+/* Styles that restyle the logo need normal text instead of the gradient-clipped default */
+:is(body.st-terminal, body.st-desktop, body.st-bold, body.st-pixel, body.st-comic):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; }
+body.st-pixel:not(#z) .logo { background: none; }
+/* Full-look styles hide the scene, so their footer uses their own colors (not a scene's footer bar) */
+:is(body.st-paper, body.st-comic, body.st-pixel, body.st-bold):not(#z) footer { background: var(--bg-secondary) !important; border-top: 2px solid var(--border); }

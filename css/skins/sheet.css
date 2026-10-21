@@ -1,0 +1,40 @@
+/* GN 2.0 site style: Spreadsheet
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) #scene { display: none !important; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .zone-item::before { display: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+/* ── Spreadsheet: looks like a work sheet (gridlines, formula bar, cells) ── */
+body.st-sheet:not(#z) {
+    --primary: #188038; --primary-hover: #137333; --primary-light: rgba(24,128,56,.12); --primary-lighter: rgba(24,128,56,.06);
+    --text: #202124; --text-muted: #5f6368; --text-light: #5f6368; --accent-text: #137333;
+    --bg: #ffffff; --bg-secondary: #f8f9fa; --surface: #ffffff; --surface-hover: #e8f0fe; --border: #dadce0; --border-light: #e8eaed;
+    --glass: #ffffff; --gradient-surface: #ffffff; --gradient-primary: #ffffff;
+    --shadow-sm: none; --shadow: 0 1px 3px rgba(60,64,67,.3); --shadow-lg: 0 2px 8px rgba(60,64,67,.3); --shadow-xl: 0 4px 14px rgba(60,64,67,.3);
+    --radius: 0; --radius-sm: 4px; --radius-lg: 0; --radius-xl: 8px;
+    font-family: Arial, "Roboto", Helvetica, sans-serif; font-size: 13px;
+    /* gridlines */
+    background: linear-gradient(#e2e3e5 1px, transparent 1px) 0 0 / 100% 24px, linear-gradient(90deg, #e2e3e5 1px, transparent 1px) 46px 0 / 104px 100%, #fff !important;
+    background-attachment: fixed !important; color: #202124;
+}
+body.st-sheet:not(#z) header { background: #f9fbfd !important; border-bottom: 1px solid #dadce0; box-shadow: none !important; backdrop-filter: none; color: #202124; }
+body.st-sheet:not(#z) .logo { color: #202124; font-size: 1.15rem; font-weight: 400; letter-spacing: 0; display: inline-flex; align-items: center; gap: .5rem; }
+body.st-sheet:not(#z) .logo::before { content: ""; width: 22px; height: 28px; border-radius: 3px; background: linear-gradient(#fff, #fff) 5px 9px / 12px 2px no-repeat, linear-gradient(#fff, #fff) 5px 14px / 12px 2px no-repeat, linear-gradient(#fff, #fff) 5px 19px / 12px 2px no-repeat, linear-gradient(#fff, #fff) 10px 9px / 2px 12px no-repeat, #188038; }
+/* the formula bar */
+body.st-sheet:not(#z) header::after { content: "fx"; display: block; padding: 4px 12px 4px 52px; border-top: 1px solid #dadce0; background: #fff; color: #80868b; font: italic 13px Georgia, serif; }
+body.st-sheet:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #fff !important; border: 1px solid #dadce0 !important; box-shadow: none !important; border-radius: 0 !important; }
+body.st-sheet:not(#z) :is(.popup, .status-panel, .toast) { background: #fff !important; border: 1px solid #dadce0 !important; border-radius: 8px !important; }
+body.st-sheet:not(#z) .zone-item:hover { outline: 2px solid #1a73e8; outline-offset: -2px; transform: none; }
+body.st-sheet:not(#z) .zone-item button { color: #202124; font-weight: 400; font-size: 13px; }
+body.st-sheet:not(#z) .section-title { color: #202124; font-size: 14px; font-weight: 700; background: #f1f3f4; border: 1px solid #dadce0; padding: 2px 10px; display: inline-flex; }
+body.st-sheet:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #188038 !important; color: #fff !important; border: 0 !important; border-radius: 4px !important; box-shadow: none !important; font-weight: 500; }
+body.st-sheet:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: transparent !important; color: #444746 !important; border: 1px solid transparent !important; border-radius: 4px !important; box-shadow: none !important; }
+body.st-sheet:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):hover { background: #e8eaed !important; }
+body.st-sheet:not(#z) .control-button .control-icon { color: #444746; }
+body.st-sheet:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #f1f3f4 !important; color: #202124 !important; border: 1px solid transparent !important; border-radius: 4px !important; caret-color: #1a73e8; box-shadow: none !important; }
+body.st-sheet:not(#z) #searchBar:focus { background: #fff !important; border-color: #1a73e8 !important; }
+body.st-sheet:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #5f6368; }
+body.st-sheet:not(#z) .popup-header { background: #f9fbfd !important; color: #202124 !important; border-bottom: 1px solid #dadce0; }
+body.st-sheet:not(#z) footer { background: #f9fbfd !important; border-top: 1px solid #dadce0; }
+body.st-sheet:not(#z) footer .footer-links a { color: #444746; font-weight: 400; }

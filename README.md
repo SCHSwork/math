@@ -103,7 +103,9 @@ sw.js                  background helper: caches covers, lets the site open offl
 manifest.json          app name and icons for "install as app"
 CHANGELOG.md           everything that's changed, newest first (also in the site footer)
 
-css/styles.css         all the styles
+css/styles.css         the shared styles, scenes, and the style picker's previews
+css/skins/<style>.css  one file per site style (Arcade, Aquarium, Receipt...), loaded only
+                       while that style is on; edit a style's look there
 js/
   ui.js                notices, dialogs, accessibility helpers (loaded first)
   originals.js         GN Originals: loads games.json from SCHSwork/GN-originals
@@ -120,6 +122,10 @@ js/
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers
+  skins.js             site styles: the list, the picker, loading css/skins/ files,
+                       and the Aquarium and Pop-up book animations
+  scenes.js            scene backgrounds, your own picture, the frame-rate limit for
+                       looping animations, and Lighter effects (auto-detects slow devices)
 
 assets/icons/          site icon at every size
 config/
@@ -128,7 +134,7 @@ config/
   game-info.json       genres, description and keywords for every game (used by filters and the finder)
   partner-games.json   the html5games.com partner games (may contain ads)
 tools/
-  stamp_versions.py    run after editing css/ or js/ so browsers load the new version
+  stamp_versions.py    run after editing css/ or js/ (including css/skins/) so browsers load the new version
 ```
 
 ## Firebase setup

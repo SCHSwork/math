@@ -1,0 +1,50 @@
+/* GN 2.0 site style: Cyberpunk
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   UI-trend site styles: Minimalist, Semi-Flat, Neumorphism, Cyberpunk.
+   Minimalist and Semi-Flat keep the color theme's accent and follow
+   light/dark mode; Neumorphism and Cyberpunk are full looks.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) #scene { display: none !important; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .zone-item::before { display: none; }
+/* ── Cyberpunk: hazard yellow, hot pink and cyan on black; angled cuts, a logo glitch ── */
+body.st-cyber:not(#z) {
+    --primary: #fcee0a; --primary-hover: #fff466; --primary-light: rgba(252,238,10,.14); --primary-lighter: rgba(252,238,10,.07);
+    --text: #f1f1f1; --text-muted: #b5b5c2; --text-light: #a4a4b4; --accent-text: #fcee0a;
+    --bg: #0b0b10; --bg-secondary: #13131b; --surface: #15151e; --surface-hover: #1d1d29; --border: #2c2c3c; --border-light: #22222f;
+    --glass: #13131b; --gradient-surface: #15151e; --gradient-primary: #0b0b10;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    --angle: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    --angle-btn: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(ellipse 60% 40% at 85% 0%, rgba(255,42,109,.16), transparent 70%), radial-gradient(ellipse 50% 40% at 0% 100%, rgba(5,217,232,.12), transparent 70%), #0b0b10 !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-cyber:not(#z) header { background: #0b0b10 !important; border-bottom: 0; box-shadow: none !important; position: sticky; }
+/* hazard stripes along the bottom of the header */
+body.st-cyber:not(#z) header::after { content: ""; display: block; height: 6px; background: repeating-linear-gradient(-45deg, #fcee0a 0 12px, #0b0b10 12px 24px); }
+body.st-cyber:not(#z) .logo { font-family: Impact, "Arial Narrow", "Arial Black", sans-serif; font-weight: 400; font-size: 2rem; letter-spacing: .04em; color: #fcee0a; text-transform: uppercase; font-style: italic; text-shadow: 2px 0 #ff2a6d, -2px 0 #05d9e8; }
+body.st-cyber:not(#z) .logo:hover { animation: stCyberGlitch .5s steps(2) 1; }
+body.reduced-motion.st-cyber:not(#z) .logo:hover { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    body.st-cyber:not(#z) .logo:hover { animation: none; }
+}
+body.st-cyber:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #15151e !important; border: 0 !important; border-left: 4px solid #fcee0a !important; box-shadow: none !important; clip-path: var(--angle); }
+body.st-cyber:not(#z) :is(.popup, .status-panel, .toast) { background: #13131b !important; border: 1px solid #fcee0a !important; box-shadow: 0 0 0 1px #0b0b10, 6px 6px 0 #ff2a6d !important; }
+body.st-cyber:not(#z) .zone-item:hover { border-left-color: #ff2a6d !important; background: #1d1d29 !important; transform: translateX(3px); }
+body.st-cyber:not(#z) .zone-item button { color: #f1f1f1; font-weight: 700; letter-spacing: .02em; }
+body.st-cyber:not(#z) .section-title { font-family: Impact, "Arial Narrow", "Arial Black", sans-serif; font-weight: 400; color: #fcee0a; text-transform: uppercase; letter-spacing: .06em; font-style: italic; }
+body.st-cyber:not(#z) .section-title .section-count { color: #05d9e8; font-style: normal; }
+body.st-cyber:not(#z) summary.section-title::after { border-color: #05d9e8; }
+body.st-cyber:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #fcee0a !important; color: #0b0b10 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; clip-path: var(--angle-btn); font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+body.st-cyber:not(#z) :is(.settings-button, #gotd .gotd-play):hover { background: #ff2a6d !important; color: #fff !important; }
+body.st-cyber:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #15151e !important; color: #05d9e8 !important; border: 1px solid #05d9e8 !important; border-radius: 0 !important; box-shadow: none !important; clip-path: var(--angle-btn); }
+body.st-cyber:not(#z) .control-button .control-icon { color: #05d9e8; }
+body.st-cyber:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #13131b !important; color: #f1f1f1 !important; border: 1px solid #3a3a4e !important; border-radius: 0 !important; caret-color: #fcee0a; box-shadow: none !important; }
+body.st-cyber:not(#z) #searchBar:focus { border-color: #fcee0a !important; box-shadow: 3px 3px 0 #ff2a6d !important; }
+body.st-cyber:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #a4a4b4; }
+body.st-cyber:not(#z) .popup-header { background: #fcee0a !important; color: #0b0b10 !important; }
+body.st-cyber:not(#z) footer { background: #0b0b10 !important; border-top: 3px solid #ff2a6d; }

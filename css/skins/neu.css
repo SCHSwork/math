@@ -1,0 +1,44 @@
+/* GN 2.0 site style: Neumorphism
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   UI-trend site styles: Minimalist, Semi-Flat, Neumorphism, Cyberpunk.
+   Minimalist and Semi-Flat keep the color theme's accent and follow
+   light/dark mode; Neumorphism and Cyberpunk are full looks.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) #scene { display: none !important; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .zone-item::before { display: none; }
+/* ── Neumorphism: soft surfaces raised from (or pressed into) the page ── */
+body.st-neu:not(#z) {
+    --primary: #5b6cf0; --primary-hover: #4a5ae0; --primary-light: rgba(91,108,240,.14); --primary-lighter: rgba(91,108,240,.07);
+    --text: #2f3646; --text-muted: #4e586b; --text-light: #545e72; --accent-text: #3f4fd6;
+    --bg: #e4e8ef; --bg-secondary: #e4e8ef; --surface: #e4e8ef; --surface-hover: #e8ecf3; --border: #d3d8e1; --border-light: #dce1e8;
+    --glass: #e4e8ef; --gradient-surface: #e4e8ef; --gradient-primary: #e4e8ef;
+    --raise: 7px 7px 14px #c3c8d1, -7px -7px 14px #ffffff;
+    --raise-sm: 4px 4px 8px #c3c8d1, -4px -4px 8px #ffffff;
+    --press: inset 4px 4px 8px #c3c8d1, inset -4px -4px 8px #ffffff;
+    --shadow-sm: var(--raise-sm); --shadow: var(--raise); --shadow-lg: var(--raise); --shadow-xl: 12px 12px 24px #c3c8d1, -12px -12px 24px #ffffff;
+    --radius: 18px; --radius-sm: 14px; --radius-lg: 22px; --radius-xl: 26px;
+    font-family: "Segoe UI", system-ui, Roboto, sans-serif;
+    background: #e4e8ef !important; color: var(--text);
+}
+body.st-neu:not(#z) header { background: #e4e8ef !important; box-shadow: 0 6px 14px #c9ced7 !important; backdrop-filter: none; }
+body.st-neu:not(#z) .logo { color: #3f4fd6; font-weight: 800; text-shadow: 2px 2px 3px #c3c8d1, -2px -2px 3px #fff; }
+body.st-neu:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #e4e8ef !important; border: 0 !important; box-shadow: var(--raise) !important; }
+body.st-neu:not(#z) :is(.popup, .status-panel, .toast) { background: #e4e8ef !important; border: 0 !important; box-shadow: 14px 14px 30px #b9bec8, -10px -10px 24px #fff !important; }
+body.st-neu:not(#z) .zone-item { padding: 8px; }
+body.st-neu:not(#z) .zone-item img { border-radius: 12px; }
+body.st-neu:not(#z) .zone-item:hover { transform: none; box-shadow: 10px 10px 20px #bcc1cb, -10px -10px 20px #fff !important; }
+body.st-neu:not(#z) .zone-item:active { box-shadow: var(--press) !important; }
+body.st-neu:not(#z) .zone-item button { color: #2f3646; font-weight: 600; }
+body.st-neu:not(#z) .section-title { color: #2f3646; font-weight: 800; }
+body.st-neu:not(#z) :is(.settings-button, #gotd .gotd-play, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #e4e8ef !important; color: #3f4fd6 !important; border: 0 !important; box-shadow: var(--raise-sm) !important; font-weight: 700; }
+body.st-neu:not(#z) :is(.settings-button, #gotd .gotd-play, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):active, body.st-neu:not(#z) :is(.theme-button, .finder-chip).active { box-shadow: var(--press) !important; transform: none !important; }
+body.st-neu:not(#z) .control-button .control-icon { color: #3f4fd6; }
+body.st-neu:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #e4e8ef !important; color: #2f3646 !important; border: 0 !important; caret-color: #3f4fd6; box-shadow: var(--press) !important; }
+body.st-neu:not(#z) #searchBar { border-radius: 999px; }
+body.st-neu:not(#z) #searchBar:focus { box-shadow: var(--press), 0 0 0 2px #8c98f5 !important; }
+body.st-neu:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #545e72; }
+body.st-neu:not(#z) .popup-header { background: #e4e8ef !important; color: #2f3646 !important; box-shadow: 0 4px 10px #cfd4dc; }
+body.st-neu:not(#z) footer { background: #e4e8ef !important; border-top: 0; box-shadow: 0 -6px 14px #c9ced7; }

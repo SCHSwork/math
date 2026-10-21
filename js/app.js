@@ -3446,6 +3446,7 @@ function openSettingsPanel() {
             ${row("Game card size", "", select(cardSize, "setCardSize(this.value)", [["small", "Small"], ["medium", "Medium"], ["large", "Large"], ["list", "List"]]))}
             ${row("Compact header", "A slimmer top bar", toggle(compactMode, "setCompactMode(this.checked)"))}
             ${row("Reduce motion", "Fewer animations", toggle(reducedMotion, "setReducedMotionEnabled(this.checked)", "reduced-motion-enabled"))}
+            ${typeof getLiteFxMode === "function" ? row("Lighter effects", liteFxNote(), select(getLiteFxMode(), "setLiteFxMode(this.value)", [["auto", "Auto"], ["on", "On"], ["off", "Off"]])) : ""}
             ${row("Site status light", "The little light in the bottom-left corner", toggle(typeof getShowSiteStatus !== "function" || getShowSiteStatus(), "setShowSiteStatus(this.checked)"))}
         </div>
         <button class="settings-button set-secondary" onclick="resetAppearanceSettings()">Reset look to default</button>

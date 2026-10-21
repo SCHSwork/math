@@ -1,0 +1,46 @@
+/* GN 2.0 site style: Blueprint
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) #scene { display: none !important; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-chalk, body.st-blueprint, body.st-aero, body.st-neon, body.st-lcd):not(#z) .zone-item::before { display: none; }
+/* ── Blueprint: drafting paper, white lines, yellow highlights ── */
+body.st-blueprint:not(#z) {
+    --primary: #ffd85a; --primary-hover: #ffe68f; --primary-light: rgba(255,216,90,.18); --primary-lighter: rgba(255,216,90,.08);
+    --text: #f2f7ff; --text-muted: #bcd3ee; --text-light: #a6c4e6; --accent-text: #ffd85a;
+    --bg: #12467d; --bg-secondary: #0f3d6e; --surface: #134a84; --surface-hover: #18558f; --border: rgba(242,247,255,.75); --border-light: rgba(242,247,255,.35);
+    --glass: #0d3664; --gradient-surface: transparent; --gradient-primary: #0d3664;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    font-family: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif; font-stretch: condensed;
+    background:
+        linear-gradient(rgba(255,255,255,.13) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient(90deg, rgba(255,255,255,.13) 1px, transparent 1px) 0 0 / 80px 80px,
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 16px 16px,
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 16px 16px,
+        #12467d !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-blueprint:not(#z) header { background: #0d3664 !important; border-bottom: 1px solid rgba(242,247,255,.75); box-shadow: 0 3px 0 -1px #0d3664, 0 4px 0 -1px rgba(242,247,255,.35) !important; backdrop-filter: none; }
+body.st-blueprint:not(#z) .logo { color: #f2f7ff; font-weight: 700; letter-spacing: .08em; border: 1px solid rgba(242,247,255,.75); padding: 0 .45rem; }
+/* cards are drawn like parts on a drawing: thin outline plus corner ticks */
+body.st-blueprint:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) {
+    background: linear-gradient(#f2f7ff, #f2f7ff) 0 0 / 10px 2px no-repeat, linear-gradient(#f2f7ff, #f2f7ff) 0 0 / 2px 10px no-repeat,
+                linear-gradient(#f2f7ff, #f2f7ff) 100% 100% / 10px 2px no-repeat, linear-gradient(#f2f7ff, #f2f7ff) 100% 100% / 2px 10px no-repeat,
+                rgba(13,54,100,.55) !important;
+    border: 1px solid rgba(242,247,255,.6) !important; box-shadow: none !important; }
+body.st-blueprint:not(#z) :is(.popup, .status-panel, .toast) { background: #0f3d6e !important; border: 1px solid rgba(242,247,255,.75) !important; box-shadow: 6px 6px 0 rgba(0,0,0,.25) !important; }
+body.st-blueprint:not(#z) .zone-item:hover { border-color: #ffd85a !important; outline: 1px dashed #ffd85a; outline-offset: 4px; transform: none; }
+body.st-blueprint:not(#z) .zone-item img { border-bottom: 1px solid rgba(242,247,255,.6); }
+body.st-blueprint:not(#z) .zone-item button { color: #f2f7ff; letter-spacing: .02em; }
+body.st-blueprint:not(#z) .section-title { color: #f2f7ff; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid rgba(242,247,255,.75); padding-bottom: .15rem; }
+body.st-blueprint:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #ffd85a !important; color: #0d3664 !important; border: 0 !important; box-shadow: none !important; letter-spacing: .04em; }
+body.st-blueprint:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: transparent !important; color: #f2f7ff !important; border: 1px solid rgba(242,247,255,.75) !important; box-shadow: none !important; }
+body.st-blueprint:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button):hover { border-color: #ffd85a !important; color: #ffd85a !important; }
+body.st-blueprint:not(#z) .control-button .control-icon { color: inherit; }
+body.st-blueprint:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #0d3664 !important; color: #f2f7ff !important; border: 1px solid rgba(242,247,255,.75) !important; caret-color: #ffd85a; box-shadow: none !important; }
+body.st-blueprint:not(#z) #searchBar:focus { border-color: #ffd85a !important; }
+body.st-blueprint:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #a6c4e6; }
+body.st-blueprint:not(#z) .popup-header { background: #0d3664 !important; border-bottom: 1px solid rgba(242,247,255,.75); color: #f2f7ff; }
+body.st-blueprint:not(#z) footer { background: #0d3664 !important; border-top: 1px solid rgba(242,247,255,.75); }

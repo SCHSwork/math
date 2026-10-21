@@ -1,0 +1,39 @@
+/* GN 2.0 site style: Hacker terminal
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Site styles (js/skins.js). ":not(#z)" makes these win over color themes
+   and scenes. Full-look styles hide the scene background.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-terminal:not(#z), body.st-desktop:not(#z), body.st-bold:not(#z), body.st-paper:not(#z), body.st-pixel:not(#z), body.st-comic:not(#z)) #scene { display: none !important; }
+/* ── Hacker terminal ── */
+body.st-terminal:not(#z) {
+    --primary: #22ff88; --primary-hover: #7dffb8; --primary-light: rgba(34,255,136,.14); --primary-lighter: rgba(34,255,136,.07);
+    --text: #b6ffd1; --text-muted: #4fbf7f; --text-light: #2f8f5a; --accent-text: #22ff88;
+    --bg: #020a05; --bg-secondary: #04140a; --surface: #031009; --surface-hover: #072214; --border: #1f6b40; --border-light: #134428;
+    --glass: #04140a; --gradient-surface: #031009; --gradient-primary: #031009; --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: 0 0 0 1px #22ff88;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    font-family: "Cascadia Mono", "Consolas", "Courier New", ui-monospace, monospace;
+    background: #020a05 !important; color: var(--text);
+}
+body.st-terminal:not(#z)::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2147483000;
+    background: repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+body.st-terminal:not(#z) header { background: #020a05 !important; border-bottom: 1px solid #22ff88; box-shadow: 0 0 18px rgba(34,255,136,.25); }
+body.st-terminal:not(#z) .logo { color: #22ff88; text-shadow: 0 0 8px #22ff88; }
+body.st-terminal:not(#z) .logo::before { content: "> "; }
+body.st-terminal:not(#z) .logo::after { content: "_"; animation: stBlink 1s steps(1) infinite; }
+body.st-terminal:not(#z) :is(.zone-item, .popup, #gotd, .settings-section, .filter-menu, .status-panel, .toast) { border: 1px solid #1f6b40 !important; border-radius: 0 !important; box-shadow: none !important; background: #031009 !important; }
+body.st-terminal:not(#z) .zone-item:hover { border-color: #22ff88 !important; box-shadow: 0 0 14px rgba(34,255,136,.35) !important; transform: none; }
+body.st-terminal:not(#z) .zone-item img { filter: grayscale(1) sepia(1) hue-rotate(75deg) saturate(3) brightness(.85); border-radius: 0; }
+body.st-terminal:not(#z) .zone-item:hover img { filter: none; }
+body.st-terminal:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button, #gotd .gotd-play) { background: transparent !important; color: #22ff88 !important; border: 1px solid #22ff88 !important; border-radius: 0 !important; box-shadow: none !important; text-transform: lowercase; }
+body.st-terminal:not(#z) :is(.settings-button, .theme-button:not(.scene-pick), .finder-chip):hover { background: #22ff88 !important; color: #020a05 !important; }
+body.st-terminal:not(#z) .section-title::before { content: "$ ls "; color: #4fbf7f; font-weight: 400; }
+body.st-terminal:not(#z) #searchBar { background: #020a05 !important; color: #22ff88 !important; border: 1px solid #1f6b40 !important; border-radius: 0; caret-color: #22ff88; }
+body.st-terminal:not(#z) .popup-header { background: #04140a !important; color: #22ff88; border-bottom: 1px solid #1f6b40; }
+body.st-terminal:not(#z) .popup-header::before { content: "[ "; }
+body.st-terminal:not(#z) .popup-header::after { content: ""; }
+body.st-terminal:not(#z) footer { background: #020a05 !important; border-top: 1px solid #1f6b40; }
+/* Styles that restyle the logo need normal text instead of the gradient-clipped default */
+:is(body.st-terminal, body.st-desktop, body.st-bold, body.st-pixel, body.st-comic):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; }
+body.st-terminal:not(#z) .logo { background: none; }

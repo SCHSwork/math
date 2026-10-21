@@ -1,0 +1,41 @@
+/* GN 2.0 site style: Web 1999
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) #scene { display: none !important; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) .zone-item::before { display: none; }
+:is(body.st-hud, body.st-candy, body.st-quest, body.st-web99, body.st-sheet):not(#z) :is(#searchBar, input, select, textarea, button) { font-family: inherit; }
+/* ── Web 1999: a starry homepage, rainbow logo, glowing table borders, blue links ── */
+body.st-web99:not(#z) {
+    --primary: #ffff00; --primary-hover: #ffff99; --primary-light: rgba(255,255,0,.15); --primary-lighter: rgba(255,255,0,.07);
+    --text: #ffffff; --text-muted: #c8c8ff; --text-light: #b0b0ee; --accent-text: #ffff00;
+    --bg: #000000; --bg-secondary: #000033; --surface: #000033; --surface-hover: #00004d; --border: #00ffff; --border-light: #0099cc;
+    --glass: #000033; --gradient-surface: #000033; --gradient-primary: #000000;
+    --shadow-sm: none; --shadow: none; --shadow-lg: none; --shadow-xl: none;
+    --radius: 0; --radius-sm: 0; --radius-lg: 0; --radius-xl: 0;
+    font-family: "Times New Roman", Times, serif;
+    background:
+        radial-gradient(1px 1px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 120px 80px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 200px 160px, #ffff99, transparent), radial-gradient(1px 1px at 60px 190px, #fff, transparent),
+        radial-gradient(1px 1px at 170px 20px, #aaf, transparent), radial-gradient(2px 2px at 90px 120px, #fff, transparent) #000 !important;
+    background-size: 220px 220px !important; color: #fff;
+}
+body.st-web99:not(#z) header { background: #000 !important; border-bottom: 4px ridge #c0c0c0; box-shadow: none !important; backdrop-filter: none; }
+body.st-web99:not(#z) .logo { font-family: "Comic Sans MS", "Comic Neue", cursive; font-weight: 700; font-size: 2rem;
+    background: linear-gradient(90deg, #ff0000, #ff9900, #ffff00, #00ff00, #00ffff, #6666ff, #ff00ff) !important; -webkit-background-clip: text !important; background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+body.st-web99:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: #000033 !important; border: 4px ridge #00ffff !important; box-shadow: none !important; }
+body.st-web99:not(#z) :is(.popup, .status-panel, .toast) { background: #000033 !important; border: 4px ridge #00ffff !important; box-shadow: none !important; }
+body.st-web99:not(#z) .zone-item:hover { border-color: #ff00ff !important; transform: none; }
+body.st-web99:not(#z) .zone-item button { color: #ffff00; text-decoration: underline; font-weight: 700; }
+body.st-web99:not(#z) .section-title { font-family: "Comic Sans MS", "Comic Neue", cursive; color: #00ff00; text-decoration: underline; }
+body.st-web99:not(#z) .section-title::after { filter: none; }
+body.st-web99:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #c0c0c0 !important; color: #000 !important; border: 3px outset #fff !important; border-radius: 0 !important; box-shadow: none !important; font-family: "Arial", sans-serif; font-weight: 700; }
+body.st-web99:not(#z) :is(.settings-button, #gotd .gotd-play):active { border-style: inset !important; }
+body.st-web99:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #c0c0c0 !important; color: #000 !important; border: 3px outset #fff !important; border-radius: 0 !important; box-shadow: none !important; }
+body.st-web99:not(#z) .control-button .control-icon { color: #000; }
+body.st-web99:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #fff !important; color: #000 !important; border: 3px inset #c0c0c0 !important; border-radius: 0 !important; caret-color: #000; box-shadow: none !important; }
+body.st-web99:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #555; }
+body.st-web99:not(#z) .popup-header { background: #000080 !important; color: #ffff00 !important; }
+body.st-web99:not(#z) footer { background: #000 !important; border-top: 4px ridge #c0c0c0; }
+body.st-web99:not(#z) footer .footer-links a { color: #6699ff; text-decoration: underline; }
+body.st-web99:not(#z) footer .footer-links a:visited { color: #cc66ff; }

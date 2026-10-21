@@ -1,0 +1,68 @@
+/* GN 2.0 site style: Art museum
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Vending machine, Art museum, Receipt, Subway map
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) #scene { display: none !important; }
+:is(body.st-vend, body.st-museum, body.st-receipt, body.st-metro):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── Art museum: each game hangs in a frame under its own spotlight, with a placard ── */
+body.st-museum:not(#z) {
+    --primary: #d8b25a; --primary-hover: #e8c87a; --primary-light: rgba(216,178,90,.16); --primary-lighter: rgba(216,178,90,.08);
+    --text: #f3ead9; --text-muted: #d4c6ac; --text-light: #c2b394; --accent-text: #e8c87a;
+    --bg: #3b1a1e; --bg-secondary: #2c1316; --surface: #2c1316; --surface-hover: #381a1e; --border: #5c3438; --border-light: #4a272b;
+    --glass: #2c1316; --gradient-surface: #2c1316; --gradient-primary: #1d0d0f;
+    --shadow-sm: none; --shadow: 0 6px 16px rgba(0,0,0,.45); --shadow-lg: 0 10px 26px rgba(0,0,0,.5); --shadow-xl: 0 16px 36px rgba(0,0,0,.55);
+    --radius: 3px; --radius-sm: 2px; --radius-lg: 4px; --radius-xl: 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    /* deep red gallery wall with a faint fabric weave */
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px), radial-gradient(ellipse 90% 60% at 50% 0, #4f2228, #3b1a1e 60%, #2a1114) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+body.st-museum:not(#z) header { background: #1d0d0f !important; border-bottom: 1px solid #d8b25a; box-shadow: 0 4px 18px rgba(0,0,0,.5) !important; }
+body.st-museum:not(#z) .logo { color: #e8c87a; font-family: Georgia, serif; font-weight: 400; letter-spacing: .22em; text-transform: uppercase; }
+body.st-museum:not(#z) #container { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important; gap: 3rem 2.2rem !important; padding-top: 1.5rem; }
+body.st-museum:not(#z) .shelf { grid-auto-columns: 180px; gap: 2rem !important; padding-top: 1.6rem; }
+body.st-museum:not(#z) .zone-item { background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: visible; padding: 0 4px; }
+body.st-museum:not(#z) .zone-item:hover { transform: none; }
+/* gold frame around an ivory mat; every third frame is dark wood, the next silver */
+body.st-museum:not(#z) .zone-item img { box-sizing: border-box; padding: 9px; background: #f3ecdc; border: 13px solid transparent; border-radius: 0;
+    border-image: linear-gradient(135deg, #fbe7a1, #b5851f 25%, #f2d272 45%, #8a5a0b 70%, #e5bf55) 1;
+    box-shadow: 0 14px 26px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.25); transition: box-shadow .3s ease; }
+body.st-museum:not(#z) .zone-item:nth-child(3n+2) img { border-image: linear-gradient(135deg, #6b4428, #2e1a0e 40%, #5a3820 70%, #24140a) 1; }
+body.st-museum:not(#z) .zone-item:nth-child(3n) img { border-image: linear-gradient(135deg, #f4f6f8, #8d949c 30%, #e2e6ea 55%, #6c737b 80%, #c9ced4) 1; }
+body.st-museum:not(#z) .zone-item:hover img { transform: none; box-shadow: 0 18px 34px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.25); }
+/* spotlight from a little brass lamp above each frame */
+body.st-museum:not(#z) .zone-item::before { content: ""; position: absolute; inset: -26px -22% auto; height: 85%; opacity: .55; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 52% 70% at 50% 0, rgba(255,236,190,.38), rgba(255,236,190,.1) 55%, transparent 72%); transition: opacity .35s ease; }
+body.st-museum:not(#z) .zone-item:is(:hover, :focus-within)::before { opacity: 1; }
+body.st-museum:not(#z) .zone-item::after { content: ""; position: absolute; top: -26px; left: 50%; width: 46px; height: 7px; margin-left: -23px; aspect-ratio: auto; transform: none; animation: none !important; opacity: 1; z-index: 2;
+    background: linear-gradient(180deg, #e8c87a, #8a6420); border-radius: 0 0 6px 6px; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+body.st-museum:not(#z) .zone-item > * { position: relative; z-index: 1; }
+body.st-museum:not(#z) .zone-item > :is(.card-fav, .card-badges) { position: absolute; z-index: 3; }
+/* placard */
+body.st-museum:not(#z) .zone-item > button:not(.card-fav) { flex-direction: column; gap: 2px; width: 84%; margin: 16px auto 0; padding: 7px 10px 8px; min-height: 0; max-height: none;
+    background: #f3ecdc !important; color: #2b2118 !important; border-radius: 1px; box-shadow: 0 2px 5px rgba(0,0,0,.45); font-family: Georgia, serif; font-size: 13px; font-weight: 700; line-height: 1.25; }
+body.st-museum:not(#z) .zone-item > button:not(.card-fav)::after { content: "Interactive media"; display: block; font-size: 10.5px; font-style: italic; font-weight: 400; color: #6b5a45; }
+body.st-museum:not(#z) .shelf .zone-item > button:not(.card-fav) { display: flex; -webkit-line-clamp: unset; }
+body.st-museum:not(#z) .zone-item .card-meta { justify-content: center; color: #d4c6ac; font-size: 11px; margin: 6px 0 0; padding: 0; }
+body.st-museum:not(#z) .section-title .section-count { color: #d4c6ac; letter-spacing: .05em; }
+body.st-museum:not(#z) .section-title { color: #e8c87a; font-family: Georgia, serif; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; }
+body.st-museum:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #2c1316 !important; border: 1px solid #5c3438 !important; }
+body.st-museum:not(#z) :is(.popup, .status-panel, .toast) { background: #2c1316 !important; border: 1px solid #d8b25a !important; }
+body.st-museum:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: transparent !important; color: #f3ead9 !important; border: 1px solid #8a6a3a !important; box-shadow: none !important; font-family: Georgia, serif; }
+body.st-museum:not(#z) .control-button .control-icon { color: #e8c87a; }
+body.st-museum:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #d8b25a !important; color: #24120f !important; border: 0 !important; box-shadow: none !important; font-family: Georgia, serif; letter-spacing: .06em; }
+body.st-museum:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #f3ecdc !important; color: #2b2118 !important; border: 1px solid #d8b25a !important; caret-color: #8a5a0b; box-shadow: none !important; font-family: Georgia, serif; }
+body.st-museum:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(216,178,90,.5) !important; }
+body.st-museum:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #6b5a45; }
+body.st-museum:not(#z) .popup-header { background: #1d0d0f !important; color: #e8c87a !important; }
+/* footer: a polished wood floor */
+body.st-museum:not(#z) footer { background: repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 120px), linear-gradient(180deg, #5a3a22, #3e2716) !important; border-top: 6px solid #241509; color: #f3ead9; }
+body.st-museum:not(#z) footer a { color: #f3ead9; }
+@media (max-width: 600px) {
+    body.st-museum:not(#z) #container { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 2.2rem 1.1rem !important; }
+    body.st-museum:not(#z) .shelf { grid-auto-columns: 140px; gap: 1.2rem !important; }
+    body.st-museum:not(#z) .zone-item img { padding: 5px; border-width: 8px; }
+    body.st-museum:not(#z) .zone-item > button:not(.card-fav) { width: 94%; font-size: 12px; }
+}

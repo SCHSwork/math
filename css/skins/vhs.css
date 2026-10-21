@@ -1,0 +1,63 @@
+/* GN 2.0 site style: VHS shelf
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   Trading cards, VHS shelf, Patches on denim
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-cards, body.st-vhs, body.st-denim):not(#z) #scene { display: none !important; }
+:is(body.st-cards, body.st-vhs, body.st-denim):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+/* ── VHS shelf: every game is a tape standing on a wooden shelf; point at one to slide it out ── */
+body.st-vhs:not(#z) {
+    --spine-w: 56px; --spine-h: 226px; --plank: 20px;
+    --primary: #ff5a36; --primary-hover: #ff7c5e; --primary-light: rgba(255,90,54,.16); --primary-lighter: rgba(255,90,54,.08);
+    --text: #f3ece4; --text-muted: #c6b8a8; --text-light: #b3a594; --accent-text: #ffb38a;
+    --bg: #1d140e; --bg-secondary: #261a12; --surface: #2a1d14; --surface-hover: #33241a; --border: #4a3424; --border-light: #3a2a1d;
+    --glass: #261a12; --gradient-surface: #2a1d14; --gradient-primary: #141414;
+    --shadow-sm: none; --shadow: 0 6px 16px rgba(0,0,0,.45); --shadow-lg: 0 10px 26px rgba(0,0,0,.5); --shadow-xl: 0 16px 36px rgba(0,0,0,.55);
+    --radius: 6px; --radius-sm: 4px; --radius-lg: 8px; --radius-xl: 10px;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+    /* dark wood-panel wall */
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, transparent 2px 140px), linear-gradient(180deg, #2a1b12, #1d140e) !important;
+    background-attachment: fixed !important; color: var(--text);
+}
+/* header: black tape box with retro stripes */
+body.st-vhs:not(#z) header { background: #141414 !important; box-shadow: 0 4px 14px rgba(0,0,0,.5) !important; }
+body.st-vhs:not(#z) header::after { content: ""; display: block; height: 8px; background: linear-gradient(180deg, #e8402c 0 25%, #f08a24 25% 50%, #f6c445 50% 75%, #2bb3a8 75%); }
+body.st-vhs:not(#z) .logo { color: #fff; font-weight: 900; font-style: italic; letter-spacing: .02em; }
+/* shelves: tapes in rows, a plank under each row */
+body.st-vhs:not(#z) #container { display: flex !important; flex-wrap: wrap; align-items: flex-end; gap: var(--plank) 6px; padding: 0 10px;
+    background: repeating-linear-gradient(180deg, transparent 0 var(--spine-h), #8a5a32 var(--spine-h) calc(var(--spine-h) + 4px), #6b4223 calc(var(--spine-h) + 4px) calc(var(--spine-h) + var(--plank) - 3px), #3b2412 calc(var(--spine-h) + var(--plank) - 3px) calc(var(--spine-h) + var(--plank))); }
+body.st-vhs:not(#z) .shelf { grid-auto-columns: max-content !important; align-items: end; gap: 6px !important; padding-bottom: var(--plank);
+    background: linear-gradient(180deg, #8a5a32 0 4px, #6b4223 4px calc(100% - 3px), #3b2412 calc(100% - 3px)) bottom / 100% var(--plank) no-repeat; }
+body.st-vhs:not(#z) .zone-item {
+    width: var(--spine-w); height: var(--spine-h); flex: none; padding: 0; border: 0 !important; border-radius: 3px !important;
+    background: #111 !important; box-shadow: inset -3px 0 0 rgba(0,0,0,.45), inset 2px 0 0 rgba(255,255,255,.12) !important;
+    transition: width .3s ease; animation: none; }
+body.st-vhs:not(#z) .zone-item::before, body.st-vhs:not(#z) .zone-item::after, body.st-vhs:not(#z) .zone-item :is(.card-badges, .card-meta, .card-fav, .zone-actions) { display: none !important; }
+/* the spine takes its colors from the cover, blurred */
+body.st-vhs:not(#z) .zone-item img { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover;
+    filter: blur(7px) saturate(1.5) brightness(.75); transform: scale(1.35); transition: filter .3s ease, transform .3s ease; }
+/* title on a white spine label, reading bottom to top */
+body.st-vhs:not(#z) .zone-item button {
+    position: absolute; left: 50%; top: 14px; bottom: 14px; width: 30px; margin-left: -15px; min-height: 0; padding: 6px 0;
+    writing-mode: vertical-rl; transform: rotate(180deg); justify-content: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    background: #f3ece4; color: #1d140e; border-radius: 2px; font-size: 12px; font-weight: 800; letter-spacing: .02em; line-height: 1;
+    max-height: none !important; height: auto; display: block !important; -webkit-line-clamp: unset; text-align: center; }
+body.st-vhs:not(#z) .zone-item:hover, body.st-vhs:not(#z) .zone-item:focus-within { width: 160px; transform: none; }
+body.st-vhs:not(#z) .zone-item:hover img, body.st-vhs:not(#z) .zone-item:focus-within img { filter: none; transform: none; }
+body.st-vhs:not(#z) .zone-item:hover button, body.st-vhs:not(#z) .zone-item:focus-within button {
+    writing-mode: horizontal-tb; transform: none; left: 0; right: 0; top: auto; bottom: 0; width: auto; margin: 0; padding: 8px 6px;
+    white-space: normal; background: rgba(20,20,20,.85); color: #fff; border-radius: 0; max-height: 50%; }
+@media (max-width: 600px) {
+    body.st-vhs:not(#z) { --spine-w: 46px; --spine-h: 196px; }
+}
+body.st-vhs:not(#z) :is(#gotd, .settings-section, .filter-menu, .popup, .status-panel, .toast) { background: #261a12 !important; border: 1px solid #4a3424 !important; }
+body.st-vhs:not(#z) .section-title { color: #f3ece4; font-weight: 900; font-style: italic; }
+body.st-vhs:not(#z) :is(.settings-button, #gotd .gotd-play) { background: #ff5a36 !important; color: #1a0d07 !important; border: 0 !important; box-shadow: 0 3px 0 #a8321a !important; font-weight: 900; font-style: italic; }
+body.st-vhs:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: #2a1d14 !important; color: #f3ece4 !important; border: 1px solid #4a3424 !important; box-shadow: none !important; }
+body.st-vhs:not(#z) .control-button .control-icon { color: #ffb38a; }
+body.st-vhs:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: #f3ece4 !important; color: #1d140e !important; border: 0 !important; caret-color: #ff5a36; box-shadow: none !important; }
+body.st-vhs:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px #ff5a36 !important; }
+body.st-vhs:not(#z) :is(#searchBar, input, textarea)::placeholder { color: #6b5a4a; }
+body.st-vhs:not(#z) .popup-header { background: #141414 !important; color: #fff !important; }
+body.st-vhs:not(#z) footer { background: #141414 !important; border-top: 0; }

@@ -1,0 +1,49 @@
+/* GN 2.0 site style: Semi-Flat
+   Loaded only while this style is on (see js/skins.js). Shared parts, picker
+   previews and fonts stay in css/styles.css. */
+/* ═════════════════════════════════════════════════════════════════════════
+   UI-trend site styles: Minimalist, Semi-Flat, Neumorphism, Cyberpunk.
+   Minimalist and Semi-Flat keep the color theme's accent and follow
+   light/dark mode; Neumorphism and Cyberpunk are full looks.
+   ═════════════════════════════════════════════════════════════════════════ */
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) #scene { display: none !important; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
+:is(body.st-minimal, body.st-semiflat, body.st-neu, body.st-cyber):not(#z) .zone-item::before { display: none; }
+/* ── Semi-Flat: flat theme color, one soft shadow, rounded and friendly ── */
+body.st-semiflat:not(#z) {
+    --sf: var(--primary);
+    --sf-deep: color-mix(in srgb, var(--primary) 70%, black);
+    --text: #1f2633; --text-muted: #556070; --text-light: #5f6a7a; --accent-text: var(--sf-deep);
+    --bg: #f3f5f9; --bg-secondary: #e9edf3; --surface: #ffffff; --surface-hover: #f6f8fb; --border: #dfe4ec; --border-light: #e8ecf2;
+    --glass: #ffffff; --gradient-surface: #ffffff; --gradient-primary: var(--sf-deep);
+    --shadow-sm: 0 2px 6px rgba(20,30,50,.08); --shadow: 0 4px 12px rgba(20,30,50,.1); --shadow-lg: 0 8px 20px rgba(20,30,50,.12); --shadow-xl: 0 12px 28px rgba(20,30,50,.14);
+    --radius: 14px; --radius-sm: 10px; --radius-lg: 16px; --radius-xl: 20px;
+    font-family: "Segoe UI", system-ui, Roboto, sans-serif;
+    background: #f3f5f9 !important; color: var(--text);
+}
+body.st-semiflat.dark-mode:not(#z) {
+    --text: #eef1f6; --text-muted: #a9b2c1; --text-light: #98a2b3; --accent-text: color-mix(in srgb, var(--primary) 60%, white);
+    --bg: #161b24; --bg-secondary: #1d2330; --surface: #212836; --surface-hover: #283041; --border: #2e3747; --border-light: #283041;
+    --glass: #212836; --gradient-surface: #212836;
+    --shadow-sm: 0 2px 6px rgba(0,0,0,.3); --shadow: 0 4px 12px rgba(0,0,0,.35); --shadow-lg: 0 8px 20px rgba(0,0,0,.4);
+    background: #161b24 !important;
+}
+body.st-semiflat:not(#z) header { background: var(--sf-deep) !important; box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 55%, black) !important; backdrop-filter: none; }
+body.st-semiflat:not(#z) .logo { color: #fff; font-weight: 800; }
+body.st-semiflat:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow-sm) !important; }
+body.st-semiflat:not(#z) :is(.popup, .status-panel, .toast) { background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow-xl) !important; }
+body.st-semiflat:not(#z) .zone-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg) !important; }
+body.st-semiflat:not(#z) .zone-item button { color: var(--text); font-weight: 600; }
+body.st-semiflat:not(#z) .section-title { color: var(--text); font-weight: 800; }
+body.st-semiflat:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--sf-deep) !important; color: #fff !important; border: 0 !important; border-radius: 10px !important; box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 50%, black) !important; font-weight: 700; }
+body.st-semiflat:not(#z) :is(.settings-button, #gotd .gotd-play):active { transform: translateY(2px); box-shadow: 0 1px 0 color-mix(in srgb, var(--primary) 50%, black) !important; }
+body.st-semiflat:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip, .filter-button, .control-button) { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 10px !important; box-shadow: 0 2px 0 var(--border) !important; }
+body.st-semiflat:not(#z) header :is(.control-button, .filter-button) { background: rgba(255,255,255,.16) !important; color: #fff !important; border: 0 !important; box-shadow: 0 2px 0 rgba(0,0,0,.18) !important; }
+body.st-semiflat:not(#z) .control-button .control-icon { color: inherit; }
+body.st-semiflat:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--border) !important; caret-color: var(--sf-deep); box-shadow: none !important; }
+body.st-semiflat:not(#z) header #searchBar, body.st-semiflat:not(#z) header #searchBar:focus { background: #fff !important; color: #1f2633 !important; border: 0 !important; }
+body.st-semiflat:not(#z) header #searchBar::placeholder { color: #5f6a7a; }
+body.st-semiflat:not(#z) #searchBar:focus { box-shadow: 0 0 0 3px rgba(255,255,255,.4) !important; }
+body.st-semiflat:not(#z) :is(input, textarea)::placeholder { color: var(--text-light); }
+body.st-semiflat:not(#z) .popup-header { background: var(--sf-deep) !important; color: #fff !important; }
+body.st-semiflat:not(#z) footer { background: var(--surface) !important; border-top: 1px solid var(--border); }

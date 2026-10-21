@@ -46,7 +46,39 @@ function getSiteSkin() {
     try { v = localStorage.getItem(SKIN_KEY) || "default"; } catch {}
     return SITE_SKINS[v] ? v : "default";
 }
+// Each style's look is in css/skins/<key>.css, loaded the first time it's used
+const SKIN_CSS_V = window.GN_SKIN_CSS || {};
+function skinCssReady(skin) {
+    if (skin === "default" || !SITE_SKINS[skin]) return true;
+    const link = document.getElementById("skin-css-" + skin);
+    return !!(link && (link.sheet || link.dataset.loaded));
+}
+function ensureSkinCss(skin, done) {
+    if (skinCssReady(skin)) { if (done) done(); return; }
+    let link = document.getElementById("skin-css-" + skin);
+    if (!link) {
+        link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.id = "skin-css-" + skin;
+        link.href = "css/skins/" + skin + ".css" + (SKIN_CSS_V[skin] ? "?v=" + SKIN_CSS_V[skin] : "");
+        document.head.appendChild(link);
+    }
+    if (!done) return;
+    let called = false;
+    const finish = () => { if (called) return; called = true; link.dataset.loaded = "1"; done(); };
+    link.addEventListener("load", finish, { once: true });
+    link.addEventListener("error", finish, { once: true });
+    setTimeout(finish, 5000);   // slow network: switch anyway
+}
+let pendingSkin = null;
 function applySiteSkin(skin = getSiteSkin()) {
+    if (!skinCssReady(skin)) {
+        // keep the current look until the new style's file has loaded, then switch
+        pendingSkin = skin;
+        ensureSkinCss(skin, () => { if (pendingSkin === skin) applySiteSkin(skin); });
+        return;
+    }
+    pendingSkin = null;
     const b = document.body;
     if (!b) return;
     Object.keys(SITE_SKINS).forEach(k => b.classList.remove("st-" + k));
@@ -124,15 +156,19 @@ function setSiteSkin(skin) {
     if (!SITE_SKINS[skin]) skin = "default";
     try { localStorage.setItem(SKIN_KEY, skin); } catch {}
     const run = () => applySiteSkin(skin);
-    const reduced = document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    if (typeof document.startViewTransition === "function" && !reduced) document.startViewTransition(run); else run();
+    const reduced = document.body.classList.contains("reduced-motion") || document.body.classList.contains("lite-fx") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    // load the style's file first, so the switch happens in one smooth step
+    ensureSkinCss(skin, () => {
+        if (getSiteSkin() !== skin) return;   // picked another one meanwhile
+        if (typeof document.startViewTransition === "function" && !reduced) document.startViewTransition(run); else run();
+    });
     if (typeof syncScrollbarColors === "function") setTimeout(syncScrollbarColors, 400);
 }
 // Settings → Look: the style picker
 function siteSkinPickerHtml() {
     const cur = getSiteSkin();
     return Object.entries(SITE_SKINS).map(([k, s]) =>
-        `<button type="button" class="skin-pick skin-prev-${k}${k === cur ? " active" : ""}" data-skin="${k}" onclick="setSiteSkin('${k}')" title="${s.note}"><span class="skin-art" aria-hidden="true"><i></i><i></i><i></i></span><b>${s.label}</b></button>`).join("");
+        `<button type="button" class="skin-pick skin-prev-${k}${k === cur ? " active" : ""}" data-skin="${k}" onclick="setSiteSkin('${k}')" onpointerenter="ensureSkinCss('${k}')" onfocus="ensureSkinCss('${k}')" title="${s.note}"><span class="skin-art" aria-hidden="true"><i></i><i></i><i></i></span><b>${s.label}</b></button>`).join("");
 }
 if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLoaded", () => applySiteSkin());
 
@@ -161,7 +197,7 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
 (function () {
     let cv = null, cx = null, raf = 0, W = 0, H = 0, last = 0, lastScroll = 0, fish = [], jellies = [], bubbles = [], weeds = [];
     const on = () => document.body.classList.contains("st-aqua");
-    const still = () => document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const still = () => document.body.classList.contains("reduced-motion") || document.body.classList.contains("lite-fx") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     const gameOpen = () => { const v = document.getElementById("zoneViewer"); return !!v && getComputedStyle(v).display !== "none"; };
     const rnd = (a, b) => a + Math.random() * (b - a);
     const PALETTES = [["#ff8a3d", "#ffb36b", true], ["#4fc3f7", "#0277bd"], ["#ffe14d", "#f9a825"], ["#f472b6", "#be185d"], ["#7ef0d0", "#14a38b"], ["#a78bfa", "#6d28d9"], ["#ff8a3d", "#ffb36b", true]];
@@ -288,7 +324,7 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
 (function () {
     let io = null, mo = null;
     const on = () => document.body.classList.contains("st-popup");
-    const still = () => document.body.classList.contains("reduced-motion") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const still = () => document.body.classList.contains("reduced-motion") || document.body.classList.contains("lite-fx") || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     const AREAS = "#container, .shelf";
     function watch(root) {
         (root || document).querySelectorAll(":is(#container, .shelf) > .zone-item:not(.pu-in):not(.pu-watch)").forEach(c => { c.classList.add("pu-watch"); io.observe(c); });
