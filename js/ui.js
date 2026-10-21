@@ -265,6 +265,8 @@
         btn.addEventListener("click", () => {
             // do what the button shows, even if more cards arrived since it last updated
             if (btn.classList.contains("up")) { stopFollowing(); window.scrollTo({ top: 0, behavior: behaviorFor(0) }); return; }
+            // All games only builds cards as you scroll; build the rest so the bottom is the real bottom
+            if (typeof window.renderAllZones === "function") window.renderAllZones();
             const bottom = document.documentElement.scrollHeight;
             window.scrollTo({ top: bottom, behavior: behaviorFor(bottom) });
             // keep following while the page is still growing: 2s after the last growth, 20s at most

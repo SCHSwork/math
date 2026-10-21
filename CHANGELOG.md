@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 20, 2026 — Faster site, especially on slower computers
+
+### Changed
+- **All games builds cards as you scroll** instead of all ~1,800 at once, so the page holds about 4,400 elements instead of 24,500. Hovering, scrolling and the animated styles are much smoother. The scroll-to-bottom button and the browser's find (Ctrl+F) build the rest first, so they still reach every game.
+- **Pop-up book:** cards now spring up once as they come into view, instead of running 1,800 scroll-linked animations all the time. Scrolling no longer freezes for over a second at a time on slow computers.
+- **Aquarium:** the game list no longer takes up to a minute to finish loading. The fish draw about 30 times a second instead of 60, hold still while you scroll, and use cheaper glow effects. The light rays are a separate layer that costs almost nothing, and fewer cards bob.
+- **Arcade and Aquarium:** the chasing bulbs and the water's edge move without making the browser recheck the page every frame. With either style open and nothing moving, the computer now does a fraction of the work.
+
 ## October 20, 2026 — Scene pickers follow the site style
 
 ### Changed

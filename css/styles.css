@@ -4159,6 +4159,14 @@ body.st-metro:not(#z) footer a { color: #f1f2f4; }
 :is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
 #stFx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; display: none; }
 body.st-aqua:not(#z) #stFx { display: block; }
+/* light rays from the surface: a fixed layer that sways slowly (moved with transform, so it's cheap) */
+body.st-aqua:not(#z)::before { content: ""; position: fixed; top: -5vh; left: -20vw; width: 140vw; height: 95vh; z-index: -1; pointer-events: none;
+    background: repeating-linear-gradient(104deg, transparent 0 7vw, rgba(190,245,255,.09) 7vw 10vw, transparent 10vw 15vw, rgba(190,245,255,.05) 15vw 19vw, transparent 19vw 26vw);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 90%); mask-image: linear-gradient(180deg, #000, transparent 90%);
+    transform-origin: 50% 0; animation: stAquaRays 18s ease-in-out infinite alternate; will-change: transform; }
+@keyframes stAquaRays { from { transform: translateX(-3vw) skewX(-3deg); } to { transform: translateX(3vw) skewX(4deg); } }
+body.reduced-motion.st-aqua:not(#z)::before { animation: none; }
+@media (prefers-reduced-motion: reduce) { body.st-aqua:not(#z)::before { animation: none; } }
 
 /* ── Aquarium: fish, jellyfish, light rays and bubbles are drawn live behind the page (skins.js) ── */
 body.st-aqua:not(#z) {
@@ -4173,17 +4181,20 @@ body.st-aqua:not(#z) {
 }
 /* the water's surface, rippling */
 body.st-aqua:not(#z) header { background: linear-gradient(180deg, rgba(160,240,255,.95), rgba(40,170,215,.92)) !important; border-bottom: 0; box-shadow: none !important; }
-body.st-aqua:not(#z) header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -14px; height: 14px; pointer-events: none;
+body.st-aqua:not(#z) header { overflow-x: clip; }
+body.st-aqua:not(#z) header::after { content: ""; position: absolute; left: -280px; right: 0; bottom: -14px; height: 14px; pointer-events: none; will-change: transform;
     background: radial-gradient(14px 10px at 50% 0, rgba(40,170,215,.92) 98%, transparent) 0 0 / 40px 14px repeat-x, radial-gradient(18px 8px at 50% 0, rgba(255,255,255,.35) 60%, transparent 62%) 20px 0 / 56px 10px repeat-x;
-    animation: stAquaWave 6s linear infinite; }
-@keyframes stAquaWave { to { background-position: 40px 0, -36px 0; } }
+    animation: stAquaWave 40s linear infinite; }
+/* the two wave layers repeat every 40px and 56px; 112px isn't a multiple of 40, so use 280 */
+@keyframes stAquaWave { to { transform: translateX(280px); } }
 body.st-aqua:not(#z) .logo { color: #043a57; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,.7); }
 body.st-aqua:not(#z) header .control-button { background: rgba(255,255,255,.55) !important; color: #043a57 !important; border: 1px solid rgba(255,255,255,.8) !important; box-shadow: none !important; }
 body.st-aqua:not(#z) header .control-button .control-icon { color: #043a57; }
 /* glassy cards that bob in the water; only the first screenful bobs, to keep it smooth */
 body.st-aqua:not(#z) .zone-item { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 40%, rgba(120,220,255,.08)) !important; border: 1px solid rgba(170,240,255,.45) !important; border-radius: 20px !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 26px rgba(0,15,35,.45) !important; overflow: hidden; }
-body.st-aqua:not(#z) :is(#container .zone-item:nth-child(-n+36), .shelf .zone-item) { animation: stAquaBob 5.5s ease-in-out infinite; }
+/* only the first cards in each row and the first screenful bob, so it stays smooth */
+body.st-aqua:not(#z) :is(#container .zone-item:nth-child(-n+18), .shelf .zone-item:nth-child(-n+8)) { animation: stAquaBob 5.5s ease-in-out infinite; }
 body.st-aqua:not(#z) .zone-item:nth-child(3n+1) { animation-delay: -1.8s !important; animation-duration: 6.4s !important; }
 body.st-aqua:not(#z) .zone-item:nth-child(3n+2) { animation-delay: -3.3s !important; animation-duration: 4.9s !important; }
 @keyframes stAquaBob { 0%, 100% { transform: translateY(0) rotate(-.6deg); } 50% { transform: translateY(-7px) rotate(.6deg); } }
@@ -4240,9 +4251,14 @@ body.st-arcade:not(#z) {
 }
 /* header: marquee bulbs chasing along the bottom */
 body.st-arcade:not(#z) header { background: #0d0820 !important; border-bottom: 0; box-shadow: 0 6px 24px rgba(255,43,214,.25) !important; }
-body.st-arcade:not(#z) header::after { content: ""; display: block; height: 12px; background: radial-gradient(circle 4px, #fff6c2 0 2px, #ffcf3f 3px, transparent 4.5px) 0 50% / 24px 12px repeat-x, radial-gradient(circle 4px, #6b4a12 0 3px, transparent 4.5px) 12px 50% / 24px 12px repeat-x, #1a0f30;
-    box-shadow: 0 0 14px rgba(255,207,63,.45); animation: stArcadeChase .5s steps(1) infinite; }
-@keyframes stArcadeChase { 50% { background-position: 12px 50%, 0 50%, 0 0; } }
+body.st-arcade:not(#z) header { overflow-x: clip; }
+body.st-arcade:not(#z) header::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background: #1a0f30; box-shadow: 0 0 14px rgba(255,207,63,.45); pointer-events: none; }
+/* the bulb strip is 24px wider than the header and hops 12px back and forth, so lit and dark bulbs swap */
+body.st-arcade:not(#z) header::after { content: ""; position: absolute; left: -24px; right: 0; bottom: 0; height: 12px; pointer-events: none; will-change: transform;
+    background: radial-gradient(circle 4px, #fff6c2 0 2px, #ffcf3f 3px, transparent 4.5px) 0 50% / 24px 12px repeat-x, radial-gradient(circle 4px, #6b4a12 0 3px, transparent 4.5px) 12px 50% / 24px 12px repeat-x;
+    animation: stArcadeChase .5s steps(1) infinite; }
+body.st-arcade:not(#z) .header-content { border-bottom: 12px solid transparent; }
+@keyframes stArcadeChase { 50% { transform: translateX(12px); } }
 body.st-arcade:not(#z) .logo { font-family: "GN HUD", "Segoe UI", sans-serif; font-weight: 900; color: #ff8ef0; text-shadow: 0 0 6px #ff2bd6, 0 0 18px #ff2bd6, 0 0 36px rgba(255,43,214,.6); letter-spacing: .06em; }
 body.st-arcade:not(#z) #container { grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)) !important; gap: 2rem 1.4rem !important; }
 body.st-arcade:not(#z) .zone-item {
@@ -4343,16 +4359,10 @@ body.st-popup:not(#z) .shelf .zone-item > button:not(.card-fav) { max-height: no
 body.st-popup:not(#z) .zone-item::after { content: ""; top: auto; bottom: -9px; left: 22%; width: 56%; height: 9px; aspect-ratio: auto; transform: none; opacity: 1; animation: none !important; background: #e4d2ab; clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%); z-index: 0; }
 body.st-popup:not(#z) .zone-item::before { display: none; }
 body.st-popup:not(#z) .zone-item .card-meta { margin: -4px 0 0; padding: 0 0 8px; color: #6e553c; }
-@supports (animation-timeline: view()) {
-    body.st-popup:not(#z) :is(#container, .shelf) .zone-item { animation: stPopUp linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
-    body.st-popup:not(#z) .shelf .zone-item { animation-timeline: view(block); }
-}
-@keyframes stPopUp {
-    from { transform: perspective(700px) rotateX(80deg); box-shadow: 0 1px 0 #e3d3b0, 0 0 0 rgba(70,40,10,0) !important; filter: brightness(.82); }
-    to { transform: perspective(700px) rotateX(0deg); filter: none; }
-}
-body.reduced-motion.st-popup:not(#z) .zone-item { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { body.st-popup:not(#z) .zone-item { animation: none !important; } }
+/* cards start folded flat and spring up the first time they scroll into view (skins.js adds .pu-in) */
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item { animation: none; transition: transform .75s cubic-bezier(.25, 1.45, .45, 1), filter .5s ease, translate .25s ease, box-shadow .25s ease; transition-delay: var(--pu-delay, 0ms); }
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item:not(.pu-in) { transform: perspective(700px) rotateX(80deg); filter: brightness(.82); box-shadow: 0 1px 0 #e3d3b0 !important; }
+body.st-popup.pu-ready:not(#z) :is(#container, .shelf) .zone-item.pu-in { transform: perspective(700px) rotateX(0deg); }
 body.st-popup:not(#z) .section-title { color: #6b1d1d; font-weight: 700; font-size: 1.5rem; text-shadow: 0 1px 0 #fff; }
 body.st-popup:not(#z) .section-title .section-count { color: #6e553c; }
 body.st-popup:not(#z) :is(#gotd, .settings-section, .filter-menu) { background: #fffdf6 !important; border: 1px solid #d8c39b !important; box-shadow: 0 10px 14px -8px rgba(70,40,10,.3) !important; }
@@ -4376,3 +4386,5 @@ body.st-popup:not(#z) footer a { color: #f6ead0; }
 .scenes-off-note { display: none; }
 body.skin-no-scenes .needs-scenes { display: none !important; }
 body.skin-no-scenes .scenes-off-note { display: block; margin: .4rem 0 .2rem; font-size: 13px; color: var(--text-muted); }
+/* marker under All games; more cards are built when it nears the screen */
+#zonesMore { height: 1px; }
