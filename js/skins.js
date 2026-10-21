@@ -31,7 +31,7 @@ const SITE_SKINS = {
     cards:    { label: "Trading cards",  note: "Games as collectible cards; the frame shows how often it's played (common to legendary)" },
     vhs:      { label: "VHS shelf",      note: "Games as tapes on wooden shelves; point at one to slide it out" },
     denim:    { label: "Patches on denim", note: "Games as stitched-on patches on a jeans background" },
-    aqua:     { label: "Aquarium",       note: "Fish, jellyfish and light rays swim behind glass cards that bob in the water" },
+    aqua:     { label: "Aquarium",       note: "Fish, jellyfish, light rays and bubbles drift behind glass cards" },
     arcade:   { label: "Arcade",         note: "Every game is a glowing arcade cabinet with a CRT screen and joystick" },
     popup:    { label: "Pop-up book",    note: "An open storybook; games fold up off the page as you scroll to them" },
     vend:     { label: "Vending machine", note: "Games on coils behind glass, each with a slot number and a price" },
@@ -179,7 +179,9 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
     }
     function resize() {
         if (!cv) return;
-        W = innerWidth; H = innerHeight; cv.width = W; cv.height = H; seed();
+        W = innerWidth; H = innerHeight;
+        // drawn at half resolution and stretched to fit: a quarter of the pixels, and soft-edged fish don't mind
+        cv.width = Math.ceil(W * .5); cv.height = Math.ceil(H * .5); cx.setTransform(.5, 0, 0, .5, 0, 0); seed();
         if (!raf) draw(performance.now() / 1000);
     }
     function drawFish(f, t) {
@@ -262,9 +264,9 @@ if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLo
         if (document.hidden || gameOpen()) { last = 0; setTimeout(() => { if (!raf) raf = requestAnimationFrame(frame); }, 600); return; }
         // while you scroll, the page gets the computer's full attention; the fish catch up after
         if (ms - lastScroll > 180) { step(dt, t); draw(t); } else last = 0;
-        // about 30 frames a second is plenty for drifting fish, and the gaps leave
+        // about 24 frames a second is plenty for drifting fish, and the gaps leave
         // the browser time for everything else (like building more game cards)
-        if (!still()) { raf = -1; setTimeout(() => { if (raf === -1) raf = requestAnimationFrame(frame); }, 26); }
+        if (!still()) { raf = -1; setTimeout(() => { if (raf === -1) raf = requestAnimationFrame(frame); }, 38); }
     }
     window.stAquaFx = function () {
         if (!on()) { if (raf > 0) cancelAnimationFrame(raf); raf = 0; return; }

@@ -105,3 +105,35 @@ function setCustomBgDim(v) {
 const watchBody = () => new MutationObserver(applyCustomBackground).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 if (document.body) watchBody(); else document.addEventListener("DOMContentLoaded", watchBody);
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyCustomBackground); else applyCustomBackground();
+
+// ── Looping animations at a lower frame rate ────────────────────────────────
+// Scenes and the moving backgrounds of some site styles cover the whole screen.
+// Redrawing them 60 times a second keeps the graphics chip busy, which makes the
+// whole browser (other tabs too) choppy on school laptops. These loops are slow,
+// so moving them in small steps 15 times a second (30 for falling snow, rain,
+// shooting stars and anything quick) looks the same and costs a fraction as much.
+// One-off animations (cards appearing, buttons pressing) stay smooth.
+(function () {
+    const FAST = ".s-fall, .s-shoot, .s-bubbles, .zone-item";
+    function slowDown() {
+        if (typeof document.getAnimations !== "function") return;
+        for (const a of document.getAnimations()) {
+            if (a.gnStepped || typeof CSSAnimation === "undefined" || !(a instanceof CSSAnimation) || !a.effect) continue;
+            a.gnStepped = true;
+            const t = a.effect.target, timing = a.effect.getComputedTiming();
+            if (!t || timing.iterations !== Infinity || !timing.duration || !isFinite(timing.duration)) continue;
+            // 30 is a multiple of 15, so both rates tick on the same frames
+            const fps = (t.matches && t.matches(FAST)) || timing.duration < 2500 ? 30 : 15;
+            try { a.effect.updateTiming({ easing: `steps(${Math.max(2, Math.round(timing.duration / 1000 * fps))})` }); } catch {}
+        }
+    }
+    let queued = false;
+    const queue = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; slowDown(); });
+    };
+    // every CSS animation announces itself when it starts (new theme, hover effects...)
+    document.addEventListener("animationstart", queue, true);
+    if (document.body) queue(); else document.addEventListener("DOMContentLoaded", queue);
+})();
