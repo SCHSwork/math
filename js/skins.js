@@ -40,6 +40,7 @@ const SITE_SKINS = {
     metro:    { label: "Subway map",     note: "Games are stations along colored train lines" }
 };
 const SKIN_KEY = "gnmath-site-skin";
+const SKINS_WITH_SCENES = new Set(["default", "glass"]);
 function getSiteSkin() {
     let v = "default";
     try { v = localStorage.getItem(SKIN_KEY) || "default"; } catch {}
@@ -50,6 +51,8 @@ function applySiteSkin(skin = getSiteSkin()) {
     if (!b) return;
     Object.keys(SITE_SKINS).forEach(k => b.classList.remove("st-" + k));
     if (skin !== "default") b.classList.add("st-" + skin);
+    // Only Default and Glass draw scenes; settings hides the scene pickers for the rest
+    b.classList.toggle("skin-no-scenes", !SKINS_WITH_SCENES.has(skin));
     document.querySelectorAll("[data-skin]").forEach(el => el.classList.toggle("active", el.dataset.skin === skin));
     if (skin === "dock") buildDock();
     if (window.stAquaFx) window.stAquaFx();

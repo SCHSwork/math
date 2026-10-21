@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 20, 2026 — Scene pickers follow the site style
+
+### Changed
+- Settings → Look only shows **Scenes** and **Your own background** when the Default or Glass style is on, since the other styles draw their own backgrounds. With any other style, a short note says why they're hidden. They come back as soon as you switch to Default or Glass.
+
 ## October 19, 2026 — Aquarium, Arcade and Pop-up book
 
 ### New

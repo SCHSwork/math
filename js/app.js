@@ -3369,7 +3369,7 @@ function openSettingsPanel() {
     <div class="set-pane" data-pane="look">
         <div class="settings-section">
             <h4>Site style</h4>
-            <div class="set-row set-col"><div class="set-text"><span class="set-label">How the whole site looks</span><small>Changes fonts, buttons, cards and the header. Colors and scenes below work with Default and Glass.</small></div>
+            <div class="set-row set-col"><div class="set-text"><span class="set-label">How the whole site looks</span><small>Changes fonts, buttons, cards and the header. Scenes and your own background work with Default and Glass.</small></div>
                 <div class="skin-picks">${typeof siteSkinPickerHtml === "function" ? siteSkinPickerHtml() : ""}</div>
             </div>
         </div>
@@ -3381,13 +3381,14 @@ function openSettingsPanel() {
                     ${COLOR_THEMES.map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${themeLabel(t)}</button>`).join("")}
                 </div>
             </div>
-            <div class="set-row set-col"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds with their own colors. ☀️ scenes are bright, the rest are dark.</small></div>
+            <p class="set-note scenes-off-note">Scenes and your own background only show with the Default and Glass styles, so they're hidden for this style.</p>
+            <div class="set-row set-col needs-scenes"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds with their own colors. ☀️ scenes are bright, the rest are dark.</small></div>
                 ${Object.entries(SCENE_GROUPS).map(([group, list]) => `<div class="scene-group">${group}</div>
                 <div class="scene-picks">
                     ${list.map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${LIGHT_SCENES.has(t) ? "☀️ " : ""}${themeLabel(t)}</span></button>`).join("")}
                 </div>`).join("")}
             </div>
-            <div class="set-row set-col"><div class="set-text"><span class="set-label">Your own background</span><small>Paste a link to any picture or GIF (no download needed), or pick one from your device. Only you see it.</small></div>
+            <div class="set-row set-col needs-scenes"><div class="set-text"><span class="set-label">Your own background</span><small>Paste a link to any picture or GIF (no download needed), or pick one from your device. Only you see it.</small></div>
                 <div class="custom-bg">
                     <div class="custom-bg-preview" id="custom-bg-preview" data-theme-option="custom"></div>
                     <div class="custom-bg-controls">
