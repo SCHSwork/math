@@ -278,7 +278,6 @@ header {
     border: 0;
     border-radius: var(--radius);
     background: var(--glass);
-    backdrop-filter: blur(20px);
     color: var(--text);
     font-size: 15px;
     outline: none;
@@ -1080,7 +1079,7 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
 #siteStatus .status-dot::after {
     content: ""; position: absolute; inset: 0; border-radius: 50%;
     background: var(--st);
-    animation: smPulse 2.2s ease-out infinite;
+    animation: smPulse 2.2s ease-out 5;   /* pulses a few times when the page opens, then rests */
 }
 #siteStatus[data-level="ok"] .status-dot::after { animation-duration: 3.5s; }
 .status-panel {
@@ -1253,7 +1252,6 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     font-size: 14px;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(20px);
 }
 
 .zone-controls button:hover {
@@ -1273,8 +1271,7 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
 #popupOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.66);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1357,7 +1354,6 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(20px);
 }
 
 #popupClose:hover {
@@ -1518,7 +1514,6 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(20px);
 }
 .control-buttons button:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -2157,7 +2152,7 @@ body.cards-list .zone-item::after { display: none; }
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
     transform: translateX(-120%);
-    animation: mPlayShine 4s ease-in-out 1.5s infinite;
+    animation: mPlayShine 4s ease-in-out 1.5s 3;   /* three passes, then it rests (an endless loop keeps the screen redrawing) */
     pointer-events: none;
 }
 @keyframes mPlayShine { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
@@ -2288,7 +2283,7 @@ body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
 
 /* Nebula: glowing gas clouds drifting past */
 .theme-nebula #scene .s1 { display: block; }
-.theme-nebula #scene .a1, .theme-nebula #scene .a2, .theme-nebula #scene .a3 { display: block; width: 80vmax; height: 80vmax; border-radius: 50%; filter: blur(60px); opacity: 0.55; }
+.theme-nebula #scene .a1, .theme-nebula #scene .a2, .theme-nebula #scene .a3 { display: block; width: 80vmax; height: 80vmax; border-radius: 50%; opacity: 0.55; }
 .theme-nebula #scene .a1 { left: -20vmax; top: -25vmax; background: radial-gradient(circle, #db2777, transparent 65%); animation: scFloatA 40s ease-in-out infinite alternate; }
 .theme-nebula #scene .a2 { right: -25vmax; top: 10vmax; background: radial-gradient(circle, #0891b2, transparent 65%); animation: scFloatB 50s ease-in-out infinite alternate; }
 .theme-nebula #scene .a3 { left: 20vmax; bottom: -40vmax; background: radial-gradient(circle, #7c3aed, transparent 65%); animation: scFloatA 60s ease-in-out -20s infinite alternate; }
@@ -2297,7 +2292,7 @@ body:has(#zoneViewer[style*="flex"]) #scene { display: none !important; }
 
 /* Aurora: green and teal curtains swaying across the sky */
 .theme-aurora #scene .s1 { display: block; opacity: 0.6; }
-.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; filter: blur(40px); transform-origin: 50% 0; }
+.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; transform-origin: 50% 0; }
 .theme-aurora #scene .a1 { background: linear-gradient(180deg, transparent 0%, rgba(52, 211, 153, 0.55) 40%, rgba(16, 185, 129, 0.15) 75%, transparent 100%);
     -webkit-mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%); mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%);
     animation: scSway 14s ease-in-out infinite alternate; }
@@ -2394,7 +2389,7 @@ body.theme-lava      { --bg: #120302; --primary: #f97316; --primary-hover: #fb92
 
 /* Aurora: green and teal curtains swaying across the sky */
 .theme-aurora #scene .s1 { display: block; opacity: 0.6; }
-.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; filter: blur(40px); transform-origin: 50% 0; }
+.theme-aurora #scene .a1, .theme-aurora #scene .a2 { display: block; left: -20%; width: 140%; height: 55vh; top: -5vh; transform-origin: 50% 0; }
 .theme-aurora #scene .a1 { background: linear-gradient(180deg, transparent 0%, rgba(52, 211, 153, 0.55) 40%, rgba(16, 185, 129, 0.15) 75%, transparent 100%);
     -webkit-mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%); mask-image: repeating-linear-gradient(100deg, #000 0 8%, transparent 14% 20%);
     animation: scSway 14s ease-in-out infinite alternate; }
@@ -2535,7 +2530,7 @@ body.theme-lava      { --bg: #120302; --primary: #f97316; --primary-hover: #fb92
 
 /* Lava: glowing blobs rising like a lava lamp */
 .theme-lava #scene .a1 { display: block; inset: 0; background: radial-gradient(ellipse 100% 50% at 50% 100%, rgba(234, 88, 12, 0.35), transparent 70%), linear-gradient(180deg, #120302, #2a0704); }
-.theme-lava #scene .a2, .theme-lava #scene .a3, .theme-lava #scene .a4 { display: block; border-radius: 50%; filter: blur(30px); opacity: 0.75; }
+.theme-lava #scene .a2, .theme-lava #scene .a3, .theme-lava #scene .a4 { display: block; border-radius: 50%; opacity: 0.75; }
 .theme-lava #scene .a2 { width: 40vmax; height: 40vmax; left: 5%; bottom: -30vmax; background: radial-gradient(circle, #f97316, #b91c1c 55%, transparent 70%); animation: scRise 26s ease-in-out infinite; }
 .theme-lava #scene .a3 { width: 30vmax; height: 30vmax; left: 55%; bottom: -30vmax; background: radial-gradient(circle, #fbbf24, #ea580c 55%, transparent 70%); animation: scRise 32s ease-in-out -11s infinite; }
 .theme-lava #scene .a4 { width: 24vmax; height: 24vmax; left: 30%; bottom: -30vmax; background: radial-gradient(circle, #ef4444, #7f1d1d 55%, transparent 70%); animation: scRise 22s ease-in-out -6s infinite; }
@@ -2607,7 +2602,7 @@ body.theme-arcade    { --bg: #0c0520; --primary: #facc15; --primary-hover: #fde0
 
 /* Pastel dream: soft floating colors and bubbles */
 .theme-pastel #scene .a1 { display: block; inset: 0; background: linear-gradient(135deg, #fbcfe8 0%, #ddd6fe 50%, #bfdbfe 100%); }
-.theme-pastel #scene .a2, .theme-pastel #scene .a3, .theme-pastel #scene .a4 { display: block; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(50px); opacity: 0.7; }
+.theme-pastel #scene .a2, .theme-pastel #scene .a3, .theme-pastel #scene .a4 { display: block; width: 60vmax; height: 60vmax; border-radius: 50%; opacity: 0.7; }
 .theme-pastel #scene .a2 { left: -15vmax; top: -15vmax; background: radial-gradient(circle, #f9a8d4, transparent 65%); animation: scFloatA 30s ease-in-out infinite alternate; }
 .theme-pastel #scene .a3 { right: -20vmax; top: 15vmax; background: radial-gradient(circle, #a5f3fc, transparent 65%); animation: scFloatB 36s ease-in-out infinite alternate; }
 .theme-pastel #scene .a4 { left: 25vmax; bottom: -30vmax; background: radial-gradient(circle, #fde68a, transparent 65%); animation: scFloatA 44s ease-in-out -15s infinite alternate; }
@@ -2764,11 +2759,11 @@ body.theme-custom { --bg: #0b0b14; --primary: #a78bfa; --primary-hover: #c4b5fd;
 body.theme-aura { --bg: #05030f; --primary: #818cf8; --primary-hover: #a5b4fc; --primary-light: rgba(129,140,248,.18); --primary-lighter: rgba(129,140,248,.09); --gradient-primary: linear-gradient(135deg, #312e81, #7c3aed, #0ea5e9); --shadow-glow: 0 0 22px rgba(129,140,248,.5); }
 .theme-aura #scene .a1 { display: block; left: 50%; top: 55%; width: 140vmax; height: 140vmax; margin: -70vmax 0 0 -70vmax;
     background: conic-gradient(from 0deg, rgba(99, 102, 241, 0.5), rgba(14, 165, 233, 0.15), rgba(168, 85, 247, 0.55), rgba(30, 27, 75, 0.1), rgba(56, 189, 248, 0.45), rgba(124, 58, 237, 0.2), rgba(99, 102, 241, 0.5));
-    filter: blur(40px); -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 62%); mask-image: radial-gradient(circle, #000 15%, transparent 62%);
+    -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 62%); mask-image: radial-gradient(circle, #000 15%, transparent 62%);
     animation: scSpinPlain 24s linear infinite; }
 .theme-aura #scene .a2 { display: block; left: 0; right: 0; bottom: -10vh; height: 80vh;
     background: radial-gradient(ellipse 18% 60% at 20% 100%, rgba(129, 140, 248, 0.45), transparent 70%), radial-gradient(ellipse 14% 70% at 50% 100%, rgba(56, 189, 248, 0.4), transparent 70%), radial-gradient(ellipse 18% 55% at 80% 100%, rgba(168, 85, 247, 0.45), transparent 70%);
-    filter: blur(10px); transform-origin: 50% 100%; animation: scFlicker 1.4s ease-in-out infinite alternate; }
+    transform-origin: 50% 100%; animation: scFlicker 1.4s ease-in-out infinite alternate; }
 .theme-aura #scene .s-bubbles { display: block; left: 0; right: 0; top: 0; height: 200%; background-size: 100% 50%;
     background-image: radial-gradient(ellipse 2px 14px at 15% 40%, #c7d2fe, transparent), radial-gradient(ellipse 2px 18px at 38% 70%, #bae6fd, transparent), radial-gradient(ellipse 2px 12px at 62% 30%, #e9d5ff, transparent), radial-gradient(ellipse 2px 16px at 84% 60%, #c7d2fe, transparent), radial-gradient(ellipse 2px 10px at 50% 90%, #bae6fd, transparent);
     animation: scBubbles 6s linear infinite; }
@@ -3135,7 +3130,7 @@ body.reduced-motion.st-aero:not(#z)::before, body.st-aero:not(#z):has(#zoneViewe
 body.st-aero:not(#z) header { background: var(--gloss-soft), linear-gradient(180deg, rgba(20,140,230,.82), rgba(4,90,180,.86)) !important; backdrop-filter: blur(14px) saturate(1.4); border-bottom: 1px solid rgba(255,255,255,.7); box-shadow: 0 4px 18px rgba(0,50,110,.3), inset 0 1px 0 rgba(255,255,255,.6) !important; }
 body.st-aero:not(#z) .logo { color: #fff; text-shadow: 0 1px 2px rgba(0,40,100,.7), 0 0 14px rgba(160,230,255,.8); }
 /* frosted glass panels with a highlight along the top edge */
-body.st-aero:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: var(--glass-panel) !important; backdrop-filter: blur(12px) saturate(1.5); border: 1px solid rgba(255,255,255,.9) !important; box-shadow: 0 8px 22px rgba(0,60,120,.2), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255,255,255,.35) !important; }
+body.st-aero:not(#z) :is(.zone-item, #gotd, .settings-section, .filter-menu) { background: var(--glass-panel) !important; background-color: rgba(220,240,255,.35) !important; border: 1px solid rgba(255,255,255,.9) !important; box-shadow: 0 8px 22px rgba(0,60,120,.2), inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255,255,255,.35) !important; }
 body.st-aero:not(#z) :is(.popup, .status-panel, .toast) { background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(240,250,255,.93)) !important; backdrop-filter: blur(18px); border: 1px solid #fff !important; box-shadow: 0 18px 44px rgba(0,50,110,.35) !important; }
 body.st-aero:not(#z) .zone-item:hover { box-shadow: 0 12px 30px rgba(0,60,120,.28), 0 0 0 2px rgba(120,220,255,.9), inset 0 1px 0 #fff !important; transform: translateY(-3px); }
 body.st-aero:not(#z) .zone-item img { border-bottom: 1px solid rgba(255,255,255,.8); }
@@ -4159,14 +4154,11 @@ body.st-metro:not(#z) footer a { color: #f1f2f4; }
 :is(body.st-aqua, body.st-arcade, body.st-popup):not(#z) .logo { -webkit-text-fill-color: currentColor; -webkit-background-clip: border-box; background-clip: border-box; background: none; }
 #stFx { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; display: none; }
 body.st-aqua:not(#z) #stFx { display: block; }
-/* light rays from the surface: a fixed layer that sways slowly (moved with transform, so it's cheap) */
+/* light rays from the surface: a still layer (the fish, jellyfish and bubbles do the moving) */
 body.st-aqua:not(#z)::before { content: ""; position: fixed; top: -5vh; left: -20vw; width: 140vw; height: 95vh; z-index: -1; pointer-events: none;
     background: repeating-linear-gradient(104deg, transparent 0 7vw, rgba(190,245,255,.09) 7vw 10vw, transparent 10vw 15vw, rgba(190,245,255,.05) 15vw 19vw, transparent 19vw 26vw);
     -webkit-mask-image: linear-gradient(180deg, #000, transparent 90%); mask-image: linear-gradient(180deg, #000, transparent 90%);
-    transform-origin: 50% 0; animation: stAquaRays 18s ease-in-out infinite alternate; will-change: transform; }
-@keyframes stAquaRays { from { transform: translateX(-3vw) skewX(-3deg); } to { transform: translateX(3vw) skewX(4deg); } }
-body.reduced-motion.st-aqua:not(#z)::before { animation: none; }
-@media (prefers-reduced-motion: reduce) { body.st-aqua:not(#z)::before { animation: none; } }
+    transform: skewX(2deg); }
 
 /* ── Aquarium: fish, jellyfish, light rays and bubbles are drawn live behind the page (skins.js) ── */
 body.st-aqua:not(#z) {
@@ -4179,26 +4171,20 @@ body.st-aqua:not(#z) {
     font-family: "GN Candy", "Segoe UI", system-ui, sans-serif;
     background: linear-gradient(180deg, #0f7fa8 0%, #0a5b85 22%, #063a5e 55%, #03213a 85%, #021829 100%) !important; background-attachment: fixed !important; color: var(--text);
 }
-/* the water's surface, rippling */
+/* the water's surface */
 body.st-aqua:not(#z) header { background: linear-gradient(180deg, rgba(160,240,255,.95), rgba(40,170,215,.92)) !important; border-bottom: 0; box-shadow: none !important; }
 body.st-aqua:not(#z) header { overflow-x: clip; }
-body.st-aqua:not(#z) header::after { content: ""; position: absolute; left: -280px; right: 0; bottom: -14px; height: 14px; pointer-events: none; will-change: transform;
+body.st-aqua:not(#z) header::after { content: ""; position: absolute; left: 0; right: 0; bottom: -14px; height: 14px; pointer-events: none;
     background: radial-gradient(14px 10px at 50% 0, rgba(40,170,215,.92) 98%, transparent) 0 0 / 40px 14px repeat-x, radial-gradient(18px 8px at 50% 0, rgba(255,255,255,.35) 60%, transparent 62%) 20px 0 / 56px 10px repeat-x;
-    animation: stAquaWave 40s linear infinite; }
-/* the two wave layers repeat every 40px and 56px; 112px isn't a multiple of 40, so use 280 */
-@keyframes stAquaWave { to { transform: translateX(280px); } }
+    }
+
 body.st-aqua:not(#z) .logo { color: #043a57; font-weight: 700; text-shadow: 0 1px 0 rgba(255,255,255,.7); }
 body.st-aqua:not(#z) header .control-button { background: rgba(255,255,255,.55) !important; color: #043a57 !important; border: 1px solid rgba(255,255,255,.8) !important; box-shadow: none !important; }
 body.st-aqua:not(#z) header .control-button .control-icon { color: #043a57; }
-/* glassy cards that bob in the water; only the first screenful bobs, to keep it smooth */
+/* glassy cards; they lift and glow when you point at one */
 body.st-aqua:not(#z) .zone-item { background: linear-gradient(160deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 40%, rgba(120,220,255,.08)) !important; border: 1px solid rgba(170,240,255,.45) !important; border-radius: 20px !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 26px rgba(0,15,35,.45) !important; overflow: hidden; }
-/* only the first cards in each row and the first screenful bob, so it stays smooth */
-body.st-aqua:not(#z) :is(#container .zone-item:nth-child(-n+18), .shelf .zone-item:nth-child(-n+8)) { animation: stAquaBob 5.5s ease-in-out infinite; }
-body.st-aqua:not(#z) .zone-item:nth-child(3n+1) { animation-delay: -1.8s !important; animation-duration: 6.4s !important; }
-body.st-aqua:not(#z) .zone-item:nth-child(3n+2) { animation-delay: -3.3s !important; animation-duration: 4.9s !important; }
-@keyframes stAquaBob { 0%, 100% { transform: translateY(0) rotate(-.6deg); } 50% { transform: translateY(-7px) rotate(.6deg); } }
-body.st-aqua:not(#z) .zone-item:hover { animation-play-state: paused; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(120,230,255,.8), 0 0 30px rgba(80,220,255,.45), 0 14px 30px rgba(0,15,35,.5) !important; }
+body.st-aqua:not(#z) .zone-item:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 2px rgba(120,230,255,.8), 0 0 30px rgba(80,220,255,.45), 0 14px 30px rgba(0,15,35,.5) !important; }
 body.st-aqua:not(#z) .zone-item img { border-radius: 14px; margin: 8px 8px 0; width: calc(100% - 16px); }
 body.st-aqua:not(#z) .zone-item button { color: #eafcff; font-weight: 600; }
 body.st-aqua:not(#z) .zone-item:hover > button:not(.card-fav) { color: #fff; background: transparent; }
@@ -4224,8 +4210,8 @@ body.st-aqua:not(#z) .popup-header { background: linear-gradient(180deg, #22c3e6
 /* the sandy bottom */
 body.st-aqua:not(#z) footer { background: radial-gradient(circle at 30% 40%, rgba(120,90,40,.35) 0 1px, transparent 2px) 0 0 / 9px 9px, linear-gradient(180deg, #d9bf86, #b8995c) !important; border-top: 0; color: #2e2108; }
 body.st-aqua:not(#z) footer a { color: #2e2108; }
-body.reduced-motion.st-aqua:not(#z) :is(.zone-item, .zone-item::after, header::after) { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { body.st-aqua:not(#z) :is(.zone-item, .zone-item::after, header::after) { animation: none !important; } }
+body.reduced-motion.st-aqua:not(#z) :is(.zone-item::after, header::after) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { body.st-aqua:not(#z) :is(.zone-item::after, header::after) { animation: none !important; } }
 
 /* ── Arcade: every game is a cabinet with a lit marquee, a CRT screen and a control panel ── */
 body.st-arcade:not(#z) {

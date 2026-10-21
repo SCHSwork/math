@@ -7,6 +7,26 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 21, 2026 — Much lighter on the graphics chip
+
+Having the site open no longer makes the rest of the browser (other tabs too) choppy. The screen was being redrawn 60 times a second even when nothing was happening, and on some scenes it had to redo large blurs every time. Counting screen redraws per second with the page sitting still:
+
+| | Before | After |
+|---|---|---|
+| Default style | 60 | about 2 |
+| Space scene | 54 | 17 |
+| Snowfall scene | 60 | 30 |
+| Aquarium | 60, plus about 1,260 repaints | 21, no repaints |
+| Arcade | 60 | 6 |
+| Frutiger Aero | 60 | 17 |
+
+### Changed
+- **Background animations run at 15 frames a second** (30 for falling snow, rain, shooting stars and other quick things) instead of 60. They drift slowly, so they look the same.
+- **The shimmer on Today's pick and the pulsing status light** play a few times when the page opens, then rest. Looping forever kept the whole screen redrawing.
+- **Scenes no longer use large blur filters** on their glowing clouds (Nebula, Aurora, Lava, Pastel dream, Spirit aura). The glows already fade out softly, so they look nearly the same.
+- **Fewer frosted-glass effects:** the search box and header buttons no longer blur again on top of the already-frosted header, the dark backdrop behind popups is plain, and Frutiger Aero's cards keep their glassy look without a live blur.
+- **Aquarium:** the fish draw at half resolution, 24 times a second. The cards no longer bob (they lift and glow when you point at one instead), and the light rays and water edge hold still.
+
 ## October 20, 2026 — Faster site, especially on slower computers
 
 ### Changed
