@@ -31,16 +31,16 @@ service cloud.firestore {
         && (!('note' in request.resource.data) || (request.resource.data.note is string && request.resource.data.note.size() <= 200));
       allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isStaff());
     }
-    // Game admins. The site owner's admin document has owner: true, set once by
-    // hand in the Firebase console (it can't be set from the site). Only the
-    // owner can add or remove admins, and nobody can remove the owner.
+    // Game admins. The site owner (ownerUid() below) is always an admin. Only
+    // the owner can add or remove admins, and nobody can remove or suspend the
+    // owner.
     match /admins/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
       allow create: if isOwner()
         && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
         && request.resource.data.addedAt == request.time;
-      allow delete: if isOwner() && request.auth.uid != uid && resource.data.get('owner', false) != true;
+      allow delete: if isOwner() && request.auth.uid != uid;
     }
 
     // Mods: review reports, ideas and game submissions only. They can't see
@@ -168,12 +168,13 @@ service cloud.firestore {
     function isBanned() {
       return request.auth != null && exists(/databases/$(db)/documents/bans/$(request.auth.uid));
     }
+    // The site owner's account ID. The site fills this in by itself when the
+    // owner saves their GitHub token in the Owner Panel; then publish this file.
+    function ownerUid() { return ''; } // OWNER_UID
+    function isOwnerUid(uid) { return ownerUid() != '' && uid == ownerUid(); }
     function isAdmin() {
-      return request.auth != null && exists(/databases/$(db)/documents/admins/$(request.auth.uid));
-    }
-    function isOwnerUid(uid) {
-      return exists(/databases/$(db)/documents/admins/$(uid))
-        && get(/databases/$(db)/documents/admins/$(uid)).data.get('owner', false) == true;
+      return request.auth != null && (isOwnerUid(request.auth.uid)
+        || exists(/databases/$(db)/documents/admins/$(request.auth.uid)));
     }
     function isOwner() { return request.auth != null && isOwnerUid(request.auth.uid); }
     // Admins, or mods who aren't suspended

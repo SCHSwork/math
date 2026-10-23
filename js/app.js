@@ -2257,6 +2257,57 @@ const GITHUB_SYNC_URL   = `https://api.github.com/repos/${GITHUB_SYNC_REPO}/cont
 // Public CDN URL — readable by ALL visitors (no token needed)
 const GITHUB_SYNC_CDN   = `https://raw.githubusercontent.com/${GITHUB_SYNC_REPO}/main/${GITHUB_SYNC_FILE}`;
 
+// ── Site owner account ───────────────────────────────────────────────────────
+// The owner's account ID lives in config/firestore.rules (what Firebase
+// enforces) and in owner-settings.json (so the site can show it). When the
+// owner's GitHub token is saved on a browser that's signed in, the site writes
+// that account into both by itself. The rules still have to be published in
+// the Firebase console, since a GitHub token can't change Firebase.
+const OWNER_UID_KEY = "gnmath-owner-uid";
+const OWNER_UID_RE = /^[A-Za-z0-9]{10,128}$/;
+const RULES_FILE_URL = `https://api.github.com/repos/${GITHUB_SYNC_REPO}/contents/config/firestore.rules`;
+function getSiteOwnerUid() { try { return localStorage.getItem(OWNER_UID_KEY) || ""; } catch { return ""; } }
+let _claimingOwner = false;
+async function claimOwnerAccount() {
+    const pat = getGithubPat();
+    if (_claimingOwner || !pat || typeof cloudUser === "undefined" || !cloudUser) return;
+    const uid = cloudUser.uid;
+    if (!OWNER_UID_RE.test(uid)) return;
+    _claimingOwner = true;
+    try {
+        const headers = { Authorization: `token ${pat}`, Accept: "application/vnd.github+json" };
+        const res = await fetch(RULES_FILE_URL + "?t=" + Date.now(), { headers, cache: "no-store" });
+        if (!res.ok) return;
+        const file = await res.json();
+        const rules = new TextDecoder().decode(Uint8Array.from(atob(file.content.replace(/\n/g, "")), c => c.charCodeAt(0)));
+        const m = rules.match(/function ownerUid\(\) \{ return '([^']*)'; \} \/\/ OWNER_UID/);
+        if (!m) return;
+        if (m[1] === uid) {
+            if (getSiteOwnerUid() !== uid) { localStorage.setItem(OWNER_UID_KEY, uid); githubAutoSync(); }
+            return;
+        }
+        if (m[1] && !(await askConfirm(`Another account is set as the site owner. Make this account (${currentUsername()}) the owner instead?`, { title: "Change site owner?", confirmText: "Make owner" }))) return;
+        const updated = rules.replace(m[0], `function ownerUid() { return '${uid}'; } // OWNER_UID`);
+        const bytes = new TextEncoder().encode(updated);
+        let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+        const put = await fetch(RULES_FILE_URL, {
+            method: "PUT",
+            headers: { ...headers, "Content-Type": "application/json" },
+            body: JSON.stringify({ message: `Set site owner to ${currentUsername().slice(0, 40)}`, content: btoa(bin), sha: file.sha }),
+            cache: "no-store"
+        });
+        if (!put.ok) { notify("Couldn't set this account as the site owner on GitHub.", { type: "error" }); return; }
+        localStorage.setItem(OWNER_UID_KEY, uid);
+        githubAutoSync();
+        if (typeof refreshAccountButtonAdmin === "function") refreshAccountButtonAdmin();
+        notify(`${currentUsername()} is now the site owner. To finish, publish the updated config/firestore.rules in the Firebase console (Firestore Database → Rules).`, { type: "success", duration: 15000 });
+    } catch (e) {
+        console.error(e);
+    } finally {
+        _claimingOwner = false;
+    }
+}
+
 function getGithubPat() {
     return localStorage.getItem(OWNER_STORAGE_KEYS.githubPat) || "";
 }
@@ -2284,6 +2335,7 @@ function buildOwnerSettingsObject() {
         footerLinks: getFooterLinks() || [],
         visitorDefaults: getOwnerVisitorDefaults(),
         trustedReporters: getTrustedReporters(),
+        ownerUid: getSiteOwnerUid(),
         updatedAt: new Date().toISOString()
     };
 }
@@ -2341,6 +2393,10 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
             .filter(x => x && typeof x.uid === "string" && /^[A-Za-z0-9_.@-]{6,128}$/.test(x.uid))
             .map(x => ({ uid: x.uid, name: String(x.name || "").slice(0, 40) })));
         if (rerender && typeof refreshCards === "function") refreshCards();
+    }
+    if (typeof settings.ownerUid === "string" && (!settings.ownerUid || OWNER_UID_RE.test(settings.ownerUid))) {
+        try { localStorage.setItem(OWNER_UID_KEY, settings.ownerUid); } catch {}
+        if (typeof refreshAccountButtonAdmin === "function") refreshAccountButtonAdmin();
     }
     if (Array.isArray(settings.footerLinks)) {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.footerLinks, JSON.stringify(settings.footerLinks));
@@ -2781,12 +2837,13 @@ function ownerUnlockedThisTab() {
 
 // Runs onSuccess once the owner is verified; asks for the token if needed.
 async function requestOwnerAccess(onSuccess) {
-    if (ownerUnlockedThisTab()) return onSuccess();
+    if (ownerUnlockedThisTab()) { claimOwnerAccount(); return onSuccess(); }
     const saved = getGithubPat();
     if (saved) {
         const check = await verifyOwnerToken(saved);
         if (check.ok) {
             try { sessionStorage.setItem("gnmath-owner-unlocked", "1"); } catch {}
+            claimOwnerAccount();
             return onSuccess();
         }
     }
@@ -2827,6 +2884,7 @@ function showOwnerTokenDialog(onSuccess, notice) {
         setGithubPat(token);
         try { sessionStorage.setItem("gnmath-owner-unlocked", "1"); } catch {}
         wrap.remove();
+        claimOwnerAccount();
         onSuccess();
     };
     okBtn.onclick = submit;

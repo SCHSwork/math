@@ -2,9 +2,10 @@
 // Admin Panel: account management for site admins.
 //
 // Roles (all checked by config/firestore.rules, not just by this page):
-//   • Owner: the admin whose admins/<uid> document has owner: true, set once by
-//     hand in the Firebase console. Only the owner can add or remove admins,
-//     and nobody can remove or suspend the owner.
+//   • Owner: the account in ownerUid() in config/firestore.rules, filled in by
+//     the site when the owner saves their GitHub token (see claimOwnerAccount).
+//     Always an admin. Only the owner can add or remove admins, and nobody can
+//     remove or suspend the owner.
 //   • Game admin: a document admins/<uid>. Admins manage accounts, handle
 //     takedowns, review everything mods can, and add or remove mods.
 //   • Mod: a document mods/<uid>. Mods only review reports, ideas and game
@@ -31,8 +32,11 @@ async function syncMyProfileAndRoles(user) {
     try {
         const a = await cloudDb.collection("admins").doc(user.uid).get();
         siteAdminState.admin = !!(a && a.exists);
-        siteAdminState.owner = !!(a && a.exists && (a.data() || {}).owner === true);
     } catch (e) {}
+    if (typeof getSiteOwnerUid === "function" && user.uid === getSiteOwnerUid()) {
+        siteAdminState.owner = true;
+        siteAdminState.admin = true;
+    }
     try {
         const m = await cloudDb.collection("mods").doc(user.uid).get();
         siteAdminState.mod = !!(m && m.exists);
@@ -46,6 +50,8 @@ async function syncMyProfileAndRoles(user) {
         }
     } catch (e) {}
     if (typeof refreshAccountButtonAdmin === "function") refreshAccountButtonAdmin();
+    // Owner's browser (GitHub token saved): make sure this account is the owner
+    if (isOwnerBrowser() && typeof claimOwnerAccount === "function") claimOwnerAccount();
 }
 function isSiteAdmin() { return !!(siteAdminState.admin && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function isSiteOwner() { return !!(siteAdminState.owner && isSiteAdmin()); }
@@ -53,6 +59,10 @@ function isSiteOwner() { return !!(siteAdminState.owner && isSiteAdmin()); }
 function isSiteMod() { return isSiteAdmin() || !!(siteAdminState.mod && !siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function isSuspended() { return !!(siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function refreshAccountButtonAdmin() {
+    if (cloudUser && siteAdminState.uid === cloudUser.uid && typeof getSiteOwnerUid === "function" && cloudUser.uid === getSiteOwnerUid()) {
+        siteAdminState.owner = true;
+        siteAdminState.admin = true;
+    }
     const btn = document.getElementById("accountButton");
     if (btn) btn.classList.toggle("is-admin", isSiteMod());
 }
@@ -218,7 +228,7 @@ function openModPanel(body) {
 
 function adminRoleBadges(p) {
     const out = [];
-    if (adminData.admins.get(p.uid)?.owner === true) out.push(["Owner", "admin"]);
+    if (p.uid === getSiteOwnerUid()) out.push(["Owner", "admin"]);
     else if (adminData.admins.has(p.uid)) out.push(["Admin", "admin"]);
     if (adminData.mods.has(p.uid)) out.push(["Mod", "mod"]);
     if (typeof isTrustedReporter === "function" && isTrustedReporter(p.uid)) out.push(["Trusted reporter", "trusted"]);
@@ -235,7 +245,7 @@ function renderAdminList() {
     const weekAgo = Date.now() - 7 * 86400000;
     let rows = adminData.profiles.filter(p => {
         if (q && !normText(p.username).includes(q)) return false;
-        if (filter === "admins") return adminData.admins.has(p.uid);
+        if (filter === "admins") return adminData.admins.has(p.uid) || p.uid === getSiteOwnerUid();
         if (filter === "mods") return adminData.mods.has(p.uid);
         if (filter === "trusted") return typeof isTrustedReporter === "function" && isTrustedReporter(p.uid);
         if (filter === "banned") return adminData.bans.has(p.uid);
@@ -289,7 +299,7 @@ function adminRow(p) {
     box.className = "admin-actions";
     const me = cloudUser && p.uid === cloudUser.uid;
     const isAdm = adminData.admins.has(p.uid);
-    const isOwn = adminData.admins.get(p.uid)?.owner === true;
+    const isOwn = p.uid === getSiteOwnerUid();
     const isMod = adminData.mods.has(p.uid);
     const isBan = adminData.bans.has(p.uid);
     const trusted = typeof isTrustedReporter === "function" && isTrustedReporter(p.uid);
