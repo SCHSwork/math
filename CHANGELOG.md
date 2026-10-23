@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 22, 2026 — Games open faster
+
+### Changed
+- **Games no longer wait on a blocked source.** Games load from several sources (jsDelivr, GitHub, githack, and backups). Before, the site tried them one at a time and waited up to 30 seconds on each, so a source that a school filter silently blocks could stall a game for half a minute or more. Now, if a source hasn't answered in 2.5 seconds, the next one starts too, and whichever answers first is used.
+- **Blocked or slow sources are remembered for 6 hours**, across visits, instead of only until the tab closes, so later games skip them right away.
+- **Resting the mouse on a game starts loading it**, so it often opens almost instantly when clicked.
+- The page connects to the game sources early, while it's still loading.
+
 ## October 22, 2026 — Action log
 
 ### New

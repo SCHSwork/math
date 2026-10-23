@@ -87,13 +87,24 @@ const PRIMARY_MIRRORS = ["jsdelivr", "github", "githack"];
 const BACKUP_MIRRORS = ["fastly", "gcore", "testingcf"];
 const MIRROR_HOSTS = { "cdn.jsdelivr.net": "jsdelivr", "raw.githubusercontent.com": "github", "rawcdn.githack.com": "githack",
     "fastly.jsdelivr.net": "fastly", "gcore.jsdelivr.net": "gcore", "testingcf.jsdelivr.net": "testingcf" };
-const mirrorDown = new Set((() => { try { return JSON.parse(sessionStorage.getItem("gnmath-mirror-down") || "[]"); } catch { return []; } })());
+// Sources that failed recently, remembered across visits for a few hours so a
+// school filter that blocks one isn't waited on again every time the site opens.
+const MIRROR_DOWN_KEY = "gnmath-mirror-down-at", MIRROR_DOWN_MS = 6 * 3600000;
+const mirrorDownAt = (() => {
+    try {
+        const all = JSON.parse(localStorage.getItem(MIRROR_DOWN_KEY) || "{}"), now = Date.now(), out = {};
+        for (const [k, t] of Object.entries(all)) if (MIRRORS[k] && now - t < MIRROR_DOWN_MS) out[k] = t;
+        return out;
+    } catch { return {}; }
+})();
+const mirrorDown = new Set(Object.keys(mirrorDownAt));
 function markMirror(name, ok) {
     if (!name) return;
     const before = mirrorDown.has(name);
-    if (ok) mirrorDown.delete(name); else mirrorDown.add(name);
+    if (ok) { mirrorDown.delete(name); delete mirrorDownAt[name]; }
+    else { mirrorDown.add(name); mirrorDownAt[name] = Date.now(); }
     if (before !== mirrorDown.has(name)) {
-        try { sessionStorage.setItem("gnmath-mirror-down", JSON.stringify([...mirrorDown])); } catch {}
+        try { localStorage.setItem(MIRROR_DOWN_KEY, JSON.stringify(mirrorDownAt)); } catch {}
         console.info(`Game source ${name} is ${ok ? "back up" : "unavailable"}`);
     }
 }
@@ -126,8 +137,60 @@ function mirrorUrls(owner, repo, ref, path) {
     return order.map(k => MIRRORS[k](owner, repo, ref, path));
 }
 function mirrorOf(url) { try { return MIRROR_HOSTS[new URL(url).hostname]; } catch { return null; } }
-// Try each URL until one returns a usable response
-async function fetchFirst(urls, { timeoutMs = 15000, validate, track = true, cache } = {}) {
+// Try each URL until one returns a usable response. With `stagger`, the next
+// source also starts if the current one hasn't answered within that many ms
+// (or right away if it fails), and the first good answer wins. That way a
+// source a filter silently blocks costs a couple of seconds, not the timeout.
+function fetchFirst(urls, opts = {}) {
+    return opts.stagger && urls.length > 1 ? fetchFirstStaggered(urls, opts) : fetchFirstInOrder(urls, opts);
+}
+function fetchFirstStaggered(urls, { timeoutMs = 15000, validate, track = true, cache, stagger }) {
+    return new Promise((resolve, reject) => {
+        let next = 0, running = 0, done = false, lastError = new Error("No sources"), staggerTimer = null;
+        const ctrls = [], waiting = new Set();  // names of sources still loading
+        const launch = () => {
+            clearTimeout(staggerTimer);
+            if (done || next >= urls.length) return;
+            const url = urls[next++], name = mirrorOf(url);
+            const ctrl = new AbortController();
+            ctrls.push(ctrl);
+            if (name) waiting.add(name);
+            const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+            running++;
+            staggerTimer = setTimeout(launch, stagger);
+            (async () => {
+                try {
+                    const res = await fetch(url, cache ? { signal: ctrl.signal, cache } : { signal: ctrl.signal });
+                    if (res.redirected && new URL(res.url).hostname !== new URL(url).hostname) throw Object.assign(new Error("redirected"), { down: true });
+                    if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { down: res.status >= 500 || res.status === 403 });
+                    const out = validate ? await validate(res) : res;
+                    if (done) return;
+                    done = true;
+                    clearTimeout(staggerTimer);
+                    ctrls.forEach(c => { if (c !== ctrl) c.abort(); });
+                    if (track) {
+                        // Sources that started earlier and still hadn't answered: skip them next time
+                        for (const w of waiting) if (w !== name && urls.findIndex(u => mirrorOf(u) === w) < urls.indexOf(url)) markMirror(w, false);
+                        markMirror(name, true);
+                    }
+                    resolve(out);
+                } catch (err) {
+                    if (done) return;  // stopped because another source won
+                    if (track && err.down !== false && !/^HTTP 404/.test(err.message)) markMirror(name, false);
+                    lastError = err;
+                    launch();          // failed: try the next source now
+                } finally {
+                    clearTimeout(timer);
+                    if (name && !done) waiting.delete(name);
+                    running--;
+                    if (!done && running === 0 && next >= urls.length) { clearTimeout(staggerTimer); reject(lastError); }
+                }
+            })();
+        };
+        launch();
+    });
+}
+async function fetchFirstInOrder(urls, { timeoutMs = 15000, validate, track = true, cache } = {}) {
     let lastError = new Error("No sources");
     for (const url of urls) {
         const name = mirrorOf(url);
@@ -487,6 +550,10 @@ function createZoneCard(file) {
     // short vending-machine code (row letter + number) for the Vending machine style
     { const n = Math.abs(parseInt(file.id, 10) || 0); zoneItem.dataset.slot = "ABCDEFGH"[n % 8] + (10 + (Math.floor(n / 8) % 90)); }
     zoneItem.onclick = () => openZone(file);
+    // Mouse resting on a card: start loading that game so it opens faster
+    let hoverTimer = null;
+    zoneItem.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") hoverTimer = setTimeout(() => prefetchZone(file), 150); });
+    zoneItem.addEventListener("pointerleave", () => clearTimeout(hoverTimer));
 
     const img = document.createElement("img");
     if (typeof isPartnerZone === "function" && isPartnerZone(file)) img.dataset.placeholder = coverPlaceholder(file.name);
@@ -875,8 +942,26 @@ async function fetchWithFallback(rawUrl) {
     const candidates = isHtml
         ? mirrorUrls("freebuisness", "html", LIBRARY_REF, suffix)
         : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
-    const html = await fetchFirst(candidates, { timeoutMs: 30000, validate: res => res.text() });
+    const html = await fetchFirst(candidates, { timeoutMs: 30000, stagger: 2500, validate: res => res.text() });
     return rewriteForMirrors(cleanGameHtml(html));
+}
+
+// Game pages started early (card hover). Kept briefly, at most a few.
+const zonePrefetch = new Map();
+function prefetchZone(file) {
+    if (!file || !file.url || file.url.startsWith("http") || isZoneDisabled(file.id)) return;
+    if (typeof isPartnerZone === "function" && isPartnerZone(file)) return;
+    if (zonePrefetch.has(file.url)) return;
+    const p = fetchWithFallback(file.url);
+    p.catch(() => zonePrefetch.delete(file.url));
+    zonePrefetch.set(file.url, p);
+    setTimeout(() => zonePrefetch.delete(file.url), 120000);
+    while (zonePrefetch.size > 4) zonePrefetch.delete(zonePrefetch.keys().next().value);
+}
+function loadZoneHtml(url) {
+    const p = zonePrefetch.get(url);
+    zonePrefetch.delete(url);
+    return p ? p.catch(() => fetchWithFallback(url)) : fetchWithFallback(url);
 }
 
 function openRandomZone() {
@@ -946,7 +1031,7 @@ function openZone(file) {
         zoneFrame.contentDocument.open();
         zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
         zoneFrame.contentDocument.close();
-        fetchWithFallback(file.url).then(html => {
+        loadZoneHtml(file.url).then(html => {
             if (token !== zoneOpenToken) return; // another game was opened meanwhile
             if (zoneFrame.contentDocument === null) replaceZoneFrame();
             markGamePageWritten();
