@@ -2300,7 +2300,7 @@ async function claimOwnerAccount() {
         localStorage.setItem(OWNER_UID_KEY, uid);
         githubAutoSync();
         if (typeof refreshAccountButtonAdmin === "function") refreshAccountButtonAdmin();
-        notify(`${currentUsername()} is now the site owner. To finish, publish the updated config/firestore.rules in the Firebase console (Firestore Database → Rules).`, { type: "success", duration: 15000 });
+        notify(`${currentUsername()} is now the site owner. The updated rules publish to Firebase by themselves in a minute or two.`, { type: "success", duration: 15000 });
     } catch (e) {
         console.error(e);
     } finally {
