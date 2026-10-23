@@ -2,6 +2,7 @@
 # so nobody has to paste it into the Firebase console by hand.
 # Needs a repository secret FIREBASE_SERVICE_ACCOUNT: the JSON key from
 # Firebase console → Project settings → Service accounts → Generate new private key.
+# The key only needs the Firebase Rules API, which the Admin SDK key has.
 name: Publish Firestore rules
 on:
   push:
@@ -54,20 +55,34 @@ jobs:
       - name: Publish rules
         if: steps.key.outputs.ok == 'true'
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          KEY_FILE: ${{ runner.temp }}/sa.json
         run: |
-          mkdir -p "$RUNNER_TEMP/fb"
-          cp config/firestore.rules "$RUNNER_TEMP/fb/firestore.rules"
-          echo '{"firestore":{"rules":"firestore.rules"}}' > "$RUNNER_TEMP/fb/firebase.json"
-          cd "$RUNNER_TEMP/fb"
-          set +e
-          npx --yes firebase-tools@14 deploy --only firestore:rules --project gn-math-dfd85 --non-interactive 2>&1 | tee out.log
-          code=${PIPESTATUS[0]}
-          if [ "$code" != "0" ]; then
-            # Show the error on the run's summary page too
-            grep -iE "error|denied|permission|not been used|disabled|invalid" out.log | tail -5 | while IFS= read -r line; do echo "::error::$line"; done
-            exit "$code"
-          fi
+          pip install --quiet google-auth requests
+          python3 - <<'PY'
+          # Uses the Firebase Rules API directly: make a ruleset from the file,
+          # then point the database's live rules at it.
+          import os, sys, requests
+          from google.oauth2 import service_account
+          from google.auth.transport.requests import Request
+          PROJECT = "gn-math-dfd85"
+          creds = service_account.Credentials.from_service_account_file(
+              os.environ["KEY_FILE"], scopes=["https://www.googleapis.com/auth/cloud-platform"])
+          creds.refresh(Request())
+          h = {"Authorization": f"Bearer {creds.token}"}
+          api = f"https://firebaserules.googleapis.com/v1/projects/{PROJECT}"
+          src = open("config/firestore.rules").read()
+          r = requests.post(f"{api}/rulesets", headers=h, json={"source": {"files": [{"name": "firestore.rules", "content": src}]}})
+          if not r.ok:
+              print(f"::error::Firebase didn't accept the rules ({r.status_code}): {r.text[:600]}")
+              sys.exit(1)
+          ruleset = r.json()["name"]
+          release = f"projects/{PROJECT}/releases/cloud.firestore"
+          r = requests.patch(f"https://firebaserules.googleapis.com/v1/{release}", headers=h, json={"release": {"name": release, "rulesetName": ruleset}})
+          if not r.ok:
+              print(f"::error::Couldn't switch Firestore to the new rules ({r.status_code}): {r.text[:600]}")
+              sys.exit(1)
+          print(f"::notice::Published config/firestore.rules to Firebase ({ruleset.split('/')[-1]}).")
+          PY
       - name: Remove the key
         if: always()
         run: rm -f "$RUNNER_TEMP/sa.json"
