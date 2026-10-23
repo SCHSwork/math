@@ -28,6 +28,24 @@ jobs:
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+            # Check the key is a complete service account file, without printing it
+            python3 - "$RUNNER_TEMP/sa.json" <<'PY' || { rm -f "$RUNNER_TEMP/sa.json"; exit 1; }
+          import json, sys
+          raw = open(sys.argv[1]).read()
+          try:
+              d = json.loads(raw)
+          except Exception as e:
+              print(f"::error::The FIREBASE_SERVICE_ACCOUNT secret isn't valid JSON ({type(e).__name__} near character {getattr(e, 'pos', '?')} of {len(raw)}). Paste the whole downloaded .json file again, from the first {{ to the last }}.")
+              sys.exit(1)
+          missing = [k for k in ("type", "project_id", "private_key", "client_email") if not d.get(k)]
+          if missing or d.get("type") != "service_account":
+              print(f"::error::The secret is JSON but not a service account key (missing: {', '.join(missing) or 'type=service_account'}).")
+              sys.exit(1)
+          if "-----END PRIVATE KEY-----" not in d["private_key"]:
+              print("::error::The secret's private_key is cut off. Paste the whole downloaded .json file again.")
+              sys.exit(1)
+          print(f"::notice::Key looks complete: {d['client_email']} for project {d['project_id']}")
+          PY
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish rules
