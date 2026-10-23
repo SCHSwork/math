@@ -1,5 +1,6 @@
 rules_version = '2';
-// Paste this whole file into Firebase console → Firestore Database → Rules → Publish.
+// Published to Firebase automatically when this changes (.github/workflows/publish-rules.yml).
+// Without that set up: paste this whole file into Firebase console → Firestore Database → Rules → Publish.
 service cloud.firestore {
   match /databases/{db}/documents {
 

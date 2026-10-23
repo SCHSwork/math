@@ -1,0 +1,45 @@
+# Publishes config/firestore.rules to Firebase whenever it changes on main,
+# so nobody has to paste it into the Firebase console by hand.
+# Needs a repository secret FIREBASE_SERVICE_ACCOUNT: the JSON key from
+# Firebase console → Project settings → Service accounts → Generate new private key.
+name: Publish Firestore rules
+on:
+  push:
+    branches: [main]
+    paths: [config/firestore.rules]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: firestore-rules
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for the Firebase key
+        id: key
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::warning::No FIREBASE_SERVICE_ACCOUNT secret yet, so the rules weren't published. Paste config/firestore.rules into the Firebase console, or add the secret."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish rules
+        if: steps.key.outputs.ok == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: |
+          mkdir -p "$RUNNER_TEMP/fb"
+          cp config/firestore.rules "$RUNNER_TEMP/fb/firestore.rules"
+          echo '{"firestore":{"rules":"firestore.rules"}}' > "$RUNNER_TEMP/fb/firebase.json"
+          cd "$RUNNER_TEMP/fb"
+          npx --yes firebase-tools@14 deploy --only firestore:rules --project gn-math-dfd85 --non-interactive
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
