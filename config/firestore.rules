@@ -209,7 +209,8 @@ service cloud.firestore {
       return d.keys().hasOnly(['action', 'target', 'targetName', 'by', 'byName', 'at', 'detail'])
         && d.by == request.auth.uid && d.at == request.time
         && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
-                        'remove_ratings', 'remove_rating', 'delete_submissions']
+                        'remove_ratings', 'remove_rating', 'delete_submissions',
+                        'make_trusted', 'remove_trusted']
         && shortText(d.target, 128) && shortText(d.targetName, 40)
         && shortText(d.byName, 40) && shortText(d.detail, 200);
     }

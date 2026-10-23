@@ -234,7 +234,8 @@ function logAction(action, target, targetName, detail) {
 const ACTION_LABELS = {
     suspend: "suspended", unsuspend: "unsuspended", make_mod: "made a mod:", remove_mod: "removed mod from",
     make_admin: "made an admin:", remove_admin: "removed admin from", remove_ratings: "removed all ratings & reports from",
-    remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of"
+    remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of",
+    make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from"
 };
 let actionLogCache = null, actionLogFilter = "";
 async function renderActionLog() {
@@ -257,7 +258,7 @@ async function renderActionLog() {
         </div>
         <p id="log-summary" class="admin-summary"></p>
         <div id="log-list" class="admin-list"></div>
-        <p class="admin-footnote">Every suspension, mod or admin change, and rating or submission removal is logged here. Entries can't be edited or deleted from the site. Shows the newest 200.</p>`;
+        <p class="admin-footnote">Every suspension, mod, admin or trusted reporter change, and rating or submission removal is logged here. Entries can't be edited or deleted from the site. Shows the newest 200.</p>`;
     const input = document.getElementById("log-search");
     input.value = actionLogFilter;
     const draw = () => {
@@ -415,6 +416,7 @@ function adminRow(p) {
     btn(trusted ? "Remove trusted reporter" : "Make trusted reporter", async () => {
         const list = getTrustedReporters();
         setTrustedReporters(trusted ? list.filter(x => x.uid !== p.uid) : [...list, { uid: p.uid, name: String(p.username || "").slice(0, 40) }]);
+        logAction(trusted ? "remove_trusted" : "make_trusted", p.uid, String(p.username || ""), "");
         if (typeof githubAutoSync === "function") githubAutoSync();
         if (typeof refreshCards === "function") refreshCards();
         notify(trusted ? `${p.username} is no longer a trusted reporter.` : `${p.username} is now a trusted reporter. Saved to GitHub.`, { type: "success" });
