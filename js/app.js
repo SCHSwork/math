@@ -144,7 +144,7 @@ function mirrorOf(url) { try { return MIRROR_HOSTS[new URL(url).hostname]; } cat
 function fetchFirst(urls, opts = {}) {
     return opts.stagger && urls.length > 1 ? fetchFirstStaggered(urls, opts) : fetchFirstInOrder(urls, opts);
 }
-function fetchFirstStaggered(urls, { timeoutMs = 15000, validate, track = true, cache, stagger }) {
+function fetchFirstStaggered(urls, { timeoutMs = 15000, validate, track = true, cache, stagger, onTry }) {
     return new Promise((resolve, reject) => {
         let next = 0, running = 0, done = false, lastError = new Error("No sources"), staggerTimer = null;
         const ctrls = [], waiting = new Set();  // names of sources still loading
@@ -152,6 +152,7 @@ function fetchFirstStaggered(urls, { timeoutMs = 15000, validate, track = true, 
             clearTimeout(staggerTimer);
             if (done || next >= urls.length) return;
             const url = urls[next++], name = mirrorOf(url);
+            if (onTry) try { onTry(name, next - 1); } catch {}
             const ctrl = new AbortController();
             ctrls.push(ctrl);
             if (name) waiting.add(name);
@@ -928,10 +929,10 @@ function cleanGameHtml(html) {
     return out;
 }
 
-async function fetchWithFallback(rawUrl) {
+async function fetchWithFallback(rawUrl, onTry) {
     // GN Originals: "gh:owner/repo@sha/path"
     if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) {
-        let html = await fetchOriginalHtml(rawUrl);
+        let html = await fetchOriginalHtml(rawUrl, onTry);
         // UBZone games: keep their own links on the checked version (ubzone.js)
         if (typeof isUbzoneGhUrl === "function" && isUbzoneGhUrl(rawUrl)) html = pinUbzoneRefs(html);
         return rewriteForMirrors(html);
@@ -942,7 +943,7 @@ async function fetchWithFallback(rawUrl) {
     const candidates = isHtml
         ? mirrorUrls("freebuisness", "html", LIBRARY_REF, suffix)
         : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
-    const html = await fetchFirst(candidates, { timeoutMs: 30000, stagger: 2500, validate: res => res.text() });
+    const html = await fetchFirst(candidates, { timeoutMs: 30000, stagger: 2500, onTry, validate: res => res.text() });
     return rewriteForMirrors(cleanGameHtml(html));
 }
 
@@ -961,7 +962,8 @@ function prefetchZone(file) {
 function loadZoneHtml(url) {
     const p = zonePrefetch.get(url);
     zonePrefetch.delete(url);
-    return p ? p.catch(() => fetchWithFallback(url)) : fetchWithFallback(url);
+    const onTry = typeof noteGameSource === "function" ? noteGameSource : null;
+    return p ? p.catch(() => fetchWithFallback(url, onTry)) : fetchWithFallback(url, onTry);
 }
 
 function openRandomZone() {

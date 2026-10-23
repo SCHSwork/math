@@ -393,20 +393,30 @@ async function resetMyStats() {
 function gameLoadingScreenHtml(file) {
     const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const cover = coverSources(file.cover)[0] || "";
+    // The site's accent color, so the screen matches the style in use
+    let accent = "#fc2651";
+    try { const c = getComputedStyle(document.body).getPropertyValue("--primary").trim(); if (/^(#[0-9a-f]{3,8}|rgba?\([\d.,\s%]+\)|hsla?\([\d.,\s%deg]+\))$/i.test(c)) accent = c; } catch {}
     return `<!doctype html><html><head><meta charset="utf-8"><style>
-        html,body{margin:0;height:100%;background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif}
-        body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:16px;box-sizing:border-box}
-        img{width:160px;height:160px;object-fit:cover;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-        h1{font-size:22px;margin:0}
-        .bar{width:220px;height:6px;border-radius:99px;background:#1e293b;overflow:hidden}
-        .bar span{display:block;width:40%;height:100%;border-radius:99px;background:#fc2651;animation:slide 1.1s ease-in-out infinite}
-        @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
-        p{margin:0;color:#94a3b8;font-size:14px}
+        html,body{margin:0;height:100%;color:#e2e8f0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+        body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:16px;box-sizing:border-box;background:#0b1120;
+            background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,${accent} 22%,#0f172a) 0%,#0b1120 70%)}
+        .cv{position:relative;width:150px;height:150px}
+        .cv img{width:100%;height:100%;object-fit:cover;border-radius:24px;box-shadow:0 14px 40px rgba(0,0,0,.55);animation:float 3s ease-in-out infinite}
+        .cv::after{content:"";position:absolute;inset:-6px;border-radius:30px;border:2px solid ${accent};opacity:.5;animation:pulse 1.8s ease-out infinite}
+        @keyframes float{50%{transform:translateY(-6px)}}
+        @keyframes pulse{0%{transform:scale(.96);opacity:.6}100%{transform:scale(1.12);opacity:0}}
+        h1{font-size:22px;margin:4px 0 0;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .bar{width:min(280px,80vw);height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+        #gn-load-fill{height:100%;width:0;border-radius:99px;background:${accent};transition:width .3s ease}
+        #gn-load-fill.ind{width:35%;animation:slide 1.1s ease-in-out infinite}
+        @keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
+        #gn-load-status{margin:0;color:#94a3b8;font-size:14px;min-height:1.3em;max-width:90vw}
+        @media (prefers-reduced-motion:reduce){.cv img,.cv::after{animation:none}#gn-load-fill.ind{animation-duration:3s}}
     </style></head><body>
-        ${cover ? `<img src="${esc(cover)}" alt="">` : ""}
+        ${cover ? `<div class="cv"><img src="${esc(cover)}" alt=""></div>` : ""}
         <h1>${esc(file.name)}</h1>
-        <div class="bar"><span></span></div>
-        <p>Loading game…</p>
+        <div class="bar"><div id="gn-load-fill" class="ind"></div></div>
+        <p id="gn-load-status">Finding the fastest source…</p>
     </body></html>`;
 }
 

@@ -618,34 +618,66 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
 #gameMenu .gm-danger { color: #f87171; }
 #gameMenu .gm-sep { height: 1px; margin: 0.3rem 0.4rem; background: var(--border, #334155); }
 
-/* Game loading bar (bottom-center pill over the game) */
+/* Game loading bar (bottom-center card over the game) */
 #gameLoadBar {
     position: fixed;
     left: 50%;
     bottom: 24px;
     transform: translate(-50%, 20px);
     z-index: 10050;
-    width: min(600px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: min(520px, calc(100vw - 32px));
     box-sizing: border-box;
-    padding: 0.7rem 0.9rem 0.8rem;
-    border-radius: 14px;
-    background: rgba(15, 23, 42, 0.92);
+    padding: 0.65rem 0.85rem;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: #e2e8f0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
     font-size: 13px;
-    font-weight: 600;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 #gameLoadBar.glb-show { opacity: 1; transform: translate(-50%, 0); }
-#gameLoadBar .glb-text { margin-bottom: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#gameLoadBar .glb-stats { margin-bottom: 0.5rem; font-size: 13px; font-weight: 500; color: #cbd5e1; white-space: normal; font-variant-numeric: tabular-nums; }
-#gameLoadBar .glb-track { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-#gameLoadBar .glb-fill { height: 100%; width: 0; border-radius: 999px; background: var(--primary, #fc2651); transition: width 0.35s ease; }
+#gameLoadBar .glb-cover { width: 44px; height: 44px; flex: none; border-radius: 10px; object-fit: cover; background: rgba(255, 255, 255, 0.06); }
+#gameLoadBar .glb-cover[hidden] { display: none; }
+#gameLoadBar .glb-main { flex: 1; min-width: 0; }
+#gameLoadBar .glb-top { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.35rem; font-weight: 650; }
+#gameLoadBar .glb-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gameLoadBar .glb-pct { flex: none; font-variant-numeric: tabular-nums; color: #fff; }
+#gameLoadBar .glb-stats { margin-top: 0.35rem; font-size: 12px; font-weight: 500; color: #94a3b8; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gameLoadBar .glb-track { position: relative; height: 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+#gameLoadBar .glb-fill {
+    position: relative; height: 100%; width: 0; border-radius: 999px; overflow: hidden;
+    background: var(--primary, #fc2651);
+    transition: width 0.4s ease, background-color 0.3s ease;
+}
+/* Moving shine so a slow download still looks alive */
+#gameLoadBar .glb-fill::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: translateX(-100%); animation: glbShine 1.6s ease-in-out infinite;
+}
 #gameLoadBar .glb-fill.glb-indeterminate { width: 35% !important; animation: glbSlide 1.2s ease-in-out infinite; }
+#gameLoadBar .glb-fill.glb-indeterminate::after { display: none; }
 #gameLoadBar.glb-done .glb-fill { background: #22c55e; }
+#gameLoadBar.glb-done .glb-fill::after { display: none; }
+#gameLoadBar.glb-done .glb-pct { color: #4ade80; }
 @keyframes glbSlide { 0% { transform: translateX(-110%); } 100% { transform: translateX(300%); } }
+@keyframes glbShine { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+    #gameLoadBar .glb-fill::after { animation: none; display: none; }
+    #gameLoadBar .glb-fill.glb-indeterminate { animation-duration: 3s; }
+}
+@media (max-width: 480px) {
+    #gameLoadBar { bottom: 12px; gap: 0.6rem; }
+    #gameLoadBar .glb-cover { width: 36px; height: 36px; }
+}
 
 /* Favorite star, broken flag and stats line on game cards */
 .zone-item button.card-fav,

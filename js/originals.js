@@ -84,11 +84,11 @@ function withBaseHref(html, base) {
     return tag + html;
 }
 
-async function fetchOriginalHtml(url) {
+async function fetchOriginalHtml(url, onTry) {
     const g = parseGhUrl(url);
     if (!g) throw new Error("Not a GN Originals address");
     const { text, from } = await fetchFirst(mirrorUrls(g.owner, g.repo, g.ref, g.path), {
-        timeoutMs: 30000, stagger: 2500,
+        timeoutMs: 30000, stagger: 2500, onTry,
         validate: async res => ({ text: await res.text(), from: res.url })
     });
     const dir = g.path.includes("/") ? g.path.slice(0, g.path.lastIndexOf("/") + 1) : "";

@@ -7,6 +7,15 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 23, 2026 — A better loading bar
+
+### Changed
+- **The percentage no longer jumps backwards.** Games often start a second or third download partway through, which used to make the bar hit 99% and then drop. The site now remembers how big each game was the last time it loaded on this device, so later loads show a steady, real percentage and time left.
+- **Every file counts.** Scripts, images, sounds and other files a game loads now count toward the total, not just some of its downloads.
+- **It no longer says "ready" too early.** It waits until the game's page has finished loading, and nothing has downloaded for a moment.
+- **It says what's happening:** which source the game is coming from, when it switches to a faster one, download speed, time left, when the network has stalled, and how long the game took once it's ready.
+- **New look:** the loading screen uses your site style's accent color with the game's cover, and the bar over the game shows the cover, a big percentage and a moving shine.
+
 ## October 22, 2026 — Games open faster
 
 ### Changed
