@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 22, 2026 — Action log
+
+### New
+- **Log tab** in the Admin Panel: who suspended or unsuspended someone, made or removed a mod or admin, or removed ratings or submissions, and when. Searchable by name. Only admins can see it, and entries can't be changed or deleted from the site.
+- Suspensions and role changes **can't skip the log**: Firebase only accepts them when they're saved together with their log entry.
+- **Firestore rules publish themselves** when `config/firestore.rules` changes on GitHub (needs the `FIREBASE_SERVICE_ACCOUNT` secret).
+
 ## October 22, 2026 — Mods, and the owner can't be removed
 
 ### New

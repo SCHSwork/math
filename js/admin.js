@@ -145,6 +145,7 @@ async function openAdminPanel() {
             <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports &amp; ideas</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="log" aria-selected="false">Log</button>`}
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
@@ -167,7 +168,8 @@ async function openAdminPanel() {
         <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
         <div id="admin-newgames" hidden></div>
         <div id="admin-feedback" hidden></div>
-        <div id="admin-takedowns" hidden></div>`;
+        <div id="admin-takedowns" hidden></div>
+        <div id="admin-log" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
@@ -175,6 +177,8 @@ async function openAdminPanel() {
         document.getElementById("admin-newgames").hidden = b.dataset.tab !== "newgames";
         document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
         document.getElementById("admin-takedowns").hidden = b.dataset.tab !== "takedowns";
+        document.getElementById("admin-log").hidden = b.dataset.tab !== "log";
+        if (b.dataset.tab === "log") renderActionLog();
         if (b.dataset.tab === "takedowns" && typeof renderModTakedowns === "function") renderModTakedowns();
         if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
         if (b.dataset.tab === "newgames") renderNewLibraryGames();
@@ -205,6 +209,78 @@ async function openAdminPanel() {
         console.error(e);
         document.getElementById("admin-summary").textContent = "Couldn't load accounts: " + (typeof statsErrorText === "function" ? statsErrorText(e) : e.message || e);
     }
+}
+
+// ── Action log ──────────────────────────────────────────────────────────────
+// Role and suspension changes are saved in one batch with their log entry and
+// auditLog's pointer (auditLast/<account>); the rules refuse them otherwise.
+async function loggedWrite(action, target, targetName, detail, apply) {
+    const batch = cloudDb.batch();
+    const logRef = cloudDb.collection("auditLog").doc();
+    const at = firebase.firestore.FieldValue.serverTimestamp();
+    batch.set(logRef, { action, target, targetName: String(targetName || "").slice(0, 40), by: cloudUser.uid, byName: currentUsername().slice(0, 40), at, detail: String(detail || "").slice(0, 200) });
+    batch.set(cloudDb.collection("auditLast").doc(target), { action, by: cloudUser.uid, at, logId: logRef.id });
+    apply(batch);
+    await batch.commit();
+    actionLogCache = null;
+}
+// Other actions just add an entry
+function logAction(action, target, targetName, detail) {
+    if (!cloudUser || !cloudDb) return;
+    cloudDb.collection("auditLog").add({ action, target, targetName: String(targetName || "").slice(0, 40), by: cloudUser.uid, byName: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp(), detail: String(detail || "").slice(0, 200) })
+        .then(() => { actionLogCache = null; })
+        .catch(e => console.error("Couldn't log action", e));
+}
+const ACTION_LABELS = {
+    suspend: "suspended", unsuspend: "unsuspended", make_mod: "made a mod:", remove_mod: "removed mod from",
+    make_admin: "made an admin:", remove_admin: "removed admin from", remove_ratings: "removed all ratings & reports from",
+    remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of"
+};
+let actionLogCache = null, actionLogFilter = "";
+async function renderActionLog() {
+    const box = document.getElementById("admin-log");
+    if (!box) return;
+    if (!actionLogCache) {
+        box.innerHTML = `<p class="admin-summary">Loading the log…</p>`;
+        try {
+            const snap = await cloudDb.collection("auditLog").orderBy("at", "desc").limit(200).get();
+            if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
+            actionLogCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            box.innerHTML = `<p class="admin-summary">Couldn't load the log: ${escapeHtmlText(e.message || String(e))}</p>`;
+            return;
+        }
+    }
+    box.innerHTML = `
+        <div class="admin-toolbar">
+            <input type="search" id="log-search" data-no-autofill placeholder="Search by name…" aria-label="Search the log" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
+        </div>
+        <p id="log-summary" class="admin-summary"></p>
+        <div id="log-list" class="admin-list"></div>
+        <p class="admin-footnote">Every suspension, mod or admin change, and rating or submission removal is logged here. Entries can't be edited or deleted from the site. Shows the newest 200.</p>`;
+    const input = document.getElementById("log-search");
+    input.value = actionLogFilter;
+    const draw = () => {
+        actionLogFilter = input.value;
+        const q = normText(actionLogFilter);
+        const rows = actionLogCache.filter(e => !q || normText(e.byName).includes(q) || normText(e.targetName).includes(q));
+        document.getElementById("log-summary").textContent = rows.length ? `${rows.length} action${rows.length === 1 ? "" : "s"}` : (q ? "Nothing matches." : "No actions yet.");
+        const list = document.getElementById("log-list");
+        list.innerHTML = "";
+        for (const e of rows) {
+            const row = document.createElement("div");
+            row.className = "admin-act-item";
+            const d = e.at && typeof e.at.toDate === "function" ? e.at.toDate() : null;
+            const text = document.createElement("span");
+            text.textContent = `${e.byName || "?"} ${ACTION_LABELS[e.action] || e.action} ${e.targetName || "?"}${e.detail ? " — " + e.detail : ""}`;
+            const when = document.createElement("small");
+            when.textContent = d ? d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+            row.append(text, when);
+            list.appendChild(row);
+        }
+    };
+    input.addEventListener("input", draw);
+    draw();
 }
 
 function adminRoleBadges(p) {
@@ -309,12 +385,12 @@ function adminRow(p) {
     btn(isAdm ? "Remove game admin" : "Make game admin", async () => {
         if (isAdm) {
             if (!(await askConfirm(`${p.username} will no longer be able to manage accounts, handle takedowns or review reports and submissions.`, { title: "Remove game admin?", confirmText: "Remove admin", danger: true }))) return;
-            await cloudDb.collection("admins").doc(p.uid).delete();
+            await loggedWrite("remove_admin", p.uid, String(p.username || ""), "", b => b.delete(cloudDb.collection("admins").doc(p.uid)));
             adminData.admins.delete(p.uid);
         } else {
             if (!(await askConfirm(`${p.username} will be able to see every account, suspend people, handle takedowns and add or remove mods. For just reviewing reports and submissions, make them a mod instead.`, { title: "Make game admin?", confirmText: "Make admin" }))) return;
             const data = { name: String(p.username || "").slice(0, 40), addedBy: currentUsername().slice(0, 40), addedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            await cloudDb.collection("admins").doc(p.uid).set(data);
+            await loggedWrite("make_admin", p.uid, String(p.username || ""), "", b => b.set(cloudDb.collection("admins").doc(p.uid), data));
             adminData.admins.set(p.uid, data);
         }
         notify(isAdm ? `${p.username} is no longer a game admin.` : `${p.username} is now a game admin.`, { type: "success" });
@@ -325,12 +401,12 @@ function adminRow(p) {
     if (!isAdm) btn(isMod ? "Remove mod" : "Make mod", async () => {
         if (isMod) {
             if (!(await askConfirm(`${p.username} will no longer be able to review reports, ideas or game submissions.`, { title: "Remove mod?", confirmText: "Remove mod", danger: true }))) return;
-            await cloudDb.collection("mods").doc(p.uid).delete();
+            await loggedWrite("remove_mod", p.uid, String(p.username || ""), "", b => b.delete(cloudDb.collection("mods").doc(p.uid)));
             adminData.mods.delete(p.uid);
         } else {
             if (!(await askConfirm(`${p.username} will be able to review reports, ideas and game submissions. They won't see accounts or be able to suspend anyone or change roles.`, { title: "Make mod?", confirmText: "Make mod" }))) return;
             const data = { name: String(p.username || "").slice(0, 40), addedBy: currentUsername().slice(0, 40), addedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            await cloudDb.collection("mods").doc(p.uid).set(data);
+            await loggedWrite("make_mod", p.uid, String(p.username || ""), "", b => b.set(cloudDb.collection("mods").doc(p.uid), data));
             adminData.mods.set(p.uid, data);
         }
         notify(isMod ? `${p.username} is no longer a mod.` : `${p.username} is now a mod.`, { type: "success" });
@@ -346,14 +422,14 @@ function adminRow(p) {
     }, canTrust ? {} : { disabled: "Trusted reporters are saved to GitHub, so this needs the owner's GitHub token on this browser (Owner Panel)." });
     btn(isBan ? "Unsuspend" : "Suspend", async () => {
         if (isBan) {
-            await cloudDb.collection("bans").doc(p.uid).delete();
+            await loggedWrite("unsuspend", p.uid, String(p.username || ""), "", b => b.delete(cloudDb.collection("bans").doc(p.uid)));
             adminData.bans.delete(p.uid);
             notify(`${p.username} is no longer suspended.`, { type: "success" });
         } else {
             const reason = document.getElementById("admin-reason-" + p.uid)?.value.trim().slice(0, 200) || "";
             if (!(await askConfirm(`${p.username} will still be able to play and keep their saves, but won't be able to rate, report or submit games.${reason ? " Reason shown to them: " + reason : ""}`, { title: "Suspend account?", confirmText: "Suspend", danger: true }))) return;
             const data = { name: String(p.username || "").slice(0, 40), reason, by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp() };
-            await cloudDb.collection("bans").doc(p.uid).set(data);
+            await loggedWrite("suspend", p.uid, String(p.username || ""), reason, b => b.set(cloudDb.collection("bans").doc(p.uid), data));
             adminData.bans.set(p.uid, data);
             notify(`${p.username} is suspended.`, { type: "success" });
         }
@@ -363,6 +439,7 @@ function adminRow(p) {
     btn("Remove their ratings & reports", async () => {
         if (!(await askConfirm(`Delete every rating and broken report from ${p.username}? This can't be undone.`, { title: "Remove ratings & reports?", confirmText: "Remove", danger: true }))) return;
         const n = await adminRemoveStats(p.uid);
+        logAction("remove_ratings", p.uid, String(p.username || ""), `${n} rating(s)/report(s)`);
         adminData.stats.delete(p.uid);
         if (typeof loadGameStats === "function") loadGameStats({ force: true });
         notify(`Removed ${n} rating(s)/report(s) from ${p.username}.`, { type: "success" });
@@ -372,6 +449,7 @@ function adminRow(p) {
         if (!(await askConfirm(`Delete all game submissions from ${p.username}?`, { title: "Delete submissions?", confirmText: "Delete", danger: true }))) return;
         const snap = await cloudDb.collection("submissions").where("uid", "==", p.uid).get();
         await Promise.all(snap.docs.map(d => d.ref.delete()));
+        logAction("delete_submissions", p.uid, String(p.username || ""), `${snap.docs.length} submission(s)`);
         adminData.subs.delete(p.uid);
         notify(`Deleted ${snap.docs.length} submission(s).`, { type: "success" });
         renderAdminList();
@@ -445,6 +523,7 @@ function renderAdminActivity(box, p) {
                 const del = firebase.firestore.FieldValue.delete();
                 const field = kind === "broken" ? "r" : "v";
                 await cloudDb.collection("gameStats").doc(item.shard).set({ ["z" + item.gameId]: { [field]: { [p.uid]: del } } }, { merge: true });
+                logAction("remove_rating", p.uid, String(p.username || ""), `${kind === "broken" ? "broken report" : kind} on ${adminGameName(item.gameId).name}`);
                 if (typeof fbCount === "function") fbCount(0, 1);
                 const arr = kind === "broken" ? st.broken : kind === "like" ? st.likes : st.dislikes;
                 arr.splice(arr.indexOf(item), 1);
