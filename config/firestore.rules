@@ -35,7 +35,7 @@ service cloud.firestore {
     // the owner can add or remove admins, and nobody can remove or suspend the
     // owner.
     match /admins/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create: if isOwner()
         && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
@@ -43,11 +43,11 @@ service cloud.firestore {
       allow delete: if isOwner() && request.auth.uid != uid;
     }
 
-    // Mods: review reports, ideas and game submissions only. They can't see
-    // accounts, suspend anyone, handle takedowns or change roles. Admins add
-    // and remove them.
+    // Mods: review reports, ideas and game submissions, and can look at the
+    // account list (read-only). They can't suspend anyone, handle takedowns or
+    // change roles. Admins add and remove them.
     match /mods/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create: if isAdmin()
         && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
@@ -58,7 +58,7 @@ service cloud.firestore {
     // Suspended accounts: can still play and keep cloud saves, but can't
     // rate, report or submit. Only admins can add or remove these.
     match /bans/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create, update: if isAdmin() && request.auth.uid != uid && !isOwnerUid(uid)
         && request.resource.data.keys().hasOnly(['name', 'reason', 'by', 'at'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.reason, 200)
@@ -69,7 +69,7 @@ service cloud.firestore {
     // Small public-to-admins profile so admins can find accounts:
     // username (must match the sign-in name), join date, last visit.
     match /profiles/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen'])
         && request.resource.data.username == request.auth.token.email.split('@')[0]
