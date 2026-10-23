@@ -33,7 +33,9 @@ jobs:
           import json, sys
           raw = open(sys.argv[1]).read()
           try:
-              d = json.loads(raw)
+              # strict=False accepts real line breaks inside the key, which phones
+              # add when copying it; the file is then rewritten as normal JSON.
+              d = json.loads(raw, strict=False)
           except Exception as e:
               print(f"::error::The FIREBASE_SERVICE_ACCOUNT secret isn't valid JSON ({type(e).__name__} near character {getattr(e, 'pos', '?')} of {len(raw)}). Paste the whole downloaded .json file again, from the first {{ to the last }}.")
               sys.exit(1)
@@ -44,6 +46,7 @@ jobs:
           if "-----END PRIVATE KEY-----" not in d["private_key"]:
               print("::error::The secret's private_key is cut off. Paste the whole downloaded .json file again.")
               sys.exit(1)
+          json.dump(d, open(sys.argv[1], "w"))
           print(f"::notice::Key looks complete: {d['client_email']} for project {d['project_id']}")
           PY
             echo "ok=true" >> "$GITHUB_OUTPUT"
