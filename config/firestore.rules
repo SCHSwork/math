@@ -37,11 +37,11 @@ service cloud.firestore {
     // owner.
     match /admins/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
-      allow create: if isOwner()
+      allow create: if isOwner() && loggedAs(uid, 'make_admin')
         && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
         && request.resource.data.addedAt == request.time;
-      allow delete: if isOwner() && request.auth.uid != uid;
+      allow delete: if isOwner() && request.auth.uid != uid && loggedAs(uid, 'remove_admin');
     }
 
     // Mods: review reports, ideas and game submissions, and can look at the
@@ -49,22 +49,43 @@ service cloud.firestore {
     // change roles. Admins add and remove them.
     match /mods/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
-      allow create: if isAdmin()
+      allow create: if isAdmin() && loggedAs(uid, 'make_mod')
         && request.resource.data.keys().hasOnly(['name', 'addedBy', 'addedAt'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.addedBy, 40)
         && request.resource.data.addedAt == request.time;
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && loggedAs(uid, 'remove_mod');
     }
 
     // Suspended accounts: can still play and keep cloud saves, but can't
     // rate, report or submit. Only admins can add or remove these.
     match /bans/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
-      allow create, update: if isAdmin() && request.auth.uid != uid && !isOwnerUid(uid)
+      allow create, update: if isAdmin() && request.auth.uid != uid && !isOwnerUid(uid) && loggedAs(uid, 'suspend')
         && request.resource.data.keys().hasOnly(['name', 'reason', 'by', 'at'])
         && shortText(request.resource.data.name, 40) && shortText(request.resource.data.reason, 200)
         && shortText(request.resource.data.by, 40) && request.resource.data.at == request.time;
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && loggedAs(uid, 'unsuspend');
+    }
+
+    // Action log. Every staff action writes an entry; admins can read them and
+    // nobody can change or delete one from the site. Role and suspension
+    // changes must be saved together with their entry: the same write also
+    // updates auditLast/<account> to point at it, and the admins/mods/bans
+    // rules above check that (loggedAs), so those changes can't skip the log.
+    match /auditLog/{id} {
+      allow read: if isAdmin();
+      allow create: if isStaff() && validLog(request.resource.data);
+    }
+    match /auditLast/{uid} {
+      allow read: if isAdmin();
+      allow create, update: if isStaff()
+        && request.resource.data.keys().hasOnly(['action', 'by', 'at', 'logId'])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.at == request.time
+        && request.resource.data.logId is string
+        && getAfter(/databases/$(db)/documents/auditLog/$(request.resource.data.logId)).data.target == uid
+        && getAfter(/databases/$(db)/documents/auditLog/$(request.resource.data.logId)).data.action == request.resource.data.action
+        && getAfter(/databases/$(db)/documents/auditLog/$(request.resource.data.logId)).data.at == request.time;
     }
 
     // Small public-to-admins profile so admins can find accounts:
@@ -184,6 +205,19 @@ service cloud.firestore {
         && exists(/databases/$(db)/documents/mods/$(request.auth.uid)));
     }
     function shortText(v, max) { return v is string && v.size() <= max; }
+    function validLog(d) {
+      return d.keys().hasOnly(['action', 'target', 'targetName', 'by', 'byName', 'at', 'detail'])
+        && d.by == request.auth.uid && d.at == request.time
+        && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
+                        'remove_ratings', 'remove_rating', 'delete_submissions']
+        && shortText(d.target, 128) && shortText(d.targetName, 40)
+        && shortText(d.byName, 40) && shortText(d.detail, 200);
+    }
+    // True when this same write also logged `action` on account `uid`
+    function loggedAs(uid, action) {
+      let last = getAfter(/databases/$(db)/documents/auditLast/$(uid)).data;
+      return last.action == action && last.by == request.auth.uid && last.at == request.time;
+    }
     function validSubmission(d) {
       return d.keys().hasOnly(['uid', 'username', 'name', 'url', 'author', 'relation', 'license', 'genre', 'description', 'status', 'createdAt'])
         && d.uid == request.auth.uid
