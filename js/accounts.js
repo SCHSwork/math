@@ -530,7 +530,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
                 <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
             </div>
-            ${typeof isSiteAdmin === "function" && isSiteAdmin() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ Admin Panel</button>` : ""}
+            ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
             <details class="acct-section">
                 <summary>Change password</summary>
                 <label for="acct-old-password">Current password</label>

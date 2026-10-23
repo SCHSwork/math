@@ -2,9 +2,13 @@
 // Admin Panel: account management for site admins.
 //
 // Roles (all checked by config/firestore.rules, not just by this page):
-//   • Game admin: a document admins/<uid>. Admins review game submissions,
-//     manage accounts and can make other accounts admins. The very first admin
-//     is added once in the Firebase console.
+//   • Owner: the admin whose admins/<uid> document has owner: true, set once by
+//     hand in the Firebase console. Only the owner can add or remove admins,
+//     and nobody can remove or suspend the owner.
+//   • Game admin: a document admins/<uid>. Admins manage accounts, handle
+//     takedowns, review everything mods can, and add or remove mods.
+//   • Mod: a document mods/<uid>. Mods only review reports, ideas and game
+//     submissions. They can't see accounts or change anyone's role.
 //   • Trusted reporter: listed in config/owner-settings.json (needs the owner's
 //     GitHub token on this browser to change).
 //   • Suspended: a document bans/<uid>. A suspended account can still play and
@@ -12,11 +16,11 @@
 // Every account keeps a small profile (profiles/<uid>: username, joined, last
 // seen) so admins can find it. Passwords and cloud saves are never visible.
 // ═════════════════════════════════════════════════════════════════════════════
-let siteAdminState = { uid: null, admin: false, banned: null };
+let siteAdminState = { uid: null, admin: false, owner: false, mod: false, banned: null };
 
 // Profile + role check, run whenever someone signs in
 async function syncMyProfileAndRoles(user) {
-    siteAdminState = { uid: user ? user.uid : null, admin: false, banned: null };
+    siteAdminState = { uid: user ? user.uid : null, admin: false, owner: false, mod: false, banned: null };
     if (!user || !cloudDb) return;
     const username = (user.email || "").split("@")[0].slice(0, 40);
     try {
@@ -27,6 +31,11 @@ async function syncMyProfileAndRoles(user) {
     try {
         const a = await cloudDb.collection("admins").doc(user.uid).get();
         siteAdminState.admin = !!(a && a.exists);
+        siteAdminState.owner = !!(a && a.exists && (a.data() || {}).owner === true);
+    } catch (e) {}
+    try {
+        const m = await cloudDb.collection("mods").doc(user.uid).get();
+        siteAdminState.mod = !!(m && m.exists);
     } catch (e) {}
     try {
         const b = await cloudDb.collection("bans").doc(user.uid).get();
@@ -39,10 +48,13 @@ async function syncMyProfileAndRoles(user) {
     if (typeof refreshAccountButtonAdmin === "function") refreshAccountButtonAdmin();
 }
 function isSiteAdmin() { return !!(siteAdminState.admin && cloudUser && siteAdminState.uid === cloudUser.uid); }
+function isSiteOwner() { return !!(siteAdminState.owner && isSiteAdmin()); }
+// Admins, or mods who aren't suspended
+function isSiteMod() { return isSiteAdmin() || !!(siteAdminState.mod && !siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function isSuspended() { return !!(siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function refreshAccountButtonAdmin() {
     const btn = document.getElementById("accountButton");
-    if (btn) btn.classList.toggle("is-admin", isSiteAdmin());
+    if (btn) btn.classList.toggle("is-admin", isSiteMod());
 }
 
 function fmtDate(v) {
@@ -58,9 +70,10 @@ function timeOf(v) {
 
 let adminData = null;   // { profiles, admins:Set, bans:Map, subs:Map uid→count, stats:Map uid→{votes,reports} }
 async function loadAdminData() {
-    const [profiles, admins, bans, subs, stats, feedback] = await Promise.all([
+    const [profiles, admins, mods, bans, subs, stats, feedback] = await Promise.all([
         cloudDb.collection("profiles").get(),
         cloudDb.collection("admins").get(),
+        cloudDb.collection("mods").get().catch(() => ({ docs: [] })),
         cloudDb.collection("bans").get(),
         cloudDb.collection("submissions").get().catch(() => ({ docs: [] })),
         cloudDb.collection("gameStats").get().catch(() => ({ docs: [] })),
@@ -85,15 +98,16 @@ async function loadAdminData() {
     adminData = {
         profiles: profiles.docs.map(d => ({ uid: d.id, ...(d.data() || {}) })),
         admins: new Map(admins.docs.map(d => [d.id, d.data() || {}])),
+        mods: new Map(mods.docs.map(d => [d.id, d.data() || {}])),
         bans: new Map(bans.docs.map(d => [d.id, d.data() || {}])),
         subs: subMap,
         stats: statMap,
         feedback: fbMap
     };
     // Admins/bans whose account has no profile yet still show up
-    for (const uid of [...adminData.admins.keys(), ...adminData.bans.keys()]) {
+    for (const uid of [...adminData.admins.keys(), ...adminData.mods.keys(), ...adminData.bans.keys()]) {
         if (!adminData.profiles.some(p => p.uid === uid)) {
-            adminData.profiles.push({ uid, username: adminData.admins.get(uid)?.name || adminData.bans.get(uid)?.name || "(no profile yet)" });
+            adminData.profiles.push({ uid, username: adminData.admins.get(uid)?.name || adminData.mods.get(uid)?.name || adminData.bans.get(uid)?.name || "(no profile yet)" });
         }
     }
     return adminData;
@@ -105,14 +119,15 @@ async function openAdminPanel() {
     const body = document.getElementById("popupBody");
     body.contentEditable = false;
     document.getElementById("popupOverlay").style.display = "flex";
-    if (!isSiteAdmin()) {
+    if (!isSiteMod()) {
         await syncMyProfileAndRoles(cloudUser);
     }
-    if (!isSiteAdmin()) {
-        body.innerHTML = `<p>This account (<b>${escapeHtmlText(currentUsername())}</b>) isn't a game admin.</p>
+    if (!isSiteMod()) {
+        body.innerHTML = `<p>This account (<b>${escapeHtmlText(currentUsername())}</b>) isn't a game admin or mod.</p>
             <p style="color:var(--text-muted);font-size:14px;">An existing admin can make it one from their Admin Panel. The very first admin is added once in the Firebase console: in <b>Firestore Database → Data</b>, add a document to a collection named <code>admins</code>, using this account's ID <code>${escapeHtmlText(cloudUser.uid)}</code> as the document ID.</p>`;
         return;
     }
+    if (!isSiteAdmin()) return openModPanel(body);
     body.innerHTML = `
         <div class="admin-tabs" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
@@ -127,6 +142,7 @@ async function openAdminPanel() {
                 <select id="admin-filter" aria-label="Show">
                     <option value="all">All accounts</option>
                     <option value="admins">Admins</option>
+                    <option value="mods">Mods</option>
                     <option value="trusted">Trusted reporters</option>
                     <option value="banned">Suspended</option>
                     <option value="recent">Seen this week</option>
@@ -179,9 +195,32 @@ async function openAdminPanel() {
     }
 }
 
+// Mods get just the review tabs: reports & ideas, and game submissions
+function openModPanel(body) {
+    document.getElementById("popupTitle").textContent = "Mod Panel";
+    body.innerHTML = `
+        <div class="admin-tabs" role="tablist">
+            <button type="button" role="tab" data-tab="feedback" aria-selected="true">Reports &amp; ideas</button>
+            <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
+        </div>
+        <div id="admin-feedback"></div>
+        <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
+        <p class="admin-footnote">You're a mod: you can review reports, ideas and game submissions. Accounts, suspensions and takedowns are handled by admins.</p>`;
+    body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
+        body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+        document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
+        document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
+        if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
+        if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
+    });
+    if (typeof renderModFeedback === "function") renderModFeedback();
+}
+
 function adminRoleBadges(p) {
     const out = [];
-    if (adminData.admins.has(p.uid)) out.push(["Admin", "admin"]);
+    if (adminData.admins.get(p.uid)?.owner === true) out.push(["Owner", "admin"]);
+    else if (adminData.admins.has(p.uid)) out.push(["Admin", "admin"]);
+    if (adminData.mods.has(p.uid)) out.push(["Mod", "mod"]);
     if (typeof isTrustedReporter === "function" && isTrustedReporter(p.uid)) out.push(["Trusted reporter", "trusted"]);
     if (adminData.bans.has(p.uid)) out.push(["Suspended", "banned"]);
     if (cloudUser && p.uid === cloudUser.uid) out.push(["You", "you"]);
@@ -197,6 +236,7 @@ function renderAdminList() {
     let rows = adminData.profiles.filter(p => {
         if (q && !normText(p.username).includes(q)) return false;
         if (filter === "admins") return adminData.admins.has(p.uid);
+        if (filter === "mods") return adminData.mods.has(p.uid);
         if (filter === "trusted") return typeof isTrustedReporter === "function" && isTrustedReporter(p.uid);
         if (filter === "banned") return adminData.bans.has(p.uid);
         if (filter === "recent") return timeOf(p.lastSeen) >= weekAgo;
@@ -205,7 +245,7 @@ function renderAdminList() {
     rows.sort((a, b) => timeOf(b.lastSeen) - timeOf(a.lastSeen) || String(a.username).localeCompare(String(b.username)));
     const total = adminData.profiles.length;
     document.getElementById("admin-summary").textContent =
-        `${total.toLocaleString()} account${total === 1 ? "" : "s"} · ${adminData.admins.size} admin${adminData.admins.size === 1 ? "" : "s"} · ${adminData.bans.size} suspended` +
+        `${total.toLocaleString()} account${total === 1 ? "" : "s"} · ${adminData.admins.size} admin${adminData.admins.size === 1 ? "" : "s"} · ${adminData.mods.size} mod${adminData.mods.size === 1 ? "" : "s"} · ${adminData.bans.size} suspended` +
         (rows.length !== total ? ` · showing ${rows.length}` : "");
     list.innerHTML = "";
     const shown = rows.slice(0, 200);
@@ -249,6 +289,8 @@ function adminRow(p) {
     box.className = "admin-actions";
     const me = cloudUser && p.uid === cloudUser.uid;
     const isAdm = adminData.admins.has(p.uid);
+    const isOwn = adminData.admins.get(p.uid)?.owner === true;
+    const isMod = adminData.mods.has(p.uid);
     const isBan = adminData.bans.has(p.uid);
     const trusted = typeof isTrustedReporter === "function" && isTrustedReporter(p.uid);
     const canTrust = typeof getGithubPat === "function" && !!getGithubPat();
@@ -267,18 +309,34 @@ function adminRow(p) {
     };
     btn(isAdm ? "Remove game admin" : "Make game admin", async () => {
         if (isAdm) {
-            if (!(await askConfirm(`${p.username} will no longer be able to manage accounts or review submissions.`, { title: "Remove game admin?", confirmText: "Remove admin", danger: true }))) return;
+            if (!(await askConfirm(`${p.username} will no longer be able to manage accounts, handle takedowns or review reports and submissions.`, { title: "Remove game admin?", confirmText: "Remove admin", danger: true }))) return;
             await cloudDb.collection("admins").doc(p.uid).delete();
             adminData.admins.delete(p.uid);
         } else {
-            if (!(await askConfirm(`${p.username} will be able to manage accounts (including making other admins and suspending people) and review game submissions.`, { title: "Make game admin?", confirmText: "Make admin" }))) return;
+            if (!(await askConfirm(`${p.username} will be able to see every account, suspend people, handle takedowns and add or remove mods. For just reviewing reports and submissions, make them a mod instead.`, { title: "Make game admin?", confirmText: "Make admin" }))) return;
             const data = { name: String(p.username || "").slice(0, 40), addedBy: currentUsername().slice(0, 40), addedAt: firebase.firestore.FieldValue.serverTimestamp() };
             await cloudDb.collection("admins").doc(p.uid).set(data);
             adminData.admins.set(p.uid, data);
         }
         notify(isAdm ? `${p.username} is no longer a game admin.` : `${p.username} is now a game admin.`, { type: "success" });
         renderAdminList();
-    }, me ? { disabled: "You can't remove your own admin access. Ask another admin." } : {});
+    }, isOwn ? { disabled: "This is the site owner, who can't be removed." }
+        : me ? { disabled: "You can't remove your own admin access." }
+        : !isSiteOwner() ? { disabled: "Only the site owner can add or remove admins." } : {});
+    if (!isAdm) btn(isMod ? "Remove mod" : "Make mod", async () => {
+        if (isMod) {
+            if (!(await askConfirm(`${p.username} will no longer be able to review reports, ideas or game submissions.`, { title: "Remove mod?", confirmText: "Remove mod", danger: true }))) return;
+            await cloudDb.collection("mods").doc(p.uid).delete();
+            adminData.mods.delete(p.uid);
+        } else {
+            if (!(await askConfirm(`${p.username} will be able to review reports, ideas and game submissions. They won't see accounts or be able to suspend anyone or change roles.`, { title: "Make mod?", confirmText: "Make mod" }))) return;
+            const data = { name: String(p.username || "").slice(0, 40), addedBy: currentUsername().slice(0, 40), addedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            await cloudDb.collection("mods").doc(p.uid).set(data);
+            adminData.mods.set(p.uid, data);
+        }
+        notify(isMod ? `${p.username} is no longer a mod.` : `${p.username} is now a mod.`, { type: "success" });
+        renderAdminList();
+    });
     btn(trusted ? "Remove trusted reporter" : "Make trusted reporter", async () => {
         const list = getTrustedReporters();
         setTrustedReporters(trusted ? list.filter(x => x.uid !== p.uid) : [...list, { uid: p.uid, name: String(p.username || "").slice(0, 40) }]);
@@ -301,7 +359,8 @@ function adminRow(p) {
             notify(`${p.username} is suspended.`, { type: "success" });
         }
         renderAdminList();
-    }, me ? { disabled: "You can't suspend yourself.", danger: true } : { danger: true });
+    }, me ? { disabled: "You can't suspend yourself.", danger: true }
+        : isOwn ? { disabled: "The site owner can't be suspended.", danger: true } : { danger: true });
     btn("Remove their ratings & reports", async () => {
         if (!(await askConfirm(`Delete every rating and broken report from ${p.username}? This can't be undone.`, { title: "Remove ratings & reports?", confirmText: "Remove", danger: true }))) return;
         const n = await adminRemoveStats(p.uid);
@@ -318,7 +377,7 @@ function adminRow(p) {
         notify(`Deleted ${snap.docs.length} submission(s).`, { type: "success" });
         renderAdminList();
     }, { danger: true });
-    if (!isBan && !me) {
+    if (!isBan && !me && !isOwn) {
         const reason = document.createElement("input");
         reason.id = "admin-reason-" + p.uid;
         reason.className = "submit-note";
