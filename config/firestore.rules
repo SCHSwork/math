@@ -170,7 +170,7 @@ service cloud.firestore {
     }
     // The site owner's account ID. The site fills this in by itself when the
     // owner saves their GitHub token in the Owner Panel; then publish this file.
-    function ownerUid() { return ''; } // OWNER_UID
+    function ownerUid() { return 'AKOZ92Fya7dXqNDcSFl8T6nLHwn2'; } // OWNER_UID
     function isOwnerUid(uid) { return ownerUid() != '' && uid == ownerUid(); }
     function isAdmin() {
       return request.auth != null && (isOwnerUid(request.auth.uid)
