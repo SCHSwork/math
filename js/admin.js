@@ -8,8 +8,8 @@
 //     remove or suspend the owner.
 //   • Game admin: a document admins/<uid>. Admins manage accounts, handle
 //     takedowns, review everything mods can, and add or remove mods.
-//   • Mod: a document mods/<uid>. Mods only review reports, ideas and game
-//     submissions. They can't see accounts or change anyone's role.
+//   • Mod: a document mods/<uid>. Mods review reports, ideas and game
+//     submissions, and can look at the account list without changing anything.
 //   • Trusted reporter: listed in config/owner-settings.json (needs the owner's
 //     GitHub token on this browser to change).
 //   • Suspended: a document bans/<uid>. A suspended account can still play and
@@ -137,14 +137,15 @@ async function openAdminPanel() {
             <p style="color:var(--text-muted);font-size:14px;">An existing admin can make it one from their Admin Panel. The very first admin is added once in the Firebase console: in <b>Firestore Database → Data</b>, add a document to a collection named <code>admins</code>, using this account's ID <code>${escapeHtmlText(cloudUser.uid)}</code> as the document ID.</p>`;
         return;
     }
-    if (!isSiteAdmin()) return openModPanel(body);
+    const modOnly = !isSiteAdmin();
+    if (modOnly) document.getElementById("popupTitle").textContent = "Mod Panel";
     body.innerHTML = `
         <div class="admin-tabs" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
             <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports &amp; ideas</button>
-            <button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
-            <button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
             <div class="admin-toolbar">
@@ -160,6 +161,7 @@ async function openAdminPanel() {
             </div>
             <p id="admin-summary" class="admin-summary">Loading accounts…</p>
             <div id="admin-list" class="admin-list"></div>
+            ${modOnly ? `<p class="admin-footnote">You're a mod, so this list is view-only. Ask an admin to suspend someone or change roles.</p>` : ""}
             <p class="admin-footnote">Passwords and cloud saves are private, even from admins. To delete an account completely or reset a password, use the Firebase console (Authentication → Users). Accounts show up here after they next visit the site.</p>
         </div>
         <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
@@ -187,7 +189,7 @@ async function openAdminPanel() {
         }).catch(() => {});
     }
     // Takedown requests waiting, shown on their tab
-    if (typeof updateTakedownTabCount === "function") {
+    if (!modOnly && typeof updateTakedownTabCount === "function") {
         cloudDb.collection("takedowns").where("status", "in", ["open", "info"]).get().then(snap => {
             if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
             if (!modTakedowns.length) modTakedowns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -203,27 +205,6 @@ async function openAdminPanel() {
         console.error(e);
         document.getElementById("admin-summary").textContent = "Couldn't load accounts: " + (typeof statsErrorText === "function" ? statsErrorText(e) : e.message || e);
     }
-}
-
-// Mods get just the review tabs: reports & ideas, and game submissions
-function openModPanel(body) {
-    document.getElementById("popupTitle").textContent = "Mod Panel";
-    body.innerHTML = `
-        <div class="admin-tabs" role="tablist">
-            <button type="button" role="tab" data-tab="feedback" aria-selected="true">Reports &amp; ideas</button>
-            <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
-        </div>
-        <div id="admin-feedback"></div>
-        <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
-        <p class="admin-footnote">You're a mod: you can review reports, ideas and game submissions. Accounts, suspensions and takedowns are handled by admins.</p>`;
-    body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
-        body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
-        document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
-        document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
-        if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
-        if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
-    });
-    if (typeof renderModFeedback === "function") renderModFeedback();
 }
 
 function adminRoleBadges(p) {
@@ -294,6 +275,14 @@ function adminRow(p) {
     activity.className = "admin-activity";
     row.appendChild(activity);
     row.addEventListener("toggle", () => { if (row.open) renderAdminActivity(activity, p); });
+    // Mods only look: no buttons
+    if (!isSiteAdmin()) {
+        const idLine = document.createElement("small");
+        idLine.className = "admin-id";
+        idLine.textContent = (adminData.bans.get(p.uid)?.reason ? "Suspended: " + adminData.bans.get(p.uid).reason + " · " : "") + "Account ID: " + p.uid;
+        row.appendChild(idLine);
+        return row;
+    }
 
     const box = document.createElement("div");
     box.className = "admin-actions";
@@ -446,6 +435,7 @@ function renderAdminActivity(box, p) {
             open.onclick = () => { closePopup(); openZone(zone); };
             row.appendChild(open);
         }
+        if (!isSiteAdmin()) { list.appendChild(row); return; }
         const rm = document.createElement("button");
         rm.type = "button"; rm.className = "finder-chip danger";
         rm.textContent = kind === "broken" ? "Remove report" : "Remove rating";

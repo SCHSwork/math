@@ -10,7 +10,7 @@ All the changes to GN 2.0, newest first.
 ## October 22, 2026 — Mods, and the owner can't be removed
 
 ### New
-- **Mod role.** Mods get a smaller **Mod Panel** with just two tabs: Reports & ideas, and Game submissions. They can't see accounts, suspend anyone, handle takedowns or change anyone's role. Admins make someone a mod from Admin Panel → Accounts → **Make mod**. Mods show a purple badge, and there's a "Mods" filter.
+- **Mod role.** Mods get a **Mod Panel** with Accounts (view-only), Reports & ideas, and Game submissions. They can't suspend anyone, remove ratings, handle takedowns or change anyone's role. Admins make someone a mod from Admin Panel → Accounts → **Make mod**. Mods show a purple badge, and there's a "Mods" filter.
 
 ### Changed
 - **The site owner is locked in.** When the owner saves their GitHub token in the Owner Panel while signed in, the site writes that account into `config/firestore.rules` as the owner by itself. Publish the rules in the Firebase console to finish. The owner is always an admin, and nobody can remove or suspend them.
