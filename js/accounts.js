@@ -432,10 +432,28 @@ async function cloudSignIn(create) {
         say(friendlyAuthError(e));
     }
 }
+// Saving first can take a few seconds, so the button says so and extra clicks
+// are ignored. If the save is very slow, sign out anyway after 10 seconds
+// (progress stays on this device either way).
+let cloudSigningOut = false;
 async function cloudSignOut() {
+    if (cloudSigningOut) return;
     if (!(await askConfirm("Your progress will be saved to the cloud first.", { title: "Sign out?", confirmText: "Sign out" }))) return;
-    await uploadCloudSave();
-    await cloudAuth.signOut();
+    cloudSigningOut = true;
+    const btn = document.getElementById("acct-signout");
+    if (btn) { btn.disabled = true; btn.textContent = "Saving, then signing out…"; }
+    try {
+        // Wait for an autosave that's already running, then save
+        for (let i = 0; i < 20 && cloudBusy; i++) await new Promise(r => setTimeout(r, 250));
+        await Promise.race([uploadCloudSave(), new Promise(r => setTimeout(r, 10000))]);
+        await cloudAuth.signOut();
+    } catch (e) {
+        console.error(e);
+        notify("Couldn't sign out: " + (e.message || e), { type: "error" });
+        if (btn) { btn.disabled = false; btn.textContent = "Sign out"; }
+    } finally {
+        cloudSigningOut = false;
+    }
 }
 
 async function cloudChangePassword() {
@@ -528,7 +546,7 @@ function openAccountPanel(mode) {
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;">
                 <button class="settings-button" onclick="confirmUploadCloudSave()">Save now</button>
                 <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
-                <button class="settings-button" onclick="cloudSignOut()">Sign out</button>
+                <button class="settings-button" id="acct-signout" onclick="cloudSignOut()">Sign out</button>
             </div>
             ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
             <details class="acct-section">
