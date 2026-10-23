@@ -3393,7 +3393,7 @@ function openSettingsPanel() {
     const select = (value, onchange, options, id = "") => `<select ${id ? `id="${id}"` : ""} class="settings-select set-select" onchange="${onchange}">${options.map(([v, l]) => `<option value="${v}" ${value === v ? "selected" : ""}>${l}</option>`).join("")}</select>`;
     const isDark = document.body.classList.contains("dark-mode");
     const signedIn = typeof cloudUser !== "undefined" && cloudUser;
-    const staff = (typeof isSiteAdmin === "function" && isSiteAdmin()) || !!getGithubPat();
+    const staff = (typeof isSiteMod === "function" && isSiteMod()) || !!getGithubPat();
     const tab = (() => { try { return localStorage.getItem("gnmath-settings-tab") || "look"; } catch { return "look"; } })();
 
     popupBody.innerHTML = `
