@@ -1025,12 +1025,15 @@ function partGuardHook(SIZES) {
     } catch (e) {}
 }
 
-// Sizes of split game files (config/part-sizes.json), loaded once
-let gamePartSizes = null;
-const partSizesPromise = fetch("config/part-sizes.json")
-    .then(r => r.ok ? r.json() : null)
-    .then(j => { gamePartSizes = (j && j.repos) || {}; })
-    .catch(() => { gamePartSizes = {}; });
+// Sizes of split game files (config/part-sizes.json), loaded when the first game opens
+let gamePartSizes = null, partSizesPromise = null;
+function loadPartSizes() {
+    if (!partSizesPromise) partSizesPromise = fetch("config/part-sizes.json")
+        .then(r => r.ok ? r.json() : null)
+        .then(j => { gamePartSizes = (j && j.repos) || {}; })
+        .catch(() => { gamePartSizes = {}; });
+    return partSizesPromise;
+}
 // The pieces one game page can load: repos (and folders) it links to
 function partSizesForPage(html) {
     if (!gamePartSizes || !/\.part\d|getParts|mergeFiles/i.test(html)) return null;
@@ -1128,7 +1131,7 @@ function cleanGameHtml(html) {
 
 async function fetchWithFallback(rawUrl, onTry) {
     // Sizes of split game files, for the split-file guard (don't wait long for them)
-    if (!gamePartSizes) await Promise.race([partSizesPromise, new Promise(r => setTimeout(r, 3000))]);
+    if (!gamePartSizes) await Promise.race([loadPartSizes(), new Promise(r => setTimeout(r, 3000))]);
     // Washed library games: from this site first, then its GitHub mirrors
     if (rawUrl.startsWith("washed:")) {
         const path = rawUrl.slice(7);
