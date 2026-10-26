@@ -1,0 +1,52 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/subwaysurfersmonaco (commit f85f28d). Removed: Poki ad SDK (replaced with a stand-in that skips ads), Google AdSense, Google Analytics, GameMonetize/other ad SDKs and the 4399 domain lock. The two files over jsDelivr's 20 MB limit load from GitHub (or githack). Game files locked to that commit. -->
+<!DOCTYPE html>
+<html>
+<head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Images and fonts only from the game's own sources (its loading screen also asked Poki's servers for a font and a thumbnail) -->
+<meta http-equiv="Content-Security-Policy" content="img-src data: blob: https://cdn.jsdelivr.net https://fastly.jsdelivr.net https://gcore.jsdelivr.net https://testingcf.jsdelivr.net https://raw.githubusercontent.com https://rawcdn.githack.com; font-src data: https://cdn.jsdelivr.net https://fastly.jsdelivr.net https://gcore.jsdelivr.net https://testingcf.jsdelivr.net https://raw.githubusercontent.com https://rawcdn.githack.com">
+<title>Subway Surfers: Monaco</title>
+<script src="4399.js"></script>
+<script>
+// Stand-in for Poki's SDK: same calls, no ads or tracking. Ad breaks end at once.
+window.PokiSDK = new Proxy({}, { get: function (t, k) {
+    if (k === "then") return undefined;
+    if (k === "isAdBlocked") return function () { return false; };
+    return function () { return k === "rewardedBreak" ? Promise.resolve(false) : Promise.resolve(); };
+} });
+(function () {
+    // The game's two biggest files are over jsDelivr's 20 MB limit: get them from GitHub,
+    // or from githack if GN 2.0 has found GitHub blocked here.
+    var down = []; try { down = Array.from(window.parent.mirrorDown || []); } catch (e) {}
+    var big = down.indexOf("github") === -1
+        ? "https://raw.githubusercontent.com/Avioso/strongdog/f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco/"
+        : "https://rawcdn.githack.com/Avioso/strongdog/f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco/";
+    var here = "https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco/";
+    var build = {"companyName": "Kiloo Games", "productName": "Subway Surfers", "productVersion": "1.94.0", "dataUrl": "Monaco.data.unityweb", "wasmCodeUrl": "Monaco.wasm.code.unityweb", "wasmFrameworkUrl": "Monaco.wasm.framework.unityweb", "asmCodeUrl": "Monaco.asm.code.unityweb", "asmMemoryUrl": "Monaco.asm.memory.unityweb", "asmFrameworkUrl": "Monaco.asm.framework.unityweb", "TOTAL_MEMORY": 369098752, "graphicsAPI": ["WebGL 2.0", "WebGL 1.0"], "webglContextAttributes": {"preserveDrawingBuffer": false}, "splashScreenStyle": "Dark", "backgroundColor": "#231F20", "developmentBuild": false, "multithreading": false, "unityVersion": "2019.4.18f1"};
+    ["dataUrl", "wasmCodeUrl"].forEach(function (k) { build[k] = big + build[k]; });
+    ["wasmFrameworkUrl", "asmCodeUrl", "asmMemoryUrl", "asmFrameworkUrl"].forEach(function (k) { build[k] = here + build[k]; });
+    window.config = {
+        loader: "unity", debug: false, maxRatio: 16 / 9, minRatio: 9 / 16,
+        title: "Subway Surfers: Monaco",
+        unityVersion: "2019.4.18f1",
+        unityWebglLoaderUrl: "https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco/UnityLoader.2019.2.js",
+        unityWebglBuildUrl: URL.createObjectURL(new Blob([JSON.stringify(build)], { type: "application/json" })),
+        fileSize: 35,
+        cachedDecompressedFileSizes: {
+                'Monaco.asm.code.unityweb': 9077141,
+                'Monaco.asm.framework.unityweb': 86363,
+                'Monaco.asm.memory.unityweb': 951441,
+                'Monaco.data.unityweb': 18202156,
+                'Monaco.wasm.code.unityweb': 7279600,
+                'Monaco.wasm.framework.unityweb': 90687,
+            }
+    };
+})();
+</script>
+</head>
+<body>
+<script src="unity.js"></script>
+</body>
+</html>
