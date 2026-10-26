@@ -1,0 +1,111 @@
+{
+ "washedFrom": "5639f84",
+ "checked": "2026-10-25",
+ "games": {
+  "615": {
+   "name": "Friday Night Funkin Vs. Dave and Bambi v3",
+   "file": "615.html-a",
+   "path": "washed/615.html",
+   "removed": [
+    "tracker/ad https://www.googletagmanager.com/gtag/js",
+    "tracker setup",
+    "tracker/ad https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe",
+    "obfuscated ad loader (17 KB)"
+   ],
+   "lockedTo": {
+    "bubbls/fnf-mods": "5e7d07a86897704b437d208136f3f694c27ea074"
+   },
+   "sha256": "276afbb1159fb743417d59fbe02ce1dc78e73ac4bcdcf13d98a80cb0ccf02297"
+  },
+  "869": {
+   "name": "Five Nights at Freddy's: Into The Pit",
+   "file": "869.html",
+   "path": "washed/869.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/fnaf-into-the-pit": "df6e074be181d4d2fb419241a25138bb8acbb928"
+   },
+   "sha256": "b434165f9f61c32fde3610b19eea74b1e01c8db526f379e0705492470ab01a8a"
+  },
+  "870": {
+   "name": "Sally Face",
+   "file": "870.html",
+   "path": "washed/870.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/sally-face": "2a30dae2e11272c279dd9483094c37894a27f23a"
+   },
+   "sha256": "25da4cc34510aadaf7c939d24ba6e0c8f4e2cea477720ab4f30dbacfc9e82eee"
+  },
+  "871": {
+   "name": "Gamble With Friends",
+   "file": "871.html",
+   "path": "washed/871.html",
+   "removed": [],
+   "lockedTo": {
+    "Camzzz-vrgt/gamble-with-your-friends-web": "d7b3ac61ce6d2cb98e212dfa01ba0df413539a53"
+   },
+   "sha256": "90eb8b9dd7083bc415b46c3eeca0cf501c87a9444cadb2d45cb78e2928d6cd5b"
+  },
+  "872": {
+   "name": "The One Fish",
+   "file": "872.html",
+   "path": "washed/872.html",
+   "removed": [],
+   "lockedTo": {
+    "Camzzz-vrgt/the-one-fish-web": "6206af991991cc6903f1e020c542e5ee26023dbd"
+   },
+   "sha256": "2ee9978aae7ed61f7b80c9e5434da6d3f808b22828f6a7c23d48c91632f20dcc"
+  },
+  "873": {
+   "name": "Chain-Chillas",
+   "file": "873.html",
+   "path": "washed/873.html",
+   "removed": [],
+   "lockedTo": {
+    "Camzzz-vrgt/chain-chillas-web": "eb819b5cb33da2f97d85ed36f00a3bc8e889fa38"
+   },
+   "sha256": "a0d47a8a02688d064d8eaa132eacacedec5b55ec997d352d94df8d3cb3723c74"
+  },
+  "874": {
+   "name": "Wolfenstein 3D",
+   "file": "874.html",
+   "path": "washed/874.html",
+   "removed": [],
+   "lockedTo": {
+    "Stinkalistic/UGS": "bc13cc7651ca3e238d734ba1e37964c3b8607071"
+   },
+   "sha256": "1e9ca6b91eb3b8c062299ca951ffb44a513c21d514554e273f4e6522188832ec"
+  },
+  "875": {
+   "name": "ROAM0120.EXE",
+   "file": "875.html",
+   "path": "washed/875.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/roam0120": "083f23afcf57812a061e1c511fd1991526e53b8a"
+   },
+   "sha256": "5f2b99efd2342446b04dd96a2bd0d213974bd78e43708a6644a920046bc67829"
+  },
+  "876": {
+   "name": "Sugary Spire Exhibition Night: Pizzano's Awesome Night Mod",
+   "file": "876.html",
+   "path": "washed/876.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/sugary-spire-pizzano": "238a454522ebd6e214e262ad39fa25334154425c"
+   },
+   "sha256": "105469ea8b05e858072a3b2c23533f4f76448d567c3419632947c3c18a53228d"
+  },
+  "877": {
+   "name": "Pet The Cat",
+   "file": "877.html",
+   "path": "washed/877.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/pet-the-cat": "82c47ef19c710a970b0a3a63d6e3827310afb583"
+   },
+   "sha256": "96f4e879222411720538c56bf5796bcd0f13d4d1ac0d544aa4a660b86c32ca2c"
+  }
+ }
+}
