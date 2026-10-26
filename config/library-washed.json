@@ -213,7 +213,7 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "1e17abfc85d2abf4c964be0de8345b7fb2c2daddcc182e43930fbc95f68b6af1",
-   "cover": "washed/covers/sd-100ng-100-player-pong.jpg",
+   "cover": "washed/covers/sd-100ng-100-player-pong-2.jpg",
    "description": "Online Pong for up to 100 players. Needs its maker's server, which is sometimes offline."
   },
   "990102": {
@@ -359,7 +359,7 @@
    "removed": [
     "(single-file page: cleaned by the site when it loads)"
    ],
-   "cover": "washed/covers/sd-there-is-no-game.jpg"
+   "cover": "washed/covers/sd-there-is-no-game-2.jpg"
   },
   "990114": {
    "name": "Terrain Generator",
@@ -496,7 +496,7 @@
    "path": "washed/sd-asciispace.html",
    "removed": [],
    "sha256": "a1d9ff7f2a93122e45fce0b60f988b6ab1bac5b1c8917fde4b108f76808b186b",
-   "cover": "washed/covers/sd-ascii-space.jpg"
+   "cover": "washed/covers/sd-ascii-space-2.jpg"
   },
   "990125": {
    "name": "Avalanche",
@@ -512,7 +512,7 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "85727abc44832026c47483e25a40c604a0dbb4619121b3dc8a2f85db991c33bc",
-   "cover": "washed/covers/sd-avalanche.jpg"
+   "cover": "washed/covers/sd-avalanche-2.jpg"
   },
   "990126": {
    "name": "Ball Platformer",
@@ -613,7 +613,7 @@
    "path": "washed/sd-boxing-physics.html",
    "removed": [],
    "sha256": "7914eeea81b15d4e444b135b673f9648db07193767c9e5f633112340056e4f38",
-   "cover": "washed/covers/sd-boxing-physics.jpg",
+   "cover": "washed/covers/sd-boxing-physics-2.jpg",
    "featured": true,
    "featuredOrder": 6
   },
@@ -676,7 +676,7 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "45ee047723e32c23bdc86490c2f619c10e13f1aab42d2679f14e639bf76143ff",
-   "cover": "washed/covers/sd-cs-go-clicker.jpg"
+   "cover": "washed/covers/sd-cs-go-clicker-2.jpg"
   },
   "990137": {
    "name": "2048 Cupcakes",
@@ -992,7 +992,7 @@
    "path": "washed/sd-konnekt.html",
    "removed": [],
    "sha256": "4c56ba3a3deda56ce7d6dcf0a387df0d8f69bb6c26b22eab7409718261882822",
-   "cover": "washed/covers/sd-konnekt.jpg"
+   "cover": "washed/covers/sd-konnekt-2.jpg"
   },
   "990160": {
    "name": "MineKhan",
@@ -1124,7 +1124,7 @@
     "inline ad/tracker code"
    ],
    "sha256": "47a1118ac183a379e6ef70d049ea911bc832f94dc2ac7fed28c29aef1b280209",
-   "cover": "washed/covers/sd-space-company.jpg"
+   "cover": "washed/covers/sd-space-company-2.jpg"
   },
   "990173": {
    "name": "Space Invaders",
@@ -1202,7 +1202,7 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "d7afe76815385e62671eb24817b738ba78db916be8a40066e4ecc1efc6823055",
-   "cover": "washed/covers/sd-veloce.jpg"
+   "cover": "washed/covers/sd-veloce-2.jpg"
   },
   "990180": {
    "name": "Wall Smash",
@@ -1284,7 +1284,7 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "38cd0e60b602e597b65dc2db2d224f33baf5692da99c53779804fa59b6c96d42",
-   "cover": "washed/covers/sd-you-are-jeff-bezos.jpg"
+   "cover": "washed/covers/sd-you-are-jeff-bezos-2.jpg"
   },
   "990188": {
    "name": "Bomb It",
@@ -1314,7 +1314,7 @@
    "path": "washed/sd-bombit2.html",
    "removed": [],
    "sha256": "1cbce99137538884df9dfbd12de85a822daf537c17b064e13dd8d5aab16d49bb",
-   "cover": "washed/covers/sd-bomb-it-2.jpg"
+   "cover": "washed/covers/sd-bomb-it-2-2.jpg"
   },
   "990190": {
    "name": "Bomb It 3",
@@ -1328,7 +1328,7 @@
    "path": "washed/sd-bombit3.html",
    "removed": [],
    "sha256": "776441d2e2f1cdb22f512b13111fb4598efb8a5534ae0c07572b600c34c8f846",
-   "cover": "washed/covers/sd-bomb-it-3.jpg"
+   "cover": "washed/covers/sd-bomb-it-3-2.jpg"
   },
   "990191": {
    "name": "Comic Book Cody",
@@ -1342,7 +1342,7 @@
    "path": "washed/sd-comicbook.html",
    "removed": [],
    "sha256": "b1328dc625016127042cdf9935063fe23ecb6b3880fadb4d39558544291bb4a8",
-   "cover": "washed/covers/sd-comic-book-cody.jpg"
+   "cover": "washed/covers/sd-comic-book-cody-2.jpg"
   },
   "990195": {
    "name": "Hot Dog Bush",
@@ -1356,7 +1356,7 @@
    "path": "washed/sd-hotdogbush.html",
    "removed": [],
    "sha256": "a6da1733147cd87e349ef0b2429da6876b618a8b87bd793c7570cfb113662981",
-   "cover": "washed/covers/sd-hot-dog-bush.jpg"
+   "cover": "washed/covers/sd-hot-dog-bush-2.jpg"
   },
   "990196": {
    "name": "Papa Louie: When Pizzas Attack!",
@@ -1370,7 +1370,7 @@
    "path": "washed/sd-louie1.html",
    "removed": [],
    "sha256": "215d563716d76a75092069ceec3036c9c572af987621f971911f48d1b1cc4547",
-   "cover": "washed/covers/sd-papa-louie-when-pizzas-attack.jpg",
+   "cover": "washed/covers/sd-papa-louie-when-pizzas-attack-2.jpg",
    "featured": true,
    "featuredOrder": 10
   },
@@ -1400,7 +1400,7 @@
    "path": "washed/sd-pandas1.html",
    "removed": [],
    "sha256": "311ae529b04479298491df5f1374bc901ec6b2227a0b801b11d651a4ec98c9d7",
-   "cover": "washed/covers/sd-3-pandas.jpg"
+   "cover": "washed/covers/sd-3-pandas-2.jpg"
   },
   "990199": {
    "name": "Shape Switcher",
@@ -1428,7 +1428,7 @@
    "path": "washed/sd-sugar.html",
    "removed": [],
    "sha256": "50ecb263e6755b1e0d592ff85fbaee5cb431a99af4f8d2fe33a83a2e2d139f63",
-   "cover": "washed/covers/sd-sugar-sugar.jpg"
+   "cover": "washed/covers/sd-sugar-sugar-2.jpg"
   },
   "990201": {
    "name": "Fireboy and Watergirl",

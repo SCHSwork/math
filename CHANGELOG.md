@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Real thumbnails for new games
+
+### Changed
+- **17 Strongdog games that only had their name on a colored card now have real thumbnails.** Most are the game's own title screen (Bomb It 2 & 3, 3 Pandas, Sugar Sugar, Papa Louie, Comic Book Cody, Hot Dog Bush, Boxing Physics, There Is No Game, Veloce, ASCII Space). Games with no usable title screen got drawn artwork (100ng, CS:GO Clicker, Space Company, You Are Jeff Bezos, Konnekt, Avalanche).
+
 ## October 26, 2026 — Find new games
 
 ### Added
