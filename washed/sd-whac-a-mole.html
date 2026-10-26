@@ -1,0 +1,71 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/whac-a-mole/index.html (commit f85f28d). Removed: nothing. Game files locked to that commit. -->
+<!doctype html>
+
+<html lang="en">
+
+<head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/whac-a-mole/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+  <meta charset="utf-8">
+  <title>Whac-a-mole</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div class="details">
+    <h2>Your score:</h2>
+    <h2 id="score">0</h2>
+
+    <h2>Time Left:</h2>
+    <h2 id="time-left">60</h2>
+
+  </div>
+
+  <img src="./hammer.png" alt="" id="hammer">
+
+  <div class="grid">
+    <div class="square" id="1"></div>
+    <div class="square" id="2"></div>
+    <div class="square" id="3"></div>
+    <div class="square" id="4"></div>
+    <div class="square" id="5"></div>
+    <div class="square" id="6"></div>
+    <div class="square" id="7"></div>
+    <div class="square" id="8"></div>
+    <div class="square" id="9"></div>
+    <div class="square" id="10"></div>
+    <div class="square" id="11"></div>
+    <div class="square" id="12"></div>
+
+    <iframe src="bg-music.mp3" allow="autoplay" id="audio" style="display: none"></iframe>
+    <audio src="./bg-music.mp3" id="player" autoplay loop muted />
+    <audio src="./whack.mp3" id="whack"></audio>
+  </div>
+
+  <script>const audio = new Audio('bg-music.mp3');
+    audio.play();</script>
+  <script src="app.js"></script>
+</body>
+
+</html>

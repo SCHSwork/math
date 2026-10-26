@@ -1,0 +1,189 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/steal-this-election/index.html (commit f85f28d). Removed: inline ad/tracker code. Game files locked to that commit. -->
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/steal-this-election/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Steal This Election</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+<script type="text/javascript" src="scripts/scr.js"></script></head>
+	<style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: none;
+            touch-action: pan-x pan-y;
+        }
+
+        /* @media only screen and (orientation:landscape) {
+			body {
+				transform: rotate(90deg);
+			}
+		} */
+
+        .floating {
+            position: absolute;
+            animation-name: floating;
+            animation-duration: 1.5s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+        }
+
+        @keyframes floating {
+            from {
+                transform: translate(0, 0px);
+            }
+            65% {
+                transform: translate(0, 15px);
+            }
+            to {
+                transform: translate(0, -0px);
+            }
+        }
+    </style>
+<body>
+    <div id="unity-container" class="unity-desktop">
+        <canvas id="unity-canvas" width=1280 height=720></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+            </div>
+        </div>
+        <div id="unity-warning"> </div>
+        <div id="unity-footer">
+            <div id="unity-webgl-logo"></div>
+            <div id="unity-fullscreen-button"></div>
+            <div id="unity-build-title">Steal This Election</div>
+        </div>
+    </div>
+    <script>
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+        var warningBanner = document.querySelector("#unity-warning");
+
+        // Shows a temporary message banner/ribbon for a few seconds, or
+        // a permanent error message on top of the canvas if type=='error'.
+        // If type=='warning', a yellow highlight color is used.
+        // Modify or remove this function to customize the visually presented
+        // way that non-critical warnings and error messages are presented to the
+        // user.
+        function unityShowBanner(msg, type) {
+            function updateBannerVisibility() {
+                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+            }
+            var div = document.createElement('div');
+            div.innerHTML = msg;
+            warningBanner.appendChild(div);
+            if (type == 'error') div.style = 'background: red; padding: 10px;';
+            else {
+                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+                setTimeout(function() {
+                    warningBanner.removeChild(div);
+                    updateBannerVisibility();
+                }, 5000);
+            }
+            updateBannerVisibility();
+        }
+
+        var buildUrl = "Build";
+        var loaderUrl ="ggj21-postnutclarity-steal-this-election-brotli.loader.js";
+        var config = {
+            dataUrl:"ggj21-postnutclarity-steal-this-election-brotli.data.unityweb",
+            frameworkUrl:"ggj21-postnutclarity-steal-this-election-brotli.framework.js.unityweb",
+            codeUrl:"ggj21-postnutclarity-steal-this-election-brotli.wasm.unityweb",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "Post Nut Clarity",
+            productName: "Steal This Election",
+            productVersion: "0.1",
+            showBanner: unityShowBanner,
+        };
+
+        // By default Unity keeps WebGL canvas render target size matched with
+        // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+        // Set this to false if you want to decouple this synchronization from
+        // happening inside the engine, and you would instead like to size up
+        // the canvas DOM size and WebGL render target sizes yourself.
+        // config.matchWebGLToCanvasSize = false;
+
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            // Mobile device style: fill the whole browser client area with the game canvas:
+
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            container.className = "unity-mobile";
+
+            // To lower canvas resolution on mobile devices to gain some
+            // performance, uncomment the following line:
+            // config.devicePixelRatio = 1;
+
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+
+            unityShowBanner('WebGL builds are not supported on mobile devices.');
+        } else {
+            // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+            canvas.style.width = "1280px";
+            canvas.style.height = "720px";
+        }
+
+        loadingBar.style.display = "block";
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                progressBarFull.style.width = 100 * progress + "%";
+            }).then((unityInstance) => {
+                loadingBar.style.display = "none";
+                fullscreenButton.onclick = () => {
+                    unityInstance.SetFullscreen(1);
+                };
+            }).catch((message) => {
+                alert(message);
+            });
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+
+</html>

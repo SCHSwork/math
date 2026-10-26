@@ -1,0 +1,67 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/fliphero/index.html (commit f85f28d). Removed: nothing. Game files locked to that commit. -->
+
+
+<!-- Play on Poki -->
+<!DOCTYPE html>
+<head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/fliphero/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+	<title>FlipHero.io - Poki</title>
+
+	<script>
+	window.config = {
+		loader: 'unity',
+		debug: false,
+		maxRatio: 16 / 9,
+		minRatio: 9 / 16,
+
+		title: 'FlipHero.io',
+
+		thumbnail: '4690767c67f7d94569f57bf7b739f36a.png',
+		numScreenshots: 4,
+
+		unityWebglBuildUrl: 'July 31 2019.json',
+		unityWebglLoaderUrl: 'UnityLoader.js',
+
+		// **** Optional Settings ****
+		fileSize: 51,
+		loadingComments: ['Loading...'],
+		cachedDecompressedFileSizes: {
+			'July 31 2019.asm.framework.unityweb':451093,
+			'July 31 2019.wasm.framework.unityweb':505840,
+			'July 31 2019.asm.memory.unityweb':2249368,
+			'July 31 2019.wasm.code.unityweb':18287758,
+			'July 31 2019.data.unityweb':20038226,
+			'July 31 2019.asm.code.unityweb':32073844,
+		},
+		//
+	};
+	</script>
+</head>
+<body>
+	<script src="master-loader.js"></script>
+</body>
+</html>

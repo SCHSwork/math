@@ -1,0 +1,68 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/edge-surf/index.html (commit f85f28d). Removed: link to that site's /js/main.js. Game files locked to that commit. -->
+<!-- Copyright (C) Microsoft Corporation. All rights reserved.
+ Use of this source code is governed by a BSD-style license -->
+
+<!DOCTYPE html>
+<!-- saved from url=edge://surf/ -->
+<html dir="ltr" lang="en">
+  <head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/edge-surf/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+    <title>Edge surf</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="57x57" href="resources/icons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="resources/icons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="resources/icons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="resources/icons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="resources/icons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="resources/icons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="resources/icons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="resources/icons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="resources/icons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="resources/icons/android-icon-192x192.png">
+    <link rel="icon" type="image/svg+xml" href="resources/icons/favicon.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="resources/icons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <script src="resources/js/base-error-reporting.js"></script>
+    <script src="resources/js/surf-error-reporting.js"></script>
+    <script src="resources/js/assert.js"></script>
+    <script src="resources/js/promise_resolver.js"></script>
+    <script src="resources/js/cr.js"></script>
+    <script src="resources/js/parse_html_subset.js"></script>
+    <script src="resources/js/load_time_data.js"></script>
+    <script src="resources/js/util.js"></script>
+    <script src="resources/js/strings.js"></script>
+    
+    <link href="resources/css/interface.css" rel="stylesheet" media="all"/>
+  </head>
+    <body>
+        <div id="hamburger-container"></div>
+        <div id="modal-root"></div>
+        <script defer="defer" src="resources/js/lib_react.chunk.js"></script>
+        <script defer="defer" src="resources/js/lib_common.chunk.js"></script>
+        <script defer="defer" src="resources/js/surf.bundle.js"></script>
+    </body>
+</html>

@@ -1,0 +1,66 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/picky-package/index.html (commit f85f28d). Removed: nothing. Game files locked to that commit. -->
+
+<!-- Play on Poki -->
+<!DOCTYPE html>
+<head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/picky-package/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+	<title>Picky Package - Play on Poki</title>
+
+	<script>
+	window.config = {
+		loader: 'unity',
+		debug: false,
+		maxRatio: 16 / 9,
+		minRatio: 9 / 16,
+
+		title: 'Picky Package',
+
+		thumbnail: '2b2f1e04eb440d7d6dcb03b177466f1b.png',
+		numScreenshots: 4,
+
+		unityWebglBuildUrl: '59e9e387b7edc52f7364492c25abd197.json',
+		unityWebglLoaderUrl: 'UnityLoader.js',
+
+		// **** Optional Settings ****
+		fileSize: 14,
+		loadingComments: ['Loading...'],
+		cachedDecompressedFileSizes: {
+			'0a90f9e2a95f93d596744f1d3c835dcc.unityweb':618233,
+			'59bbdd1ed17fcd80bb73e467a645c64a.unityweb':917059,
+			'4f3d9aba903fc66ec75ce484019339bd.unityweb':1817283,
+			'c606fb04f1d0f87631e2b93445e35ac5.unityweb':14809701,
+			'9422e58b3015058179ec50ca6403d204.unityweb':17006862,
+			'f2c72720ba16fa5932f2b34e35939282.unityweb':29367066,
+		},
+		//
+	};
+	</script>
+</head>
+<body>
+	<script src="master-loader.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/eel-slap/index.html (commit f85f28d). Removed: link to that site's /js/main.js. Game files locked to that commit. -->
+<!DOCTYPE html>
+<html>
+    <head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/eel-slap/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Eel slap!</title>
+        <link rel="SHORTCUT ICON" href="favicon.ico"/>
+        <link rel="icon" href="./favicon.ico">
+        <link rel="stylesheet" href="css/normalize.css" type="text/css">
+        <link rel="stylesheet" type="text/css" href="css/eelslap.css"/>
+        <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+        <script src="js/eelslap.js"></script>
+        
+    </head>
+    <body>
+        <div id="eelcontainer" class="eel">
+            <div id="loader">LOADING...</div>
+            <div id="introtext">yo</div>
+            <div id="allimages">
+                <img class="eelimages" id="eelimage1" src="" width="15360" height="480">
+                <img class="eelimages" id="eelimage2" src="" width="14720" height="480">
+                <img class="eelimages" id="eelimage3" src="" width="15360" height="480">
+                <img class="eelimages" id="eelimage4" src="" width="14720" height="480">
+            </div>
+        </div>
+    </body>
+</html>
