@@ -909,6 +909,7 @@ function applyFilters() {
     if (query || (tag && tag !== "none") || extra) {
         document.getElementById("featuredZonesWrapper").removeAttribute("open");
         document.getElementById("originalsWrapper")?.removeAttribute("open");
+        document.getElementById("newGamesWrapper")?.removeAttribute("open");
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");

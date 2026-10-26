@@ -43,6 +43,7 @@ addedDatesPromise.then(() => {
     // Lists drawn before the dates arrived: redraw them with the badges and order
     newZoneSource = null;
     if (!Array.isArray(zones) || !zones.length) return;
+    renderNewRow();
     if (typeof sortOptions !== "undefined" && sortOptions.value === "newest" && typeof sortZones === "function") sortZones();
     else if (typeof applyFilters === "function") applyFilters();
 });
@@ -315,6 +316,7 @@ function renderPersonalRows() {
     renderGameOfTheDay();
     const section = document.getElementById("yourGames");
     if (!section) return;
+    renderNewRow();
     const nRecent = fillShelf("recentZones", getRecent());
     const nFav = fillShelf("favoriteZones", getFavorites());
     if (!yourGamesTab) { try { yourGamesTab = localStorage.getItem("gnmath-your-games-tab"); } catch {} }
@@ -331,6 +333,34 @@ function renderPersonalRows() {
         b.setAttribute("aria-selected", on ? "true" : "false");
         b.textContent = b.dataset.tab === "recent" ? "Recent" : `Favorites${nFav ? " " + nFav : ""}`;
     });
+}
+// ── New games row (added in the last 2 weeks, newest first) ─────────────────
+const NEW_ROW_DAYS = 14, NEW_ROW_MAX = 24;
+function renderNewRow() {
+    const wrap = document.getElementById("newGamesWrapper");
+    if (!wrap || !Array.isArray(zones) || !zones.length || !addedDates) return;
+    const all = zones.filter(z => isAddedWithinDays(z, NEW_ROW_DAYS) && !isZoneDisabled(z.id)
+        && !(typeof isPartnerZone === "function" && isPartnerZone(z))).sort(compareAdded);
+    wrap.hidden = !all.length;
+    if (!all.length) return;
+    const grid = document.getElementById("newZones");
+    clearCards(grid);
+    all.slice(0, NEW_ROW_MAX).forEach(z => grid.appendChild(createZoneCard(z)));
+    if (all.length > NEW_ROW_MAX) {
+        // Last tile: the rest, through the New filter
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "shelf-more";
+        more.textContent = `See all ${all.length} new games →`;
+        more.onclick = () => {
+            const show = document.getElementById("showOptions");
+            if (show) { show.value = "new14"; applyFilters(); }
+            document.getElementById("allZonesWrapper")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        grid.appendChild(more);
+    }
+    observeLazyZoneImages("#newZones img.lazy-zone-img");
+    if (typeof setSectionTitle === "function") setSectionTitle(document.getElementById("newGamesSummary"), "New games", all.length);
 }
 // Redraw every card section (after a favorite, a vote or new stats)
 function refreshCards() {

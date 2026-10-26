@@ -582,6 +582,21 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
     .shelf { grid-auto-columns: 148px; }
     .shelf-small { grid-auto-columns: 108px; }
 }
+/* "See all N new games" tile at the end of the New games row */
+.shelf-more {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    padding: 1rem;
+    cursor: pointer;
+    scroll-snap-align: start;
+    min-height: 120px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+.shelf-more:hover, .shelf-more:focus-visible { border-color: var(--primary); background: var(--bg-tertiary, var(--bg-secondary)); }
 .changelog-doc h2 { margin: 1.25rem 0 0.25rem; font-size: 1.2rem; }
 .changelog-doc h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; color: var(--accent-text); }
 .changelog-doc ul { margin: 0 0 0.5rem; padding-left: 1.2rem; }
