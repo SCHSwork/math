@@ -372,9 +372,13 @@ async function listZones() {
         // Extra washed games that aren't in the library's list (e.g. Drive Mad, from
         // another collection), added like library games
         for (const [id, w] of Object.entries(washedGames)) {
-            if (!w || !w.extra || !/^washed\/[\w.-]+\.html$/.test(w.path || "") || zones.some(z => String(z.id) === id)) continue;
+            if (!w || !w.extra || zones.some(z => String(z.id) === id)) continue;
+            // A washed page in washed/, or a page used straight from a repo, locked to a commit
+            const url = /^washed\/[\w.-]+\.html$/.test(w.path || "") ? "washed:" + w.path
+                : /^gh:[\w.-]+\/[\w.-]+@[0-9a-f]{40}\/[^\s?#]+$/.test(w.url || "") ? w.url : "";
+            if (!url) continue;
             zones.push({ id: Number(id), name: String(w.name || "").slice(0, 80), author: String(w.author || ""), authorLink: /^https:\/\//.test(w.source || "") ? w.source : "",
-                cover: w.cover || "", url: "washed:" + w.path, description: w.description || "", washed: true });
+                cover: w.cover || "", url, description: w.description || "", washed: true });
         }
         if (typeof notifyNewLibraryGames === "function") notifyNewLibraryGames();
         // Add the GN Originals (open-source games) after the main library. An original
@@ -893,7 +897,7 @@ function filterZones() { applyFilters(); }
 // a fake "Download" ad pushing a browser-hijacker extension, plus an anti-adblock
 // trap that wipes the page if its ad box is removed. We strip the loader before
 // the game runs (so the trap never starts) and block known ad hosts as a backup.
-const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com)$";
+const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com|mc\\.yandex\\.ru|yandex\\.ru|yandex\\.net|igroutka\\.ru|id\\.net|playtomic\\.com|stats\\.unity3d\\.com|cloud\\.unity3d\\.com|unblockedgamesroblox\\.weebly\\.com|gamemonetize\\.com|gamedistribution\\.com|cpmstar\\.com|adinplay\\.com|api\\.adinplay\\.com|imasdk\\.googleapis\\.com|poki\\.io|poki-gdn\\.com|crazygames\\.com|improvedigital\\.com|prebid\\.org|clarity\\.ms|hotjar\\.com|statcounter\\.com|histats\\.com|cloudflareinsights\\.com)$";
 
 function isObfuscatedAdScript(code) {
     if (/r9x\.in/i.test(code)) return true;
@@ -920,7 +924,8 @@ function isKnownBadGame(html) { return typeof html === "string" && BAD_GAME_MARK
 // config/part-sizes.json (tools/build_part_sizes.py) has every piece's size;
 // the pieces for one page are passed in as SIZES. This re-downloads short
 // pieces, and stops a short joined file from being saved or used.
-function partGuardHook(SIZES) {
+function partGuardHook(SIZES, BIG) {
+    BIG = BIG || {};
     var ALIASES = ["latest", "HEAD", "main", "master"];
     function where(url) {
         var u; try { u = new URL(url, document.baseURI); } catch (e) { return null; }
@@ -962,9 +967,45 @@ function partGuardHook(SIZES) {
     }
     var note = function (m) { try { console.warn("[GN 2.0] " + m); } catch (e) {} };
 
+    // Files over jsDelivr's 20 MB limit (it won't serve them): get them from GitHub,
+    // or githack (which also serves scripts with the right type)
+    function bigAlt(url, forScript) {
+        var w = where(url);
+        if (!w || !/jsdelivr\.net$/.test(new URL(url, document.baseURI).hostname)) return null;
+        var refs = [w.ref].concat(ALIASES.indexOf(w.ref) >= 0 ? ALIASES : []), hit = false;
+        for (var i = 0; i < refs.length && !hit; i++) { var l = BIG[w.repo + "@" + refs[i]]; if (l && l.indexOf(w.path) >= 0) hit = true; }
+        if (!hit) return null;
+        var ref = ALIASES.indexOf(w.ref) >= 0 ? "HEAD" : w.ref, path = w.path.split("/").map(encodeURIComponent).join("/");
+        var githubDown = false; try { githubDown = !!(window.parent.mirrorDown && window.parent.mirrorDown.has("github")); } catch (e) {}
+        return forScript || githubDown ? "https://rawcdn.githack.com/" + w.repo + "/" + ref + "/" + path
+                                       : "https://raw.githubusercontent.com/" + w.repo + "/" + ref + "/" + path;
+    }
+    try {
+        var xo = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (m, url) {
+            var alt = bigAlt(String(url));
+            if (alt) { arguments[1] = alt; note("Big file from GitHub: " + String(url).split("/").pop()); }
+            return xo.apply(this, arguments);
+        };
+        var SD = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
+        if (SD && SD.set) Object.defineProperty(HTMLScriptElement.prototype, "src", { configurable: true, enumerable: SD.enumerable, get: SD.get,
+            set: function (v) { var alt = bigAlt(String(v), true); SD.set.call(this, alt || v); } });
+        var sa = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (n, v) {
+            if (this instanceof HTMLScriptElement && /^src$/i.test(n)) { var alt = bigAlt(String(v), true); if (alt) v = alt; }
+            return sa.call(this, n, v);
+        };
+    } catch (e) {}
+
     var origFetch = window.fetch;
     if (origFetch) window.fetch = function (input, init) {
         var url = typeof input === "string" ? input : (input && input.url) || String(input);
+        var alt = bigAlt(url);
+        if (alt) {
+            note("Big file from GitHub: " + url.split("/").pop());
+            arguments[0] = typeof input === "string" || !(input instanceof Request) ? alt : new Request(alt, input);
+            input = arguments[0]; url = alt;
+        }
         var method = (init && init.method) || (input && input.method) || "GET";
         if (!/\.part\d+(\?|#|$)/.test(url) || String(method).toUpperCase() !== "GET") return origFetch.apply(this, arguments);
         var want = sizeOf(url), fixed = locked(url), self = this, first = arguments, seen = {};
@@ -1036,17 +1077,18 @@ function partGuardHook(SIZES) {
 }
 
 // Sizes of split game files (config/part-sizes.json), loaded when the first game opens
-let gamePartSizes = null, partSizesPromise = null;
+let gamePartSizes = null, gameBigFiles = {}, partSizesPromise = null;
 function loadPartSizes() {
     if (!partSizesPromise) partSizesPromise = fetch("config/part-sizes.json")
         .then(r => r.ok ? r.json() : null)
-        .then(j => { gamePartSizes = (j && j.repos) || {}; })
+        .then(j => { gamePartSizes = (j && j.repos) || {}; gameBigFiles = (j && j.big) || {}; })
         .catch(() => { gamePartSizes = {}; });
     return partSizesPromise;
 }
 // The pieces one game page can load: repos (and folders) it links to
 function partSizesForPage(html) {
-    if (!gamePartSizes || !/\.part\d|getParts|mergeFiles/i.test(html)) return null;
+    if (!gamePartSizes) return null;
+    const split = /\.part\d|getParts|mergeFiles/i.test(html);
     const rxs = [
         /https?:\/\/(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([\w.-]+)\/([\w.-]+)(?:@([\w./-]+?))?\/([^"'\s)<>`]*)/g,
         /https?:\/\/(?:raw\.githubusercontent\.com|rawcdn\.githack\.com|raw\.githack\.com)\/([\w.-]+)\/([\w.-]+)\/([\w.-]+)\/([^"'\s)<>`]*)/g
@@ -1058,11 +1100,13 @@ function partSizesForPage(html) {
         if (!dirs.has(key)) dirs.set(key, new Set());
         dirs.get(key).add(dir);
     }
-    const out = {};
+    const out = {}, big = {};
     for (const [key, set] of dirs) {
         const [repo, ref] = key.split("@");
         const refs = [ref, ...(["latest", "HEAD", "main", "master"].includes(ref) ? ["latest", "HEAD", "main", "master"] : [])];
-        const listKey = refs.map(r => `${repo}@${r}`).find(k => gamePartSizes[k]);
+        const bigKey = refs.map(r => `${repo}@${r}`).find(k => gameBigFiles[k]);
+        if (bigKey) big[`${repo}@${ref}`] = gameBigFiles[bigKey];
+        const listKey = split && refs.map(r => `${repo}@${r}`).find(k => gamePartSizes[k]);
         if (!listKey) continue;
         // Use the specific folders; a link at the repo's top level (e.g. a shared script) doesn't count
         const folders = [...set].filter(Boolean);
@@ -1072,7 +1116,21 @@ function partSizesForPage(html) {
         }
         if (Object.keys(pick).length) out[`${repo}@${ref}`] = pick;
     }
-    return Object.keys(out).length ? out : null;
+    return Object.keys(out).length || Object.keys(big).length ? { sizes: out, big } : null;
+}
+// <script src> written in the game page itself: point big ones at githack
+function rewriteBigScripts(html, big) {
+    if (!big || !Object.keys(big).length) return html;
+    const base = (html.match(/<base\s[^>]*href=["']([^"']+)/i) || [])[1] || "";
+    return html.replace(/(<script\b[^>]*\bsrc=["'])([^"']+)(["'])/gi, (all, a, src, b) => {
+        let u; try { u = new URL(src, base || undefined); } catch { return all; }
+        const m = u.hostname.endsWith("jsdelivr.net") && u.pathname.match(/^\/gh\/([^/]+)\/([^/@]+)(?:@([^/]+))?\/(.*)$/);
+        if (!m) return all;
+        const ref = m[3] || "latest", path = decodeURIComponent(m[4]);
+        const list = big[`${m[1]}/${m[2]}@${ref}`];
+        if (!list || !list.includes(path)) return all;
+        return a + `https://rawcdn.githack.com/${m[1]}/${m[2]}/${["latest", "main", "master"].includes(ref) ? "HEAD" : ref}/${m[4]}` + b;
+    });
 }
 
 function fixMergedUnityParts(html) {
@@ -1122,6 +1180,11 @@ function cleanGameHtml(html) {
         `[window.HTMLScriptElement,window.HTMLIFrameElement].forEach(function(C){if(!C)return;var d=Object.getOwnPropertyDescriptor(C.prototype,"src");` +
         `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v))return;d.set.call(this,v)}})});` +
         `var sa=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){if(/^src$/i.test(n)&&(this instanceof HTMLScriptElement||this instanceof HTMLIFrameElement)&&blocked(v))return;return sa.apply(this,arguments)};` +
+        `try{var of=window.fetch;if(of)window.fetch=function(u){try{if(blocked(typeof u==="string"?u:u&&u.url))return Promise.resolve(new Response("",{status:204}))}catch(e){}return of.apply(this,arguments)};` +
+        `var xo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){if(blocked(u)){arguments[1]="data:,";}return xo.apply(this,arguments)};` +
+        `if(navigator.sendBeacon){var sb=navigator.sendBeacon.bind(navigator);navigator.sendBeacon=function(u){return blocked(u)?true:sb.apply(null,arguments)}}` +
+        `var ID=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,"src");if(ID&&ID.set)Object.defineProperty(HTMLImageElement.prototype,"src",{configurable:true,enumerable:ID.enumerable,get:ID.get,set:function(v){if(blocked(v))return;ID.set.call(this,v)}});` +
+        `var WS=window.WebSocket;if(WS){window.WebSocket=function(u,p){if(blocked(u))throw new DOMException("Blocked","SecurityError");return p===undefined?new WS(u):new WS(u,p)};window.WebSocket.prototype=WS.prototype;["CONNECTING","OPEN","CLOSING","CLOSED"].forEach(function(k){window.WebSocket[k]=WS[k]})}}catch(e){}` +
         `})();<\/script><style>#sidebarad1,#sidebarad2{display:none!important}</style>` +
         // Game files load from other sites, so their stylesheets can't be read from
         // here. Some game plugins (e.g. Newgrounds.io in Unity games) read every
@@ -1132,7 +1195,8 @@ function cleanGameHtml(html) {
         (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "") +
         (typeof gameErrorHook === "function" ? `<script>(${gameErrorHook.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
-        ((sizes => sizes ? `<script>(${partGuardHook.toString()})(${JSON.stringify(sizes).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
+        ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
+    out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
     if (/<head\b[^>]*>/i.test(out)) out = out.replace(/<head\b[^>]*>/i, m => m + guard);
     else if (/<!doctype[^>]*>/i.test(out)) out = out.replace(/<!doctype[^>]*>/i, m => m + guard);
     else out = guard + out;

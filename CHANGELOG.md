@@ -7,6 +7,19 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — 81 games from Strongdog
+
+### New
+- **81 games** from the [Strongdog](https://github.com/Avioso/strongdog) collection that GN 2.0 didn't have, each washed, locked to the checked version and tested in a browser before being added: 100ng: 100-Player Pong, 2048 Cupcakes, 2048 Multitasking, 3 Pandas, 9007199254740992, ASCII Space, Amidst the Clouds, Appel, Avalanche, Ball Hop, Ball Platformer, Ballistic Chickens, Big Tower Holiday Special, Biters.io, Black Hole Square, Bomb It, Bomb It 2, Bomb It 3, Boxing Physics, Bubble Scratch, CS:GO Clicker, Captain Callisto, Chess, Comic Book Cody, Connect 3, Crowd Drift City, Cyber City Driver, Dunkers Fight 2P, Eat.io, Edge Surf, Eel Slap!, Endless War 3, Fireboy and Watergirl, Flappy 2048, Flappy Plane, Flip Hero, Floyd, Funny Shooter 2, Goodnight, Horse Master, Hot Dog Bush, Idle Shark, Interactive Buddy, Kitchen Gun Game, Kitten Cannon, Konnekt, Mario (Scratch), MineKhan, Minhero: Tower of Sages, Papa Louie: When Pizzas Attack!, Paper Minecraft, Picky Package, Pokey Stick, Pushback, Retrohaunt, Roadblocks, Sand and Water, Scratch Brawl 2, Shape Switcher, Shuttledeck, Sleeping Beauty, Space Company, Space Invaders, Stack, Steal This Election, Sugar, Sugar, Terrain Generator, The Ninja, The Ninja 2, The Ninja 3, The Ninja 4, The Ninja 5, The Ninja 5 (Hacked), There Is No Game, Tower Master, Veloce, Wall Smash, Weave Silk, WebGL Fluid Simulation, Whac-a-Mole, You Are Jeff Bezos.
+- Washing removed ads and trackers (Google AdSense and Analytics, Yandex Metrica, GameMonetize, CrazyGames, AdinPlay and others), replaced ad SDKs the games call with a stand-in that skips ads, removed links to that site's own scripts and security rules tied to it, and moved libraries from Google's and unpkg's CDNs to jsDelivr. Flash games use their own copy of Ruffle.
+- **100ng (100-player Pong)** is online-only and needs its maker's server, which is sometimes down.
+- Left out after checking: games GN 2.0 already has (FNAF 1–4, 1v1, Getting Over It, Slither.io, Run, Paper.io, Fancy Pants, Bad Time Simulator, Pong), pages that just frame another website (Krunker, Zombs Royale, BrowserQuest, 1v1 Space, Disc Us and 22 Construct Arcade links), online games that can't work from here (Shell Shockers: an outdated copy of a game that updates constantly; Ferge.io), Construct 3 games that need to run code in background workers (Among Us, Algae's Escapade, Yoshi's Fabrication Station), games that depend on outside services (Rodeo Stampede, Restaurant Rush), three single-file games of 77–97 MB, a broken demo, and non-games (a pirated-video site, a TV static page).
+
+### Changed
+- **Game files over 20 MB load from GitHub or githack automatically.** jsDelivr won't serve them, which used to make such games fail. The daily size-list job now also lists those files.
+- **Trackers and ad networks are blocked inside every game**, not just their scripts: fetch, XHR, beacons, images and websockets to those hosts go nowhere. Added Yandex, Unity's analytics, id.net/Playtomic, GameMonetize, GameDistribution, CrazyGames, AdinPlay, CPMStar, Poki's tracker and others to the list.
+- Washed entries can also point straight at a page in a repo (locked to a commit), for single-file games too big to copy.
+
 ## October 25, 2026 — Subway Surfers is back (3 cities)
 
 ### New

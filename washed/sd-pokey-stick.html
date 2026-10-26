@@ -1,0 +1,138 @@
+<!-- Washed for GN 2.0 from Avioso/strongdog html/pokey-stick/index.html (commit f85f28d). Removed: ad/tracker script scr.js. Game files locked to that commit. -->
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+<base href="https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/pokey-stick/">
+<script>
+// GN 2.0: stand-in for game ad/portal SDKs (Poki, Yandex, GameMonetize, CrazyGames,
+// GameDistribution…). Same calls, no ads or tracking; "ad finished" callbacks run at once.
+(function () {
+  function stub() {
+    var fn = function () {
+      for (var i = 0; i < arguments.length; i++) { var a = arguments[i];
+        if (a && typeof a === "object") { var cb = a.callbacks || a;
+          ["onClose", "onRewarded", "onComplete", "adFinished", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) { if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0); }); }
+        if (typeof a === "function" && i === arguments.length - 1 && arguments.length > 1) setTimeout(function () { try { a(); } catch (e) {} }, 0); }
+      return Promise.resolve(p);
+    };
+    var p = new Proxy(fn, { get: function (t, k) { if (k === "then") return undefined; if (k === Symbol.toPrimitive) return function () { return ""; };
+      if (k === "isAdBlocked" || k === "adblockDetected") return function () { return false; }; if (!(k in t)) t[k] = stub(); return t[k]; },
+      apply: function (t, self, args) { return fn.apply(self, args); } });
+    return p;
+  }
+  ["PokiSDK", "YaGames", "ysdk", "sdk", "gdsdk", "CrazyGames", "GameDistribution", "SDK", "aiptag", "adsbygoogle", "gtag", "ga", "ym", "GameSnacks"].forEach(function (n) { try { if (!(n in window)) window[n] = stub(); } catch (e) {} });
+})();
+</script>
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Pokey Stick</title>
+    <style>
+        body {
+    margin: 0px;
+      touch-action: none;
+      background: #f1f2f6;
+}
+div#loadingBox {
+  width: 100%;
+  height: 20px;
+  position: absolute;
+  top: 50%;
+  margin-top: -10px;
+  text-align: center;
+}
+div#bgBar {
+  position: absolute;
+  width: 300px;
+  margin-left: -150px;
+  left: 50%;
+  height: 6px;
+  display: block;
+  background-color: #333;
+}
+div#progressBar {
+  left: 50%;
+  position: absolute;
+  margin-left: -150px;
+  width: 0px;
+  height: 6px;
+  background-color: #6c5ce7;
+  border-radius: 6px;
+}
+div#bgBar {
+  border-radius: 6px;
+}
+p#loadingInfo {
+  color: #666;
+  letter-spacing: 1px;
+  position: absolute;
+  width: 100%;
+  font-family: "Monaco", sans-serif;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 12px;
+  margin-top: 25px;
+}
+
+p#loadingInfo::before {
+        content: ".Loading.";
+        animation: animate infinite 1s;
+        padding-left: 10px;
+    }
+  
+    @keyframes animate {
+  
+        0% {
+            content: ".Loading.";
+        }
+  
+        50% {
+            content: "..Loading..";
+        }
+  
+        75% {
+            content: "...Loading...";
+        }
+    }
+    </style>
+  </head>
+    <body style="text-align: center">
+    <canvas id="unity-canvas" width=360 height=640 style="width: 360px; height: 640px;"></canvas>
+      
+    <div id="loadingBox">
+    
+  <div id="bgBar"></div>
+  <div id="progressBar"></div>
+  <p id="loadingInfo"></p>
+</div>
+  <script src="pokey-stick.loader.js"></script>
+    <script>
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+
+      createUnityInstance(document.querySelector("#unity-canvas"), {
+      dataUrl: "pokey-stick.data",
+        frameworkUrl: "pokey-stick.framework.js",
+        codeUrl: "pokey-stick.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Nevar Games",
+        productName: "Pokey Stick",
+        productVersion: "0.1",
+      },UnityProgress);
+      
+      function UnityProgress( progress) {
+          var  bar = document.getElementById("progressBar")
+    bar.style.width = (300 * progress) + "px";
+    if(progress >= 1)
+        document.getElementById("loadingBox").style.display = "none";
+}
+    </script>
+    <script src="adaptation.javascript"></script>
+  </body>
+</html>

@@ -187,6 +187,1224 @@
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
    "sha256": "ea88a6b81625723129bb36180890cae4c8ada4691621321baaf01bfc52d5fccc"
+  },
+  "990101": {
+   "name": "100ng: 100-Player Pong",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/100-player-pong",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-100-player-pong.html",
+   "removed": [
+    "ad slot",
+    "ad/tracker script adsbygoogle.js",
+    "inline ad/tracker code",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "1e17abfc85d2abf4c964be0de8345b7fb2c2daddcc182e43930fbc95f68b6af1",
+   "cover": "washed/covers/sd-100ng-100-player-pong.jpg",
+   "description": "Online Pong for up to 100 players. Needs its maker's server, which is sometimes offline."
+  },
+  "990102": {
+   "name": "2048 Multitasking",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/2048-multitask",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-2048-multitask.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "16e1b96c66b8b09694c8e23ecbcdebb1554e8f59cbb657b9fca7ecd19662053b",
+   "cover": "washed/covers/sd-2048-multitasking.jpg"
+  },
+  "990103": {
+   "name": "9007199254740992",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/9007199254740992",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-9007199254740992.html",
+   "removed": [
+    "ad/tracker script js",
+    "inline ad/tracker code",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "bb0af80f7ea5662fcd153bd6b23b8959476fd38307ccfebba912ed978cb9554c",
+   "cover": "washed/covers/sd-9007199254740992.jpg"
+  },
+  "990104": {
+   "name": "Appel",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Appel.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Appel.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-appel.jpg"
+  },
+  "990105": {
+   "name": "Bubble Scratch",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Bubble Scratch.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Bubble%20Scratch.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-bubble-scratch.jpg"
+  },
+  "990109": {
+   "name": "Mario (Scratch)",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Mario.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Mario.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-mario-scratch.jpg"
+  },
+  "990110": {
+   "name": "Paper Minecraft",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Paper Minecraft.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Paper%20Minecraft.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-paper-minecraft.jpg"
+  },
+  "990111": {
+   "name": "Sand and Water",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Sand and Water v3.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Sand%20and%20Water%20v3.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-sand-and-water.jpg"
+  },
+  "990112": {
+   "name": "Scratch Brawl 2",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Scratch Brawl 2.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Scratch%20Brawl%202.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-scratch-brawl-2.jpg"
+  },
+  "990113": {
+   "name": "There Is No Game",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/THERE IS NO GAME!.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/THERE%20IS%20NO%20GAME!.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-there-is-no-game.jpg"
+  },
+  "990114": {
+   "name": "Terrain Generator",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Terrain Generator.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/Terrain%20Generator.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-terrain-generator.jpg"
+  },
+  "990115": {
+   "name": "The Ninja 2",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja 2.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja%202.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja-2.jpg"
+  },
+  "990116": {
+   "name": "The Ninja 3",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja 3.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja%203.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja-3.jpg"
+  },
+  "990117": {
+   "name": "The Ninja 4",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja 4.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja%204.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja-4.jpg"
+  },
+  "990118": {
+   "name": "The Ninja 5 (Hacked)",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja 5 Hacked!.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja%205%20Hacked!.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja-5-hacked.jpg"
+  },
+  "990119": {
+   "name": "The Ninja 5",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja 5.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja%205.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja-5.jpg"
+  },
+  "990120": {
+   "name": "The Ninja",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/The Ninja.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/The%20Ninja.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-the-ninja.jpg"
+  },
+  "990122": {
+   "name": "Amidst the Clouds",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/amidst-the-clouds",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-amidst-the-clouds.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "9985d8368b5f0e06aebe1c756b4f9d429dbfc6ef3445add2ba39f646583870f5",
+   "cover": "washed/covers/sd-amidst-the-clouds.jpg"
+  },
+  "990124": {
+   "name": "ASCII Space",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/asciispace",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-asciispace.html",
+   "removed": [],
+   "sha256": "a1d9ff7f2a93122e45fce0b60f988b6ab1bac5b1c8917fde4b108f76808b186b",
+   "cover": "washed/covers/sd-ascii-space.jpg"
+  },
+  "990125": {
+   "name": "Avalanche",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/avalanche",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-avalanche.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "85727abc44832026c47483e25a40c604a0dbb4619121b3dc8a2f85db991c33bc",
+   "cover": "washed/covers/sd-avalanche.jpg"
+  },
+  "990126": {
+   "name": "Ball Platformer",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/ball platformer.html",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "url": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/ball%20platformer.html",
+   "removed": [
+    "(single-file page: cleaned by the site when it loads)"
+   ],
+   "cover": "washed/covers/sd-ball-platformer.jpg"
+  },
+  "990127": {
+   "name": "Ball Hop",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/ball-hop",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-ball-hop.html",
+   "removed": [],
+   "sha256": "9fa0a1bfda8135dbc09df1e75ac46534587401cf5798eb74c20db457efec341a",
+   "cover": "washed/covers/sd-ball-hop.jpg"
+  },
+  "990128": {
+   "name": "Ballistic Chickens",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/ballistic-chickens",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-ballistic-chickens.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "f2dc07553d8ed65298b3a4b19271aee378ed2635c5260353f290283981d93a3f",
+   "cover": "washed/covers/sd-ballistic-chickens.jpg"
+  },
+  "990129": {
+   "name": "Biters.io",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/biters-io",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-biters-io.html",
+   "removed": [],
+   "sha256": "f573ce9559bec35713129cbf339cb3be449b280d1c9eb681907bb07b3f141dc8",
+   "cover": "washed/covers/sd-biters-io.jpg"
+  },
+  "990130": {
+   "name": "Big Tower Holiday Special",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/bitts",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-bitts.html",
+   "removed": [],
+   "sha256": "de26a9a56b2319bd32b61b8ae90e822e8fc4a4c0e49be27133ba59bfa4df2c7a",
+   "cover": "washed/covers/sd-big-tower-holiday-special.jpg"
+  },
+  "990131": {
+   "name": "Black Hole Square",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/blackholesquare",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-blackholesquare.html",
+   "removed": [],
+   "sha256": "0e43c2d4f571dd52e5e8c13420d971744670ba9e193be16a74ab68757fb58994",
+   "cover": "washed/covers/sd-black-hole-square.jpg"
+  },
+  "990132": {
+   "name": "Boxing Physics",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/boxing-physics",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-boxing-physics.html",
+   "removed": [],
+   "sha256": "7914eeea81b15d4e444b135b673f9648db07193767c9e5f633112340056e4f38",
+   "cover": "washed/covers/sd-boxing-physics.jpg"
+  },
+  "990133": {
+   "name": "Captain Callisto",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/captaincallisto",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-captaincallisto.html",
+   "removed": [],
+   "sha256": "e532a3d766a3003b622ca7bf91066b59aefd221ec8c3d7dae4943fc5175c93ca",
+   "cover": "washed/covers/sd-captain-callisto.jpg"
+  },
+  "990134": {
+   "name": "Chess",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/chess",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-chess.html",
+   "removed": [],
+   "sha256": "b75b5e834f67d43ad39b382dddf63ce324e4cad8420597da15e8584ae3226157",
+   "cover": "washed/covers/sd-chess.jpg"
+  },
+  "990135": {
+   "name": "Connect 3",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/connect3",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-connect3.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "eb40d98e3c98cc4565c809dc2e7d32c903cf99b5efa84014fd6c573dbb45b938",
+   "cover": "washed/covers/sd-connect-3.jpg"
+  },
+  "990136": {
+   "name": "CS:GO Clicker",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/csgo-clicker",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-csgo-clicker.html",
+   "removed": [
+    "inline ad/tracker code",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "45ee047723e32c23bdc86490c2f619c10e13f1aab42d2679f14e639bf76143ff",
+   "cover": "washed/covers/sd-cs-go-clicker.jpg"
+  },
+  "990137": {
+   "name": "2048 Cupcakes",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/cupcakes",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-cupcakes.html",
+   "removed": [
+    "inline ad/tracker code"
+   ],
+   "sha256": "2f9ff12207734d30f32843156d54bdb610b0ab2a1c3fbbcaa1821a82b75cf01a",
+   "cover": "washed/covers/sd-2048-cupcakes.jpg"
+  },
+  "990138": {
+   "name": "Cyber City Driver",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/cyber-city-driver",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-cyber-city-driver.html",
+   "removed": [],
+   "sha256": "3c301323325631269d7d45c2c320f5335b184a5b7a9a021e275e5eb07c228a69",
+   "cover": "washed/covers/sd-cyber-city-driver.jpg"
+  },
+  "990140": {
+   "name": "Crowd Drift City",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/drift-city",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-drift-city.html",
+   "removed": [],
+   "sha256": "912fb868d66e322045960854cd7cc9693acd6baa86e4232385f65bb88902e72f",
+   "cover": "washed/covers/sd-crowd-drift-city.jpg"
+  },
+  "990141": {
+   "name": "Dunkers Fight 2P",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/dunkers-fight",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-dunkers-fight.html",
+   "removed": [],
+   "sha256": "cd5e882a2c03be5fb8ed6ae57739ab358461f33083bb9007b46dc60d42ed2178",
+   "cover": "washed/covers/sd-dunkers-fight-2p.jpg"
+  },
+  "990142": {
+   "name": "Eat.io",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/eatio",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-eatio.html",
+   "removed": [],
+   "sha256": "3c3495b7503fc9d14fc3ac86451135c6596b3cc1a339d3b60c7efa97f1d358f7",
+   "cover": "washed/covers/sd-eat-io.jpg"
+  },
+  "990143": {
+   "name": "Edge Surf",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/edge-surf",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-edge-surf.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "158f32168668738e9954cb4fadc9a596813864301229defb206eb1d6f1195e3b",
+   "cover": "washed/covers/sd-edge-surf.jpg"
+  },
+  "990144": {
+   "name": "Eel Slap!",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/eel-slap",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-eel-slap.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "2387aea0ba3bb60020651c67feaf98ee6cd4314b172f973e5b984fc0cb24aaa6",
+   "cover": "washed/covers/sd-eel-slap.jpg"
+  },
+  "990145": {
+   "name": "Endless War 3",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/endlesswar3",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-endlesswar3.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "f7f12ecaa8e20193c921a435b5eccac227c754d59ac51c7a95e11b848e66b5e2",
+   "cover": "washed/covers/sd-endless-war-3.jpg"
+  },
+  "990147": {
+   "name": "Flappy 2048",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/flappy-2048",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-flappy-2048.html",
+   "removed": [],
+   "sha256": "f84ff8c4075d65eb4cb40855b338e111d6d06b31edaee3f73f6d929573d6860a",
+   "cover": "washed/covers/sd-flappy-2048.jpg"
+  },
+  "990148": {
+   "name": "Flappy Plane",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/flappyplane",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-flappyplane.html",
+   "removed": [],
+   "sha256": "811b6cfbb431b8fe0263f0414240daf0f9092ef9df7c71e366b5720302dadba6",
+   "cover": "washed/covers/sd-flappy-plane.jpg"
+  },
+  "990149": {
+   "name": "Flip Hero",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/fliphero",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-fliphero.html",
+   "removed": [],
+   "sha256": "b2559dca493d630e492918359b5ebdc34e6378c16d9897b1fb286b15479d10ef",
+   "cover": "washed/covers/sd-flip-hero.jpg"
+  },
+  "990150": {
+   "name": "Floyd",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/floyd",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-floyd.html",
+   "removed": [],
+   "sha256": "1dcca94fb74cfb71e2de725c33cc87d19171a3065d36c79c3b9d2e705ccfa886",
+   "cover": "washed/covers/sd-floyd.jpg"
+  },
+  "990151": {
+   "name": "Funny Shooter 2",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/funnyshooter",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-funnyshooter.html",
+   "removed": [
+    "security rule tied to the original host"
+   ],
+   "sha256": "031368ae41dd0e084285c1cb334e904ba25f14699e1dcb554952f468b8c23ce0",
+   "cover": "washed/covers/sd-funny-shooter-2.jpg"
+  },
+  "990152": {
+   "name": "Goodnight",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/goodnight",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-goodnight.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "c490f2f249b0ea0ad23a44740933b2a724e14fe5afbe1891cfe4f68abef2c45d",
+   "cover": "washed/covers/sd-goodnight.jpg"
+  },
+  "990153": {
+   "name": "Horse Master",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse mster",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-hearse-mster.html",
+   "removed": [
+    "inline ad/tracker code"
+   ],
+   "sha256": "8c919618608147d2c15a5be2584cb21de500d1e66bc7767f4c134adcf9d59a7c",
+   "cover": "washed/covers/sd-horse-master.jpg"
+  },
+  "990155": {
+   "name": "Idle Shark",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/idle-shark",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-idle-shark.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "f549d37bd08fc640aa3cd6f317eac93f37424b0f23a379669056ff9954beda1e",
+   "cover": "washed/covers/sd-idle-shark.jpg"
+  },
+  "990156": {
+   "name": "Interactive Buddy",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/interactivebuddy",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-interactivebuddy.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "3deea74fc56a342ee38fd005311b6ff0a2589a20da336f993147a9647f00a7ac",
+   "cover": "washed/covers/sd-interactive-buddy.jpg"
+  },
+  "990157": {
+   "name": "Kitchen Gun Game",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/kitchen-gun-game",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-kitchen-gun-game.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "fda5004c3366ff892e6e899d14b7489b5e7a98069ae40039c33153aaa7e57922",
+   "cover": "washed/covers/sd-kitchen-gun-game.jpg"
+  },
+  "990158": {
+   "name": "Kitten Cannon",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/kittencannon",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-kittencannon.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "f544f71c644a7f2b52f24ea06eac7222296c3f19c1d21c6da14bf8c9c3c2385e",
+   "cover": "washed/covers/sd-kitten-cannon.jpg"
+  },
+  "990159": {
+   "name": "Konnekt",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/konnekt",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-konnekt.html",
+   "removed": [],
+   "sha256": "4c56ba3a3deda56ce7d6dcf0a387df0d8f69bb6c26b22eab7409718261882822",
+   "cover": "washed/covers/sd-konnekt.jpg"
+  },
+  "990160": {
+   "name": "MineKhan",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/minekhan",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-minekhan.html",
+   "removed": [],
+   "sha256": "f94fe9aff2e756e8981a5835d041679a4544710faf8832c7170600e9a8d8b869",
+   "cover": "washed/covers/sd-minekhan.jpg"
+  },
+  "990162": {
+   "name": "Picky Package",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/picky-package",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-picky-package.html",
+   "removed": [],
+   "sha256": "594481039b9f21ce8297f884050c646ec1ba548d6a17f529790801eb75e8eb79",
+   "cover": "washed/covers/sd-picky-package.jpg"
+  },
+  "990163": {
+   "name": "Pokey Stick",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/pokey-stick",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-pokey-stick.html",
+   "removed": [
+    "ad/tracker script scr.js"
+   ],
+   "sha256": "9e937e66454a9e9a84e334305346099bddb245a0291c0e922126fc51f50730a2",
+   "cover": "washed/covers/sd-pokey-stick.jpg"
+  },
+  "990164": {
+   "name": "Pushback",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/pushback",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-pushback.html",
+   "removed": [],
+   "sha256": "7e968869afbedb1cfbe97980f90ab3a9b4e84106a6cfede6cda7a0b021409735",
+   "cover": "washed/covers/sd-pushback.jpg"
+  },
+  "990166": {
+   "name": "Retrohaunt",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/retrohaunt",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-retrohaunt.html",
+   "removed": [],
+   "sha256": "e4a9e5b89b210d3854be952f15885b88816b521b530b709561a29b5087073adf",
+   "cover": "washed/covers/sd-retrohaunt.jpg"
+  },
+  "990167": {
+   "name": "Roadblocks",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/roadblocks",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-roadblocks.html",
+   "removed": [],
+   "sha256": "ca7bf5772a097b6c95d9e188c66e86b1909d982641ad90593794eaf03b16c809",
+   "cover": "washed/covers/sd-roadblocks.jpg"
+  },
+  "990170": {
+   "name": "Shuttledeck",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/shuttledeck",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-shuttledeck.html",
+   "removed": [],
+   "sha256": "d53b62330f08bbc10569a2c7c8396ba73ded488505df2de8c924054b21f972a1",
+   "cover": "washed/covers/sd-shuttledeck.jpg"
+  },
+  "990171": {
+   "name": "Sleeping Beauty",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/sleeping beauty",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-sleeping-beauty.html",
+   "removed": [],
+   "sha256": "de88ac2d62792db6546e2ebd21c98a214e58924b98fa24f9cd9aac6aebdf2360",
+   "cover": "washed/covers/sd-sleeping-beauty.jpg"
+  },
+  "990172": {
+   "name": "Space Company",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/spacecompany",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-spacecompany.html",
+   "removed": [
+    "inline ad/tracker code"
+   ],
+   "sha256": "47a1118ac183a379e6ef70d049ea911bc832f94dc2ac7fed28c29aef1b280209",
+   "cover": "washed/covers/sd-space-company.jpg"
+  },
+  "990173": {
+   "name": "Space Invaders",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/spaceinvaders",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-spaceinvaders.html",
+   "removed": [],
+   "sha256": "2ebf1fb060565b806ae4917ab98d40f5d007f8cb46c34e61ee0a43e74d516966",
+   "cover": "washed/covers/sd-space-invaders.jpg"
+  },
+  "990174": {
+   "name": "Stack",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/stack",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-stack.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "c964e0db4d815894d62996cee333a8dce582475811588c18c2fab2722698933a",
+   "cover": "washed/covers/sd-stack.jpg"
+  },
+  "990176": {
+   "name": "Steal This Election",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/steal-this-election",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-steal-this-election.html",
+   "removed": [
+    "inline ad/tracker code"
+   ],
+   "sha256": "c4698b3938f913cf152f04d5d4805e0130899539f2de9eb08d11d8504b73234d",
+   "cover": "washed/covers/sd-steal-this-election.jpg"
+  },
+  "990177": {
+   "name": "Tower Master",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/towermaster",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-towermaster.html",
+   "removed": [
+    "inline ad/tracker code"
+   ],
+   "sha256": "a5581f2988334ffce2a42b49cb92cfed89ae1df61af4e39237b8f556400ca675",
+   "cover": "washed/covers/sd-tower-master.jpg"
+  },
+  "990179": {
+   "name": "Veloce",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/veloce",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-veloce.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "d7afe76815385e62671eb24817b738ba78db916be8a40066e4ecc1efc6823055",
+   "cover": "washed/covers/sd-veloce.jpg"
+  },
+  "990180": {
+   "name": "Wall Smash",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/wallsmash",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-wallsmash.html",
+   "removed": [
+    "inline ad/tracker code",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "953a7a6b8886cc5465449be8d5d927569f4ee2001ad1cdb96af74d57c13be8d6",
+   "cover": "washed/covers/sd-wall-smash.jpg"
+  },
+  "990181": {
+   "name": "Weave Silk",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/weavesilk",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-weavesilk.html",
+   "removed": [
+    "ad/tracker script js",
+    "inline ad/tracker code",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "319472ba8b95539a4291c267e95028e6d1ec209e79c91a0f395c7352b2ccbde7",
+   "cover": "washed/covers/sd-weave-silk.jpg"
+  },
+  "990182": {
+   "name": "WebGL Fluid Simulation",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/webgl-fluid-simulation",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-webgl-fluid-simulation.html",
+   "removed": [
+    "ad/tracker script analytics.js",
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "a87278535319333721e58f8ba25d3fdd7408da2ce30bfb457b55265f57bffd1e",
+   "cover": "washed/covers/sd-webgl-fluid-simulation.jpg"
+  },
+  "990183": {
+   "name": "Whac-a-Mole",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/whac-a-mole",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-whac-a-mole.html",
+   "removed": [],
+   "sha256": "25fb5e7ac24d47adef3f35c4e02ca151d7e90bda66e353b6942d0cd234de4167",
+   "cover": "washed/covers/sd-whac-a-mole.jpg"
+  },
+  "990185": {
+   "name": "You Are Jeff Bezos",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/you-are-bezos",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-you-are-bezos.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "38cd0e60b602e597b65dc2db2d224f33baf5692da99c53779804fa59b6c96d42",
+   "cover": "washed/covers/sd-you-are-jeff-bezos.jpg"
+  },
+  "990188": {
+   "name": "Bomb It",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/bombit",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-bombit.html",
+   "removed": [],
+   "sha256": "38b6a269b8620c3c4b751d4846fc1f931d73b3b0662d5c82e255ac4b0db1463c",
+   "cover": "washed/covers/sd-bomb-it.jpg"
+  },
+  "990189": {
+   "name": "Bomb It 2",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/bombit2",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-bombit2.html",
+   "removed": [],
+   "sha256": "1cbce99137538884df9dfbd12de85a822daf537c17b064e13dd8d5aab16d49bb",
+   "cover": "washed/covers/sd-bomb-it-2.jpg"
+  },
+  "990190": {
+   "name": "Bomb It 3",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/bombit3",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-bombit3.html",
+   "removed": [],
+   "sha256": "776441d2e2f1cdb22f512b13111fb4598efb8a5534ae0c07572b600c34c8f846",
+   "cover": "washed/covers/sd-bomb-it-3.jpg"
+  },
+  "990191": {
+   "name": "Comic Book Cody",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/comicbook",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-comicbook.html",
+   "removed": [],
+   "sha256": "b1328dc625016127042cdf9935063fe23ecb6b3880fadb4d39558544291bb4a8",
+   "cover": "washed/covers/sd-comic-book-cody.jpg"
+  },
+  "990195": {
+   "name": "Hot Dog Bush",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/hotdogbush",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-hotdogbush.html",
+   "removed": [],
+   "sha256": "a6da1733147cd87e349ef0b2429da6876b618a8b87bd793c7570cfb113662981",
+   "cover": "washed/covers/sd-hot-dog-bush.jpg"
+  },
+  "990196": {
+   "name": "Papa Louie: When Pizzas Attack!",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/louie1",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-louie1.html",
+   "removed": [],
+   "sha256": "215d563716d76a75092069ceec3036c9c572af987621f971911f48d1b1cc4547",
+   "cover": "washed/covers/sd-papa-louie-when-pizzas-attack.jpg"
+  },
+  "990197": {
+   "name": "Minhero: Tower of Sages",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/minhero",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-minhero.html",
+   "removed": [],
+   "sha256": "3505a8bef7b278e8ce53fdaab61cdcdfd451fd2aedbc482f2108486cada5bd04",
+   "cover": "washed/covers/sd-minhero-tower-of-sages.jpg"
+  },
+  "990198": {
+   "name": "3 Pandas",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/pandas1",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-pandas1.html",
+   "removed": [],
+   "sha256": "311ae529b04479298491df5f1374bc901ec6b2227a0b801b11d651a4ec98c9d7",
+   "cover": "washed/covers/sd-3-pandas.jpg"
+  },
+  "990199": {
+   "name": "Shape Switcher",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/shapeswitch",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-shapeswitch.html",
+   "removed": [],
+   "sha256": "7a94157e91adccf4850d645573fae0503a9b293b269c378cf3ff9d57c4ab2f81",
+   "cover": "washed/covers/sd-shape-switcher.jpg"
+  },
+  "990200": {
+   "name": "Sugar, Sugar",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/sugar",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-sugar.html",
+   "removed": [],
+   "sha256": "50ecb263e6755b1e0d592ff85fbaee5cb431a99af4f8d2fe33a83a2e2d139f63",
+   "cover": "washed/covers/sd-sugar-sugar.jpg"
+  },
+  "990201": {
+   "name": "Fireboy and Watergirl",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/waterboy",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-waterboy.html",
+   "removed": [],
+   "sha256": "4a715d79b95a4f2825ba118d0c32535918579d23a666e80dfbb0d82219cb8796",
+   "cover": "washed/covers/sd-fireboy-and-watergirl.jpg"
   }
  }
 }
