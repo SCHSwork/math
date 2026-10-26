@@ -1213,11 +1213,18 @@ function cleanGameHtml(html) {
     if (isKnownBadGame(html)) { const e = new Error("This game file contains a known malicious script"); e.blocked = true; throw e; }
     // Some library files contain the whole page twice, one after the other. The
     // game then starts twice on the same canvas and crashes (Unity: "null function"),
-    // so keep only the first copy.
+    // so keep only the first copy. But some UBZone files start with an empty page
+    // (just a title and styles) and the real game after it; there, keep the game.
     const firstEnd = html.search(/<\/html\s*>/i);
     if (firstEnd !== -1 && /<html\b/i.test(html.slice(firstEnd))) {
-        html = html.slice(0, firstEnd) + "</html>";
-        console.info("Removed a duplicated copy of the game page");
+        const first = html.slice(0, firstEnd);
+        if (/<(script|canvas|iframe|embed|object)\b/i.test(first)) {
+            html = first + "</html>";
+            console.info("Removed a duplicated copy of the game page");
+        } else {
+            html = html.slice(firstEnd).replace(/^<\/html\s*>/i, "");
+            console.info("Skipped an empty page in front of the game");
+        }
     }
     html = fixMergedUnityParts(html);
     html = useLocalRuffle(html);
