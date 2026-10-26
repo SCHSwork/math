@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — New games in Featured
+
+### Changed
+- **The Featured row starts with 20 of the newly added games**: Drive Mad, Subway Surfers (San Francisco, Beijing, Monaco), Paper Minecraft, Funny Shooter 2, Boxing Physics, Crowd Drift City, Cyber City Driver, Fireboy and Watergirl, Papa Louie: When Pizzas Attack!, Kitten Cannon, Bomb It, Idle Shark, MineKhan, Flip Hero, Dunkers Fight 2P, The Ninja, Appel and Scratch Brawl 2. Washed library games the library features (Into The Pit, Sally Face) come next, then the library's usual picks.
+- Washed games can be featured with `"featured": true` in `config/library-washed.json` (`featuredOrder` sets their place).
+
 ## October 25, 2026 — 81 games from Strongdog
 
 ### New

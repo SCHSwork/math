@@ -123,7 +123,9 @@
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
-   "sha256": "dab34a3e2d0480ba94a92aca590123e889580c009eb1b30ab6e39f9e3cddb3ac"
+   "sha256": "dab34a3e2d0480ba94a92aca590123e889580c009eb1b30ab6e39f9e3cddb3ac",
+   "featured": true,
+   "featuredOrder": 0
   },
   "990002": {
    "name": "Subway Surfers: San Francisco",
@@ -144,7 +146,9 @@
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
-   "sha256": "cf8e96334b1fa64224c55b381d68537c15d70f20f127d9c9e3e61c9755fe5bfd"
+   "sha256": "cf8e96334b1fa64224c55b381d68537c15d70f20f127d9c9e3e61c9755fe5bfd",
+   "featured": true,
+   "featuredOrder": 1
   },
   "990003": {
    "name": "Subway Surfers: Beijing",
@@ -165,7 +169,9 @@
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
-   "sha256": "bb137cab9bf018632c5849154a02c14bf6a23a40c4e1ccf5615e238391a9094b"
+   "sha256": "bb137cab9bf018632c5849154a02c14bf6a23a40c4e1ccf5615e238391a9094b",
+   "featured": true,
+   "featuredOrder": 2
   },
   "990004": {
    "name": "Subway Surfers: Monaco",
@@ -186,7 +192,9 @@
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
-   "sha256": "ea88a6b81625723129bb36180890cae4c8ada4691621321baaf01bfc52d5fccc"
+   "sha256": "ea88a6b81625723129bb36180890cae4c8ada4691621321baaf01bfc52d5fccc",
+   "featured": true,
+   "featuredOrder": 3
   },
   "990101": {
    "name": "100ng: 100-Player Pong",
@@ -255,7 +263,9 @@
    "removed": [
     "(single-file page: cleaned by the site when it loads)"
    ],
-   "cover": "washed/covers/sd-appel.jpg"
+   "cover": "washed/covers/sd-appel.jpg",
+   "featured": true,
+   "featuredOrder": 18
   },
   "990105": {
    "name": "Bubble Scratch",
@@ -300,7 +310,9 @@
    "removed": [
     "(single-file page: cleaned by the site when it loads)"
    ],
-   "cover": "washed/covers/sd-paper-minecraft.jpg"
+   "cover": "washed/covers/sd-paper-minecraft.jpg",
+   "featured": true,
+   "featuredOrder": 4
   },
   "990111": {
    "name": "Sand and Water",
@@ -330,7 +342,9 @@
    "removed": [
     "(single-file page: cleaned by the site when it loads)"
    ],
-   "cover": "washed/covers/sd-scratch-brawl-2.jpg"
+   "cover": "washed/covers/sd-scratch-brawl-2.jpg",
+   "featured": true,
+   "featuredOrder": 19
   },
   "990113": {
    "name": "There Is No Game",
@@ -450,7 +464,9 @@
    "removed": [
     "(single-file page: cleaned by the site when it loads)"
    ],
-   "cover": "washed/covers/sd-the-ninja.jpg"
+   "cover": "washed/covers/sd-the-ninja.jpg",
+   "featured": true,
+   "featuredOrder": 17
   },
   "990122": {
    "name": "Amidst the Clouds",
@@ -597,7 +613,9 @@
    "path": "washed/sd-boxing-physics.html",
    "removed": [],
    "sha256": "7914eeea81b15d4e444b135b673f9648db07193767c9e5f633112340056e4f38",
-   "cover": "washed/covers/sd-boxing-physics.jpg"
+   "cover": "washed/covers/sd-boxing-physics.jpg",
+   "featured": true,
+   "featuredOrder": 6
   },
   "990133": {
    "name": "Captain Callisto",
@@ -688,7 +706,9 @@
    "path": "washed/sd-cyber-city-driver.html",
    "removed": [],
    "sha256": "3c301323325631269d7d45c2c320f5335b184a5b7a9a021e275e5eb07c228a69",
-   "cover": "washed/covers/sd-cyber-city-driver.jpg"
+   "cover": "washed/covers/sd-cyber-city-driver.jpg",
+   "featured": true,
+   "featuredOrder": 8
   },
   "990140": {
    "name": "Crowd Drift City",
@@ -702,7 +722,9 @@
    "path": "washed/sd-drift-city.html",
    "removed": [],
    "sha256": "912fb868d66e322045960854cd7cc9693acd6baa86e4232385f65bb88902e72f",
-   "cover": "washed/covers/sd-crowd-drift-city.jpg"
+   "cover": "washed/covers/sd-crowd-drift-city.jpg",
+   "featured": true,
+   "featuredOrder": 7
   },
   "990141": {
    "name": "Dunkers Fight 2P",
@@ -716,7 +738,9 @@
    "path": "washed/sd-dunkers-fight.html",
    "removed": [],
    "sha256": "cd5e882a2c03be5fb8ed6ae57739ab358461f33083bb9007b46dc60d42ed2178",
-   "cover": "washed/covers/sd-dunkers-fight-2p.jpg"
+   "cover": "washed/covers/sd-dunkers-fight-2p.jpg",
+   "featured": true,
+   "featuredOrder": 16
   },
   "990142": {
    "name": "Eat.io",
@@ -820,7 +844,9 @@
    "path": "washed/sd-fliphero.html",
    "removed": [],
    "sha256": "b2559dca493d630e492918359b5ebdc34e6378c16d9897b1fb286b15479d10ef",
-   "cover": "washed/covers/sd-flip-hero.jpg"
+   "cover": "washed/covers/sd-flip-hero.jpg",
+   "featured": true,
+   "featuredOrder": 15
   },
   "990150": {
    "name": "Floyd",
@@ -850,7 +876,9 @@
     "security rule tied to the original host"
    ],
    "sha256": "031368ae41dd0e084285c1cb334e904ba25f14699e1dcb554952f468b8c23ce0",
-   "cover": "washed/covers/sd-funny-shooter-2.jpg"
+   "cover": "washed/covers/sd-funny-shooter-2.jpg",
+   "featured": true,
+   "featuredOrder": 5
   },
   "990152": {
    "name": "Goodnight",
@@ -898,7 +926,9 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "f549d37bd08fc640aa3cd6f317eac93f37424b0f23a379669056ff9954beda1e",
-   "cover": "washed/covers/sd-idle-shark.jpg"
+   "cover": "washed/covers/sd-idle-shark.jpg",
+   "featured": true,
+   "featuredOrder": 13
   },
   "990156": {
    "name": "Interactive Buddy",
@@ -946,7 +976,9 @@
     "link to that site's /js/main.js"
    ],
    "sha256": "f544f71c644a7f2b52f24ea06eac7222296c3f19c1d21c6da14bf8c9c3c2385e",
-   "cover": "washed/covers/sd-kitten-cannon.jpg"
+   "cover": "washed/covers/sd-kitten-cannon.jpg",
+   "featured": true,
+   "featuredOrder": 11
   },
   "990159": {
    "name": "Konnekt",
@@ -974,7 +1006,9 @@
    "path": "washed/sd-minekhan.html",
    "removed": [],
    "sha256": "f94fe9aff2e756e8981a5835d041679a4544710faf8832c7170600e9a8d8b869",
-   "cover": "washed/covers/sd-minekhan.jpg"
+   "cover": "washed/covers/sd-minekhan.jpg",
+   "featured": true,
+   "featuredOrder": 14
   },
   "990162": {
    "name": "Picky Package",
@@ -1264,7 +1298,9 @@
    "path": "washed/sd-bombit.html",
    "removed": [],
    "sha256": "38b6a269b8620c3c4b751d4846fc1f931d73b3b0662d5c82e255ac4b0db1463c",
-   "cover": "washed/covers/sd-bomb-it.jpg"
+   "cover": "washed/covers/sd-bomb-it.jpg",
+   "featured": true,
+   "featuredOrder": 12
   },
   "990189": {
    "name": "Bomb It 2",
@@ -1334,7 +1370,9 @@
    "path": "washed/sd-louie1.html",
    "removed": [],
    "sha256": "215d563716d76a75092069ceec3036c9c572af987621f971911f48d1b1cc4547",
-   "cover": "washed/covers/sd-papa-louie-when-pizzas-attack.jpg"
+   "cover": "washed/covers/sd-papa-louie-when-pizzas-attack.jpg",
+   "featured": true,
+   "featuredOrder": 10
   },
   "990197": {
    "name": "Minhero: Tower of Sages",
@@ -1404,7 +1442,9 @@
    "path": "washed/sd-waterboy.html",
    "removed": [],
    "sha256": "4a715d79b95a4f2825ba118d0c32535918579d23a666e80dfbb0d82219cb8796",
-   "cover": "washed/covers/sd-fireboy-and-watergirl.jpg"
+   "cover": "washed/covers/sd-fireboy-and-watergirl.jpg",
+   "featured": true,
+   "featuredOrder": 9
   }
  }
 }
