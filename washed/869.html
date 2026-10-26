@@ -250,6 +250,8 @@ var loadingText = document.querySelector("#loading-text");
         productName: "Five Nights at Freddy's Into the Pit",
         productVersion: "Release 1.0.11.7",
         showBanner: unityShowBanner,
+        // GN 2.0: keep Unity's real error text (it only shows "abort({})")
+        printErr: function (msg) { window.__gnLastErr = String(msg); console.error(msg); },
       };
 
       // By default Unity keeps WebGL canvas render target size matched with
@@ -280,11 +282,12 @@ var loadingText = document.querySelector("#loading-text");
           loadingText.remove();
         }).catch((message) => {
           // GN 2.0: a plain message instead of a popup full of code
-          const small = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory < 4);
-          loadingText.style.fontSize = "22px";
-          loadingText.textContent = small
-            ? "This device ran out of memory. Into The Pit is a very big game (645 MB) and usually needs a computer or Chromebook."
-            : "The game couldn't start (" + String(message).split("\n")[0].slice(0, 80) + "). Try closing other tabs and loading it again.";
+          const why = String(window.__gnLastErr || message).split("\n")[0].slice(0, 220);
+          const mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          loadingText.style.cssText += ";font:18px/1.4 system-ui,sans-serif;margin:16px;color:#e2e8f0";
+          loadingText.textContent = (mobile
+            ? "Into The Pit couldn't start on this device. Its game code is 99 MB, and phone browsers often can't prepare code that big. It works best on a computer or Chromebook."
+            : "Into The Pit couldn't start. Try closing other tabs and loading it again.") + "  Details: " + why;
           console.error(message);
         });
       };

@@ -25,7 +25,7 @@
    "lockedTo": {
     "web-ports/fnaf-into-the-pit": "df6e074be181d4d2fb419241a25138bb8acbb928"
    },
-   "sha256": "7b7d433e61b9ec1a4d060fff898918b35f6e40279c4aabc553beaba657d57d8f",
+   "sha256": "e927e276a11b0cb4158546d86c4b155371068aef20885ac88df8151e07a99156",
    "edited": "Loads its 645 MB as Blobs, 3 parts at a time, instead of copying it into memory 2-3 times (crashed phones); plain message instead of an error popup."
   },
   "870": {
