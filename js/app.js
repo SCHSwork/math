@@ -57,6 +57,14 @@ const pinnedFilesPromise = fetch("config/library-pinned.json")
     .then(r => r.ok ? r.json() : null)
     .then(j => j && j.ref === LIBRARY_REF && Array.isArray(j.files) ? new Set(j.files) : null)
     .catch(() => null);
+// Library games added after the clean version that were checked and cleaned by
+// hand ("washed"): the bad script removed and their game files locked to a
+// checked commit. They load from this site's washed/ folder instead
+// (config/library-washed.json, made with tools/wash_library_games.py).
+const washedGamesPromise = fetch("config/library-washed.json")
+    .then(r => r.ok ? r.json() : null)
+    .then(j => (j && j.games && typeof j.games === "object") ? j.games : {})
+    .catch(() => ({}));
 // Games the library added after the clean version. They're hidden, and admins
 // and the owner are told about them so each one can be checked (admin.js).
 let newLibraryGames = [];
@@ -344,6 +352,7 @@ async function listZones() {
         // Drop upstream promo tiles: "[!] ..." entries (Discord, comments, etc.),
         // anything named comments, and anything linking to Discord.
         const pinnedFiles = await pinnedFilesPromise;
+        const washedGames = await washedGamesPromise;
         zones = json.filter(z => {
             const name = (z.name || "").trim();
             if (/^\[!\]/.test(name) || /comment|discord/i.test(name) || /discord\.(gg|com)/i.test(z.url || "")) return false;
@@ -352,6 +361,9 @@ async function listZones() {
             // game's file from the clean version; games added after it are hidden.
             const file = String(z.url || "").match(/^\{HTML_URL\}\/?(.+)$/);
             if (!pinnedFiles || !file || pinnedFiles.has(file[1])) return true;
+            // Washed copy of this exact file: use it
+            const w = washedGames[String(z.id)];
+            if (w && w.file === file[1] && /^washed\/[\w.-]+\.html$/.test(w.path || "")) { z.url = "washed:" + w.path; z.washed = true; return true; }
             const alt = pinnedFileForId(pinnedFiles, z.id);
             if (alt) { z.url = "{HTML_URL}/" + alt; return true; }
             newLibraryGames.push({ id: z.id, name, file: file[1], author: z.author || "" });
@@ -957,6 +969,13 @@ function cleanGameHtml(html) {
 }
 
 async function fetchWithFallback(rawUrl, onTry) {
+    // Washed library games: from this site first, then its GitHub mirrors
+    if (rawUrl.startsWith("washed:")) {
+        const path = rawUrl.slice(7);
+        const urls = [new URL(path, location.href).href, ...mirrorUrls("SCHSwork", "math", "main", path)];
+        const html = await fetchFirst(urls, { timeoutMs: 30000, stagger: 2500, onTry, validate: res => res.text() });
+        return rewriteForMirrors(cleanGameHtml(html));
+    }
     // GN Originals: "gh:owner/repo@sha/path"
     if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) {
         let html = await fetchOriginalHtml(rawUrl, onTry);

@@ -11,6 +11,7 @@ import json, pathlib, re, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 pinned = json.loads((ROOT / "config/library-pinned.json").read_text())
 files = set(pinned["files"])
+washed = json.loads((ROOT / "config/library-washed.json").read_text()).get("games", {}) if (ROOT / "config/library-washed.json").exists() else {}
 req = urllib.request.Request("https://raw.githubusercontent.com/freebuisness/assets/main/zones.json", headers={"User-Agent": "gn-check"})
 zones = json.loads(urllib.request.urlopen(req, timeout=60).read())
 
@@ -21,6 +22,8 @@ for z in zones:
         continue
     f = re.sub(r"^\{HTML_URL\}/?", "", url)
     if f in files or any(re.match(rf"^{int(z['id'])}(?:[-.]|$)", x) for x in files):
+        continue
+    if washed.get(str(z["id"]), {}).get("file") == f:  # already cleaned (washed/)
         continue
     new.append((int(z["id"]), name, f, z.get("author") or ""))
 

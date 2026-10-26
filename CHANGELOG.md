@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — 10 new library games, washed
+
+### New
+- **10 games the library added after its clean version are now playable:** Friday Night Funkin Vs. Dave and Bambi v3, Five Nights at Freddy's: Into The Pit, Sally Face, Gamble With Friends, The One Fish, Chain-Chillas, Wolfenstein 3D, ROAM0120.EXE, Sugary Spire Exhibition Night: Pizzano's Awesome Night Mod, and Pet The Cat.
+- Each was **washed** before going live: its page was checked and cleaned, the code of every outside repo it loads its game from was scanned, and those repos were locked to the exact version that was checked, so they can't be swapped for something else later. The cleaned pages live in `washed/` and are listed in `config/library-washed.json`.
+  - Dave and Bambi v3 still had the malicious ad script in a new disguise (it loads `cdn.r9x.in`), plus three trackers. All removed. The other nine pages were clean.
+- `tools/wash_library_games.py` does all of this for future new games, and stops on anything suspicious instead of saving it. The new-games checker no longer lists washed games.
+
 ## October 25, 2026 — SpiderDoll works again
 
 ### Fixed
