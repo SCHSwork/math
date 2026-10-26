@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — New games row on the home page
+
+### Added
+- **A "New games" row under Featured**: everything added in the last 2 weeks, newest first, with a "See all" tile at the end that opens the full list (Sort & filter → New in the last 2 weeks). It hides itself when nothing is new, and closes like the other rows when you search.
+
 ## October 26, 2026 — Construct 3 games start again; Among Us added
 
 ### Fixed
