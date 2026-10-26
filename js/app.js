@@ -906,6 +906,162 @@ function isKnownBadGame(html) { return typeof html === "string" && BAD_GAME_MARK
 // join them and then ignore the result, telling Unity to load "Build.data",
 // which doesn't exist, so the game never starts. Point Unity at the joined
 // files instead.
+// ── Split-file guard (runs inside game pages) ───────────────────────────────
+// Big games come in pieces (Build.data.part1, .part2…) that they download, join
+// and often save in the browser. A piece cut off mid-download used to make a
+// broken joined file, and games that saved it failed on every load after.
+// config/part-sizes.json (tools/build_part_sizes.py) has every piece's size;
+// the pieces for one page are passed in as SIZES. This re-downloads short
+// pieces, and stops a short joined file from being saved or used.
+function partGuardHook(SIZES) {
+    var ALIASES = ["latest", "HEAD", "main", "master"];
+    function where(url) {
+        var u; try { u = new URL(url, document.baseURI); } catch (e) { return null; }
+        var m = null, h = u.hostname;
+        if (/(^|\.)jsdelivr\.net$/.test(h)) m = u.pathname.match(/^\/gh\/([^\/]+)\/([^\/@]+)(?:@([^\/]+))?\/(.*)$/);
+        else if (/githubusercontent\.com$|githack\.com$/.test(h)) m = u.pathname.match(/^\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.*)$/);
+        if (!m) return null;
+        var path; try { path = decodeURIComponent(m[4]); } catch (e) { path = m[4]; }
+        return { repo: m[1] + "/" + m[2], ref: m[3] || "latest", path: path };
+    }
+    // Locked to an exact commit: the file can never change, so a wrong size is always a bad download
+    function locked(url) { var w = where(url); return !!(w && /^[0-9a-f]{40}$/i.test(w.ref)); }
+    function sizeOf(url) {
+        var w = where(url); if (!w) return null;
+        var refs = [w.ref].concat(ALIASES.indexOf(w.ref) >= 0 ? ALIASES : []);
+        for (var i = 0; i < refs.length; i++) {
+            var list = SIZES[w.repo + "@" + refs[i]];
+            if (list && list[w.path] != null) return list[w.path];
+        }
+        return null;
+    }
+    // Joined files: "Build/X.data" = all of its pieces added up
+    var joined = {};
+    for (var k in SIZES) for (var p in SIZES[k]) {
+        var base = p.replace(/\.part\d+$/, "");
+        joined[base] = (joined[base] || 0) + SIZES[k][p];
+    }
+    function joinedSize(key) {
+        var s = typeof key === "string" ? key : (key && key.url) || String(key);
+        s = s.split("?")[0]; try { s = decodeURIComponent(s); } catch (e) {}
+        var name = s.split("/").pop(), found = null;
+        for (var b in joined) {
+            if (b === s || b.split("/").pop() === name) {
+                if (found !== null && found !== joined[b]) return null;  // same name, different sizes: can't tell
+                found = joined[b];
+            }
+        }
+        return found;
+    }
+    var note = function (m) { try { console.warn("[GN 2.0] " + m); } catch (e) {} };
+
+    var origFetch = window.fetch;
+    if (origFetch) window.fetch = function (input, init) {
+        var url = typeof input === "string" ? input : (input && input.url) || String(input);
+        var method = (init && init.method) || (input && input.method) || "GET";
+        if (!/\.part\d+(\?|#|$)/.test(url) || String(method).toUpperCase() !== "GET") return origFetch.apply(this, arguments);
+        var want = sizeOf(url), fixed = locked(url), self = this, first = arguments, seen = {};
+        var tryOnce = function (n) {
+            var args = n === 1 ? first : [url, Object.assign({}, init || {}, { cache: "reload" })];
+            return origFetch.apply(self, args).then(function (res) {
+                if (!res.ok) return res;
+                var cl = Number(res.headers.get("content-length")) || 0;
+                return res.arrayBuffer().then(function (buf) {
+                    var got = buf.byteLength;
+                    var expect = want != null ? want : (cl && got < cl ? cl : null);
+                    // Right size or no size known. A file on a branch (e.g. @main) may really
+                    // have changed since the size list was made: the same size twice means that.
+                    if (expect == null || got === expect || (seen[got] && !fixed)) {
+                        return new Response(buf, { status: res.status, statusText: res.statusText, headers: res.headers });
+                    }
+                    seen[got] = true;
+                    note(url + " arrived incomplete (" + got + " of " + expect + " bytes)" + (n < 4 ? ", downloading it again" : ""));
+                    if (n >= 4) throw new TypeError("Incomplete download: " + url);
+                    return new Promise(function (r) { setTimeout(r, 800 * n); }).then(function () { return tryOnce(n + 1); });
+                });
+            });
+        };
+        return tryOnce(1);
+    };
+
+    var isShort = function (key, res) {
+        var want = joinedSize(key);
+        if (want == null || !res) return Promise.resolve(false);
+        // Only "too small" counts: a game may save a bigger, unpacked version
+        return res.clone().blob().then(function (b) { return b.size < want; }, function () { return false; });
+    };
+    try {
+        var CP = window.Cache && Cache.prototype;
+        if (CP) {
+            var put = CP.put, match = CP.match;
+            CP.put = function (key, res) {
+                var self = this, args = arguments;
+                return isShort(key, res).then(function (short) {
+                    if (short) { note("Not saving " + key + ": it's incomplete"); return undefined; }
+                    return put.apply(self, args);
+                });
+            };
+            CP.match = function (key) {
+                var self = this;
+                return match.apply(this, arguments).then(function (res) {
+                    return isShort(key, res).then(function (short) {
+                        if (!short) return res;
+                        note("Saved copy of " + key + " is incomplete; downloading it again");
+                        try { self.delete(key); } catch (e) {}
+                        return undefined;
+                    });
+                });
+            };
+        }
+        var SP = window.CacheStorage && CacheStorage.prototype;
+        if (SP && SP.match) {
+            var smatch = SP.match;
+            SP.match = function (key) {
+                return smatch.apply(this, arguments).then(function (res) {
+                    return isShort(key, res).then(function (short) { return short ? undefined : res; });
+                });
+            };
+        }
+    } catch (e) {}
+}
+
+// Sizes of split game files (config/part-sizes.json), loaded once
+let gamePartSizes = null;
+const partSizesPromise = fetch("config/part-sizes.json")
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { gamePartSizes = (j && j.repos) || {}; })
+    .catch(() => { gamePartSizes = {}; });
+// The pieces one game page can load: repos (and folders) it links to
+function partSizesForPage(html) {
+    if (!gamePartSizes || !/\.part\d|getParts|mergeFiles/i.test(html)) return null;
+    const rxs = [
+        /https?:\/\/(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([\w.-]+)\/([\w.-]+)(?:@([\w./-]+?))?\/([^"'\s)<>`]*)/g,
+        /https?:\/\/(?:raw\.githubusercontent\.com|rawcdn\.githack\.com|raw\.githack\.com)\/([\w.-]+)\/([\w.-]+)\/([\w.-]+)\/([^"'\s)<>`]*)/g
+    ];
+    const dirs = new Map();  // "repo@ref" → folders used
+    for (const rx of rxs) for (const m of html.matchAll(rx)) {
+        const key = `${m[1]}/${m[2]}@${m[3] || "latest"}`;
+        const dir = m[4].includes("/") ? m[4].slice(0, m[4].lastIndexOf("/") + 1) : "";
+        if (!dirs.has(key)) dirs.set(key, new Set());
+        dirs.get(key).add(dir);
+    }
+    const out = {};
+    for (const [key, set] of dirs) {
+        const [repo, ref] = key.split("@");
+        const refs = [ref, ...(["latest", "HEAD", "main", "master"].includes(ref) ? ["latest", "HEAD", "main", "master"] : [])];
+        const listKey = refs.map(r => `${repo}@${r}`).find(k => gamePartSizes[k]);
+        if (!listKey) continue;
+        // Use the specific folders; a link at the repo's top level (e.g. a shared script) doesn't count
+        const folders = [...set].filter(Boolean);
+        const pick = {};
+        for (const [path, size] of Object.entries(gamePartSizes[listKey])) {
+            if (!folders.length || folders.some(f => path.startsWith(f))) pick[path] = size;
+        }
+        if (Object.keys(pick).length) out[`${repo}@${ref}`] = pick;
+    }
+    return Object.keys(out).length ? out : null;
+}
+
 function fixMergedUnityParts(html) {
     const re = /Promise\.all\(\[\s*(?:window\.)?mergeFiles\((?:window\.)?getParts\(\s*"([^"]+)"\s*,\s*\d+\s*,\s*\d+\s*\)\)\s*,\s*(?:window\.)?mergeFiles\((?:window\.)?getParts\(\s*"([^"]+)"\s*,\s*\d+\s*,\s*\d+\s*\)\)\s*,?\s*\]\)\s*\.then\(\s*\(\s*\[\s*(\w+)\s*,\s*(\w+)\s*\]\s*\)\s*=>\s*\{/;
     const m = html.match(re);
@@ -960,7 +1116,9 @@ function cleanGameHtml(html) {
         `<script>(function(){try{var P=CSSStyleSheet.prototype;["cssRules","rules"].forEach(function(k){var d=Object.getOwnPropertyDescriptor(P,k);` +
         `if(!d||!d.get)return;Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get:function(){try{return d.get.call(this)}catch(e){return []}}})})}catch(e){}})();<\/script>` +
         (typeof gameProgressHook === "function" ? `<script>(${gameProgressHook.toString()})();<\/script>` : "") +
-        (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "");
+        (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "") +
+        // Last, so it wraps the loading bar's fetch hook and sees what the game sees
+        ((sizes => sizes ? `<script>(${partGuardHook.toString()})(${JSON.stringify(sizes).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     if (/<head\b[^>]*>/i.test(out)) out = out.replace(/<head\b[^>]*>/i, m => m + guard);
     else if (/<!doctype[^>]*>/i.test(out)) out = out.replace(/<!doctype[^>]*>/i, m => m + guard);
     else out = guard + out;
@@ -969,6 +1127,8 @@ function cleanGameHtml(html) {
 }
 
 async function fetchWithFallback(rawUrl, onTry) {
+    // Sizes of split game files, for the split-file guard (don't wait long for them)
+    if (!gamePartSizes) await Promise.race([partSizesPromise, new Promise(r => setTimeout(r, 3000))]);
     // Washed library games: from this site first, then its GitHub mirrors
     if (rawUrl.startsWith("washed:")) {
         const path = rawUrl.slice(7);
