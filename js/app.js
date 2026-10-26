@@ -889,6 +889,27 @@ function isObfuscatedAdScript(code) {
 // A game file containing them is never run.
 const BAD_GAME_MARKERS = [/data-r=["']c7a94e["']/i, /xa0f20fba9693cbb2c66516f1/, /__gnGameAd/];
 function isKnownBadGame(html) { return typeof html === "string" && BAD_GAME_MARKERS.some(re => re.test(html)); }
+// Some Unity games are split into parts (Build.data.part1, .part2…) that the
+// page downloads and joins with mergeFiles(). A few pages (e.g. SpiderDoll)
+// join them and then ignore the result, telling Unity to load "Build.data",
+// which doesn't exist, so the game never starts. Point Unity at the joined
+// files instead.
+function fixMergedUnityParts(html) {
+    const re = /Promise\.all\(\[\s*(?:window\.)?mergeFiles\((?:window\.)?getParts\(\s*"([^"]+)"\s*,\s*\d+\s*,\s*\d+\s*\)\)\s*,\s*(?:window\.)?mergeFiles\((?:window\.)?getParts\(\s*"([^"]+)"\s*,\s*\d+\s*,\s*\d+\s*\)\)\s*,?\s*\]\)\s*\.then\(\s*\(\s*\[\s*(\w+)\s*,\s*(\w+)\s*\]\s*\)\s*=>\s*\{/;
+    const m = html.match(re);
+    if (!m) return html;
+    const [whole, file0, file1] = m;
+    const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    let fixed = html.replace(whole, whole.replace(/\(\s*\[\s*\w+\s*,\s*\w+\s*\]\s*\)/, "([__gnMerged0, __gnMerged1])"));
+    let changed = 0;
+    [[file0, "__gnMerged0"], [file1, "__gnMerged1"]].forEach(([file, v]) => {
+        fixed = fixed.replace(new RegExp(`((?:dataUrl|codeUrl|frameworkUrl)\\s*:\\s*)(["'])(?:[^"']*\\/)?${esc(file.replace(/^.*\//, ""))}\\2`, "g"), (all, key) => { changed++; return key + v; });
+    });
+    if (!changed) return html;
+    console.info("Pointed Unity at the joined game files");
+    return fixed;
+}
+
 function cleanGameHtml(html) {
     if (typeof html !== "string") return html;
     if (isKnownBadGame(html)) { const e = new Error("This game file contains a known malicious script"); e.blocked = true; throw e; }
@@ -900,6 +921,7 @@ function cleanGameHtml(html) {
         html = html.slice(0, firstEnd) + "</html>";
         console.info("Removed a duplicated copy of the game page");
     }
+    html = fixMergedUnityParts(html);
     let removed = 0;
     let out = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (whole, attrs, code) => {
         const src = (attrs.match(/\bsrc\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
@@ -920,6 +942,11 @@ function cleanGameHtml(html) {
         `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v))return;d.set.call(this,v)}})});` +
         `var sa=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){if(/^src$/i.test(n)&&(this instanceof HTMLScriptElement||this instanceof HTMLIFrameElement)&&blocked(v))return;return sa.apply(this,arguments)};` +
         `})();<\/script><style>#sidebarad1,#sidebarad2{display:none!important}</style>` +
+        // Game files load from other sites, so their stylesheets can't be read from
+        // here. Some game plugins (e.g. Newgrounds.io in Unity games) read every
+        // stylesheet when they start and crash on that; give them an empty list.
+        `<script>(function(){try{var P=CSSStyleSheet.prototype;["cssRules","rules"].forEach(function(k){var d=Object.getOwnPropertyDescriptor(P,k);` +
+        `if(!d||!d.get)return;Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get:function(){try{return d.get.call(this)}catch(e){return []}}})})}catch(e){}})();<\/script>` +
         (typeof gameProgressHook === "function" ? `<script>(${gameProgressHook.toString()})();<\/script>` : "") +
         (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "");
     if (/<head\b[^>]*>/i.test(out)) out = out.replace(/<head\b[^>]*>/i, m => m + guard);

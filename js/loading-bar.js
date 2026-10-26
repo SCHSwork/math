@@ -10,7 +10,10 @@ function gameProgressHook() {
     var seq = 0;
     var origFetch = window.fetch;
     if (origFetch) {
-        window.fetch = function () {
+        window.fetch = function (input) {
+            // Files the page made itself (joined parts) were already counted
+            var u = typeof input === "string" ? input : (input && input.url) || "";
+            if (/^(blob|data):/i.test(u)) return origFetch.apply(this, arguments);
             var id = ++seq;
             report({ t: "start", id: id });
             return origFetch.apply(this, arguments).then(function (res) {
