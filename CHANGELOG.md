@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Flash games no longer depend on jsDelivr
+
+### Fixed
+- **139 Flash games (Papa's games, Bloons, Riddle School…) now load the Flash player (Ruffle) from GN 2.0 itself** (`vendor/ruffle`, the same version they used before) instead of from jsDelivr. It works wherever the site works, even on networks that block jsDelivr and its backups, and it's downloaded once for all Flash games.
+- When jsDelivr is blocked and games fall back to unpkg, `ruffle.min.js` links are changed to `ruffle.js` (unpkg doesn't have the .min file, so those games failed to start).
+
 ## October 26, 2026 — Games fit the screen
 
 ### Fixed
