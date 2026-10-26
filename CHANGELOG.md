@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — 12 UBZone games that showed a blank page now load
+
+### Fixed
+- **12 UBZone games opened to a blank white page**: -3 Remastered, Bendy, Minecraft P.E., GDWEB+, Lobotomy Dash, Snowball.IO, Flying Gorilla, FNAE Last Breath, three, Antidisestablishmentarianism, Pneumonoultramicroscopicsilicovolcanoconiosis and The Ultimate Baldi's Basics Decompile. Their files start with an empty page and have the real game after it, and the site's fix for library files that contain their page twice kept the empty one. Now it keeps the copy that has the game in it.
+
 ## October 26, 2026 — Press / to search
 
 ### Added
