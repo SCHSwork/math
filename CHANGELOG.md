@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Press / to search
+
+### Added
+- **Press `/` anywhere on the home page to jump to the search box** (not while a game is open or you're typing somewhere else).
+
 ## October 26, 2026 — New games row on the home page
 
 ### Added
