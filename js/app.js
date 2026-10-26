@@ -236,7 +236,10 @@ function useLocalRuffle(html) {
     const local = new URL("vendor/ruffle/ruffle.js", location.href).href;
     const v = LOCAL_RUFFLE_VERSION.replace(/\./g, "\\.");
     return html.replace(new RegExp(`https?://(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net/npm/@ruffle-rs/ruffle@${v}/ruffle(?:\\.min)?\\.js`, "g"), local)
-        .replace(new RegExp(`https?://unpkg\\.com/@ruffle-rs/ruffle@${v}(?:/ruffle(?:\\.min)?\\.js)?(?=["'\\s>])`, "g"), local);
+        .replace(new RegExp(`https?://unpkg\\.com/@ruffle-rs/ruffle@${v}(?:/ruffle(?:\\.min)?\\.js)?(?=["'\\s>])`, "g"), local)
+        // "Newest Ruffle" links (no version, or @latest) change every night and unpkg is
+        // often blocked or slow: use the site's copy for those too
+        .replace(/https?:\/\/(?:unpkg\.com|(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/npm)\/@ruffle-rs\/ruffle(?:@latest)?(?:\/ruffle(?:\.min)?\.js)?(?=["'\s>])/g, local);
 }
 // When jsDelivr is unreachable, point the jsDelivr links inside a game at backups
 function rewriteForMirrors(html) {
