@@ -7,6 +7,18 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Games fit the screen
+
+### Fixed
+- **The game window now uses the whole screen under the top bar.** It was 90% wide and stuck to the left, leaving an empty strip on the right of every game.
+- **Games made for one fixed size now fit the screen** (new `js/game-fit.js`, runs inside every game). Games that sat small in the top-left corner are made bigger and centered; games whose bottom or right side was cut off (common on phones and short laptop screens) are made smaller to fit. They keep their shape, and turning a phone re-fits them right away. Games that already fill the screen aren't touched.
+  - Games from engines that handle being resized (Unity, Construct, GameMaker, Phaser, Godot, Clickteam and others) are scaled; games we can't identify are only centered, unless they don't fit at all, so clicks still land in the right place.
+  - On a sample of 64 games, the ones that didn't fit dropped from 9 to 2 on a computer screen and from 13 to 4 on a phone held sideways.
+- **Flash games show black bars at the sides** instead of white or grey ones (or half-drawn art from outside the game's stage), and no longer have a white border around them.
+
+### Added
+- **⋯ More → Fit game to screen: on/off.** If fitting ever causes trouble in a game, turn it off for that game; it's remembered.
+
 ## October 26, 2026 — Real thumbnails for new games
 
 ### Changed
