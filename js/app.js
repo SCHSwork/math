@@ -528,9 +528,9 @@ function sortZones() {
     } else if (sortBy === 'trendingDay') {
         zones.sort((a, b) => ((popularityData['day']?.[b.id]) ?? 0) - ((popularityData['day']?.[a.id]) ?? 0));
     } else if (sortBy === 'newest') {
-        // GN Originals sit after the library here; they're always in their own row
-        const addedKey = z => (typeof isOriginalZone === "function" && isOriginalZone(z)) ? -2 : Number(z.id);
-        zones.sort((a, b) => addedKey(b) - addedKey(a));
+        // The day each game was added (config/added-dates.json), newest first
+        if (typeof compareAdded === "function") zones.sort(compareAdded);
+        else zones.sort((a, b) => Number(b.id) - Number(a.id));
     } else if (sortBy === 'topRated') {
         zones.sort((a, b) => ratingScore(b.id) - ratingScore(a.id) || a.name.localeCompare(b.name));
     } else if (sortBy === 'myPlaytime') {
@@ -615,7 +615,8 @@ function createZoneCard(file) {
         const nb = document.createElement("div");
         nb.className = "card-new";
         nb.textContent = "NEW";
-        nb.title = "Recently added";
+        const when = typeof addedDayLabel === "function" ? addedDayLabel(file) : "";
+        nb.title = when ? `Added ${when}` : "Recently added";
         badges.appendChild(nb);
     }
     if (isFlaggedBroken(stats)) {
@@ -864,6 +865,7 @@ function searchScore(zone, query, tokens) {
     }
     return score + tokenTotal;
 }
+const NEW_GAME_QUERIES = new Set(["new", "new games", "new game", "newest", "latest", "latest games", "recent", "recently added", "whats new", "what s new", "new stuff"]);
 function applyFilters() {
     if (!Array.isArray(zones)) return;
     const query = normText(searchBar.value);
@@ -872,7 +874,18 @@ function applyFilters() {
     if (tag && tag !== "none") list = list.filter(zone => zone.special?.includes(tag));
     const extra = typeof gameMatchesExtraFilters === "function" && typeof extraFiltersActive === "function" && extraFiltersActive();
     if (extra) list = list.filter(gameMatchesExtraFilters);
-    if (query) {
+    // Typing "new" (or "new games", "recently added", "latest"…) lists the newest games
+    const newSearch = NEW_GAME_QUERIES.has(query) && typeof isAddedWithinDays === "function";
+    const show = document.getElementById("showOptions")?.value;
+    if (newSearch) {
+        const tokens = query.split(" ");
+        const recent = list.filter(z => isAddedWithinDays(z, 14)).sort(compareAdded);
+        const recentIds = new Set(recent.map(z => z.id));
+        // …then games that really have "new" in their name
+        list = recent.concat(list.filter(z => !recentIds.has(z.id) && searchScore(z, query, tokens) > 0));
+    } else if (!query && (show === "new7" || show === "new14") && sortOptions.value === "name" && typeof compareAdded === "function") {
+        list = list.slice().sort(compareAdded);   // New filter: newest first unless another sort was picked
+    } else if (query) {
         const tokens = query.split(" ");
         list = list.map(zone => [zone, searchScore(zone, query, tokens)])
             .filter(([, sc]) => sc > 0)
@@ -885,7 +898,8 @@ function applyFilters() {
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");
-    if (query && summary) setSectionTitle(summary, `Results for "${searchBar.value.trim()}"`, list.filter(z => !isZoneDisabled(z.id)).length);
+    if (newSearch && summary) setSectionTitle(summary, "New games (last 2 weeks)", list.filter(z => !isZoneDisabled(z.id)).length);
+    else if (query && summary) setSectionTitle(summary, `Results for "${searchBar.value.trim()}"`, list.filter(z => !isZoneDisabled(z.id)).length);
     if (!query && extra && summary) setSectionTitle(summary, "Filtered games", list.filter(z => !isZoneDisabled(z.id)).length);
     if (query && !list.length) container.textContent = `No games match "${searchBar.value.trim()}".`;
     else if (!list.length && (extra || (tag && tag !== "none"))) container.textContent = "No games match these filters. Try Reset in the Sort & filter menu.";

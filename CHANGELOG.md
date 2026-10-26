@@ -7,6 +7,17 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Find new games
+
+### Added
+- **Type "new" in the search box** (or "new games", "latest", "recently added") to see every game added in the last 2 weeks, newest first.
+- **Sort & filter → Show → 🆕 New this week / 🆕 New in the last 2 weeks.** Newest first unless you pick another sort.
+- `config/added-dates.json`: the day each game was added to the site (library, GN Originals, UBZone and washed games), built from the game lists' history by `tools/build_added_dates.py`. It updates every day with the split-file sizes. Partner catalogs aren't included.
+
+### Changed
+- **"Newest" sort is now "Recently added"** and uses the real day each game was added, so washed and Strongdog games show up first.
+- **NEW badges** now go on every game added in the last week (washed and UBZone games too, not just the library's 12 highest ids). Hovering the badge says when it was added.
+
 ## October 26, 2026 — New games in Featured
 
 ### Changed

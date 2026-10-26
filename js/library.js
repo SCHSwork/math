@@ -28,10 +28,55 @@ function writeJson(key, value) {
 }
 function zoneById(id) { return zones.find(z => String(z.id) === String(id)); }
 
-// ── "NEW" badges: the most recently added games (highest IDs) ───────────────
-const NEW_GAME_COUNT = 12;
+// ── New games ───────────────────────────────────────────────────────────────
+// config/added-dates.json has the day each game was added to the site (built
+// daily by tools/build_added_dates.py). It drives the NEW badges, the "New
+// this week / last 2 weeks" filter, the "Recently added" sort and searching "new".
+const NEW_BADGE_DAYS = 7;       // NEW badge on games added in the last week
+const NEW_GAME_COUNT = 12;      // without the dates: badge the 12 highest ids
+let addedDates = null;          // { id: "YYYY-MM-DD" }
+const addedDatesPromise = fetch("config/added-dates.json")
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { addedDates = (j && j.dates) || {}; return addedDates; })
+    .catch(() => { addedDates = {}; return addedDates; });
+addedDatesPromise.then(() => {
+    // Lists drawn before the dates arrived: redraw them with the badges and order
+    newZoneSource = null;
+    if (!Array.isArray(zones) || !zones.length) return;
+    if (typeof sortOptions !== "undefined" && sortOptions.value === "newest" && typeof sortZones === "function") sortZones();
+    else if (typeof applyFilters === "function") applyFilters();
+});
+function zoneAddedDay(zoneOrId) {
+    const id = zoneOrId && typeof zoneOrId === "object" ? zoneOrId.id : zoneOrId;
+    return (addedDates && addedDates[String(id)]) || "";
+}
+// Milliseconds since the game was added (Infinity when unknown)
+function zoneAddedAgo(zoneOrId) {
+    const d = zoneAddedDay(zoneOrId);
+    return d ? Date.now() - Date.parse(d + "T00:00:00") : Infinity;
+}
+function isAddedWithinDays(zoneOrId, days) {
+    return zoneAddedAgo(zoneOrId) < (days + 1) * 86400000;   // +1: count today in full
+}
+// "today", "yesterday", "3 days ago", "Oct 12"
+function addedDayLabel(zoneOrId) {
+    const d = zoneAddedDay(zoneOrId);
+    if (!d) return "";
+    const days = Math.floor(zoneAddedAgo(zoneOrId) / 86400000);
+    if (days <= 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 7) return `${days} days ago`;
+    return new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+// Newest first: by the day added, then the higher id
+function compareAdded(a, b) {
+    const da = zoneAddedDay(a), db = zoneAddedDay(b);
+    if (da !== db) return da < db ? 1 : -1;
+    return Number(b.id) - Number(a.id);
+}
 let newZoneIds = null, newZoneSource = null;
 function isNewZone(id) {
+    if (addedDates && Object.keys(addedDates).length) return isAddedWithinDays(id, NEW_BADGE_DAYS);
     if (newZoneSource !== zones || !newZoneIds) {
         newZoneSource = zones;
         newZoneIds = new Set(zones.map(z => Number(z.id)).filter(n => n >= 0 && n < 100000)   // not GN Originals (own row)

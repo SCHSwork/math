@@ -68,6 +68,8 @@ function showMatches(zone, show) {
     switch (show) {
         case "unplayed":  return !(typeof getPlaytime === "function" && getPlaytime(zone.id) > 0) && !(typeof getRecent === "function" && getRecent().includes(String(zone.id)));
         case "played":    return (typeof getPlaytime === "function" && getPlaytime(zone.id) > 0) || (typeof getRecent === "function" && getRecent().includes(String(zone.id)));
+        case "new7":      return typeof isAddedWithinDays === "function" && isAddedWithinDays(zone, 7);
+        case "new14":     return typeof isAddedWithinDays === "function" && isAddedWithinDays(zone, 14);
         case "favorites": return typeof isFavorite === "function" && isFavorite(zone.id);
         case "working":   return !(typeof isFlaggedBroken === "function" && isFlaggedBroken(zone.id));
         case "liked": {
