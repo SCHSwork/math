@@ -170,6 +170,7 @@ function toggleGameMenu(ev) {
         ["★", fav ? "Remove from favorites" : "Add to favorites", () => toggleFavorite(zone.id)],
         ["↻", "Restart game", () => openZone(zone)],
         ["ⓘ", "Game info", () => showZoneInfo()],
+        ...(typeof isFitOff === "function" ? [["⤢", isFitOff(zone.id) ? "Fit game to screen: off" : "Fit game to screen: on", () => { toggleFitForGame(zone.id); openZone(zone); }]] : []),
         "-",
         ["↗", "Open in new tab", () => aboutBlank()],
         ["⬇", "Download game file", () => downloadZone()],

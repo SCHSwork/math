@@ -1295,11 +1295,15 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     box-shadow: var(--shadow);
 }
 
+/* The game fills everything under the header (it used to be 90% wide, stuck to the left) */
 #zoneFrame {
-    flex-grow: 1;
+    flex: 1 1 auto;
+    display: block;
     border: none;
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    background: #000;
 }
 
 #popupOverlay {
