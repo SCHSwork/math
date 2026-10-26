@@ -12,6 +12,7 @@ All the changes to GN 2.0, newest first.
 ### Fixed
 - **Five Nights at Freddy's: Into The Pit** crashed with an `abort({})` popup at the end of loading on phones. The game is 645 MB, and its page kept copying it in memory (2–3 copies at once), more than a phone's browser allows. It now keeps the downloaded parts as files the browser can store on disk, 3 at a time, so only the game's own copy has to fit in memory. It's still very big, so phones and tablets get a heads-up before the download, and a plain message instead of a popup if they run out of memory anyway.
 - The loading bar no longer counts a game's own joined files a second time.
+- **Into The Pit no longer gets stuck on a broken download.** If one of its pieces was cut off mid-download, the page used to save the broken copy and fail on every load after that ("section extends past end of the module"). It now checks every piece's exact size, downloads short ones again, never saves or reuses an incomplete copy, and ignores copies saved by the old page.
 
 ## October 25, 2026 — 10 new library games, washed
 
