@@ -159,8 +159,27 @@ var loadingText = document.querySelector("#loading-text");
     let totalBytes = 0;
     let loadedBytes = 0;
 
+    // GN 2.0: the exact size of every part (from the game's repo at the locked
+    // commit). A part that arrives short is downloaded again, and a joined file
+    // of the wrong size is never saved or used. A cut-off download used to get
+    // saved and then break the game on every load ("extends past end of the module").
+    const PART_SIZES = {"Build/INTOTHEPIT.data.part1":20866662,"Build/INTOTHEPIT.data.part10":20866662,"Build/INTOTHEPIT.data.part11":20866662,"Build/INTOTHEPIT.data.part12":20866662,"Build/INTOTHEPIT.data.part13":20866662,"Build/INTOTHEPIT.data.part14":20866662,"Build/INTOTHEPIT.data.part15":20866662,"Build/INTOTHEPIT.data.part16":20866662,"Build/INTOTHEPIT.data.part17":20866662,"Build/INTOTHEPIT.data.part18":20866662,"Build/INTOTHEPIT.data.part19":20866662,"Build/INTOTHEPIT.data.part2":20866662,"Build/INTOTHEPIT.data.part20":20866662,"Build/INTOTHEPIT.data.part21":20866662,"Build/INTOTHEPIT.data.part22":20866662,"Build/INTOTHEPIT.data.part23":20866662,"Build/INTOTHEPIT.data.part24":20866662,"Build/INTOTHEPIT.data.part25":20866662,"Build/INTOTHEPIT.data.part26":9013795,"Build/INTOTHEPIT.data.part3":20866662,"Build/INTOTHEPIT.data.part4":20866662,"Build/INTOTHEPIT.data.part5":20866662,"Build/INTOTHEPIT.data.part6":20866662,"Build/INTOTHEPIT.data.part7":20866662,"Build/INTOTHEPIT.data.part8":20866662,"Build/INTOTHEPIT.data.part9":20866662,"Build/INTOTHEPIT.wasm.part1":20866662,"Build/INTOTHEPIT.wasm.part2":20866662,"Build/INTOTHEPIT.wasm.part3":20866662,"Build/INTOTHEPIT.wasm.part4":20866662,"Build/INTOTHEPIT.wasm.part5":20495558,"StreamingAssets/aa/WebGL/webglprefabs_assets_all_5ea291f575ddd5dc7ae765c62c8e6be3.bundle.part1":20866662,"StreamingAssets/aa/WebGL/webglprefabs_assets_all_5ea291f575ddd5dc7ae765c62c8e6be3.bundle.part2":20866662,"StreamingAssets/aa/WebGL/webglprefabs_assets_all_5ea291f575ddd5dc7ae765c62c8e6be3.bundle.part3":243011};
+    const expectedSize = parts => parts.reduce((n, p) => n + (PART_SIZES[p] || 0), 0);
+
     async function fetchWithProgress(url) {
-      const response = await fetch(url);
+      for (let attempt = 1; ; attempt++) {
+        try { return await fetchPartOnce(url); }
+        catch (e) {
+          if (attempt >= 4) throw e;
+          console.warn("Retrying " + url + ": " + e.message);
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
+    async function fetchPartOnce(url) {
+      const startLoaded = loadedBytes;
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error("HTTP " + response.status);
       const reader = response.body.getReader();
       let chunks = [];
       let received = 0;
@@ -182,15 +201,25 @@ var loadingText = document.querySelector("#loading-text");
       // have to sit in memory (it used to be copied 2-3 times, which crashed phones).
       const blob = new Blob(chunks);
       chunks.length = 0;
+      const want = PART_SIZES[url];
+      if (want && blob.size !== want) {
+        loadedBytes = startLoaded;  // don't count the bad try
+        throw new Error("got " + blob.size + " of " + want + " bytes");
+      }
       return blob;
     }
 
+    // Copies saved by the old page could be cut off, so they're not used
+    try { caches.delete("intothepit-cache"); } catch (e) {}
     async function mergeFiles(fileParts, cacheKey) {
-      const cache = await caches.open("intothepit-cache");
-      const cachedResponse = await cache.match(cacheKey);
+      const want = expectedSize(fileParts);
+      let cache = null;
+      try { cache = await caches.open("intothepit-cache-v2"); } catch (e) {}
+      const cachedResponse = cache && await cache.match(cacheKey);
       if (cachedResponse) {
         const blob = await cachedResponse.blob();
-        return URL.createObjectURL(blob);
+        if (!want || blob.size === want) return URL.createObjectURL(blob);
+        await cache.delete(cacheKey);  // broken copy: download again
       }
       // Up to 3 parts at a time, so only a few parts' downloads are in memory at once
       const buffers = new Array(fileParts.length);
@@ -199,8 +228,9 @@ var loadingText = document.querySelector("#loading-text");
       await Promise.all([worker(), worker(), worker()]);
       const mergedBlob = new Blob(buffers);
       buffers.length = 0;
+      if (want && mergedBlob.size !== want) throw new Error(cacheKey + " is incomplete (" + mergedBlob.size + " of " + want + " bytes)");
       // Saved for next time; if the device is out of space, just play without saving
-      try { await cache.put(cacheKey, new Response(mergedBlob)); } catch (e) {}
+      try { if (cache) await cache.put(cacheKey, new Response(mergedBlob)); } catch (e) {}
       return URL.createObjectURL(mergedBlob);
     }
 

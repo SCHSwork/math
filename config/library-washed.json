@@ -25,8 +25,8 @@
    "lockedTo": {
     "web-ports/fnaf-into-the-pit": "df6e074be181d4d2fb419241a25138bb8acbb928"
    },
-   "sha256": "e927e276a11b0cb4158546d86c4b155371068aef20885ac88df8151e07a99156",
-   "edited": "Loads its 645 MB as Blobs, 3 parts at a time, instead of copying it into memory 2-3 times (crashed phones); plain message instead of an error popup."
+   "sha256": "1767131e0403fccc4f37cebbe91c7318a70e6816addf2969df2cded6b1ade3b9",
+   "edited": "Loads its 645 MB as Blobs, 3 parts at a time; checks every part's exact size and re-downloads short ones; never saves or uses an incomplete copy; shows the real error instead of an abort popup."
   },
   "870": {
    "name": "Sally Face",
