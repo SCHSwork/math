@@ -378,7 +378,7 @@ async function listZones() {
                 : /^gh:[\w.-]+\/[\w.-]+@[0-9a-f]{40}\/[^\s?#]+$/.test(w.url || "") ? w.url : "";
             if (!url) continue;
             zones.push({ id: Number(id), name: String(w.name || "").slice(0, 80), author: String(w.author || ""), authorLink: /^https:\/\//.test(w.source || "") ? w.source : "",
-                cover: w.cover || "", url, description: w.description || "", washed: true });
+                cover: w.cover || "", url, description: w.description || "", washed: true, featured: w.featured === true, featuredOrder: w.featured === true ? Number(w.featuredOrder) || 0 : null });
         }
         if (typeof notifyNewLibraryGames === "function") notifyNewLibraryGames();
         // Add the GN Originals (open-source games) after the main library. An original
@@ -538,7 +538,10 @@ function sortZones() {
     }
     zones.sort((a, b) => (a.id === -1 ? -1 : b.id === -1 ? 1 : 0));
     if (featuredContainer.innerHTML === "") {
-        const featured = zones.filter(z => z.featured);
+        // Newly added games marked featured (washed list) go first
+        // Picked new games first (in their set order), then other newly added ones, then the library's
+        const rank = z => z.washed && z.featuredOrder != null ? z.featuredOrder : z.washed ? 1000 : 2000;
+        const featured = zones.filter(z => z.featured).sort((a, b) => rank(a) - rank(b));
         displayFeaturedZones(featured);
     }
     applyFilters();
