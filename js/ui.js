@@ -291,3 +291,22 @@
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setup();
 })();
+
+// Tab bars with more tabs than fit scroll sideways; fade the side with more
+(function () {
+    function update(bar) {
+        const max = bar.scrollWidth - bar.clientWidth;
+        bar.classList.toggle("fade-start", max > 2 && bar.scrollLeft > 2);
+        bar.classList.toggle("fade-end", max > 2 && bar.scrollLeft < max - 2);
+    }
+    const all = () => document.querySelectorAll(".admin-tabs").forEach(update);
+    document.addEventListener("scroll", e => { if (e.target.classList && e.target.classList.contains("admin-tabs")) update(e.target); }, true);
+    window.addEventListener("resize", all);
+    function watch() {
+        const body = document.getElementById("popupBody");
+        if (!body) return;
+        let queued = false;
+        new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; all(); }); } }).observe(body, { childList: true, subtree: true });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
+})();
