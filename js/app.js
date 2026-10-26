@@ -1181,6 +1181,37 @@ function fixMergedUnityParts(html) {
     return fixed;
 }
 
+// Game portal SDKs (Poki, CrazyGames, GameDistribution). The site removes their
+// scripts (ads and tracking), and some copies point at files that don't exist,
+// so games that call them stopped at a black screen. This stand-in has every
+// call succeed at once: ad breaks end right away and rewarded ads give the reward.
+// A game's own stand-in or the real SDK, if it loads, replaces it.
+function portalSdkStub() {
+    var make = function () {
+        var fn = function () {
+            for (var i = 0; i < arguments.length; i++) {
+                var a = arguments[i];
+                if (a && typeof a === "object") {
+                    var cb = a.callbacks || a;
+                    ["adFinished", "onClose", "onRewarded", "onComplete", "afterAd", "adComplete", "onAdFinished", "onFinish"].forEach(function (k) {
+                        if (typeof cb[k] === "function") setTimeout(function () { try { cb[k](true); } catch (e) {} }, 0);
+                    });
+                }
+            }
+            return Promise.resolve(true);
+        };
+        return new Proxy(fn, {
+            get: function (t, k) {
+                if (k === "then") return undefined;
+                if (k === Symbol.toPrimitive) return function () { return ""; };
+                if (/^(isAdBlocked|adblockDetected|isAdblock)/.test(String(k))) return function () { return false; };
+                if (!(k in t)) t[k] = make();
+                return t[k];
+            }
+        });
+    };
+    ["PokiSDK", "CrazyGames", "gdsdk"].forEach(function (n) { try { if (!(n in window)) window[n] = make(); } catch (e) {} });
+}
 // Construct 3 games work out where their files are from the page's address. Game
 // pages here are written into the game window, so that address is GN 2.0's and
 // they looked for their files on this site (scripts/c3runtime.js → 404) and never
@@ -1263,6 +1294,7 @@ function cleanGameHtml(html) {
         (typeof gameErrorHook === "function" ? `<script>(${gameErrorHook.toString()})();<\/script>` : "") +
         (typeof gameFitHook === "function" ? `<script>(${gameFitHook.toString()})();<\/script>` : "") +
         (/RuntimeInterface|c3runtime|supportcheck\.js/.test(html) ? `<script>(${construct3Hook.toString()})();<\/script>` : "") +
+        (/PokiSDK|poki-sdk|CrazyGames|gdsdk/.test(html) ? `<script>(${portalSdkStub.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
