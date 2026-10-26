@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — SpiderDoll works again
+
+### Fixed
+- **SpiderDoll** never got past loading. It had two problems, both in the game library's copy (so it was broken everywhere, not just here):
+  - Its game files are split in two halves. The page downloaded and joined them, then told the game to load files with the unsplit names, which don't exist. The site now points the game at the joined files. This fix applies to any game with the same mistake.
+  - A Newgrounds plugin inside it reads every stylesheet on the page when it starts, and crashed because the game's stylesheet comes from another site. Games now get an empty list instead of a crash, which helps any other game with that plugin too.
+- The loading bar no longer counts those joined files twice.
+
 ## October 23, 2026 — A better loading bar
 
 ### Changed
