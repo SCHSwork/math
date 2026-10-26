@@ -341,6 +341,10 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
+        // Not the daily-limit pause, and not just being offline
+        if (typeof reportError === "function" && !(typeof noteFbError === "function" && /resource-exhausted|quota/i.test(String(e && (e.code || e.message)))) && navigator.onLine !== false && e && e.code !== "unavailable") {
+            reportError("cloud-save", (e && e.message) || String(e), { stack: e && e.stack, detail: e && e.code });
+        }
         if (typeof noteFbError === "function" && noteFbError(e)) {
             setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
         } else setCloudStatus("Cloud save failed: " + (e.message || e));

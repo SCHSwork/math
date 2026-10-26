@@ -146,6 +146,7 @@ async function openAdminPanel() {
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="log" aria-selected="false">Log</button>`}
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="errors" aria-selected="false">Errors <span class="admin-tab-count" id="errors-tab-count" hidden></span></button>`}
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
@@ -169,7 +170,8 @@ async function openAdminPanel() {
         <div id="admin-newgames" hidden></div>
         <div id="admin-feedback" hidden></div>
         <div id="admin-takedowns" hidden></div>
-        <div id="admin-log" hidden></div>`;
+        <div id="admin-log" hidden></div>
+        <div id="admin-errors" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
@@ -178,6 +180,8 @@ async function openAdminPanel() {
         document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
         document.getElementById("admin-takedowns").hidden = b.dataset.tab !== "takedowns";
         document.getElementById("admin-log").hidden = b.dataset.tab !== "log";
+        if (document.getElementById("admin-errors")) document.getElementById("admin-errors").hidden = b.dataset.tab !== "errors";
+        if (b.dataset.tab === "errors") renderErrorLog();
         if (b.dataset.tab === "log") renderActionLog();
         if (b.dataset.tab === "takedowns" && typeof renderModTakedowns === "function") renderModTakedowns();
         if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
@@ -190,6 +194,15 @@ async function openAdminPanel() {
             if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
             if (!modFeedbackCache.length) modFeedbackCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             updateFeedbackTabCount();
+        }).catch(() => {});
+    }
+    // Open error reports seen in the last day, shown on their tab
+    if (!modOnly) {
+        cloudDb.collection("errorLogs").where("lastAt", ">", new Date(Date.now() - 86400000)).get().then(snap => {
+            if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
+            const n = snap.docs.filter(d => (d.data() || {}).status !== "resolved").length;
+            const el = document.getElementById("errors-tab-count");
+            if (el && n) { el.textContent = n; el.hidden = false; }
         }).catch(() => {});
     }
     // Takedown requests waiting, shown on their tab
@@ -281,6 +294,111 @@ async function renderActionLog() {
         }
     };
     input.addEventListener("input", draw);
+    draw();
+}
+
+// ── Error reports ───────────────────────────────────────────────────────────
+// Sent automatically by js/errors.js. One entry per kind of error, with how
+// many times it happened and the details of the latest time.
+const ERROR_SOURCES = { site: "Site", game: "Game crashed", "game-load": "Game didn't load", download: "Download", "cloud-save": "Cloud save" };
+let errorLogCache = null, errorLogFilter = "open";
+async function renderErrorLog(force) {
+    const box = document.getElementById("admin-errors");
+    if (!box) return;
+    if (!errorLogCache || force) {
+        box.innerHTML = `<p class="admin-summary">Loading error reports…</p>`;
+        try {
+            const snap = await cloudDb.collection("errorLogs").orderBy("lastAt", "desc").limit(200).get();
+            if (typeof fbCount === "function") fbCount(Math.max(1, snap.size), 0);
+            errorLogCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (e) {
+            box.innerHTML = `<p class="admin-summary">Couldn't load error reports: ${escapeHtmlText(e.message || String(e))}</p>`;
+            return;
+        }
+    }
+    box.innerHTML = `
+        <div class="admin-toolbar">
+            <select id="err-filter" aria-label="Show">
+                <option value="open">Open</option>
+                <option value="resolved">Resolved</option>
+                <option value="all">All</option>
+            </select>
+            <input type="search" id="err-search" data-no-autofill placeholder="Search errors or games…" aria-label="Search error reports" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
+            <button type="button" class="finder-chip" id="err-refresh">Refresh</button>
+        </div>
+        <p id="err-summary" class="admin-summary"></p>
+        <div id="err-list" class="admin-list"></div>
+        <p class="admin-footnote">Sent automatically when something goes wrong for a player. The same error from many players is one entry with a count; the details are from the latest time. A resolved error opens again if it happens again. Shows the 200 most recent.</p>`;
+    const sel = document.getElementById("err-filter"), search = document.getElementById("err-search");
+    sel.value = errorLogFilter;
+    const when = v => { const d = v && typeof v.toDate === "function" ? v.toDate() : null; return d ? d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "?"; };
+    const draw = () => {
+        errorLogFilter = sel.value;
+        const q = normText(search.value);
+        const rows = errorLogCache.filter(e => (errorLogFilter === "all" || (e.status || "open") === errorLogFilter)
+            && (!q || normText(`${e.message} ${e.gameName} ${e.where} ${e.source}`).includes(q)));
+        const total = rows.reduce((n, e) => n + (e.count || 0), 0);
+        document.getElementById("err-summary").textContent = rows.length
+            ? `${rows.length} kind${rows.length === 1 ? "" : "s"} of error · ${total.toLocaleString()} time${total === 1 ? "" : "s"} in all`
+            : (errorLogFilter === "open" && !q ? "No open errors. 🎉" : "Nothing matches.");
+        const list = document.getElementById("err-list");
+        list.innerHTML = "";
+        for (const e of rows) {
+            const row = document.createElement("details");
+            row.className = "admin-row";
+            const sum = document.createElement("summary");
+            const b = document.createElement("b"); b.textContent = e.message || "(no message)";
+            const src = document.createElement("span"); src.className = "admin-badge" + (e.source === "site" ? " banned" : ""); src.textContent = ERROR_SOURCES[e.source] || e.source;
+            sum.append(b, src);
+            if (e.status === "resolved") { const r = document.createElement("span"); r.className = "admin-badge trusted"; r.textContent = "Resolved"; sum.appendChild(r); }
+            const meta = document.createElement("small");
+            meta.textContent = [e.gameName ? "🎮 " + e.gameName : "", `${(e.count || 0).toLocaleString()}×`, "last " + when(e.lastAt), "first " + when(e.firstAt)].filter(Boolean).join(" · ");
+            sum.appendChild(meta);
+            row.appendChild(sum);
+            const body = document.createElement("div");
+            body.className = "admin-actions err-body";
+            const l = e.last || {};
+            const facts = [
+                ["Where", e.where], ["Game", e.gameName ? `${e.gameName} (#${e.gameId})` : ""], ["Detail", l.detail],
+                ["Browser", l.browser], ["Screen", l.screen], ["Device memory", l.memory ? l.memory + " GB" : ""],
+                ["Online", l.online === false ? "No" : ""], ["Blocked sources", l.blockedSources], ["On the page for", l.secondsOnPage != null ? l.secondsOnPage + "s" : ""],
+                ["Site version", l.version], ["Account", l.user], ["Full message", l.message !== e.message ? l.message : ""]
+            ].filter(([, v]) => v);
+            const dl = document.createElement("dl");
+            dl.className = "err-facts";
+            for (const [k, v] of facts) { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }
+            body.appendChild(dl);
+            if (l.stack) { const pre = document.createElement("pre"); pre.className = "err-stack"; pre.textContent = l.stack; body.appendChild(pre); }
+            const btn = (label, fn, danger) => {
+                const x = document.createElement("button"); x.type = "button"; x.className = "finder-chip" + (danger ? " danger" : ""); x.textContent = label;
+                x.onclick = async () => { x.disabled = true; try { await fn(); } catch (err) { notify("That didn't work: " + (err.message || err), { type: "error" }); x.disabled = false; } };
+                body.appendChild(x);
+            };
+            const zone = e.gameId && typeof zones !== "undefined" ? zones.find(z => String(z.id) === String(e.gameId)) : null;
+            if (zone) btn("Open game", () => { closePopup(); openZone(zone); });
+            btn("Copy details", async () => {
+                await navigator.clipboard.writeText([`${ERROR_SOURCES[e.source] || e.source}: ${e.message}`, `${e.count}× · first ${when(e.firstAt)} · last ${when(e.lastAt)}`, ...facts.map(([k, v]) => `${k}: ${v}`), l.stack ? "\n" + l.stack : ""].join("\n"));
+                notify("Copied.", { type: "success" });
+            });
+            btn(e.status === "resolved" ? "Reopen" : "Mark resolved", async () => {
+                const status = e.status === "resolved" ? "open" : "resolved";
+                await cloudDb.collection("errorLogs").doc(e.id).update({ status });
+                if (typeof fbCount === "function") fbCount(0, 1);
+                e.status = status; draw();
+            });
+            btn("Delete", async () => {
+                if (!(await askConfirm("Delete this error report? If it happens again, a new one starts.", { title: "Delete error report?", confirmText: "Delete", danger: true }))) return;
+                await cloudDb.collection("errorLogs").doc(e.id).delete();
+                if (typeof fbCount === "function") fbCount(0, 1);
+                errorLogCache = errorLogCache.filter(x => x !== e); draw();
+            }, true);
+            row.appendChild(body);
+            list.appendChild(row);
+        }
+    };
+    sel.onchange = draw;
+    search.oninput = draw;
+    document.getElementById("err-refresh").onclick = () => renderErrorLog(true);
     draw();
 }
 

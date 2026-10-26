@@ -976,7 +976,10 @@ function partGuardHook(SIZES) {
                     }
                     seen[got] = true;
                     note(url + " arrived incomplete (" + got + " of " + expect + " bytes)" + (n < 4 ? ", downloading it again" : ""));
-                    if (n >= 4) throw new TypeError("Incomplete download: " + url);
+                    if (n >= 4) {
+                        try { window.parent.__gnmathGameError({ kind: "download", message: "Piece kept arriving incomplete after 4 tries", stack: url + " (" + got + " of " + expect + " bytes)" }); } catch (e) {}
+                        throw new TypeError("Incomplete download: " + url);
+                    }
                     return new Promise(function (r) { setTimeout(r, 800 * n); }).then(function () { return tryOnce(n + 1); });
                 });
             });
@@ -1120,6 +1123,7 @@ function cleanGameHtml(html) {
         `if(!d||!d.get)return;Object.defineProperty(P,k,{configurable:true,enumerable:d.enumerable,get:function(){try{return d.get.call(this)}catch(e){return []}}})})}catch(e){}})();<\/script>` +
         (typeof gameProgressHook === "function" ? `<script>(${gameProgressHook.toString()})();<\/script>` : "") +
         (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "") +
+        (typeof gameErrorHook === "function" ? `<script>(${gameErrorHook.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((sizes => sizes ? `<script>(${partGuardHook.toString()})(${JSON.stringify(sizes).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     if (/<head\b[^>]*>/i.test(out)) out = out.replace(/<head\b[^>]*>/i, m => m + guard);
@@ -1256,6 +1260,11 @@ function openZone(file) {
             closeZone();
             if (error && error.blocked) notify(`${file.name} was blocked to keep you safe. Its game files were found to contain malicious code (added to the outside game library on October 11), so it can't be played right now.`, { type: "error", duration: 9000 });
             else notify(`Couldn't load ${file.name} from any of the game sources. Check your internet connection, or try again in a few minutes.`, { type: "error" });
+            // Every source failed while online: worth a look (a game file may be missing)
+            if (typeof reportError === "function" && navigator.onLine !== false && !(error && error.blocked)) {
+                reportError("game-load", "Couldn't load the game from any source: " + ((error && error.message) || error), {
+                    keep: true, stack: error && error.stack, gameId: file.id, gameName: file.name, detail: String(file.url || "").slice(0, 200) });
+            }
         });
     }
 }
