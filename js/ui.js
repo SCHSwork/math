@@ -236,6 +236,22 @@
     window.protectFromAutofill = el => { if (el) { el.setAttribute("data-no-autofill", ""); if (document.activeElement !== el) el.readOnly = true; } };
 })();
 
+// ── "/" jumps to the search box (like YouTube and GitHub) ────────────────────
+document.addEventListener("keydown", e => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const viewer = document.getElementById("zoneViewer");
+    if (viewer && viewer.style.display === "flex") return;          // a game is open
+    if (document.querySelector(".dialog-overlay") || document.getElementById("popupOverlay")?.style.display === "flex") return;
+    const box = document.getElementById("searchBar");
+    if (!box) return;
+    e.preventDefault();
+    box.readOnly = false;
+    box.focus();
+    box.select();
+});
+
 // ── Scroll button: jumps to the bottom of the page; near the bottom it turns
 // into "back to top". Hidden when the page is too short to scroll.
 (function () {
