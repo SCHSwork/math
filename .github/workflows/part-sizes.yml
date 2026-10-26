@@ -1,0 +1,40 @@
+# Keeps config/part-sizes.json (the exact size of every split game file) up to
+# date. The site uses it to re-download pieces that arrive cut off and to never
+# save a broken joined file. Games that load from a branch (e.g. @main) can
+# change, so it's rebuilt every day, and whenever the game lists change.
+name: Update split-file sizes
+on:
+  schedule:
+    - cron: "41 9 * * *"
+  push:
+    branches: [main]
+    paths:
+      - washed/**
+      - config/library-pinned.json
+      - config/ubzone-games.json
+      - tools/build_part_sizes.py
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: part-sizes
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the size list
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/build_part_sizes.py
+      - name: Save it if it changed
+        run: |
+          if git diff --quiet -- config/part-sizes.json && git ls-files --error-unmatch config/part-sizes.json >/dev/null 2>&1; then
+            echo "No changes"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git add config/part-sizes.json
+          git commit -m "chore: update split-file sizes"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done

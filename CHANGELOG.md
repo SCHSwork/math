@@ -7,6 +7,16 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — Big games protected from broken downloads
+
+### New
+- **Every game that loads in pieces is now protected from cut-off downloads**, not just Into The Pit. Big games come split into pieces that they download, join and often save in the browser. If a piece arrived cut off, the joined file was broken, and games that saved it failed on every load after that. Now, inside every game:
+  - each piece is checked against its exact size, and a short one is downloaded again (up to 3 times);
+  - a joined file that's too small is never saved, and one saved before is thrown out and downloaded again;
+  - for games locked to an exact version, a piece that keeps arriving short gives a clear error instead of a broken game.
+- The sizes come from `config/part-sizes.json`, which a GitHub Action rebuilds every day and whenever the game lists change (`tools/build_part_sizes.py`), since games that load from a branch can change.
+- **Re-download game files** in a game's ⋯ More menu deletes the game files it saved in your browser (not your progress), so they're downloaded fresh.
+
 ## October 25, 2026 — Into The Pit uses far less memory
 
 ### Fixed

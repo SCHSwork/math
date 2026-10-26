@@ -26,6 +26,12 @@ function gameDataHook() {
                 return req;
             };
         });
+        // Browser caches a game saves its downloaded files in (for "Re-download game files")
+        var CS = window.CacheStorage && CacheStorage.prototype;
+        if (CS && CS.open) {
+            var open = CS.open;
+            CS.open = function (name) { send({ t: "cache", name: String(name) }); return open.apply(this, arguments); };
+        }
         var C = window.IDBCursor && IDBCursor.prototype;
         if (C && C.update) {
             var upd = C.update;
@@ -57,8 +63,16 @@ function keyId(k) {
 }
 function keyFromId(id) { return id.startsWith("n:") ? Number(id.slice(2)) : id.slice(2); }
 
+// Which browser caches each game uses (kept apart from the save data above)
+const GAME_CACHES_KEY = "gnmath-gamecaches";
+function gameCaches() { return readJson(GAME_CACHES_KEY, {}) || {}; }
 window.__gnmathTrackData = function (ev) {
     if (!currentGameId) return;
+    if (ev.t === "cache") {
+        const all = gameCaches(), list = all[currentGameId] || (all[currentGameId] = []);
+        if (!list.includes(ev.name) && list.length < 20) { list.push(ev.name); writeJson(GAME_CACHES_KEY, all); }
+        return;
+    }
     const all = loadGameData();
     const g = all[currentGameId] || (all[currentGameId] = { ls: [], idb: {} });
     if (ev.t === "ls") {
@@ -163,6 +177,7 @@ function toggleGameMenu(ev) {
         ["⚠", "Report broken", () => reportCurrentZone()],
         ["📝", "Report a problem…", () => openFeedback("bug")],
         ["©", "Copyright takedown…", () => openTakedownForm(zone)],
+        ...((gameCaches()[String(zone.id)] || []).length ? [["⟳", "Re-download game files", () => redownloadCurrentGame()]] : []),
         ["🗑", `Clear this game's data${tracked ? "" : "…"}`, () => clearCurrentGameData(), true]
     ];
     for (const it of items) {
@@ -189,6 +204,24 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeGameMen
 window.addEventListener("resize", closeGameMenu);
 // Clicking into the game (an iframe) moves focus away from the page
 window.addEventListener("blur", () => setTimeout(() => { if (document.activeElement && document.activeElement.tagName === "IFRAME") closeGameMenu(); }, 0));
+
+// Deletes the game files a game saved in the browser (not its progress), so a
+// broken or outdated download is fetched fresh. Caches another game also uses are kept.
+async function redownloadCurrentGame() {
+    const zone = currentZone();
+    const id = zone ? String(zone.id) : String(currentGameId || "");
+    if (!id) return;
+    const all = gameCaches();
+    const shared = new Set(Object.entries(all).filter(([g]) => g !== id).flatMap(([, l]) => l));
+    const names = (all[id] || []).filter(n => !shared.has(n));
+    if (!names.length) { notify("This game hasn't saved any game files in your browser."); return; }
+    if (!(await askConfirm("The game's downloaded files will be deleted and downloaded again the next time it opens. Your progress isn't touched.", { title: "Re-download game files?", confirmText: "Re-download" }))) return;
+    closeZone();
+    let n = 0;
+    for (const name of names) { try { if (await caches.delete(name)) n++; } catch (e) {} }
+    notify(n ? "Deleted the saved game files. Downloading them again…" : "There were no saved game files left to delete. Opening the game again…", { type: "success" });
+    if (zone) openZone(zone);
+}
 
 async function clearCurrentGameData() {
     const zone = currentZone();
