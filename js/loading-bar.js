@@ -41,8 +41,15 @@ function gameProgressHook() {
         };
     }
     if (window.XMLHttpRequest) {
+        var origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            try { this.__gnSelf = /^(blob|data):/i.test(String(url)); } catch (e) {}
+            return origOpen.apply(this, arguments);
+        };
         var origSend = XMLHttpRequest.prototype.send;
         XMLHttpRequest.prototype.send = function () {
+            // Files the page made itself (joined parts) were already counted
+            if (this.__gnSelf) return origSend.apply(this, arguments);
             var id = ++seq;
             report({ t: "start", id: id });
             this.addEventListener("progress", function (e) {

@@ -177,13 +177,12 @@ var loadingText = document.querySelector("#loading-text");
         let mbTotal = '645.25';
         loadingText.textContent = `LOADING... ${mbDone} MB / ${mbTotal} MB`;
       }
-      let fullBuffer = new Uint8Array(received);
-      let offset = 0;
-      for (let chunk of chunks) {
-        fullBuffer.set(chunk, offset);
-        offset += chunk.length;
-      }
-      return fullBuffer.buffer;
+      // GN 2.0: keep the part as a Blob instead of copying it into one big
+      // array. The browser can keep Blobs on disk, so the 645 MB doesn't all
+      // have to sit in memory (it used to be copied 2-3 times, which crashed phones).
+      const blob = new Blob(chunks);
+      chunks.length = 0;
+      return blob;
     }
 
     async function mergeFiles(fileParts, cacheKey) {
@@ -193,12 +192,15 @@ var loadingText = document.querySelector("#loading-text");
         const blob = await cachedResponse.blob();
         return URL.createObjectURL(blob);
       }
-      const buffers = await Promise.all(
-        fileParts.map(part => fetchWithProgress(part))
-      );
+      // Up to 3 parts at a time, so only a few parts' downloads are in memory at once
+      const buffers = new Array(fileParts.length);
+      let next = 0;
+      const worker = async () => { while (next < fileParts.length) { const i = next++; buffers[i] = await fetchWithProgress(fileParts[i]); } };
+      await Promise.all([worker(), worker(), worker()]);
       const mergedBlob = new Blob(buffers);
-      const response = new Response(mergedBlob);
-      await cache.put(cacheKey, response);
+      buffers.length = 0;
+      // Saved for next time; if the device is out of space, just play without saving
+      try { await cache.put(cacheKey, new Response(mergedBlob)); } catch (e) {}
       return URL.createObjectURL(mergedBlob);
     }
 
@@ -210,6 +212,12 @@ var loadingText = document.querySelector("#loading-text");
       return parts;
     }
     (async () => {
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory < 4)) {
+        const note = document.createElement("div");
+        note.textContent = "Heads up: this game is 645 MB and may run out of memory on phones. It works best on a computer or Chromebook.";
+        note.style.cssText = "color:#fbbf24;font:16px system-ui,sans-serif;text-align:center;margin:8px 16px";
+        loadingText.after(note);
+      }
       const [dataUrl, wasmUrl, prebundle] = await Promise.all([
         mergeFiles(getParts("Build/INTOTHEPIT.data", 1, 26), "INTOTHEPIT.data"),
         mergeFiles(getParts("Build/INTOTHEPIT.wasm", 1, 5), "INTOTHEPIT.wasm"),
@@ -271,7 +279,13 @@ var loadingText = document.querySelector("#loading-text");
           loadingBar.style.display = "none";
           loadingText.remove();
         }).catch((message) => {
-          alert(message);
+          // GN 2.0: a plain message instead of a popup full of code
+          const small = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory < 4);
+          loadingText.style.fontSize = "22px";
+          loadingText.textContent = small
+            ? "This device ran out of memory. Into The Pit is a very big game (645 MB) and usually needs a computer or Chromebook."
+            : "The game couldn't start (" + String(message).split("\n")[0].slice(0, 80) + "). Try closing other tabs and loading it again.";
+          console.error(message);
         });
       };
       document.body.appendChild(script);
