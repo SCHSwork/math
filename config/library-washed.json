@@ -1445,6 +1445,25 @@
    "cover": "washed/covers/sd-fireboy-and-watergirl.jpg",
    "featured": true,
    "featuredOrder": 9
+  },
+  "990123": {
+   "name": "Among Us (Fan Game)",
+   "extra": true,
+   "author": "",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/among-us",
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "from": "strongdog",
+   "path": "washed/sd-among-us.html",
+   "removed": [
+    "link to that site's /js/main.js"
+   ],
+   "sha256": "d1c2d89bee2aaf0671cf5c7f2d048dab59872cdb3daba20d71f3e4b4b3a5d604",
+   "description": "Single-player Among Us fan game: do your tasks and find the impostor.",
+   "cover": "washed/covers/sd-among-us.jpg",
+   "featured": true,
+   "featuredOrder": 0.5
   }
  }
 }

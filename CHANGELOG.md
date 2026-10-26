@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Construct 3 games start again; Among Us added
+
+### Fixed
+- **Construct 3 games that never started now work**, e.g. Draw the Hill, Dreadhead Parkour, Teen Titans GO!: Jump Jousts 2 and Cat Gunner. They looked for their files on GN 2.0 instead of in their own folder (game pages are written into the game window, so they saw GN 2.0's address). The site now tells them their real folder and runs them without helper workers (`construct3Hook` in js/app.js). Copies already hand-patched for this are left alone.
+
+### Added
+- **Among Us (Fan Game)** from Strongdog, skipped before because of the problem above. It's in Featured.
+
 ## October 26, 2026 — Flash games no longer depend on jsDelivr
 
 ### Fixed

@@ -1180,6 +1180,33 @@ function fixMergedUnityParts(html) {
     return fixed;
 }
 
+// Construct 3 games work out where their files are from the page's address. Game
+// pages here are written into the game window, so that address is GN 2.0's and
+// they looked for their files on this site (scripts/c3runtime.js → 404) and never
+// started. Tell them the real folder (the page's <base>), and run them without
+// helper workers, which can't start from another site.
+function construct3Hook() {
+    try {
+        var RI;
+        var wrap = function (C) {
+            // Some library copies were already hand-patched to find their files; leave those alone
+            try { if (/querySelector\(\s*['"]base['"]\s*\)/.test(Function.prototype.toString.call(C))) return C; } catch (e) {}
+            var W = function (opts) {
+                opts = opts || {};
+                try {
+                    var base = document.baseURI;
+                    if (!opts.baseUrl && !opts.runtimeBaseUrl && new URL(base).origin !== location.origin) { opts.baseUrl = base; opts.runtimeBaseUrl = base; opts.useWorker = false; }
+                } catch (e) {}
+                return new C(opts);
+            };
+            W.prototype = C.prototype;
+            Object.setPrototypeOf(W, C);
+            return W;
+        };
+        Object.defineProperty(window, "RuntimeInterface", { configurable: true, enumerable: true,
+            get: function () { return RI; }, set: function (C) { RI = typeof C === "function" ? wrap(C) : C; } });
+    } catch (e) {}
+}
 function cleanGameHtml(html) {
     if (typeof html !== "string") return html;
     if (isKnownBadGame(html)) { const e = new Error("This game file contains a known malicious script"); e.blocked = true; throw e; }
@@ -1227,6 +1254,7 @@ function cleanGameHtml(html) {
         (typeof gameDataHook === "function" ? `<script>(${gameDataHook.toString()})();<\/script>` : "") +
         (typeof gameErrorHook === "function" ? `<script>(${gameErrorHook.toString()})();<\/script>` : "") +
         (typeof gameFitHook === "function" ? `<script>(${gameFitHook.toString()})();<\/script>` : "") +
+        (/RuntimeInterface|c3runtime|supportcheck\.js/.test(html) ? `<script>(${construct3Hook.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
