@@ -1942,6 +1942,11 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .admin-badge.admin { background: var(--primary); color: #fff; }
 .admin-badge.trusted { background: #0e7490; color: #fff; }
 .admin-badge.mod { background: #7c3aed; color: #fff; }
+.err-body > dl, .err-body > pre { flex-basis: 100%; }
+.err-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.75rem; margin: 0.25rem 0 0.5rem; font-size: 13px; }
+.err-facts dt { color: var(--text-muted); }
+.err-facts dd { margin: 0; overflow-wrap: anywhere; }
+.err-stack { max-height: 220px; overflow: auto; margin: 0 0 0.5rem; padding: 0.5rem 0.6rem; border-radius: 8px; background: rgba(0, 0, 0, 0.3); font-size: 11.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .admin-badge.banned { background: #7f1d1d; color: #fff; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 0.75rem 0.75rem; }
 .admin-actions small { flex-basis: 100%; color: var(--text-muted); font-size: 12px; }

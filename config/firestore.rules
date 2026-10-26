@@ -141,6 +141,38 @@ service cloud.firestore {
         && (!(request.auth.uid in request.resource.data.get('votes', {})) || request.resource.data.votes[request.auth.uid] == true);
       allow delete: if request.auth != null && ((resource.data.uid == request.auth.uid && resource.data.status == 'open') || isStaff());
     }
+    // Automatic error reports (js/errors.js): one document per kind of error,
+    // with a count and the details of the latest time it happened. Anyone can
+    // add a new one or add one to an existing count; only admins can read them
+    // or mark them resolved, and nobody else can change what's in them.
+    match /errorLogs/{id} {
+      allow read, delete: if isAdmin();
+      allow create: if id.matches('e[a-z0-9]{6,30}')
+        && request.resource.data.keys().hasOnly(['sig', 'source', 'message', 'where', 'gameId', 'gameName', 'count', 'firstAt', 'lastAt', 'last', 'status'])
+        && id == 'e' + request.resource.data.sig
+        && shortText(request.resource.data.source, 20) && shortText(request.resource.data.message, 200)
+        && shortText(request.resource.data.where, 160) && shortText(request.resource.data.gameId, 12)
+        && shortText(request.resource.data.gameName, 80)
+        && request.resource.data.count == 1 && request.resource.data.status == 'open'
+        && request.resource.data.firstAt == request.time && request.resource.data.lastAt == request.time
+        && validErrorSample(request.resource.data.last);
+      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count', 'lastAt', 'last', 'status'])
+          && request.resource.data.count == resource.data.count + 1
+          && request.resource.data.lastAt == request.time
+          && request.resource.data.status == 'open'
+          && validErrorSample(request.resource.data.last))
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note'])
+          && request.resource.data.status in ['open', 'resolved']
+          && shortText(request.resource.data.get('note', ''), 200));
+    }
+    function validErrorSample(d) {
+      return d is map && d.keys().hasOnly(['message', 'stack', 'detail', 'browser', 'ua', 'screen', 'memory', 'online', 'version', 'secondsOnPage', 'blockedSources', 'user', 'at'])
+        && shortText(d.get('message', ''), 500) && shortText(d.get('stack', ''), 1500) && shortText(d.get('detail', ''), 500)
+        && shortText(d.get('browser', ''), 60) && shortText(d.get('ua', ''), 300) && shortText(d.get('screen', ''), 30)
+        && shortText(d.get('memory', ''), 10) && d.get('online', true) is bool && shortText(d.get('version', ''), 20)
+        && d.get('secondsOnPage', 0) is int && shortText(d.get('blockedSources', ''), 120)
+        && shortText(d.get('user', ''), 40) && shortText(d.get('at', ''), 30);
+    }
     // Copyright takedown requests (js/takedown.js). Anyone can send one, no
     // account needed, since game owners usually won't have one. Only admins
     // (not mods) can read, review or delete them, since they hold contact info.

@@ -7,6 +7,19 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — Automatic error reports
+
+### New
+- **Things that go wrong for players are reported automatically**, for admins to look over in **Admin Panel → Errors**:
+  - the site itself crashing,
+  - a game crashing while it runs (including Unity "abort" popups),
+  - a game that couldn't load from any source while the player was online,
+  - a game piece that kept arriving cut off,
+  - a cloud save failing.
+- The same error from many players is **one entry with a count**, plus the details of the latest time: the error and where in the code, the game, browser and device, screen, whether they were online, which game sources were blocked, how long they'd been on the page, the site version, and the account name if they were signed in.
+- Admins can search, copy the details, open the game, mark an error resolved (it reopens if it happens again) or delete it. The tab shows how many open errors happened in the last day.
+- Each browser sends at most 15 reports a day and never the same one twice in a visit, and none when the site is near its daily Firebase limit. Reports made while offline are sent on the next visit. Known noise (browser extensions, being offline) is skipped.
+
 ## October 25, 2026 — Big games protected from broken downloads
 
 ### New
