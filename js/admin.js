@@ -142,12 +142,12 @@ async function openAdminPanel() {
     body.innerHTML = `
         <div class="admin-tabs" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
-            <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports &amp; ideas</button>
+            <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
-            <button type="button" role="tab" data-tab="submissions" aria-selected="false">Game submissions</button>
+            <button type="button" role="tab" data-tab="submissions" aria-selected="false">Submissions</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="log" aria-selected="false">Log</button>`}
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="errors" aria-selected="false">Errors <span class="admin-tab-count" id="errors-tab-count" hidden></span></button>`}
-            ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New library games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
             <div class="admin-toolbar">
@@ -174,6 +174,7 @@ async function openAdminPanel() {
         <div id="admin-errors" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+        b.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
         document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
         document.getElementById("admin-newgames").hidden = b.dataset.tab !== "newgames";

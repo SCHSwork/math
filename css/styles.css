@@ -1926,9 +1926,33 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 #popupBody .submit-radios input[type="radio"] { width: 16px; height: 16px; margin: 0; flex: none; padding: 0; }
 
 /* Admin Panel */
-.admin-tabs { display: flex; gap: 0.35rem; margin-bottom: 0.9rem; }
-.admin-tabs button { flex: 1; padding: 0.5rem 0.75rem; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-muted); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
-.admin-tabs button[aria-selected="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.admin-tabs {
+    display: flex; gap: 0.15rem; margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tabs button {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.55rem 0.8rem; margin-bottom: -1px; white-space: nowrap;
+    border: 0; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0;
+    background: none; color: var(--text-muted);
+    font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.admin-tabs button:hover { color: var(--text); background: var(--bg-secondary); }
+.admin-tabs button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.admin-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--primary); }
+/* More tabs than fit: fade the side that scrolls */
+.admin-tabs.fade-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+.admin-tabs.fade-start { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); }
+.admin-tabs.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+@media (max-width: 480px) {
+    .admin-tabs button { padding: 0.5rem 0.6rem; font-size: 13px; }
+    .set-tabs button { padding: 0.5rem 0.35rem; }
+}
+/* Few tabs (Settings): share the width evenly */
+.set-tabs button { flex: 1 0 auto; justify-content: center; }
 .admin-toolbar { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
 .admin-toolbar input, .admin-toolbar select { padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); color: var(--text); font: inherit; font-size: 14px; }
 .admin-toolbar input { flex: 1; min-width: 0; }
@@ -1956,7 +1980,7 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .admin-footnote { margin: 0.75rem 0 0; font-size: 12px; color: var(--text-muted); }
 #accountButton.is-admin::before { content: ""; position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
 /* Admin Panel: new library games waiting to be checked */
-.admin-tab-count { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--primary, #fc2651); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+.admin-tab-count { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 999px; background: var(--primary, #fc2651); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
 .newgame-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-secondary); }
 .newgame-meta { color: var(--text-muted); font-size: 12px; margin-top: 2px; word-break: break-all; }
 .newgame-btn { flex-shrink: 0; }
@@ -2174,8 +2198,6 @@ body.cards-list .zone-item::after { display: none; }
 .set-pane:not([hidden]), #admin-accounts:not([hidden]), #admin-submissions:not([hidden]),
 #admin-newgames:not([hidden]), #admin-feedback:not([hidden]), #fb-form, #fb-ideas { animation: mPaneIn 0.25s ease-out; }
 @keyframes mPaneIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.admin-tabs button { transition: background-color 0.2s, color 0.2s, transform 0.12s; }
-.admin-tabs button[aria-selected="true"] { animation: mTabPop 0.25s ease-out; }
 @keyframes mTabPop { 0% { transform: scale(0.94); } 100% { transform: scale(1); } }
 
 /* Popups close with a quick shrink instead of vanishing */
