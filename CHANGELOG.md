@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Stand-in for game portal SDKs
+
+### Fixed
+- Games that call the Poki, CrazyGames or GameDistribution SDK, but whose SDK file is removed (ads) or missing, get a stand-in where every call succeeds right away (ad breaks end at once, rewarded ads give the reward). Games that bring their own stand-in, or load the real SDK, use theirs.
+
 ## October 26, 2026 — 12 UBZone games that showed a blank page now load
 
 ### Fixed
