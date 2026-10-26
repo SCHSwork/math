@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — Drive Mad is back
+
+### New
+- **Drive Mad** (by Martin Magni) is playable again. The game library removed it in December 2025, so this copy comes from another collection on GitHub ([Avioso/strongdog](https://github.com/Avioso/strongdog)) and loads through jsDelivr like the rest of the games. It was washed first: an obfuscated GameMonetize "Jump" ad/redirect script and a link to that site's own script were removed, and the game files are locked to the exact version that was checked.
+- The washed list (`config/library-washed.json`) can now hold games that aren't in the library's list at all (`"extra": true`).
+
 ## October 25, 2026 — Automatic error reports
 
 ### New

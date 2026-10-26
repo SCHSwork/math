@@ -107,6 +107,23 @@
     "web-ports/pet-the-cat": "82c47ef19c710a970b0a3a63d6e3827310afb583"
    },
    "sha256": "96f4e879222411720538c56bf5796bcd0f13d4d1ac0d544aa4a660b86c32ca2c"
+  },
+  "990001": {
+   "name": "Drive Mad",
+   "extra": true,
+   "author": "Martin Magni (Fancade)",
+   "path": "washed/drive-mad.html",
+   "cover": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/drive-mad/webapp/cover.jpg",
+   "description": "Drive your car over wild, physics-based tracks without flipping over.",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/drive-mad",
+   "removed": [
+    "obfuscated GameMonetize \"Jump\" ad/redirect script",
+    "link to strongdog's site script (/js/main.js)"
+   ],
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "sha256": "dab34a3e2d0480ba94a92aca590123e889580c009eb1b30ab6e39f9e3cddb3ac"
   }
  }
 }

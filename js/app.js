@@ -369,6 +369,13 @@ async function listZones() {
             newLibraryGames.push({ id: z.id, name, file: file[1], author: z.author || "" });
             return false;
         });
+        // Extra washed games that aren't in the library's list (e.g. Drive Mad, from
+        // another collection), added like library games
+        for (const [id, w] of Object.entries(washedGames)) {
+            if (!w || !w.extra || !/^washed\/[\w.-]+\.html$/.test(w.path || "") || zones.some(z => String(z.id) === id)) continue;
+            zones.push({ id: Number(id), name: String(w.name || "").slice(0, 80), author: String(w.author || ""), authorLink: /^https:\/\//.test(w.source || "") ? w.source : "",
+                cover: w.cover || "", url: "washed:" + w.path, description: w.description || "", washed: true });
+        }
         if (typeof notifyNewLibraryGames === "function") notifyNewLibraryGames();
         // Add the GN Originals (open-source games) after the main library. An original
         // marked "libraryDuplicate" in games.json is the same game as one the library
