@@ -7,6 +7,16 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 25, 2026 — Subway Surfers is back (3 cities)
+
+### New
+- **Subway Surfers: San Francisco, Beijing and Monaco** are playable again. The game library removed every Subway Surfers version in December 2025; these come from the same GitHub collection as Drive Mad ([Avioso/strongdog](https://github.com/Avioso/strongdog)), washed and locked to the checked version:
+  - removed Google AdSense, Google Analytics, an ad SDK loaded from a Russian ad site, another ad network, and a lock to the 4399 game site;
+  - Poki's ad SDK is replaced with a stand-in that skips ads, and the loading screen can't fetch Poki's font or thumbnail;
+  - the two biggest files of each city are over jsDelivr's 20 MB limit, so they come from GitHub directly (or githack if GitHub is blocked for that player).
+- Houston was in that collection too, but its game files are gone from the internet, so it can't be added.
+- New covers for San Francisco and Monaco.
+
 ## October 25, 2026 — Drive Mad is back
 
 ### New

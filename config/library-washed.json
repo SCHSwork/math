@@ -124,6 +124,69 @@
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
    },
    "sha256": "dab34a3e2d0480ba94a92aca590123e889580c009eb1b30ab6e39f9e3cddb3ac"
+  },
+  "990002": {
+   "name": "Subway Surfers: San Francisco",
+   "extra": true,
+   "author": "SYBO and Kiloo",
+   "path": "washed/sanfrancisco-subway-surfers.html",
+   "cover": "washed/covers/subway-surfers-san-francisco.png",
+   "description": "Dash down the tracks, dodge trains and grab coins in this world tour city.",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurferssanfrancisco",
+   "removed": [
+    "Poki ad SDK (stand-in that skips ads)",
+    "Google AdSense",
+    "Google Analytics",
+    "other ad SDKs",
+    "4399 domain lock",
+    "Poki font and thumbnail requests (blocked)"
+   ],
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "sha256": "cf8e96334b1fa64224c55b381d68537c15d70f20f127d9c9e3e61c9755fe5bfd"
+  },
+  "990003": {
+   "name": "Subway Surfers: Beijing",
+   "extra": true,
+   "author": "SYBO and Kiloo",
+   "path": "washed/beijing-subway-surfers.html",
+   "cover": "gh:Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersbeijing/4399.png",
+   "description": "Dash down the tracks, dodge trains and grab coins in this world tour city.",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersbeijing",
+   "removed": [
+    "Poki ad SDK (stand-in that skips ads)",
+    "Google AdSense",
+    "Google Analytics",
+    "other ad SDKs",
+    "4399 domain lock",
+    "Poki font and thumbnail requests (blocked)"
+   ],
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "sha256": "bb137cab9bf018632c5849154a02c14bf6a23a40c4e1ccf5615e238391a9094b"
+  },
+  "990004": {
+   "name": "Subway Surfers: Monaco",
+   "extra": true,
+   "author": "SYBO and Kiloo",
+   "path": "washed/monaco-subway-surfers.html",
+   "cover": "washed/covers/subway-surfers-monaco.png",
+   "description": "Dash down the tracks, dodge trains and grab coins in this world tour city.",
+   "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/subwaysurfersmonaco",
+   "removed": [
+    "Poki ad SDK (stand-in that skips ads)",
+    "Google AdSense",
+    "Google Analytics",
+    "other ad SDKs",
+    "4399 domain lock",
+    "Poki font and thumbnail requests (blocked)"
+   ],
+   "lockedTo": {
+    "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
+   },
+   "sha256": "ea88a6b81625723129bb36180890cae4c8ada4691621321baaf01bfc52d5fccc"
   }
  }
 }
