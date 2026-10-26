@@ -226,6 +226,18 @@ async function fetchFirstInOrder(urls, { timeoutMs = 15000, validate, track = tr
     }
     throw lastError;
 }
+// Flash games: 139 library games load this exact Ruffle (the Flash player) from
+// jsDelivr. The site keeps its own copy (vendor/ruffle), which loads from
+// wherever the site itself loads, is shared by every Flash game, and still works
+// when jsDelivr and its backups are blocked.
+const LOCAL_RUFFLE_VERSION = "0.2.0-nightly.2025.10.2";
+function useLocalRuffle(html) {
+    if (typeof html !== "string" || !/ruffle/i.test(html)) return html;
+    const local = new URL("vendor/ruffle/ruffle.js", location.href).href;
+    const v = LOCAL_RUFFLE_VERSION.replace(/\./g, "\\.");
+    return html.replace(new RegExp(`https?://(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net/npm/@ruffle-rs/ruffle@${v}/ruffle(?:\\.min)?\\.js`, "g"), local)
+        .replace(new RegExp(`https?://unpkg\\.com/@ruffle-rs/ruffle@${v}(?:/ruffle(?:\\.min)?\\.js)?(?=["'\\s>])`, "g"), local);
+}
 // When jsDelivr is unreachable, point the jsDelivr links inside a game at backups
 function rewriteForMirrors(html) {
     if (!mirrorDown.has("jsdelivr") || typeof html !== "string") return html;
@@ -235,7 +247,9 @@ function rewriteForMirrors(html) {
     return html
         .replace(/https?:\/\/cdn\.jsdelivr\.net\/gh\/([^\/@\s"'`<>]+)\/([^\/@\s"'`<>]+)(?:@([^\/\s"'`<>]+))?\//g,
             (m, o, r, ref) => `https://rawcdn.githack.com/${o}/${r}/${!ref || ref === "latest" ? "HEAD" : ref}/`)
-        .replace(/https?:\/\/cdn\.jsdelivr\.net\/npm\//g, "https://unpkg.com/");
+        .replace(/https?:\/\/cdn\.jsdelivr\.net\/npm\//g, "https://unpkg.com/")
+        // jsDelivr makes .min.js files on request; unpkg only has what's in the package
+        .replace(/(https:\/\/unpkg\.com\/@ruffle-rs\/ruffle@[^\/\s"'`<>]+\/ruffle)\.min\.js/g, "$1.js");
 }
 // Cover image URL from the best working source, with the rest kept as fallbacks
 function coverSources(cover) {
@@ -1178,6 +1192,7 @@ function cleanGameHtml(html) {
         console.info("Removed a duplicated copy of the game page");
     }
     html = fixMergedUnityParts(html);
+    html = useLocalRuffle(html);
     let removed = 0;
     let out = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (whole, attrs, code) => {
         const src = (attrs.match(/\bsrc\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
