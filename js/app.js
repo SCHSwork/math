@@ -973,7 +973,9 @@ async function fetchWithFallback(rawUrl, onTry) {
     if (rawUrl.startsWith("washed:")) {
         const path = rawUrl.slice(7);
         const urls = [new URL(path, location.href).href, ...mirrorUrls("SCHSwork", "math", "main", path)];
-        const html = await fetchFirst(urls, { timeoutMs: 30000, stagger: 2500, onTry, validate: res => res.text() });
+        // "no-cache": always ask whether the page changed (cheap when it hasn't), so a
+        // fixed game reaches players right away instead of after the 10-minute cache
+        const html = await fetchFirst(urls, { timeoutMs: 30000, stagger: 2500, onTry, cache: "no-cache", validate: res => res.text() });
         return rewriteForMirrors(cleanGameHtml(html));
     }
     // GN Originals: "gh:owner/repo@sha/path"
