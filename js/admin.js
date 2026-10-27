@@ -203,6 +203,7 @@ async function openAdminPanel() {
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Submissions</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="log" aria-selected="false">Log</button>`}
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="errors" aria-selected="false">Errors <span class="admin-tab-count" id="errors-tab-count" hidden></span></button>`}
+            <button type="button" role="tab" data-tab="gamecheck" aria-selected="false">Game check <span class="admin-tab-count" id="gamecheck-tab-count" hidden></span></button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
@@ -229,7 +230,8 @@ async function openAdminPanel() {
         <div id="admin-feedback" hidden></div>
         <div id="admin-takedowns" hidden></div>
         <div id="admin-log" hidden></div>
-        <div id="admin-errors" hidden></div>`;
+        <div id="admin-errors" hidden></div>
+        <div id="admin-gamecheck" hidden></div>`;
     body.querySelectorAll(".admin-tabs button").forEach(b => b.onclick = () => {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         b.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
@@ -240,12 +242,19 @@ async function openAdminPanel() {
         document.getElementById("admin-takedowns").hidden = b.dataset.tab !== "takedowns";
         document.getElementById("admin-log").hidden = b.dataset.tab !== "log";
         if (document.getElementById("admin-errors")) document.getElementById("admin-errors").hidden = b.dataset.tab !== "errors";
+        document.getElementById("admin-gamecheck").hidden = b.dataset.tab !== "gamecheck";
+        if (b.dataset.tab === "gamecheck") renderGameCheck();
         if (b.dataset.tab === "errors") renderErrorLog();
         if (b.dataset.tab === "log") renderActionLog();
         if (b.dataset.tab === "takedowns" && typeof renderModTakedowns === "function") renderModTakedowns();
         if (b.dataset.tab === "feedback" && typeof renderModFeedback === "function") renderModFeedback();
         if (b.dataset.tab === "newgames") renderNewLibraryGames();
         if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
+    });
+    loadGameHealth().then(h => {
+        const c = document.getElementById("gamecheck-tab-count");
+        const broken = h ? Object.entries(h.games || {}).filter(([id, g]) => g.s === "broken" && !(typeof isZoneDisabled === "function" && isZoneDisabled(id))).length : 0;
+        if (c && broken) { c.textContent = broken; c.hidden = false; }
     });
     // How many reports and ideas are waiting, shown on the tab
     if (typeof updateFeedbackTabCount === "function") {
@@ -282,6 +291,49 @@ async function openAdminPanel() {
         console.error(e);
         document.getElementById("admin-summary").textContent = "Couldn't load accounts: " + (typeof statsErrorText === "function" ? statsErrorText(e) : e.message || e);
     }
+}
+
+// ── Game check (nightly test of every game: tools/check_games.mjs) ──────────
+let gameHealthPromise = null;
+function loadGameHealth(force) {
+    if (!gameHealthPromise || force) gameHealthPromise = fetch("config/game-health.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+    return gameHealthPromise;
+}
+async function renderGameCheck(force) {
+    const box = document.getElementById("admin-gamecheck");
+    if (!box) return;
+    box.innerHTML = `<p class="admin-summary">Loading the game check…</p>`;
+    const h = await loadGameHealth(force);
+    if (!h || !h.games) {
+        box.innerHTML = `<p class="admin-summary">No results yet. The check runs every night (about 3 AM); to run it now, open the "Nightly game check" workflow in the repo's Actions tab and press "Run workflow".</p>`;
+        return;
+    }
+    const entries = Object.entries(h.games).map(([id, g]) => ({ id, g, z: typeof zoneById === "function" ? zoneById(id) : null })).filter(x => x.z);
+    const broken = entries.filter(x => x.g.s === "broken"), slow = entries.filter(x => x.g.s === "slow");
+    const okN = entries.filter(x => x.g.s === "ok").length;
+    const off = x => typeof isZoneDisabled === "function" && isZoneDisabled(x.id);
+    const when = h.updated ? timeAgo(h.updated) : "";
+    const row = x => `<div class="gc-row${off(x) ? " gc-off" : ""}" data-id="${escapeHtmlText(x.id)}">
+            <div class="gc-main"><b>${escapeHtmlText(x.z.name)}</b> <small>#${escapeHtmlText(x.id)}${off(x) ? " · turned off" : ""} · since ${escapeHtmlText(x.g.since || x.g.at || "")}</small>
+            <div class="gc-why">${escapeHtmlText(x.g.why || "")}</div>
+            ${x.g.errors && x.g.errors.length > 1 ? `<details class="gc-errs"><summary>${x.g.errors.length} errors</summary>${x.g.errors.map(e => `<div>${escapeHtmlText(e)}</div>`).join("")}</details>` : ""}</div>
+            <div class="gc-actions"><button type="button" class="finder-chip gc-open">Open</button>
+            ${typeof isOwnerBrowser === "function" && isOwnerBrowser() ? `<button type="button" class="finder-chip gc-toggle">${off(x) ? "Turn on" : "Turn off"}</button>` : ""}</div>
+        </div>`;
+    box.innerHTML = `
+        <p class="admin-summary">Checked ${entries.length.toLocaleString()} of ${(h.total || entries.length).toLocaleString()} games${when ? `, last run ${escapeHtmlText(when)}` : ""}:
+            <b class="gc-ok">${okN.toLocaleString()} working</b> · <b class="gc-bad">${broken.length} not starting</b> · ${slow.length} too slow to tell.
+            <button type="button" class="finder-chip" id="gc-refresh">Refresh</button></p>
+        <p class="admin-footnote">Every night about 250 games are opened in a real browser, plus every game that failed last time, so each game is checked about once a week. "Not starting" means no game appeared within 45 seconds (checked twice). Some of these work fine for players (they need a click, a login or a site the test can't reach), so open one before turning it off.</p>
+        ${broken.length ? `<h4 class="gc-h">Not starting (${broken.length})</h4>${broken.sort((a, b) => off(a) - off(b) || String(a.z.name).localeCompare(b.z.name)).map(row).join("")}` : `<p>No broken games found. 🎉</p>`}
+        ${slow.length ? `<details class="gc-slow"><summary>Too slow to tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}`;
+    box.querySelector("#gc-refresh").onclick = () => renderGameCheck(true);
+    box.querySelectorAll(".gc-row").forEach(r => {
+        const id = r.dataset.id;
+        r.querySelector(".gc-open").onclick = () => { const z = zoneById(id); if (z) { closePopup(); openZone(z); } };
+        const t = r.querySelector(".gc-toggle");
+        if (t) t.onclick = () => { setZoneDisabled(id, !isZoneDisabled(id)); renderGameCheck(); };
+    });
 }
 
 // ── Visitors (everyone, with or without an account) ──────────────────────────

@@ -1,0 +1,154 @@
+// Nightly game check (.github/workflows/game-check.yml).
+//
+// Opens games on a local copy of the site in a real browser, the same way a
+// player does, and notes which ones never show a game. Each night it checks
+// the next batch (so every game gets checked every week or so) plus every game
+// that failed last time (so fixed games clear). Results go to
+// config/game-health.json, which the Admin Panel shows under "Game check".
+//
+//   node tools/check_games.mjs                      # tonight's batch
+//   node tools/check_games.mjs --batch=50           # smaller batch
+//   node tools/check_games.mjs --ids=2,11,990123    # just these
+//
+// Needs: npm i playwright && npx playwright install --with-deps chromium,
+// and the site served at SITE_URL (default http://127.0.0.1:8080/).
+import { chromium } from "playwright";
+import fs from "fs";
+
+const SITE = process.env.SITE_URL || "http://127.0.0.1:8080/";
+const OUT = new URL("../config/game-health.json", import.meta.url);
+const arg = name => (process.argv.find(a => a.startsWith(`--${name}=`)) || "").split("=")[1];
+const BATCH = Number(arg("batch") || 250);
+const WORKERS = Number(arg("workers") || 2);
+const WAIT_MS = 20000, CONFIRM_WAIT_MS = 45000;
+const MAX_MINUTES = Number(arg("minutes") || 150);
+const started = Date.now();
+
+const health = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { games: {}, next: 0 };
+health.games ||= {};
+
+// Things a test browser shouldn't touch: the site's database (online count,
+// error reports, accounts) and trackers
+const BLOCK = /(^|\.)(firestore\.googleapis\.com|firebase\w*\.googleapis\.com|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firebaseinstallations\.googleapis\.com|google-analytics\.com|googletagmanager\.com)$/;
+const NOISE = /firestore|favicon|sha\.txt|api\.github|googletagmanager|google-analytics|data\.jsdelivr|^Failed to load resource|gameanalytics|fonts\.(googleapis|gstatic)/i;
+
+const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio"] });
+
+async function makePage() {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+    await ctx.route(url => BLOCK.test(new URL(url).hostname), r => r.abort());
+    const page = await ctx.newPage();
+    const st = { errors: [] };
+    // (Offline-cache helpers can't start inside the game window; that's harmless)
+    page.on("pageerror", e => { const m = String(e.message); if (!/ServiceWorker|serviceWorker|ResizeObserver/.test(m)) st.errors.push("Script error: " + m.slice(0, 160)); });
+    page.on("response", res => { if (res.status() >= 400 && !NOISE.test(res.url())) st.errors.push(`HTTP ${res.status()} ${res.url().slice(0, 160)}`); });
+    page.on("requestfailed", rq => { const u = rq.url(); if (!NOISE.test(u) && !BLOCK.test(new URL(u).hostname)) st.errors.push(`Failed ${u.slice(0, 160)}`); });
+    // Quiet the first-visit extras (tips, celebrations) so they don't get in the way
+    await page.addInitScript(() => { try { localStorage.setItem("gnmath-playnext-off", "1"); localStorage.setItem("gnmath-achievements", JSON.stringify({ v: 1, init: 1, days: [], tried: {}, gotd: [], weekendDays: [], unlocked: {}, level: 99 })); } catch (e) {} });
+    await page.goto(SITE, { timeout: 90000 });
+    await page.waitForFunction(() => typeof zones !== "undefined" && zones.length > 500, null, { timeout: 120000 });
+    await page.waitForTimeout(2000);
+    return { ctx, page, st };
+}
+
+// What's in the game frame: the biggest canvas / Flash player / video / frame
+const measure = () => {
+    const f = document.getElementById("zoneFrame");
+    let d; try { d = f.contentDocument; } catch (e) { return { other: true }; }
+    if (!d || !d.body) return { empty: true };
+    const W = f.contentWindow.innerWidth, H = f.contentWindow.innerHeight;
+    let best = 0;
+    const look = (doc, depth) => {
+        for (const el of doc.querySelectorAll("canvas,embed,object,video,iframe,ruffle-player,ruffle-embed,ruffle-object")) {
+            const r = el.getBoundingClientRect();
+            const cs = doc.defaultView.getComputedStyle(el);
+            if (r.width < 80 || r.height < 60 || cs.display === "none" || cs.visibility === "hidden") continue;
+            best = Math.max(best, r.width * r.height);
+            if (el.tagName === "IFRAME" && depth < 2) { try { if (el.contentDocument) look(el.contentDocument, depth + 1); } catch (e) {} }
+        }
+    };
+    look(d, 0);
+    const text = (d.body.innerText || "").replace(/\s+/g, " ").trim();
+    return { surface: best / Math.max(1, W * H), text: text.slice(0, 120), textLen: text.length };
+};
+
+async function check(w, z, waitMs) {
+    const { page, st } = w;
+    st.errors.length = 0;
+    await page.evaluate(id => openZone(zones.find(x => String(x.id) === id)), String(z.id));
+    let m = null;
+    const until = Date.now() + waitMs;
+    while (Date.now() < until) {
+        await page.waitForTimeout(2500);
+        m = await page.evaluate(measure).catch(() => null);
+        if (m && (m.surface > 0.05 || m.other)) break;       // a game is showing
+    }
+    try { await page.evaluate(() => closeZone()); await page.waitForTimeout(400); } catch (e) {}
+    const errors = [...new Set(st.errors)].slice(0, 4);
+    // The most telling error: a script crash, or a game file that's missing
+    const pickWhy = () => errors.find(e => e.startsWith("Script error")) || errors.find(e => /\.(js|wasm|data|unityweb|pck|swf|html?|json)(\?|$)/i.test(e)) || errors[0];
+    if (!m) return { s: "broken", why: "The test browser crashed on this game", errors };
+    if (m.surface > 0.05 || m.other) return { s: "ok" };
+    const loading = /load|download|\d+\s*%|please wait|starting|initiali/i.test(m.text);
+    if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)" };
+    if (loading) return { s: "slow", why: `Still loading after ${Math.round(waitMs / 1000)}s: "${m.text.slice(0, 60)}"`, errors };
+    if (errors.length) return { s: "broken", why: pickWhy(), errors };
+    return { s: "broken", why: m.textLen ? `Shows only: "${m.text.slice(0, 60)}"` : "Blank page", errors };
+}
+
+const w0 = await makePage();
+const all = await w0.page.evaluate(() => zones
+    .filter(z => Number(z.id) >= 0 && z.url && !(typeof isPartnerZone === "function" && isPartnerZone(z)) && !String(z.url).startsWith("http") && !z.newTab)
+    .map(z => ({ id: String(z.id), name: z.name })));
+all.sort((a, b) => Number(a.id) - Number(b.id));
+await w0.ctx.close();
+
+let list;
+const only = arg("ids");
+if (only) {
+    const want = new Set(only.split(","));
+    list = all.filter(z => want.has(z.id));
+} else {
+    const start = (health.next || 0) % Math.max(1, all.length);
+    const batch = all.slice(start, start + BATCH).concat(all.slice(0, Math.max(0, start + BATCH - all.length)));
+    health.next = (start + BATCH) % all.length;
+    // Plus everything that failed last time
+    const failed = all.filter(z => health.games[z.id] && health.games[z.id].s !== "ok" && !batch.includes(z));
+    list = [...failed, ...batch];
+}
+console.log(`Checking ${list.length} of ${all.length} games`);
+
+const queue = [...list];
+const today = new Date().toISOString().slice(0, 10);
+async function worker() {
+    let w = await makePage(), n = 0;
+    while (queue.length && (Date.now() - started) / 60000 < MAX_MINUTES) {
+        const z = queue.shift();
+        let r;
+        try { r = await check(w, z, WAIT_MS); } catch (e) { r = { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) }; }
+        // Double-check failures with more time and a fresh page before calling them broken
+        if (r.s !== "ok") {
+            try { await w.ctx.close(); } catch (e) {}
+            w = await makePage(); n = 0;
+            try { r = await check(w, z, CONFIRM_WAIT_MS); } catch (e) { r = { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) }; }
+        }
+        const prev = health.games[z.id];
+        health.games[z.id] = { s: r.s, at: today, ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
+            ...(r.s !== "ok" ? { since: prev && prev.s === r.s && prev.since ? prev.since : today } : {}) };
+        console.log(`${z.id} ${z.name}: ${r.s}${r.why ? " - " + r.why : ""}`);
+        if (++n % 8 === 0) { try { await w.ctx.close(); } catch (e) {} w = await makePage(); }
+    }
+    try { await w.ctx.close(); } catch (e) {}
+}
+await Promise.all(Array.from({ length: WORKERS }, worker));
+await browser.close();
+
+// Forget games that left the site
+const ids = new Set(all.map(z => z.id));
+for (const id of Object.keys(health.games)) if (!ids.has(id)) delete health.games[id];
+health.updated = new Date().toISOString();
+health.total = all.length;
+const counts = Object.values(health.games).reduce((c, g) => (c[g.s] = (c[g.s] || 0) + 1, c), {});
+health.counts = counts;
+fs.writeFileSync(OUT, JSON.stringify(health, null, 1) + "\n");
+console.log("Done:", JSON.stringify(counts));
