@@ -108,10 +108,30 @@ service cloud.firestore {
     match /presence/{id} {
       allow read: if true;
       allow create, update: if id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['t', 's', 'u'])
+        && request.resource.data.keys().hasOnly(['t', 's', 'u', 'g'])
+        && (!('g' in request.resource.data) || (request.resource.data.g is string && request.resource.data.g.matches('[0-9]{1,7}')))
         && request.resource.data.t == request.time
         && request.resource.data.s in ['gn2', 'light']
         && (!('u' in request.resource.data) || validUsage(request.resource.data.u));
+    }
+    // "N playing now" and "Top 10 this week" (js/live.js). Every 5 minutes one
+    // browser adds up the presence heartbeats and saves the counts here.
+    // Anyone can read them; they can only change every 2 minutes.
+    match /live/now {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasOnly(['at', 'online', 'games'])
+        && request.resource.data.at == request.time
+        && request.resource.data.online is int && request.resource.data.online >= 0 && request.resource.data.online <= 100000
+        && request.resource.data.games is map && request.resource.data.games.size() <= 150
+        && (resource == null || request.time > resource.data.at + duration.value(120, 's'));
+    }
+    match /live/{week} {
+      allow read: if week.matches('w20[0-9]{4}');
+      allow create, update: if week.matches('w20[0-9]{4}')
+        && request.resource.data.keys().hasOnly(['at', 'p'])
+        && request.resource.data.at == request.time
+        && request.resource.data.p is map && request.resource.data.p.size() <= 3000
+        && (resource == null || request.time > resource.data.at + duration.value(120, 's'));
     }
     function validUsage(u) {
       return u is map && u.size() == 1

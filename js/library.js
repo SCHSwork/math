@@ -317,6 +317,7 @@ function renderPersonalRows() {
     const section = document.getElementById("yourGames");
     if (!section) return;
     renderNewRow();
+    if (typeof renderTop10 === "function") renderTop10();
     const nRecent = fillShelf("recentZones", getRecent());
     const nFav = fillShelf("favoriteZones", getFavorites());
     if (!yourGamesTab) { try { yourGamesTab = localStorage.getItem("gnmath-your-games-tab"); } catch {} }

@@ -35,6 +35,10 @@ const PRESENCE_NO_USAGE_KEY = "gnmath-presence-no-usage";
 function presenceUsageAllowed() {
     try { return Date.now() - Number(localStorage.getItem(PRESENCE_NO_USAGE_KEY) || 0) > 6 * 3600000; } catch { return true; }
 }
+const PRESENCE_NO_GAME_KEY = "gnmath-presence-no-game";
+function presenceGameAllowed() {
+    try { return Date.now() - Number(localStorage.getItem(PRESENCE_NO_GAME_KEY) || 0) > 6 * 3600000; } catch { return true; }
+}
 // Read by the status light (status.js)
 window.gnActiveUsers = { count: null, at: 0, error: null };
 
@@ -70,8 +74,20 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         return res.json();
     }
 
+    // The game open right now (only its id), for "N playing now" (live.js)
+    function currentGame() {
+        try {
+            const viewer = document.getElementById("zoneViewer");
+            const id = typeof currentGameId !== "undefined" && currentGameId ? String(currentGameId) : "";
+            return viewer && viewer.style.display === "flex" && /^\d{1,7}$/.test(id) && !document.hidden ? id : "";
+        } catch { return ""; }
+    }
+    let gameNoted = "";
     function beatBody(withUsage) {
         const fields = { s: { stringValue: PRESENCE.site } };
+        const g = presenceGameAllowed() ? currentGame() : "";
+        gameNoted = g;
+        if (g) fields.g = { stringValue: g };
         if (withUsage && fbOn()) {
             const t = getFbTally();
             fields.u = { mapValue: { fields: { [t.day]: { mapValue: { fields: {
@@ -96,6 +112,13 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             try {
                 await post("commit", beatBody(withUsage));
             } catch (e) {
+                // Old database rules don't allow the game field yet: stop sending it for a while
+                if (/HTTP 403/.test(e.message) && gameNoted) {
+                    try { localStorage.setItem(PRESENCE_NO_GAME_KEY, String(Date.now())); } catch {}
+                    if (fbOn()) fbCount(0, 1);
+                    await post("commit", beatBody(withUsage));
+                    return;
+                }
                 // Old database rules don't allow the usage field yet: send without it
                 if (!withUsage || !/HTTP 403/.test(e.message)) throw e;
                 try { localStorage.setItem(PRESENCE_NO_USAGE_KEY, String(Date.now())); } catch {}
@@ -110,6 +133,8 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
 
     async function count(force) {
         if (counting || (!force && Date.now() - lastCount < 30000)) return;
+        // live.js reads the online count together with the "playing now" counts
+        if (typeof window.gnLiveFresh === "function" && window.gnLiveFresh()) { lastCount = Date.now(); if (fbOn()) sumUsageSometimes(); return; }
         lastCount = Date.now();
         // Use a count another tab got recently instead of asking again
         const shared = presenceShared();
@@ -142,6 +167,24 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         }
     }
     window.refreshActiveUsers = () => count(false);
+    // The usage total still needs adding up now and then when live.js does the count
+    let lastUsageSum = 0;
+    function sumUsageSometimes() {
+        if (Date.now() - lastUsageSum < presenceCountMs()) return;
+        lastUsageSum = Date.now();
+        sumUsage();
+    }
+    // Opening or closing a game: tell the others soon (at most every 20 seconds)
+    window.presenceGameChanged = function () {
+        if (!presenceGameAllowed() || currentGame() === gameNoted) return;
+        const wait = Math.max(0, 20000 - (Date.now() - lastBeat));
+        clearTimeout(window.__gnPresenceGameTimer);
+        window.__gnPresenceGameTimer = setTimeout(() => {
+            if (currentGame() === gameNoted) return;
+            setPresenceShared({ beatAt: 0 });
+            beat();
+        }, wait + 1500);
+    };
 
     // Adds up every browser's Firebase count for today (about 1 read per 1,000 browsers)
     async function sumUsage() {

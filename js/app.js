@@ -524,6 +524,7 @@ async function fetchPopularity(duration) {
 async function refreshPopularity() {
     const results = await Promise.all(["year", "month", "week", "day"].map(fetchPopularity));
     tagCardRarity();   // cards drawn before the play counts arrived
+    if (typeof renderTop10 === "function") renderTop10();
     if (results.some(Boolean)) {
         try { localStorage.setItem(POPULARITY_CACHE_KEY, JSON.stringify({ t: Date.now(), data: popularityData })); } catch {}
     }
@@ -653,6 +654,15 @@ function createZoneCard(file) {
         zoneItem.classList.add("is-partner");
         badges.classList.add("has-ad");
         badges.prepend(makeAdBadge());
+    }
+    // People playing it right now (live.js)
+    const liveN = typeof liveCount === "function" ? liveCount(file.id) : 0;
+    if (liveN) {
+        const lb = document.createElement("div");
+        lb.className = "card-live";
+        lb.textContent = liveBadgeText(liveN);
+        lb.title = `${liveN} ${liveN === 1 ? "person is" : "people are"} playing this right now`;
+        badges.prepend(lb);
     }
     if (badges.childElementCount) zoneItem.appendChild(badges);
 
@@ -913,6 +923,7 @@ function applyFilters() {
         document.getElementById("featuredZonesWrapper").removeAttribute("open");
         document.getElementById("originalsWrapper")?.removeAttribute("open");
         document.getElementById("newGamesWrapper")?.removeAttribute("open");
+        document.getElementById("top10Wrapper")?.removeAttribute("open");
     }
     displayZones(list);
     const summary = document.getElementById("allSummary");

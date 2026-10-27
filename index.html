@@ -53,7 +53,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=e19dc3b601">
+    <link rel="stylesheet" href="css/styles.css?v=f42a47dda7">
     <script>
     // Each site style's look is in its own file (css/skins/), so only the one in use
     // is loaded. Load the saved one now, before the page is drawn, so it never flashes.
@@ -183,6 +183,10 @@
             <div id="favoriteZones" class="shelf shelf-small" role="tabpanel" hidden></div>
             <p id="yourGamesEmpty" class="shelf-empty" hidden></p>
         </section>
+        <details id="top10Wrapper" class="home-section top10-section" open hidden>
+            <summary class="section-title">Top 10 this week <span id="top10Note" class="section-note"></span></summary>
+            <div id="top10Zones" class="shelf top10-shelf"></div>
+        </details>
         <details id="featuredZonesWrapper" class="home-section" open>
             <summary id="allZonesSummary" class="section-title">Featured</summary>
             <div id="featuredZones" class="shelf"></div>
@@ -287,12 +291,12 @@
     <script src="js/partners.js?v=e5acc0456e"></script>
 
     <script src="js/ubzone.js?v=e74cf1d9fb"></script>
-    <script src="js/app.js?v=d5299b90bf"></script>
+    <script src="js/app.js?v=d689109d26"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/firebase-pace.js?v=45d6769e77"></script>
 <script src="js/accounts.js?v=f4aaa95dea"></script>
-<script src="js/library.js?v=17bace474d"></script>
+<script src="js/library.js?v=fb1f338138"></script>
 <script src="js/loading-bar.js?v=258c33af1e"></script>
 <script src="js/game-fit.js?v=589d95dcb3"></script>
 <script src="js/game-menu.js?v=9c1f2baaa2"></script>
@@ -302,7 +306,9 @@
 <script src="js/submit.js?v=56be882b1f"></script>
 <script src="js/takedown.js?v=1c0b6f1012"></script>
 <script src="js/admin.js?v=86345edabc"></script>
-<script src="js/presence.js?v=cb7f69b7d9"></script>
+<script src="js/presence.js?v=a204eb9458"></script>
+<script src="js/live.js?v=8ea53c216a"></script>
+<script src="js/achievements.js?v=a69e620100"></script>
 <script src="js/status.js?v=c623f313c3"></script>
 <script src="js/skins.js?v=72dda489fb"></script>
 <script src="js/scenes.js?v=0cc459682d"></script>
