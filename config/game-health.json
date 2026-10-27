@@ -1,0 +1,53 @@
+{
+ "games": {
+  "2": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "11": {
+   "s": "broken",
+   "at": "2026-10-27",
+   "why": "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
+    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/"
+   ],
+   "since": "2026-10-27"
+  },
+  "112": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "209": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "221": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "447": {
+   "s": "broken",
+   "at": "2026-10-27",
+   "why": "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
+   "errors": [
+    "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
+    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
+    "HTTP 404 http://127.0.0.1:8080/lodash.custom.min.js",
+    "Failed http://127.0.0.1:8080/lodash.custom.min.js"
+   ],
+   "since": "2026-10-27"
+  },
+  "990123": {
+   "s": "ok",
+   "at": "2026-10-27"
+  }
+ },
+ "next": 0,
+ "updated": "2026-10-27T04:03:22.884Z",
+ "total": 1900,
+ "counts": {
+  "ok": 5,
+  "broken": 2
+ }
+}
