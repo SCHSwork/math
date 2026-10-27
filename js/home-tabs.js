@@ -14,6 +14,7 @@
     const $ = id => document.getElementById(id);
     const shelfCount = id => { const el = $(id); return el ? el.querySelectorAll(".zone-item").length : 0; };
     const TABS = [
+        { id: "spooky", label: "Spooky", icon: "🎃", panel: "spookyWrapper", ok: () => !!$("spookyWrapper") && !$("spookyWrapper").hidden },
         { id: "top10", label: "Top 10", icon: "🔥", panel: "top10Wrapper", ok: () => !$("top10Wrapper").hidden },
         { id: "featured", label: "Featured", icon: "⭐", panel: "featuredZonesWrapper", ok: () => shelfCount("featuredZones") > 0 },
         { id: "new", label: "New", icon: "🆕", panel: "newGamesWrapper", ok: () => !$("newGamesWrapper").hidden, count: () => (($("newGamesSummary") || {}).querySelector?.(".section-count") || {}).textContent || "" },
@@ -96,7 +97,7 @@
     let timer = null;
     const soon = () => { if (applying) return; clearTimeout(timer); timer = setTimeout(render, 60); };
     const mo = new MutationObserver(soon);
-    ["top10Wrapper", "featuredZonesWrapper", "newGamesWrapper", "originalsWrapper", "yourGames"].forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
+    ["top10Wrapper", "featuredZonesWrapper", "newGamesWrapper", "originalsWrapper", "yourGames", "spookyWrapper"].forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
     ["featuredZones", "recentZones", "favoriteZones", "newGamesSummary"].forEach(id => { const el = $(id); if (el) mo.observe(el, { childList: true, characterData: true, subtree: id === "newGamesSummary" }); });
     window.renderHomeTabs = render;
     render();

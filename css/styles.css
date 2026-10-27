@@ -3277,3 +3277,18 @@ body.skin-no-scenes .scenes-off-note { display: block; margin: .4rem 0 .2rem; fo
 .av-game span { font-weight: 800; color: #f87171; margin-left: 0.2rem; }
 .av-game:hover { border-color: var(--primary); }
 @media (max-width: 600px) { .av-tiles { grid-template-columns: repeat(3, 1fr); } }
+
+/* Halloween week banner (halloween.js) */
+.hw-banner {
+    display: flex; align-items: center; gap: 0.7rem; margin: 0 0 1rem; padding: 0.6rem 0.6rem 0.6rem 0.9rem;
+    border-radius: 14px; border: 1px solid rgba(251, 146, 60, 0.45);
+    background: linear-gradient(100deg, rgba(88, 28, 135, 0.55), rgba(234, 88, 12, 0.35)); color: #fff; font-size: 14px; font-weight: 600;
+}
+.hw-pumpkin { font-size: 24px; animation: hwBob 2.4s ease-in-out infinite; }
+.hw-text { flex: 1; min-width: 0; }
+.hw-off { flex: none; border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.2); color: #fff; border-radius: 999px; padding: 0.35rem 0.8rem; font: inherit; font-size: 12.5px; cursor: pointer; }
+.hw-off:hover { background: rgba(0, 0, 0, 0.35); }
+.hw-x { flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: #fff; font-size: 18px; cursor: pointer; }
+@keyframes hwBob { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-3px) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .hw-pumpkin { animation: none; } }
+@media (max-width: 600px) { .hw-banner { flex-wrap: wrap; } .hw-text { flex-basis: calc(100% - 70px); } }

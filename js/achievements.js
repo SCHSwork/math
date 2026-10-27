@@ -68,7 +68,8 @@ function achStats() {
         days: days.length, streak, bestStreak: best,
         night: a.night, early: a.early, weekendDays: a.weekendDays.length,
         genres: genres.size, originals, jam, newPlays: a.newPlays,
-        bestDay: Math.max(0, ...Object.values(perDay))
+        bestDay: Math.max(0, ...Object.values(perDay)),
+        halloween: (a.hw || []).length, spooky: Object.keys(a.spooky || {}).length
     };
 }
 
@@ -104,7 +105,9 @@ const ACH_BADGES = [
     ["early", "🌅", "Early Bird", "Play a game before 7 AM", "early", 1, 25],
     ["weekend", "🛋️", "Weekend Warrior", "Play on 4 weekend days", "weekendDays", 4, 50],
     ["originals", "🏠", "Homegrown", "Play 5 GN Originals", "originals", 5, 75],
-    ["jam", "🧩", "Jam Session", "Play 10 js13k jam games", "jam", 10, 75]
+    ["jam", "🧩", "Jam Session", "Play 10 js13k jam games", "jam", 10, 75],
+    ["trickortreat", "🎃", "Trick or Treat", "Play a game on Halloween (Oct 31). Limited time!", "halloween", 1, 100],
+    ["spookyseason", "👻", "Spooky Season", "Play 5 spooky games during Halloween week. Limited time!", "spooky", 5, 150]
 ].map(([id, icon, name, desc, stat, goal, xp]) => ({ id, icon, name, desc, stat, goal, xp }));
 
 function achEarned(stats) { return ACH_BADGES.filter(b => (stats[b.stat] || 0) >= b.goal); }
@@ -238,6 +241,11 @@ function achNoteGameOpen(z) {
             if (g && String(g.id) === id && !a.gotd.includes(d)) a.gotd.push(d);
         } catch {}
         if (!a.days.includes(d)) a.days.push(d);
+        // Halloween week (halloween.js)
+        if (typeof halloweenActive === "function" && halloweenActive(now)) {
+            if (isHalloweenDay(now)) { a.hw = a.hw || []; if (!a.hw.includes(String(now.getFullYear()))) a.hw.push(String(now.getFullYear())); }
+            if (typeof isSpookyZone === "function" && isSpookyZone(z)) { a.spooky = a.spooky || {}; a.spooky[id] = d; }
+        }
     });
     // Check again once they've played a bit (play-time badges)
     setTimeout(() => achCheck(), 1500);
