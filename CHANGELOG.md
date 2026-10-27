@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Simpler home page
+
+### Changed
+- **The home page shows one row at a time instead of six stacked sections.** Top 10, Featured, New, Recent, Favorites and GN Originals are now tabs above a single row (js/home-tabs.js). Your choice is remembered; first-time visitors see Top 10. Tabs only appear when they have games (no Recent tab until you've played something). Arrow keys switch tabs.
+- **Game of the Day is a small chip at the end of the tab bar** (cover, name, Play, ×) instead of a big banner.
+- **The "Game jam games" and "Partner games" switches moved into Sort & filter**, so All games starts right away.
+- While searching or filtering, the tabs step aside so results come first.
+
 ## October 26, 2026 — Top 10, "playing now" and levels & badges
 
 ### Added
