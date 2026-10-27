@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — "Watch an ad for a reward" no longer breaks games
+
+### Fixed
+- **About 50 Yandex games (mostly Unity ports) froze or crashed when you picked "watch an ad" for a perk.** They load Yandex's real SDK, which can't reach Yandex from here, so it never finished starting and nothing that waited on it ever answered. The site now gives them a stand-in instead (`yandexSdkStub` in js/app.js): rewarded ads give the reward right away, ad breaks end at once, saves are kept in your browser, and account-only things (leaderboards, purchases, sign-in) politely say no.
+- **Games that use Google's game ads (`adBreak` / `adsbygoogle`)**: the ad script is removed, so rewarded ads never gave the reward or handed control back. Those ad breaks now end right away, and rewarded ones count as watched.
+
 ## October 26, 2026 — More games that never started now work
 
 Found by opening every library and UBZone game in a test browser and checking which ones never showed a game.
