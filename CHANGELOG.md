@@ -7,6 +7,21 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Top 10, "playing now" and levels & badges
+
+### Added
+- **Top 10 this week** at the top of the home page, with big rank numbers beside the covers. It's the games played most on GN 2.0 this week; early in the week, when there isn't enough yet, it fills in with what's popular across the game library.
+- **"N playing" badges on game cards**, with a pulsing dot, showing how many people have that game open right now.
+  - How it stays cheap (js/live.js): each browser's online heartbeat now also says which game is open (just the game id). Every 5 minutes one browser adds them up and saves the counts in `live/now`, and adds them to the week's total in `live/w<year><week>`. Everyone else reads one small document every 5 minutes, which replaces the old per-browser online count, so Firebase use stays about the same. The database rules only let those documents change every 2 minutes.
+- **Levels and badges** (js/achievements.js). A level ring in the header shows your level and progress to the next one; click it for your rank, XP and all 30 badges with progress bars.
+  - XP comes from trying new games, play time, visiting on different days, favorites, ratings, reports and the Game of the Day, plus a bonus for each badge.
+  - Badges include Explorer (try 10/50/150/400 games), Marathon (play time), On a Roll (visit streaks), Night Owl, Early Bird, Genre Hopper, Daily Pick, Fresh Finds, Feeling Lucky, Bug Hunter, Homegrown (GN Originals) and Jam Session (js13k).
+  - Unlocking a badge or reaching a new level shows a short celebration with confetti. Existing players start at the level their history already earns, with one hello instead of a pile of popups.
+  - Everything is kept in this browser and goes with your cloud save.
+
+### Changed
+- `config/firestore.rules`: presence heartbeats may include `g` (the open game's id); new `live/now` and `live/w…` documents.
+
 ## October 26, 2026 — "Watch an ad for a reward" no longer breaks games
 
 ### Fixed
