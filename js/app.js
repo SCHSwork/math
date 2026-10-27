@@ -1184,6 +1184,34 @@ function fixMergedUnityParts(html) {
     return fixed;
 }
 
+// Helper workers from the game's own folder. Browsers only start a worker from
+// the page's own site, and game files come from jsDelivr, so games that use one
+// (e.g. RPG Maker's music decoder) failed with "Failed to construct 'Worker'".
+// Start those workers from a tiny same-site file that loads the real one, and
+// make the worker's own relative links point at the game's folder.
+function crossOriginWorkerHook() {
+    var W = window.Worker;
+    if (!W) return;
+    var Shim = function (url, opts) {
+        try {
+            if (typeof url === "string" || url instanceof URL) {
+                var abs = new URL(String(url), document.baseURI);
+                if (abs.origin !== location.origin && abs.protocol !== "blob:" && abs.protocol !== "data:") {
+                    var a = JSON.stringify(abs.href);
+                    var pre = "var __gnBase=" + a + ";(function(){var fix=function(u){try{return new URL(u,__gnBase).href}catch(e){return u}};" +
+                        "if(self.importScripts){var oi=self.importScripts;self.importScripts=function(){return oi.apply(self,Array.prototype.map.call(arguments,fix))}}" +
+                        "var of=self.fetch;if(of)self.fetch=function(u,o){if(typeof u==='string')u=fix(u);return of.call(self,u,o)};" +
+                        "if(self.XMLHttpRequest){var xo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){arguments[1]=fix(u);return xo.apply(this,arguments)}}})();";
+                    var code = opts && opts.type === "module" ? pre + "import(" + a + ");" : pre + "importScripts(" + a + ");";
+                    return new W(URL.createObjectURL(new Blob([code], { type: "application/javascript" })), opts);
+                }
+            }
+        } catch (e) {}
+        return new W(url, opts);
+    };
+    Shim.prototype = W.prototype;
+    window.Worker = Shim;
+}
 // Game portal SDKs (Poki, CrazyGames, GameDistribution). The site removes their
 // scripts (ads and tracking), and some copies point at files that don't exist,
 // so games that call them stopped at a black screen. This stand-in has every
@@ -1262,6 +1290,9 @@ function cleanGameHtml(html) {
     }
     html = fixMergedUnityParts(html);
     html = useLocalRuffle(html);
+    // A typo in one library copy (Ace Attorney Investigations): the "a" of
+    // response.arrayBuffer() ended up after EJS_color = "…";
+    html = html.replace(/\.rrayBuffer\(/g, ".arrayBuffer(").replace(/(EJS_color\s*=\s*"[^"\n]*";)a(\s)/g, "$1$2");
     let removed = 0;
     let out = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (whole, attrs, code) => {
         const src = (attrs.match(/\bsrc\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
@@ -1298,6 +1329,7 @@ function cleanGameHtml(html) {
         (typeof gameFitHook === "function" ? `<script>(${gameFitHook.toString()})();<\/script>` : "") +
         (/RuntimeInterface|c3runtime|supportcheck\.js/.test(html) ? `<script>(${construct3Hook.toString()})();<\/script>` : "") +
         (/PokiSDK|poki-sdk|CrazyGames|gdsdk/.test(html) ? `<script>(${portalSdkStub.toString()})();<\/script>` : "") +
+        `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
