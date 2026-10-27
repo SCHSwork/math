@@ -4,7 +4,9 @@
 // 2. Game finder: describe what you want ("scary game for 2 players I haven't
 //    played", "like Slope but not hard") and it suggests games, using each
 //    game's genres, description and keywords plus your play history. It runs
-//    entirely in the browser. No text is sent anywhere.
+//    in the browser. If AI_FINDER_URL is set, it also asks an AI helper (a
+//    Cloudflare Worker in front of FreeLLMAPI, see tools/ai-finder-worker.js)
+//    to choose from the matching games; players can switch that off.
 // Needs filters.js (genres) and library.js (play history, favorites).
 // ═════════════════════════════════════════════════════════════════════════════
 const RANDOM_SETTINGS_KEY = "gnmath-random-settings";
@@ -393,6 +395,66 @@ function describeWants(w) {
     return bits.length ? "Looking for: " + bits.join(" · ") : "";
 }
 
+// ── AI picks (optional) ─────────────────────────────────────────────────────
+// Set this to the Cloudflare Worker's URL (tools/ai-finder-worker.js) to turn
+// AI picks on. Empty = off, and the finder works exactly as before.
+const AI_FINDER_URL = "";
+const AI_FINDER_PREF = "gnmath-finder-ai";
+const AI_FINDER_TIMEOUT = 12000;
+function aiFinderAvailable() { return /^https:\/\//.test(AI_FINDER_URL); }
+function aiFinderOn() {
+    if (!aiFinderAvailable()) return false;
+    try { return localStorage.getItem(AI_FINDER_PREF) !== "off"; } catch { return true; }
+}
+function setAiFinderOn(on) { try { localStorage.setItem(AI_FINDER_PREF, on ? "on" : "off"); } catch {} }
+
+// The games the AI may choose from: the finder's own best matches, games whose
+// text mentions any word of the request, then popular games, all still
+// following the hard rules (haven't played, favorites, no horror…).
+function aiCandidates(text, wants, local) {
+    const ok = z => z && z.url && !z.url.startsWith("http") && !isZoneDisabled(z.id) &&
+        (!wants.unplayed || showMatches(z, "unplayed")) && (!wants.favorites || showMatches(z, "favorites")) &&
+        (!wants.liked || showMatches(z, "liked")) && (!wants.source || zoneSource(z) === wants.source) &&
+        ![...wants.avoidGenres].some(g => zoneGenres(z).has(g));
+    const seen = new Set(), list = [];
+    const add = z => { if (list.length < 120 && ok(z) && !seen.has(z.id)) { seen.add(z.id); list.push(z); } };
+    local.slice(0, 50).forEach(r => add(r.z));
+    const words = normText(text).split(" ").filter(w => w.length > 2 && !FINDER_STOP.has(w)).map(stem);
+    if (words.length) for (const z of zones) {
+        if (list.length >= 90) break;
+        const t = gameText(z).split(" ").map(stem);
+        if (words.some(w => t.includes(w))) add(z);
+    }
+    const plays = id => (popularityData?.year?.[id]) ?? 0;
+    zones.filter(z => !seen.has(z.id)).sort((a, b) => plays(b.id) - plays(a.id)).forEach(add);
+    return list;
+}
+
+let aiFinderSeq = 0;
+async function askAiFinder(text, wants, local) {
+    const pool = aiCandidates(text, wants, local);
+    if (pool.length < 3) return null;
+    const games = pool.map(z => {
+        const info = getGameInfo(z.id);
+        return { id: String(z.id), n: z.name.slice(0, 60), g: [...zoneGenres(z)].join(",").slice(0, 60),
+            d: (info?.d || "").slice(0, 120), k: (info?.k || []).slice(0, 6).join(",").slice(0, 80), p: info?.p === 2 ? 2 : undefined };
+    });
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), AI_FINDER_TIMEOUT);
+    try {
+        const res = await fetch(AI_FINDER_URL, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ q: text.slice(0, 200), games }), signal: ctl.signal, cache: "no-store" });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const byId = new Map(pool.map(z => [String(z.id), z]));
+        const picks = (Array.isArray(data?.picks) ? data.picks : [])
+            .map(p => ({ z: byId.get(String(p?.id)), why: String(p?.why || "").slice(0, 100) }))
+            .filter(p => p.z);
+        return picks.length ? picks : null;
+    } catch { return null; }
+    finally { clearTimeout(timer); }
+}
+
 const FINDER_EXAMPLES = ["scary game I haven't played", "racing with a friend", "games like Slope", "chill puzzle, nothing scary",
     "zombies", "funny 2 player games", "something for me", "hard platformer", "cats", "space shooter"];
 const FINDER_REFINE = [["Not played yet", "I haven't played"], ["2 player", "2 player"], ["Quick", "quick"], ["Popular", "popular"], ["Relaxing", "relaxing"], ["No horror", "not scary"]];
@@ -461,6 +523,27 @@ function finderSearch(text) {
         const hist = JSON.parse(localStorage.getItem("gnmath-finder-history") || "[]").filter(x => x !== t);
         localStorage.setItem("gnmath-finder-history", JSON.stringify([t, ...hist].slice(0, 6)));
     } catch {}
+    const seq = ++aiFinderSeq;
+    document.getElementById("finder-ai-status")?.remove();
+    if (t && aiFinderOn()) {
+        const status = document.createElement("p");
+        status.id = "finder-ai-status";
+        status.className = "finder-ai-status";
+        status.textContent = "✨ Asking the AI for its picks…";
+        out.before(status);
+        askAiFinder(t, wants, results).then(picks => {
+            if (seq !== aiFinderSeq || !document.getElementById("finder-results")) return;
+            status.remove();
+            if (!picks) return;   // AI unavailable or found nothing: keep the normal results
+            const ids = new Set(picks.map(p => p.z.id));
+            const merged = [...picks.map(p => ({ z: p.z, reasons: p.why ? ["✨ " + p.why] : ["✨ AI pick"] })),
+                ...results.filter(r => !ids.has(r.z.id))];
+            finderState = { results: merged, shown: 0 };
+            out.innerHTML = "";
+            said.textContent = "✨ AI picks for “" + (t.length > 50 ? t.slice(0, 47) + "…" : t) + "”";
+            showMoreFinder(Math.max(total, merged.length));
+        });
+    }
     if (!results.length) {
         out.innerHTML = `<p style="color:var(--text-muted);margin:0.5rem 0;">No games fit all of that. Try fewer wishes or different words.</p>`;
         return;
@@ -501,8 +584,18 @@ function openGameFinder(prefill) {
         <div id="finder-refine" class="finder-chips finder-refine" hidden><span>Narrow it down:</span>${FINDER_REFINE.map(([label, add]) => `<button type="button" class="finder-chip" data-add="${escapeHtmlText(add)}">+ ${escapeHtmlText(label)}</button>`).join("")}</div>
         <p id="finder-understood" class="finder-understood" aria-live="polite"></p>
         <div id="finder-results" class="finder-results"></div>
-        <p style="margin:0.75rem 0 0;color:var(--text-muted);font-size:12px;">Try genres, moods ("chill", "funny", "hard"), themes ("zombies", "space"), "like &lt;game&gt;", "with a friend", or what you don't want ("nothing scary"). It works in your browser, and nothing you type is sent anywhere.</p>`;
+        <p style="margin:0.75rem 0 0;color:var(--text-muted);font-size:12px;">Try genres, moods ("chill", "funny", "hard"), themes ("zombies", "space"), "like &lt;game&gt;", "with a friend", or what you don't want ("nothing scary"). <span id="finder-privacy"></span></p>
+        ${aiFinderAvailable() ? `<label class="random-check finder-ai-toggle"><input type="checkbox" id="finder-ai"> ✨ AI picks</label>` : ""}`;
     const input = document.getElementById("finder-input");
+    const privacy = () => document.getElementById("finder-privacy").textContent = aiFinderOn()
+        ? "With AI picks on, what you type and a list of game names go to the site's AI helper. Nothing about your account or play history is sent."
+        : "It works in your browser, and nothing you type is sent anywhere.";
+    privacy();
+    const aiBox = document.getElementById("finder-ai");
+    if (aiBox) {
+        aiBox.checked = aiFinderOn();
+        aiBox.onchange = () => { setAiFinderOn(aiBox.checked); privacy(); if (input.value.trim()) finderSearch(input.value); };
+    }
     document.getElementById("finder-form").onsubmit = e => { e.preventDefault(); finderSearch(input.value); };
     input.addEventListener("input", () => { if (!input.value.trim()) { const ex = document.getElementById("finder-examples"); if (ex) ex.hidden = false; } });
     body.querySelectorAll(".finder-examples .finder-chip").forEach(c => c.onclick = () => finderSearch(c.textContent));

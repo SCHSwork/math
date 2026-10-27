@@ -13,7 +13,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - Filter by **genre** (17 genres), **source** (library / GN Originals / js13k / partner games), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)
 - **NEW** badges on the 12 most recently added games
 - **Your games**: one compact row that switches between Recent and Favorites (☆ on any card)
-- **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere
+- **✨ Find me a game**: describe what you want ("chill puzzle, nothing scary", "games like Slope", "zombies") and get suggestions with reasons, plus picks based on what you play. It uses `config/game-info.json` (genres, a one-line description and keywords for every game), runs in the browser, and sends nothing anywhere. Optional **✨ AI picks**: set `AI_FINDER_URL` in `js/finder.js` to a Cloudflare Worker running `tools/ai-finder-worker.js` (which calls a [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) server), and the finder also asks an AI to choose from the matching games. Players can switch it off in the finder, and it falls back to the normal results if the AI is slow or down
 - **Game jam games switch** above All games hides the js13k games everywhere
 - **Partner games switch** above All games hides the html5games.com games everywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
