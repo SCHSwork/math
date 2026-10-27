@@ -197,6 +197,10 @@ function gameErrorHook() {
         return origAlert.apply(this, arguments);
     };
 }
+// Games copied from Google Sites call window.parent.maeExportApis_() when they
+// start (Google Sites' own hook). Here there's nothing to export; this keeps
+// that from being an error in every one of those games (and in the error log).
+if (typeof window.maeExportApis_ !== "function") window.maeExportApis_ = function () {};
 window.__gnmathGameError = function (ev) {
     try {
         const z = typeof currentZone === "function" ? currentZone() : null;
