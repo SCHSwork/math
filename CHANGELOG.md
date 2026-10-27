@@ -7,6 +7,21 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Admin Panel: who's online, levels and visitors
+
+### Added
+- **Accounts tab: online status for every account.** A green dot shows "Online" or "Playing <game>"; otherwise "Seen 3 h ago" and so on. Online accounts are listed first, the summary says how many are online, and there's a new "Online now" filter.
+- **Each account shows its level** (Lv 14), plus games tried, time played and badges.
+  - Signed-in players' profiles now carry these, updated every 5 minutes while the site is open and soon after they open or close a game (one small write each time).
+- **Visitors, including people without accounts**, at the top of the Accounts tab:
+  - online now, signed in, and without an account
+  - visitors today, this week and all time (different browsers)
+  - what's being played right now; click a game to open it.
+
+### Changed
+- `config/firestore.rules`: profiles may include level, xp, badges, played, tried and playing.
+- Home tabs stop switching on their own a few seconds after the page loads, and the Top 10 shows up sooner.
+
 ## October 26, 2026 — Simpler home page
 
 ### Changed

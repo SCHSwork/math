@@ -23,12 +23,7 @@ let siteAdminState = { uid: null, admin: false, owner: false, mod: false, banned
 async function syncMyProfileAndRoles(user) {
     siteAdminState = { uid: user ? user.uid : null, admin: false, owner: false, mod: false, banned: null };
     if (!user || !cloudDb) return;
-    const username = (user.email || "").split("@")[0].slice(0, 40);
-    try {
-        const ref = cloudDb.collection("profiles").doc(user.uid);
-        const created = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime).toISOString() : "";
-        await ref.set({ username, createdAt: created, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-    } catch (e) { /* rules not published yet: ignore */ }
+    await profileBeat(true);
     try {
         const a = await cloudDb.collection("admins").doc(user.uid).get();
         siteAdminState.admin = !!(a && a.exists);
@@ -53,6 +48,67 @@ async function syncMyProfileAndRoles(user) {
     // Owner's browser (GitHub token saved): make sure this account is the owner
     if (isOwnerBrowser() && typeof claimOwnerAccount === "function") claimOwnerAccount();
 }
+// ── Profile heartbeat ───────────────────────────────────────────────────────
+// While signed in and the tab is open, the profile's last-seen time, level,
+// XP, badges, minutes played, games tried and the game open now are updated
+// every 5 minutes (and soon after opening or closing a game), so admins can
+// see who's online and what they're playing. One small write each time.
+const PROFILE_BEAT_MS = 5 * 60 * 1000;
+const PROFILE_ONLINE_MS = 7 * 60 * 1000;     // seen this recently = online
+let profileBeatAt = 0, profileLastPlaying = null, profileBeatTimer = null;
+function profileStats() {
+    const out = {};
+    try {
+        if (typeof achSummary === "function") {
+            const a = achSummary();
+            Object.assign(out, { level: a.level, xp: Math.min(a.xp, 1e8), badges: a.earned.length, tried: Math.min(a.stats.tried, 100000), played: Math.min(Math.round(a.stats.totalSec / 60), 1e8) });
+        }
+    } catch (e) {}
+    const v = document.getElementById("zoneViewer");
+    const id = typeof currentGameId !== "undefined" && currentGameId ? String(currentGameId) : "";
+    out.playing = v && v.style.display === "flex" && /^\d{1,7}$/.test(id) ? id : "";
+    return out;
+}
+async function profileBeat(force) {
+    const user = cloudUser;
+    if (!user || !cloudDb) return;
+    if (!force && (document.hidden || (typeof fbBackgroundPaused === "function" && fbBackgroundPaused()))) return;
+    profileBeatAt = Date.now();
+    const base = {
+        username: (user.email || "").split("@")[0].slice(0, 40),
+        createdAt: user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime).toISOString() : "",
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const extra = profileStats();
+    profileLastPlaying = extra.playing;
+    const ref = cloudDb.collection("profiles").doc(user.uid);
+    try {
+        if (typeof fbCount === "function") fbCount(0, 1);
+        await ref.set({ ...base, ...extra }, { merge: true });
+    } catch (e) {
+        // Rules without the new fields yet: keep at least the basics updated
+        try { await ref.set(base, { merge: true }); } catch (e2) { /* rules not published yet */ }
+    }
+}
+setInterval(() => { if (cloudUser && Date.now() - profileBeatAt >= PROFILE_BEAT_MS - 5000) profileBeat(false); }, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && cloudUser && Date.now() - profileBeatAt >= PROFILE_BEAT_MS) profileBeat(false); });
+window.profileGameChanged = function () {
+    if (!cloudUser || profileStats().playing === profileLastPlaying) return;
+    clearTimeout(profileBeatTimer);
+    profileBeatTimer = setTimeout(() => { if (profileStats().playing !== profileLastPlaying) profileBeat(false); }, Math.max(0, 60000 - (Date.now() - profileBeatAt)) + 2000);
+};
+function profileOnline(p) { return Date.now() - timeOf(p.lastSeen) < PROFILE_ONLINE_MS; }
+function timeAgo(v) {
+    const t = timeOf(v);
+    if (!t) return "";
+    const s = Math.max(0, (Date.now() - t) / 1000);
+    if (s < 60) return "just now";
+    if (s < 3600) return `${Math.round(s / 60)} min ago`;
+    if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+    if (s < 86400 * 30) return `${Math.round(s / 86400)} days ago`;
+    return fmtDate(v);
+}
+
 function isSiteAdmin() { return !!(siteAdminState.admin && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function isSiteOwner() { return !!(siteAdminState.owner && isSiteAdmin()); }
 // Admins, or mods who aren't suspended
@@ -150,10 +206,12 @@ async function openAdminPanel() {
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="newgames" aria-selected="false">New games${unreviewedNewGames().length ? ` <span class="admin-tab-count">${unreviewedNewGames().length}</span>` : ""}</button>`}
         </div>
         <div id="admin-accounts">
+            <div id="admin-visitors" class="admin-visitors"><p class="admin-summary">Loading visitors…</p></div>
             <div class="admin-toolbar">
                 <input type="search" id="admin-search" data-no-autofill placeholder="Search usernames…" aria-label="Search accounts" data-lpignore="true" data-1p-ignore data-bwignore data-form-type="other">
                 <select id="admin-filter" aria-label="Show">
                     <option value="all">All accounts</option>
+                    <option value="online">Online now</option>
                     <option value="admins">Admins</option>
                     <option value="mods">Mods</option>
                     <option value="trusted">Trusted reporters</option>
@@ -219,10 +277,60 @@ async function openAdminPanel() {
     try {
         await loadAdminData();
         renderAdminList();
+        renderVisitors();
     } catch (e) {
         console.error(e);
         document.getElementById("admin-summary").textContent = "Couldn't load accounts: " + (typeof statsErrorText === "function" ? statsErrorText(e) : e.message || e);
     }
+}
+
+// ── Visitors (everyone, with or without an account) ──────────────────────────
+// Online now and what's being played come from live/now (js/live.js); visitor
+// totals are count queries on the anonymous online heartbeats (presence/*),
+// about one read each per 1,000 browsers. "Browsers" because a person on two
+// devices counts twice, and clearing site data starts a new one.
+async function presenceCountSince(ms) {
+    const P = FIREBASE_CONFIG.projectId, KEY = FIREBASE_CONFIG.apiKey;
+    const q = { from: [{ collectionId: "presence" }] };
+    if (ms) q.where = { fieldFilter: { field: { fieldPath: "t" }, op: "GREATER_THAN", value: { timestampValue: new Date(Date.now() - ms).toISOString() } } };
+    if (typeof fbCount === "function") fbCount(1, 0);
+    const res = await fetch(`https://firestore.googleapis.com/v1/projects/${P}/databases/(default)/documents:runAggregationQuery?key=${encodeURIComponent(KEY)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ structuredAggregationQuery: { structuredQuery: q, aggregations: [{ alias: "n", count: {} }] } })
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const out = await res.json();
+    return Number((Array.isArray(out) ? out : [out]).map(x => x?.result?.aggregateFields?.n?.integerValue).find(v => v != null)) || 0;
+}
+async function renderVisitors() {
+    const box = document.getElementById("admin-visitors");
+    if (!box) return;
+    let now = null;
+    try {
+        if (typeof fbCount === "function") fbCount(1, 0);
+        const d = await cloudDb.collection("live").doc("now").get();
+        if (d.exists) now = d.data();
+    } catch (e) {}
+    const total = now && Number.isFinite(now.online) ? now.online : (window.gnActiveUsers && window.gnActiveUsers.count) || 0;
+    const signedIn = adminData ? adminData.profiles.filter(profileOnline).length : 0;
+    const guests = Math.max(0, total - signedIn);
+    const [day, week, all] = await Promise.all([86400000, 7 * 86400000, 0].map(ms => presenceCountSince(ms).catch(() => null)));
+    const fmt = n => n == null ? "–" : Number(n).toLocaleString();
+    const tile = (n, label, title) => `<div class="av-tile"${title ? ` title="${escapeHtmlText(title)}"` : ""}><b>${n}</b><span>${label}</span></div>`;
+    const games = Object.entries((now && now.games) || {}).sort((a, b) => b[1] - a[1]).slice(0, 8)
+        .map(([id, n]) => { const z = typeof zoneById === "function" ? zoneById(id) : null; return z ? `<button type="button" class="av-game" data-id="${escapeHtmlText(id)}">${escapeHtmlText(z.name)} <span>${n}</span></button>` : ""; }).join("");
+    const updated = now && now.at && now.at.toDate ? `updated ${timeAgo(now.at)}` : "";
+    box.innerHTML = `
+        <div class="av-tiles">
+            ${tile(fmt(total), "online now", "Everyone with the site open in the last 5 minutes")}
+            ${tile(fmt(signedIn), "signed in", "Accounts active in the last 7 minutes")}
+            ${tile(fmt(guests), "without an account")}
+            ${tile(fmt(day), "visitors today", "Different browsers in the last 24 hours")}
+            ${tile(fmt(week), "this week", "Different browsers in the last 7 days")}
+            ${tile(fmt(all), "all time", "Every browser that has ever opened the site")}
+        </div>
+        ${games ? `<div class="av-games"><span class="av-games-label">Playing now${updated ? ` · ${escapeHtmlText(updated)}` : ""}:</span> ${games}</div>` : ""}`;
+    box.querySelectorAll(".av-game").forEach(b => b.onclick = () => { const z = zoneById(b.dataset.id); if (z) { closePopup(); openZone(z); } });
 }
 
 // ── Action log ──────────────────────────────────────────────────────────────
@@ -427,12 +535,14 @@ function renderAdminList() {
         if (filter === "trusted") return typeof isTrustedReporter === "function" && isTrustedReporter(p.uid);
         if (filter === "banned") return adminData.bans.has(p.uid);
         if (filter === "recent") return timeOf(p.lastSeen) >= weekAgo;
+        if (filter === "online") return profileOnline(p);
         return true;
     });
-    rows.sort((a, b) => timeOf(b.lastSeen) - timeOf(a.lastSeen) || String(a.username).localeCompare(String(b.username)));
+    rows.sort((a, b) => (profileOnline(b) - profileOnline(a)) || timeOf(b.lastSeen) - timeOf(a.lastSeen) || String(a.username).localeCompare(String(b.username)));
     const total = adminData.profiles.length;
+    const online = adminData.profiles.filter(profileOnline).length;
     document.getElementById("admin-summary").textContent =
-        `${total.toLocaleString()} account${total === 1 ? "" : "s"} · ${adminData.admins.size} admin${adminData.admins.size === 1 ? "" : "s"} · ${adminData.mods.size} mod${adminData.mods.size === 1 ? "" : "s"} · ${adminData.bans.size} suspended` +
+        `${total.toLocaleString()} account${total === 1 ? "" : "s"} · ${online} online now · ${adminData.admins.size} admin${adminData.admins.size === 1 ? "" : "s"} · ${adminData.mods.size} mod${adminData.mods.size === 1 ? "" : "s"} · ${adminData.bans.size} suspended` +
         (rows.length !== total ? ` · showing ${rows.length}` : "");
     list.innerHTML = "";
     const shown = rows.slice(0, 200);
@@ -459,9 +569,27 @@ function adminRow(p) {
         b.textContent = label;
         sum.appendChild(b);
     }
+    // Level, and online now (with the game they have open) or when last seen
+    if (Number.isFinite(p.level) && p.level > 0) {
+        const lv = document.createElement("span");
+        lv.className = "admin-level";
+        lv.textContent = `Lv ${p.level}`;
+        lv.title = `Level ${p.level}${typeof achTitle === "function" ? " " + achTitle(p.level) : ""} · ${Number(p.xp || 0).toLocaleString()} XP · ${p.badges || 0} badges`;
+        sum.insertBefore(lv, name.nextSibling);
+    }
+    const on = profileOnline(p);
+    const status = document.createElement("span");
+    status.className = "admin-presence " + (on ? "on" : "off");
+    const game = on && p.playing && typeof zoneById === "function" ? zoneById(p.playing) : null;
+    status.textContent = on ? (game ? `Playing ${game.name}` : "Online") : p.lastSeen ? `Seen ${timeAgo(p.lastSeen)}` : "Never seen";
+    sum.insertBefore(status, name);
     const meta = document.createElement("small");
     const st = adminData.stats.get(p.uid) || { votes: 0, reports: 0 };
-    meta.textContent = [p.createdAt ? "joined " + fmtDate(p.createdAt) : "", p.lastSeen ? "last seen " + fmtDate(p.lastSeen) : "",
+    const mins = Number(p.played || 0);
+    meta.textContent = [p.createdAt ? "joined " + fmtDate(p.createdAt) : "",
+        p.tried ? `${p.tried} game${p.tried === 1 ? "" : "s"} tried` : "",
+        mins ? `${mins >= 60 ? Math.floor(mins / 60) + "h " + (mins % 60) + "m" : mins + "m"} played` : "",
+        p.badges ? `${p.badges} badge${p.badges === 1 ? "" : "s"}` : "",
         `${st.votes} rating${st.votes === 1 ? "" : "s"}`, `${st.reports} report${st.reports === 1 ? "" : "s"}`,
         adminData.subs.get(p.uid) ? `${adminData.subs.get(p.uid)} submission(s)` : ""].filter(Boolean).join(" · ");
     sum.appendChild(meta);

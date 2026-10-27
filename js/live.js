@@ -237,10 +237,12 @@ function renderTop10() {
     // Opening and closing games updates this browser's heartbeat soon after
     const wrapGame = () => {
         const o = window.openZone, c = window.closeZone;
-        if (typeof o === "function" && !o.__live) { window.openZone = function () { const r = o.apply(this, arguments); setTimeout(() => window.presenceGameChanged && window.presenceGameChanged(), 0); return r; }; window.openZone.__live = true; }
-        if (typeof c === "function" && !c.__live) { window.closeZone = function () { const r = c.apply(this, arguments); window.presenceGameChanged && window.presenceGameChanged(); return r; }; window.closeZone.__live = true; }
+        if (typeof o === "function" && !o.__live) { window.openZone = function () { const r = o.apply(this, arguments); setTimeout(() => { window.presenceGameChanged && window.presenceGameChanged(); window.profileGameChanged && window.profileGameChanged(); }, 0); return r; }; window.openZone.__live = true; }
+        if (typeof c === "function" && !c.__live) { window.closeZone = function () { const r = c.apply(this, arguments); window.presenceGameChanged && window.presenceGameChanged(); window.profileGameChanged && window.profileGameChanged(); return r; }; window.closeZone.__live = true; }
     };
     if (document.readyState === "complete") wrapGame(); else window.addEventListener("load", wrapGame);
+    // Top 10 from the saved week counts right away (or a quick read on a first visit)
+    setTimeout(() => { readWeek().catch(() => {}).finally(renderTop10); }, 1200);
     // After the online heartbeat has started (presence.js waits 4s)
     setTimeout(() => { tick(); setInterval(tick, 30000); }, 7000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) tick(); });
