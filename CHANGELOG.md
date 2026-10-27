@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Play next
+
+### Added
+- **"Play next" suggestions** (js/play-next.js). Close a game you played for at least 30 seconds and a small panel offers six more. Up to 3 are from the same series, the next one first (Vex 7 after Vex 6); the rest share its genres, most played first. Games you've already played, turned-off games, games reported broken and partner games are skipped.
+- The panel goes away after 25 seconds, when you open something, or with × / Esc. "Don't suggest games" turns it off in that browser.
+
 ## October 26, 2026 — Halloween week 🎃
 
 ### Added
