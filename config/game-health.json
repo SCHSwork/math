@@ -5,14 +5,24 @@
    "at": "2026-10-27"
   },
   "11": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
-    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "13": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "20": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "25": {
+   "s": "ok",
+   "at": "2026-10-27"
+  },
+  "59": {
+   "s": "ok",
+   "at": "2026-10-27"
   },
   "112": {
    "s": "ok",
@@ -44,10 +54,10 @@
   }
  },
  "next": 0,
- "updated": "2026-10-27T04:03:22.884Z",
+ "updated": "2026-10-27T04:10:21.866Z",
  "total": 1900,
  "counts": {
-  "ok": 5,
-  "broken": 2
+  "ok": 10,
+  "broken": 1
  }
 }
