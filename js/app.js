@@ -1121,12 +1121,69 @@ function partGuardHook(SIZES, BIG) {
 
 // Sizes of split game files (config/part-sizes.json), loaded when the first game opens
 let gamePartSizes = null, gameBigFiles = {}, partSizesPromise = null;
+let libraryPins = {};   // "owner/repo@branch" → commit (config/library-pins.json)
 function loadPartSizes() {
-    if (!partSizesPromise) partSizesPromise = fetch("config/part-sizes.json")
-        .then(r => r.ok ? r.json() : null)
-        .then(j => { gamePartSizes = (j && j.repos) || {}; gameBigFiles = (j && j.big) || {}; })
-        .catch(() => { gamePartSizes = {}; });
+    if (!partSizesPromise) partSizesPromise = Promise.all([
+        fetch("config/part-sizes.json")
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { gamePartSizes = (j && j.repos) || {}; gameBigFiles = (j && j.big) || {}; })
+            .catch(() => { gamePartSizes = {}; }),
+        fetch("config/library-pins.json")
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { libraryPins = (j && j.pins) || {}; })
+            .catch(() => {})
+    ]);
     return partSizesPromise;
+}
+
+// ── Pinned dependencies ─────────────────────────────────────────────────────
+// Many library games load files from other people's repos by branch name
+// (…@main, …@master, @latest or no version). Whatever gets pushed there would
+// run here the next time someone plays, so a change or a hacked account could
+// break or take over those games overnight. config/library-pins.json fixes each
+// of those to one commit (tools/build_library_pins.py), and these swap the links.
+const PIN_RX_JSD = /(https?:\/\/(?:cdn|fastly|gcore|testingcf|quantil)\.jsdelivr\.net\/gh\/)([\w.-]+)\/([\w.-]+?)(?:@([\w.-]+))?\//g;
+const PIN_RX_RAW = /(https?:\/\/(?:raw\.githubusercontent\.com|rawcdn\.githack\.com|raw\.githack\.com)\/)([\w.-]+)\/([\w.-]+)\/(?:refs\/heads\/)?([\w.-]+)\//g;
+function pinLibraryLinks(html, pins = libraryPins) {
+    if (typeof html !== "string" || !pins || !Object.keys(pins).length) return html;
+    return html
+        .replace(PIN_RX_JSD, (m, host, o, r, ref) => { const sha = pins[`${o}/${r}@${ref || "latest"}`]; return sha ? `${host}${o}/${r}@${sha}/` : m; })
+        .replace(PIN_RX_RAW, (m, host, o, r, ref) => { const sha = pins[`${o}/${r}@${ref}`]; return sha ? `${host}${o}/${r}/${sha}/` : m; });
+}
+// Inside game pages: links the game builds while it runs (scripts, files, images)
+function pinLinksHook(PINS) {
+    var JSD = /(https?:\/\/(?:cdn|fastly|gcore|testingcf|quantil)\.jsdelivr\.net\/gh\/)([\w.-]+)\/([\w.-]+?)(?:@([\w.-]+))?\//;
+    var RAW = /(https?:\/\/(?:raw\.githubusercontent\.com|rawcdn\.githack\.com|raw\.githack\.com)\/)([\w.-]+)\/([\w.-]+)\/(?:refs\/heads\/)?([\w.-]+)\//;
+    var pin = function (u) {
+        if (typeof u !== "string" || u.indexOf("://") < 0) return u;
+        return u.replace(JSD, function (m, h, o, r, ref) { var s = PINS[o + "/" + r + "@" + (ref || "latest")]; return s ? h + o + "/" + r + "@" + s + "/" : m; })
+            .replace(RAW, function (m, h, o, r, ref) { var s = PINS[o + "/" + r + "@" + ref]; return s ? h + o + "/" + r + "/" + s + "/" : m; });
+    };
+    try {
+        var of = window.fetch;
+        if (of) window.fetch = function (u, o) { if (typeof u === "string") u = pin(u); else if (u && u.url && typeof Request !== "undefined" && u instanceof Request) { var p = pin(u.url); if (p !== u.url) u = new Request(p, u); } return of.call(this, u, o); };
+        var xo = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (m, u) { if (typeof u === "string") arguments[1] = pin(u); return xo.apply(this, arguments); };
+        [[window.HTMLScriptElement, "src"], [window.HTMLImageElement, "src"], [window.HTMLMediaElement, "src"], [window.HTMLSourceElement, "src"], [window.HTMLLinkElement, "href"], [window.HTMLIFrameElement, "src"]].forEach(function (x) {
+            var C = x[0], k = x[1]; if (!C) return;
+            var d = Object.getOwnPropertyDescriptor(C.prototype, k);
+            if (!d || !d.set) return;
+            Object.defineProperty(C.prototype, k, { configurable: true, enumerable: d.enumerable, get: d.get, set: function (v) { d.set.call(this, pin(String(v))); } });
+        });
+        var sa = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (n, v) { if (/^(src|href)$/i.test(n)) v = pin(String(v)); return sa.call(this, n, v); };
+        var W = window.Worker;
+        if (W) { var PW = function (u, o) { return new W(typeof u === "string" ? pin(u) : u, o); }; PW.prototype = W.prototype; window.Worker = PW; }
+    } catch (e) {}
+}
+// The pins for repos this page mentions (keeps the page small)
+function pinsForPage(html) {
+    const out = {};
+    for (const [k, v] of Object.entries(libraryPins || {})) {
+        const repo = k.slice(0, k.lastIndexOf("@"));
+        if (html.includes(repo)) out[k] = v;
+    }
+    return out;
 }
 // The pieces one game page can load: repos (and folders) it links to
 function partSizesForPage(html) {
@@ -1146,7 +1203,9 @@ function partSizesForPage(html) {
     const out = {}, big = {};
     for (const [key, set] of dirs) {
         const [repo, ref] = key.split("@");
-        const refs = [ref, ...(["latest", "HEAD", "main", "master"].includes(ref) ? ["latest", "HEAD", "main", "master"] : [])];
+        // A pinned link (commit) also matches lists made for the branch it was pinned from
+        const pinnedFrom = Object.entries(libraryPins || {}).filter(([k, v]) => v === ref && k.startsWith(repo + "@")).map(([k]) => k.slice(repo.length + 1));
+        const refs = [ref, ...pinnedFrom, ...(["latest", "HEAD", "main", "master", ...pinnedFrom].some(r => ["latest", "HEAD", "main", "master"].includes(r)) ? ["latest", "HEAD", "main", "master"] : [])];
         const bigKey = refs.map(r => `${repo}@${r}`).find(k => gameBigFiles[k]);
         if (bigKey) big[`${repo}@${ref}`] = gameBigFiles[bigKey];
         const listKey = split && refs.map(r => `${repo}@${r}`).find(k => gamePartSizes[k]);
@@ -1402,6 +1461,8 @@ function cleanGameHtml(html) {
             console.info("Skipped an empty page in front of the game");
         }
     }
+    const pagePins = pinsForPage(html);
+    html = pinLibraryLinks(html, pagePins);
     html = fixMergedUnityParts(html);
     html = useLocalRuffle(html);
     // A typo in one library copy (Ace Attorney Investigations): the "a" of
@@ -1448,6 +1509,7 @@ function cleanGameHtml(html) {
         (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
+        (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
