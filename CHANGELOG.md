@@ -7,6 +7,15 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Halloween week 🎃
+
+### Added
+- **Halloween week, Oct 24 – Nov 1** (js/halloween.js), with everything going back to normal on Nov 2:
+  - **Decorations:** the site wears the Halloween scene (orange moon, bats, graveyard) for everyone. "Turn off decorations" in the banner, or picking any theme in Settings, switches it off for that visitor; their own theme is never changed.
+  - **A 🎃 Spooky tab** first on the home page, with horror and Halloween games, most played first.
+  - **A banner** counting down to Halloween (once a day).
+  - **Two limited-time badges:** 🎃 Trick or Treat (play any game on Oct 31) and 👻 Spooky Season (play 5 spooky games during the week).
+
 ## October 26, 2026 — Library games' outside files are locked to one version
 
 ### Security
