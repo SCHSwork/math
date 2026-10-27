@@ -7,6 +7,15 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Nightly game check
+
+### Added
+- **Every night (about 3 AM) GitHub opens about 250 games in a real browser** (`tools/check_games.mjs`, `.github/workflows/game-check.yml`), plus every game that failed last time, so each game is checked about once a week and fixed games clear themselves.
+  - Games where nothing appears within 20 seconds are checked again with 45 seconds and a fresh browser before they count as "not starting".
+  - The test never touches the site's database (online count, error reports, accounts).
+- **Admin Panel → Game check** lists the games that didn't start, with the reason (the script error or missing file), since when, and the full error list. Open plays the game; on the owner's browser, Turn off hides it. A count on the tab shows how many are failing.
+- Run it any time from the repo's Actions tab ("Nightly game check" → Run workflow), optionally for just some game ids.
+
 ## October 26, 2026 — Play next
 
 ### Added

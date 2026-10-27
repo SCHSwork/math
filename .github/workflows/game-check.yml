@@ -1,0 +1,60 @@
+# Nightly game check: opens a batch of games in a real browser (about 250 a
+# night, so every game is checked every week or so, plus every game that failed
+# last time) and saves which ones never show a game to config/game-health.json.
+# The Admin Panel shows the results under "Game check".
+# Run it by hand from the Actions tab; "ids" checks just those games (2,11,990123).
+name: Nightly game check
+on:
+  schedule:
+    - cron: "23 9 * * *"     # about 3 AM Denver time, when hardly anyone plays
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "Only these game ids (comma separated). Empty = tonight's batch"
+        required: false
+        default: ""
+      batch:
+        description: "How many games in the batch"
+        required: false
+        default: "250"
+permissions:
+  contents: write
+concurrency:
+  group: game-check
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install the test browser
+        run: |
+          npm init -y >/dev/null
+          npm i --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Serve the site
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 >/dev/null 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/index.html >/dev/null && break; sleep 1; done
+      - name: Check games
+        env:
+          SITE_URL: http://127.0.0.1:8080/
+          IDS: ${{ github.event.inputs.ids }}
+          BATCH: ${{ github.event.inputs.batch }}
+        run: |
+          [[ "$BATCH" =~ ^[0-9]+$ ]] || BATCH=250
+          ARGS="--batch=$BATCH --minutes=150"
+          if [[ "$IDS" =~ ^[0-9,]+$ ]]; then ARGS="$ARGS --ids=$IDS"; fi
+          node tools/check_games.mjs $ARGS
+      - name: Save the results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git add config/game-health.json
+          git diff --cached --quiet && { echo "No changes"; exit 0; }
+          git commit -m "chore: nightly game check"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
