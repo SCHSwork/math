@@ -13,6 +13,7 @@ Found by opening every library and UBZone game in a test browser and checking wh
 
 ### Fixed
 - **Games that use a helper worker now start**, e.g. Look Outside and Saihate Station (RPG Maker's music decoder). Browsers only start a worker from the page's own site, and game files come from jsDelivr, so these failed with "Failed to construct 'Worker'". The worker is now started from a tiny same-site file that loads the real one (`crossOriginWorkerHook` in js/app.js).
+- Games copied from Google Sites (Coreball, Big Tower Tiny Square 2, Pac-Man World 2, 64 in 1 NES…) no longer throw "maeExportApis_ is not a function" when they start, which also kept that error out of the error log.
 - **Ace Attorney Investigations: Miles Edgeworth** had two typos in its library copy (`response.rrayBuffer()` and a stray `a`) and stopped at "Error loading game". The site fixes them when it loads the game.
 
 ## October 26, 2026 — Stand-in for game portal SDKs
