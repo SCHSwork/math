@@ -1,7 +1,8 @@
 {
   "siteMode": "open",
   "disabledZones": [
-    "653"
+    "653",
+    "300013"
   ],
   "announcement": {
     "text": "HUGE UPDATE! account system to save progress and various things!",
@@ -47,5 +48,5 @@
     }
   ],
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-10-23T16:41:13.174Z"
+  "updatedAt": "2026-10-27T19:17:22.488Z"
 }
