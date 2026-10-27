@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — More games that never started now work
+
+Found by opening every library and UBZone game in a test browser and checking which ones never showed a game.
+
+### Fixed
+- **Games that use a helper worker now start**, e.g. Look Outside and Saihate Station (RPG Maker's music decoder). Browsers only start a worker from the page's own site, and game files come from jsDelivr, so these failed with "Failed to construct 'Worker'". The worker is now started from a tiny same-site file that loads the real one (`crossOriginWorkerHook` in js/app.js).
+- **Ace Attorney Investigations: Miles Edgeworth** had two typos in its library copy (`response.rrayBuffer()` and a stray `a`) and stopped at "Error loading game". The site fixes them when it loads the game.
+
 ## October 26, 2026 — Stand-in for game portal SDKs
 
 ### Fixed
