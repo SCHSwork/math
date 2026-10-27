@@ -90,13 +90,21 @@ service cloud.firestore {
 
     // Small public-to-admins profile so admins can find accounts:
     // username (must match the sign-in name), join date, last visit.
+    // Profile: username, joined, last seen, plus level, XP, badges, minutes
+    // played, games tried and the game open now (shown in the Admin Panel)
     match /profiles/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen'])
+        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen', 'level', 'xp', 'badges', 'played', 'tried', 'playing'])
         && request.resource.data.username == request.auth.token.email.split('@')[0]
         && shortText(request.resource.data.createdAt, 40)
-        && request.resource.data.lastSeen == request.time;
+        && request.resource.data.lastSeen == request.time
+        && optInt(request.resource.data, 'level', 0, 1000)
+        && optInt(request.resource.data, 'xp', 0, 100000000)
+        && optInt(request.resource.data, 'badges', 0, 500)
+        && optInt(request.resource.data, 'played', 0, 100000000)
+        && optInt(request.resource.data, 'tried', 0, 100000)
+        && (!('playing' in request.resource.data) || (request.resource.data.playing is string && request.resource.data.playing.matches('[0-9]{0,7}')));
       allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
     }
 
@@ -132,6 +140,9 @@ service cloud.firestore {
         && request.resource.data.at == request.time
         && request.resource.data.p is map && request.resource.data.p.size() <= 3000
         && (resource == null || request.time > resource.data.at + duration.value(120, 's'));
+    }
+    function optInt(d, k, lo, hi) {
+      return !(k in d) || (d[k] is int && d[k] >= lo && d[k] <= hi);
     }
     function validUsage(u) {
       return u is map && u.size() == 1

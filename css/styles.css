@@ -3257,3 +3257,23 @@ body.skin-no-scenes .scenes-off-note { display: block; margin: .4rem 0 .2rem; fo
 .filter-switches .jam-toggle-row { margin: 0; display: grid; gap: 0.2rem; }
 .filter-switches .jam-toggle-note { font-size: 11.5px; line-height: 1.35; }
 .filter-switches .jam-toggle-row[hidden] { display: none; }
+
+/* Admin Panel: who's online, levels and visitor totals */
+.admin-presence { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; margin-right: 0.45rem; color: var(--text-muted); white-space: nowrap; }
+.admin-presence::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #64748b; flex: none; }
+.admin-presence.on { color: #4ade80; }
+.admin-presence.on::before { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25); }
+.admin-level { display: inline-block; margin-left: 0.4rem; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800;
+    background: linear-gradient(90deg, #fde047, #f97316); color: #1c1917; vertical-align: 1px; }
+.admin-visitors { margin-bottom: 0.9rem; }
+.av-tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.45rem; }
+.av-tile { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem 0.4rem; text-align: center; }
+.av-tile b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+.av-tile span { font-size: 11px; color: var(--text-muted); }
+.av-tile:first-child b { color: #4ade80; }
+.av-games { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-top: 0.6rem; font-size: 12.5px; }
+.av-games-label { color: var(--text-muted); margin-right: 0.15rem; }
+.av-game { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 0.2rem 0.6rem; font: inherit; font-size: 12.5px; cursor: pointer; }
+.av-game span { font-weight: 800; color: #f87171; margin-left: 0.2rem; }
+.av-game:hover { border-color: var(--primary); }
+@media (max-width: 600px) { .av-tiles { grid-template-columns: repeat(3, 1fr); } }

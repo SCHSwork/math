@@ -23,7 +23,8 @@
     ];
     let current = null;
     try { current = localStorage.getItem(KEY); } catch {}
-    let picked = !!current;   // until someone picks a tab, show the first one there is
+    let picked = !!current;   // until someone picks a tab, show the first one there is…
+    const settleAt = Date.now() + 4000;   // …but stop switching once the page has settled
     let applying = false;
 
     function available() {
@@ -34,7 +35,7 @@
         applying = true;
         try {
             const tabs = available();
-            if (!picked || !tabs.find(t => t.id === current)) current = (tabs[0] || {}).id || null;
+            if ((!picked && Date.now() < settleAt) || !tabs.find(t => t.id === current)) current = (tabs[0] || {}).id || null;
             // Tab buttons
             const sig = tabs.map(t => t.id + ":" + (t.count ? t.count() : "")).join(",") + "|" + current;
             if (bar.dataset.sig !== sig) {
