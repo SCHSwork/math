@@ -3209,3 +3209,51 @@ body.skin-no-scenes .needs-scenes { display: none !important; }
 body.skin-no-scenes .scenes-off-note { display: block; margin: .4rem 0 .2rem; font-size: 13px; color: var(--text-muted); }
 /* marker under All games; more cards are built when it nears the screen */
 #zonesMore { height: 1px; }
+
+/* ── Home tabs (js/home-tabs.js): one row at a time ─────────────────────── */
+.home-tabs[hidden] { display: none; }
+.home-tabs.ht-empty .home-tabbar .ht-tabs { display: none; }
+.home-tabs .ht-off { display: none !important; }
+.home-tabs > .home-section { margin: 0; }
+.home-tabs summary.section-title, .home-tabs .section-head { display: none; }
+.home-tabbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.ht-tabs { display: flex; gap: 0.4rem; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.ht-tabs::-webkit-scrollbar { display: none; }
+.ht-tab {
+    display: inline-flex; align-items: center; gap: 0.35rem; flex: none;
+    padding: 0.45rem 0.95rem; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+    font: inherit; font-size: 14px; font-weight: 700; white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.ht-tab:hover { color: var(--text); border-color: var(--primary); }
+.ht-tab:active { transform: scale(0.97); }
+.ht-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ht-tab[aria-selected="true"] { background: var(--primary); border-color: transparent; color: #fff; }
+.ht-icon { font-size: 14px; line-height: 1; }
+.ht-count { font-size: 12px; font-weight: 600; opacity: 0.75; }
+/* Today's pick as a small chip at the end of the tab bar */
+.home-tabbar #gotd {
+    flex: 0 1 auto; max-width: 360px; min-width: 0; margin: 0;
+    gap: 0.55rem; padding: 0.25rem 0.3rem 0.25rem 0.25rem; border-radius: 999px;
+}
+.home-tabbar #gotd img { width: 34px; height: 34px; border-radius: 50%; }
+.home-tabbar #gotd > div { min-width: 0; }
+.home-tabbar #gotd .gotd-label { font-size: 11px; line-height: 1.2; }
+.home-tabbar #gotd h2 { margin: 0; font-size: 0.9rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-tabbar #gotd .gotd-meta { display: none; }
+.home-tabbar #gotd .gotd-play { padding: 0.35rem 0.95rem; font-size: 13px; border-radius: 999px; }
+.home-tabbar #gotd .gotd-close { position: static; transform: none; width: 24px; height: 24px; flex: none; font-size: 16px; }
+@media (max-width: 700px) {
+    .home-tabbar #gotd { flex-basis: 100%; max-width: none; }
+}
+.home-tabbar #gotd { flex-wrap: nowrap; padding-right: 0.3rem; }
+.home-tabbar #gotd > div { flex: 1 1 auto; flex-basis: auto; }
+.home-tabbar #gotd .gotd-play { width: auto; flex: none; }
+.home-tabbar #gotd img { width: 34px; height: 34px; }
+.shelf-small .card-live { font-size: 10px; padding: 1px 6px 1px 5px; white-space: nowrap; }
+/* Game jam / partner game switches, now inside Sort & filter */
+.filter-switches { grid-column: 1 / -1; display: grid; gap: 0.5rem; margin: 0.25rem 0 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
+.filter-switches .jam-toggle-row { margin: 0; display: grid; gap: 0.2rem; }
+.filter-switches .jam-toggle-note { font-size: 11.5px; line-height: 1.35; }
+.filter-switches .jam-toggle-row[hidden] { display: none; }

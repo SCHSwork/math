@@ -919,12 +919,9 @@ function applyFilters() {
             .sort((a, b) => b[1] - a[1])          // stable: equal scores keep the chosen sort order
             .map(([zone]) => zone);
     }
-    if (query || (tag && tag !== "none") || extra) {
-        document.getElementById("featuredZonesWrapper").removeAttribute("open");
-        document.getElementById("originalsWrapper")?.removeAttribute("open");
-        document.getElementById("newGamesWrapper")?.removeAttribute("open");
-        document.getElementById("top10Wrapper")?.removeAttribute("open");
-    }
+    // Searching or filtering: the home rows step aside so the results come first
+    const homeTabs = document.getElementById("homeTabs");
+    if (homeTabs) homeTabs.hidden = !!(query || (tag && tag !== "none") || extra);
     displayZones(list);
     const summary = document.getElementById("allSummary");
     if (newSearch && summary) setSectionTitle(summary, "New games (last 2 weeks)", list.filter(z => !isZoneDisabled(z.id)).length);

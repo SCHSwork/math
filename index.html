@@ -53,7 +53,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=f42a47dda7">
+    <link rel="stylesheet" href="css/styles.css?v=032fe9bcf3">
     <script>
     // Each site style's look is in its own file (css/skins/), so only the one in use
     // is loaded. Load the saved one now, before the page is drawn, so it never flashes.
@@ -127,6 +127,22 @@
                     <option value="none">All types</option>
                 </select>
                 </label>
+                <div class="filter-switches">
+                <div class="jam-toggle-row">
+                    <button type="button" id="jamToggle" class="jam-toggle" role="switch" aria-checked="true" onclick="toggleJamGames()">
+                        <span class="jam-switch" aria-hidden="true"></span>
+                        <span id="jamToggleLabel">Game jam games</span>
+                    </button>
+                    <span class="jam-toggle-note">Tiny games made in a month for the js13k contest</span>
+                </div>
+                <div class="jam-toggle-row" id="partnerToggleRow" hidden>
+                    <button type="button" id="partnerToggle" class="jam-toggle" role="switch" aria-checked="true" onclick="togglePartnerGames()">
+                        <span class="jam-switch" aria-hidden="true"></span>
+                        <span id="partnerToggleLabel">Partner games</span>
+                    </button>
+                    <span class="jam-toggle-note"><span class="ad-badge" aria-hidden="true">AD</span> Free games from html5games.com and Playgama. They may show ads from those sites; GN 2.0 adds none and earns nothing.</span>
+                </div>
+                </div>
                 <button type="button" class="filter-reset" onclick="resetFilters()">Reset</button>
                 </div>
             </div>
@@ -170,51 +186,43 @@
         </div>
     </header>
 	<main>
-        <section id="gotd" hidden aria-label="Today's pick"></section>
-        <section id="yourGames" class="home-section" hidden>
-            <div class="section-head">
-                <h2 class="section-title">Your games</h2>
-                <div class="seg" role="tablist" aria-label="Your games">
-                    <button type="button" role="tab" data-tab="recent" aria-selected="true" onclick="setYourGamesTab('recent')">Recent</button>
-                    <button type="button" role="tab" data-tab="favorites" aria-selected="false" onclick="setYourGamesTab('favorites')">Favorites</button>
-                </div>
+        <!-- Home: one row at a time, picked with the tabs (js/home-tabs.js) -->
+        <section id="homeTabs" class="home-section home-tabs" aria-label="Games for you">
+            <div class="home-tabbar">
+                <div class="ht-tabs" role="tablist" aria-label="Game lists"></div>
+                <section id="gotd" hidden aria-label="Today's pick"></section>
             </div>
-            <div id="recentZones" class="shelf shelf-small" role="tabpanel"></div>
-            <div id="favoriteZones" class="shelf shelf-small" role="tabpanel" hidden></div>
-            <p id="yourGamesEmpty" class="shelf-empty" hidden></p>
+            <section id="yourGames" class="home-section" hidden>
+                <div class="section-head">
+                    <h2 class="section-title">Your games</h2>
+                    <div class="seg" role="tablist" aria-label="Your games">
+                        <button type="button" role="tab" data-tab="recent" aria-selected="true" onclick="setYourGamesTab('recent')">Recent</button>
+                        <button type="button" role="tab" data-tab="favorites" aria-selected="false" onclick="setYourGamesTab('favorites')">Favorites</button>
+                    </div>
+                </div>
+                <div id="recentZones" class="shelf shelf-small" role="tabpanel"></div>
+                <div id="favoriteZones" class="shelf shelf-small" role="tabpanel" hidden></div>
+                <p id="yourGamesEmpty" class="shelf-empty" hidden></p>
+            </section>
+            <details id="top10Wrapper" class="home-section top10-section" open hidden>
+                <summary class="section-title">Top 10 this week <span id="top10Note" class="section-note"></span></summary>
+                <div id="top10Zones" class="shelf top10-shelf"></div>
+            </details>
+            <details id="featuredZonesWrapper" class="home-section" open>
+                <summary id="allZonesSummary" class="section-title">Featured</summary>
+                <div id="featuredZones" class="shelf"></div>
+            </details>
+            <details id="newGamesWrapper" class="home-section" open hidden>
+                <summary id="newGamesSummary" class="section-title">New games</summary>
+                <div id="newZones" class="shelf"></div>
+            </details>
+            <details id="originalsWrapper" class="home-section" open hidden>
+                <summary id="originalsSummary" class="section-title">GN Originals</summary>
+                <div id="originalsZones" class="shelf"></div>
+            </details>
         </section>
-        <details id="top10Wrapper" class="home-section top10-section" open hidden>
-            <summary class="section-title">Top 10 this week <span id="top10Note" class="section-note"></span></summary>
-            <div id="top10Zones" class="shelf top10-shelf"></div>
-        </details>
-        <details id="featuredZonesWrapper" class="home-section" open>
-            <summary id="allZonesSummary" class="section-title">Featured</summary>
-            <div id="featuredZones" class="shelf"></div>
-        </details>
-        <details id="newGamesWrapper" class="home-section" open hidden>
-            <summary id="newGamesSummary" class="section-title">New games</summary>
-            <div id="newZones" class="shelf"></div>
-        </details>
-        <details id="originalsWrapper" class="home-section" open hidden>
-            <summary id="originalsSummary" class="section-title">GN Originals</summary>
-            <div id="originalsZones" class="shelf"></div>
-        </details>
         <details id="allZonesWrapper" class="home-section" open>
             <summary id="allSummary" class="section-title">All games</summary>
-            <div class="jam-toggle-row">
-                <button type="button" id="jamToggle" class="jam-toggle" role="switch" aria-checked="true" onclick="toggleJamGames()">
-                    <span class="jam-switch" aria-hidden="true"></span>
-                    <span id="jamToggleLabel">Game jam games</span>
-                </button>
-                <span class="jam-toggle-note">Tiny games made in a month for the js13k contest</span>
-            </div>
-            <div class="jam-toggle-row" id="partnerToggleRow" hidden>
-                <button type="button" id="partnerToggle" class="jam-toggle" role="switch" aria-checked="true" onclick="togglePartnerGames()">
-                    <span class="jam-switch" aria-hidden="true"></span>
-                    <span id="partnerToggleLabel">Partner games</span>
-                </button>
-                <span class="jam-toggle-note"><span class="ad-badge" aria-hidden="true">AD</span> Free games from html5games.com and Playgama. They may show ads from those sites; GN 2.0 adds none and earns nothing.</span>
-            </div>
             <div id="container">Loading games…</div>
         </details>
     </main>
@@ -291,7 +299,7 @@
     <script src="js/partners.js?v=e5acc0456e"></script>
 
     <script src="js/ubzone.js?v=e74cf1d9fb"></script>
-    <script src="js/app.js?v=d689109d26"></script>
+    <script src="js/app.js?v=fd1a0e9756"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/firebase-pace.js?v=45d6769e77"></script>
@@ -309,6 +317,7 @@
 <script src="js/presence.js?v=a204eb9458"></script>
 <script src="js/live.js?v=8ea53c216a"></script>
 <script src="js/achievements.js?v=a69e620100"></script>
+<script src="js/home-tabs.js?v=992900af80"></script>
 <script src="js/status.js?v=c623f313c3"></script>
 <script src="js/skins.js?v=72dda489fb"></script>
 <script src="js/scenes.js?v=0cc459682d"></script>
