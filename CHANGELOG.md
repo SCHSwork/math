@@ -7,6 +7,16 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 26, 2026 — Library games' outside files are locked to one version
+
+### Security
+- **662 library games load scripts, SDKs or game files from other people's repos by branch name** (…@main, …@master, @latest or no version), from 207 repos in all. Whatever got pushed there would run on GN 2.0 the next time someone opened the game, so one bad change or hacked account could break or take over those games overnight. Each of those links is now fixed to the commit that's there today:
+  - `config/library-pins.json`, made by `tools/build_library_pins.py`.
+  - The site swaps the links in the page (`pinLibraryLinks`) and the ones a game builds while it runs (`pinLinksHook`).
+  - Pins never move by themselves. New branch links are pinned when they first appear (with the daily update). To move them forward on purpose: `python3 tools/build_library_pins.py --refresh [owner/repo]`.
+  - 11 repos are gone or private and stay as they were (jsDelivr may still have copies).
+- The split-file sizes and big-file list now use the pinned commits too.
+
 ## October 26, 2026 — Admin Panel: who's online, levels and visitors
 
 ### Added

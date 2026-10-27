@@ -50,6 +50,29 @@ def pages_from_repo(tmp, repo, ref, paths=None):
     return out
 
 
+# Game pages' branch links are swapped for fixed commits on the site
+# (config/library-pins.json, pinLibraryLinks in js/app.js): list sizes for those
+PINS = {}
+try:
+    PINS = json.loads((ROOT / "config/library-pins.json").read_text()).get("pins", {})
+except Exception:
+    pass
+PIN_JSD = re.compile(r"(https?://(?:cdn|fastly|gcore|testingcf|quantil)\.jsdelivr\.net/gh/)([\w.-]+)/([\w.-]+?)(?:@([\w.-]+))?/")
+PIN_RAW = re.compile(r"(https?://(?:raw\.githubusercontent\.com|rawcdn\.githack\.com|raw\.githack\.com)/)([\w.-]+)/([\w.-]+)/(?:refs/heads/)?([\w.-]+)/")
+
+
+def pin_links(html):
+    if not PINS:
+        return html
+    def jsd(m):
+        sha = PINS.get(f"{m.group(2)}/{m.group(3)}@{m.group(4) or 'latest'}")
+        return f"{m.group(1)}{m.group(2)}/{m.group(3)}@{sha}/" if sha else m.group(0)
+    def raw(m):
+        sha = PINS.get(f"{m.group(2)}/{m.group(3)}@{m.group(4)}")
+        return f"{m.group(1)}{m.group(2)}/{m.group(3)}/{sha}/" if sha else m.group(0)
+    return PIN_RAW.sub(raw, PIN_JSD.sub(jsd, html))
+
+
 def repo_refs(html):
     """(owner/repo, ref) pairs a page loads files from."""
     found = set()
@@ -127,6 +150,7 @@ def main():
         print(f"Reading {len(ub_paths)} UBZone pages…")
         pages.update(pages_from_repo(tmp, ub["repo"], ub["ref"], ub_paths))
 
+        pages = {k: pin_links(v) for k, v in pages.items()}
         targets = set()
         for html in pages.values():
             if SPLIT_HINT.search(html):
