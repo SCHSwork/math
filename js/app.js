@@ -1184,6 +1184,112 @@ function fixMergedUnityParts(html) {
     return fixed;
 }
 
+// Yandex Games SDK stand-in. About 50 library games (mostly Unity ports) load
+// Yandex's real SDK, which can't reach Yandex from here: YaGames.init() never
+// finished, so anything that waited for it (watch an ad for a reward, saves,
+// leaderboards) froze or crashed the game. This stand-in answers every call at
+// once: ads "finish" and give the reward, saves go to this browser, and things
+// that need a Yandex account politely say no.
+function yandexSdkStub() {
+    var resolved = function (v) { return Promise.resolve(v); };
+    var later = function (fn) { setTimeout(function () { try { fn(); } catch (e) {} }, 0); };
+    var cb = function (o) { return (o && o.callbacks) || {}; };
+    var saveKey = "yasdk:" + String(document.baseURI || location.href).replace(/[?#].*$/, "");
+    var readSave = function () { try { return JSON.parse(localStorage.getItem(saveKey) || "{}") || {}; } catch (e) { return {}; } };
+    var writeSave = function (d) { try { localStorage.setItem(saveKey, JSON.stringify(d || {})); } catch (e) {} };
+    var statsKey = saveKey + ":stats";
+    var pick = function (obj, keys) { if (!keys || !keys.length) return obj; var o = {}; keys.forEach(function (k) { if (k in obj) o[k] = obj[k]; }); return o; };
+    var player = {
+        getUniqueID: function () { return "gn-local-player"; }, getID: function () { return "gn-local-player"; },
+        getName: function () { return ""; }, getPhoto: function () { return ""; }, getAvatarSrc: function () { return ""; },
+        getMode: function () { return "lite"; }, isAuthorized: function () { return false; }, getPayingStatus: function () { return "not_paying"; },
+        getIDsPerGame: function () { return resolved([]); },
+        getData: function (keys) { return resolved(pick(readSave(), keys)); },
+        setData: function (d) { writeSave(Object.assign(readSave(), d || {})); return resolved(true); },
+        getStats: function (keys) { var s; try { s = JSON.parse(localStorage.getItem(statsKey) || "{}"); } catch (e) { s = {}; } return resolved(pick(s, keys)); },
+        setStats: function (d) { try { localStorage.setItem(statsKey, JSON.stringify(d || {})); } catch (e) {} return resolved(true); },
+        incrementStats: function (d) { var s; try { s = JSON.parse(localStorage.getItem(statsKey) || "{}"); } catch (e) { s = {}; } for (var k in d) s[k] = (Number(s[k]) || 0) + Number(d[k]); try { localStorage.setItem(statsKey, JSON.stringify(s)); } catch (e) {} return resolved(s); }
+    };
+    var lb = {
+        getLeaderboardDescription: function (n) { return resolved({ name: n, title: { en: n }, description: { invert_sort_order: false, score_format: { options: { decimal_offset: 0 } } } }); },
+        setLeaderboardScore: function () { return resolved(); },
+        getLeaderboardPlayerEntry: function () { return Promise.reject({ code: "LEADERBOARD_PLAYER_NOT_PRESENT" }); },
+        getLeaderboardEntries: function (n) { return resolved({ leaderboard: { name: n }, ranges: [], userRank: 0, entries: [] }); }
+    };
+    var device = { type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "mobile" : "desktop" };
+    device.isMobile = function () { return device.type === "mobile"; };
+    device.isDesktop = function () { return device.type === "desktop"; };
+    device.isTablet = function () { return false; };
+    device.isTV = function () { return false; };
+    var lang = (navigator.language || "en").slice(0, 2);
+    var ysdk = {
+        environment: { app: { id: "0" }, browser: { lang: lang }, i18n: { lang: lang, tld: "com" }, payload: null },
+        deviceInfo: device,
+        adv: {
+            showFullscreenAdv: function (o) { var c = cb(o); later(function () { if (c.onOpen) c.onOpen(); if (c.onClose) c.onClose(false); }); },
+            showRewardedVideo: function (o) { var c = cb(o); later(function () { if (c.onOpen) c.onOpen(); if (c.onRewarded) c.onRewarded(); if (c.onClose) c.onClose(); }); },
+            showBannerAdv: function () { return resolved({ stickyAdvIsShowing: false }); },
+            hideBannerAdv: function () { return resolved({ stickyAdvIsShowing: false }); },
+            getBannerAdvStatus: function () { return resolved({ stickyAdvIsShowing: false, reason: "UNKNOWN" }); }
+        },
+        features: {
+            LoadingAPI: { ready: function () {} },
+            GameplayAPI: { start: function () {}, stop: function () {} },
+            GamesAPI: { getAllGames: function () { return resolved({ games: [], developerURL: "" }); }, getGameByID: function () { return resolved({ isAvailable: false }); } },
+            PluginEngineDataReporterAPI: { report: function () {} }
+        },
+        auth: { openAuthDialog: function () { return Promise.reject(new Error("Not available here")); } },
+        feedback: { canReview: function () { return resolved({ value: false, reason: "UNKNOWN" }); }, requestReview: function () { return resolved({ feedbackSent: false }); } },
+        shortcut: { canShowPrompt: function () { return resolved({ canShow: false }); }, showPrompt: function () { return resolved({ outcome: "rejected" }); } },
+        clipboard: { writeText: function (t) { try { return navigator.clipboard.writeText(t); } catch (e) { return resolved(); } } },
+        screen: { fullscreen: { STATUS_ON: "on", STATUS_OFF: "off", status: "off", request: function () { return resolved(); }, exit: function () { return resolved(); } } },
+        leaderboards: { setScore: lb.setLeaderboardScore, getEntries: lb.getLeaderboardEntries, getPlayerEntry: lb.getLeaderboardPlayerEntry, getDescription: lb.getLeaderboardDescription },
+        getPlayer: function () { return resolved(player); },
+        getLeaderboards: function () { return resolved(lb); },
+        getPayments: function () { return resolved({ getCatalog: function () { return resolved([]); }, getPurchases: function () { var a = []; a.signature = ""; return resolved(a); }, purchase: function () { return Promise.reject(new Error("Purchases aren't available here")); }, consumePurchase: function () { return resolved(); } }); },
+        getStorage: function () { return resolved(localStorage); },
+        getFlags: function () { return resolved({}); },
+        isAvailableMethod: function () { return resolved(false); },
+        serverTime: function () { return Date.now(); },
+        on: function () {}, off: function () {}, onEvent: function () {}, dispatchEvent: function () {},
+        EVENTS: { HISTORY_BACK: "HISTORY_BACK", ACCOUNT_SELECTION_DIALOG_OPENED: "ACCOUNT_SELECTION_DIALOG_OPENED", ACCOUNT_SELECTION_DIALOG_CLOSED: "ACCOUNT_SELECTION_DIALOG_CLOSED" }
+    };
+    // Anything else a game asks for: a harmless function instead of a crash
+    var safe = function (obj) {
+        return new Proxy(obj, { get: function (t, k) {
+            if (k in t || typeof k === "symbol" || k === "then") return t[k];
+            return function () { return resolved(undefined); };
+        } });
+    };
+    var sdk = safe(ysdk);
+    window.YaGames = { init: function () { return resolved(sdk); } };
+}
+// H5 Games Ads (Google's adBreak / adConfig, through window.adsbygoogle). Its
+// script is removed, so ad breaks never ended: rewarded ads ("watch an ad for a
+// bonus") never gave the reward or handed control back. Answer them right away.
+function h5AdsStub() {
+    var handle = function (o) {
+        if (!o || typeof o !== "object" || Array.isArray(o)) return;
+        var run = function (fn, arg) { if (typeof fn === "function") setTimeout(function () { try { fn(arg); } catch (e) {} }, 0); };
+        if (o.onReady || o.preloadAdBreaks || o.sound) { run(o.onReady); return; }     // adConfig
+        if (!o.type) return;
+        if (o.type === "reward") {
+            if (typeof o.beforeReward === "function") {
+                setTimeout(function () {
+                    try { o.beforeReward(function () { run(o.adViewed); run(o.adBreakDone, { breakType: "reward", breakName: o.name || "", breakFormat: "reward", breakStatus: "viewed" }); }); } catch (e) {}
+                }, 0);
+            } else run(o.adBreakDone, { breakType: "reward", breakName: o.name || "", breakFormat: "reward", breakStatus: "noAdPreloaded" });
+            return;
+        }
+        run(o.adBreakDone, { breakType: o.type, breakName: o.name || "", breakFormat: o.type === "preroll" ? "preroll" : "interstitial", breakStatus: "notReady" });
+    };
+    var q = window.adsbygoogle = window.adsbygoogle || [];
+    var queued = q.slice ? q.slice() : [];
+    try { Object.defineProperty(q, "push", { configurable: true, value: function () { for (var i = 0; i < arguments.length; i++) handle(arguments[i]); return q.length; } }); } catch (e) {}
+    queued.forEach(handle);
+    if (typeof window.adBreak !== "function") window.adBreak = function (o) { handle(o); };
+    if (typeof window.adConfig !== "function") window.adConfig = function (o) { handle(o); };
+}
 // Helper workers from the game's own folder. Browsers only start a worker from
 // the page's own site, and game files come from jsDelivr, so games that use one
 // (e.g. RPG Maker's music decoder) failed with "Failed to construct 'Worker'".
@@ -1294,6 +1400,8 @@ function cleanGameHtml(html) {
     // response.arrayBuffer() ended up after EJS_color = "…";
     html = html.replace(/\.rrayBuffer\(/g, ".arrayBuffer(").replace(/(EJS_color\s*=\s*"[^"\n]*";)a(\s)/g, "$1$2");
     let removed = 0;
+    // The real Yandex SDK replaces the stand-in above and then never finishes starting
+    if (/YaGames/.test(html)) html = html.replace(/<script\b[^>]*\bsrc\s*=\s*["']?[^"'\s>]*(?:yandex-sdk\.js|yandex\.ru\/games\/sdk|\/sdk\.js|^sdk\.js)[^>]*>\s*<\/script\s*>/gi, () => { removed++; return ""; });
     let out = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi, (whole, attrs, code) => {
         const src = (attrs.match(/\bsrc\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
         if (src && new RegExp(AD_HOST_PATTERN, "i").test((() => { try { return new URL(src, "https://x/").hostname; } catch { return ""; } })())) {
@@ -1329,6 +1437,8 @@ function cleanGameHtml(html) {
         (typeof gameFitHook === "function" ? `<script>(${gameFitHook.toString()})();<\/script>` : "") +
         (/RuntimeInterface|c3runtime|supportcheck\.js/.test(html) ? `<script>(${construct3Hook.toString()})();<\/script>` : "") +
         (/PokiSDK|poki-sdk|CrazyGames|gdsdk/.test(html) ? `<script>(${portalSdkStub.toString()})();<\/script>` : "") +
+        (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
+        (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
