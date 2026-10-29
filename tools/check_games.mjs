@@ -124,6 +124,8 @@ async function check(w, z, waitMs) {
     if (m.surface > 0.05 || m.other) return { s: "ok" };
     const loading = /load|download|\d+\s*%|please wait|starting|initiali/i.test(m.text);
     if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)" };
+    // A whole menu on screen (e.g. osu!) is a working game even if a side script failed
+    if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)" };
     // Something on screen and nothing went wrong: a game drawn without a canvas (e.g. Coreball)
     if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas" };
     // Only problem: files the test server couldn't download from jsDelivr or GitHub

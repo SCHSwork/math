@@ -517,17 +517,9 @@
    "at": "2026-10-27"
   },
   "130": {
-   "s": "broken",
+   "s": "ok",
    "at": "2026-10-29",
-   "why": "Script error: Cannot set properties of null (setting 'innerText')",
-   "errors": [
-    "Script error: Cannot set properties of null (setting 'innerText')",
-    "Failed https://cdn.jsdelivr.net/gh/MartinMMCyt/osu@65e500d1cb100306acbfeffb310c84294da933c4/undefined/pages/home.html",
-    "Script error: Failed to fetch",
-    "Failed https://api.sayobot.cn/beatmaplist?0=20&1=0&2=2&5=1"
-   ],
-   "since": "2026-10-27",
-   "t": "2026-10-29T03:10:47.965406+00:00"
+   "t": "2026-10-29T15:49:11.323Z"
   },
   "146": {
    "s": "ok",
@@ -672,11 +664,9 @@
    "at": "2026-10-27"
   },
   "181": {
-   "s": "broken",
+   "s": "ok",
    "at": "2026-10-29",
-   "why": "Blank page",
-   "since": "2026-10-27",
-   "t": "2026-10-29T03:10:47.965406+00:00"
+   "t": "2026-10-29T15:49:26.313Z"
   },
   "182": {
    "s": "ok",
@@ -1068,8 +1058,7 @@
  "updated": "2026-10-27T16:08:51.031Z",
  "total": 1900,
  "counts": {
-  "ok": 245,
-  "slow": 5,
-  "broken": 2
+  "ok": 247,
+  "slow": 5
  }
 }

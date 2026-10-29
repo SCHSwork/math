@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 29, 2026 — Minecraft 1.8.8 and the nightly check
+
+### Fixed
+- **Minecraft 1.8.8 starts again** (it was a black screen for everyone). The site removes accidental second copies of a game page by cutting at the first `</html>`, but Eaglercraft has `</html>` inside its own code (text for a popup window), so half the game was thrown away. Only a real end of page counts now. Checked every library and washed game page: Minecraft was the only one affected.
+- **The nightly game check can't lose a night anymore.** On Oct 28 a game froze the test browser, the run hit GitHub's 3-hour limit and nothing was saved. Every game now has a time limit (a frozen game goes under "Couldn't tell"), results are saved after each game, and the save step always runs.
+- **osu! no longer shows as "not starting".** Its menu is a normal web page, not a game canvas; a page with a full menu on screen now counts as working.
+
 ## October 28, 2026 — Authors for the new games
 
 ### Fixed
