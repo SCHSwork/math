@@ -1514,7 +1514,14 @@ function cleanGameHtml(html) {
     // game then starts twice on the same canvas and crashes (Unity: "null function"),
     // so keep only the first copy. But some UBZone files start with an empty page
     // (just a title and styles) and the real game after it; there, keep the game.
-    const firstEnd = html.search(/<\/html\s*>/i);
+    // Only a real end of page counts: one followed by more HTML (or nothing).
+    // Eaglercraft (Minecraft 1.8.8) has "</html>" inside its own code, as text
+    // for a popup window; cutting there threw away half the game (black screen).
+    const endRe = /<\/html\s*>/gi;
+    let firstEnd = -1, em;
+    while ((em = endRe.exec(html))) {
+        if (/^\s*(<|$)/.test(html.slice(em.index + em[0].length, em.index + em[0].length + 200))) { firstEnd = em.index; break; }
+    }
     if (firstEnd !== -1 && /<html\b/i.test(html.slice(firstEnd))) {
         const first = html.slice(0, firstEnd);
         if (/<(script|canvas|iframe|embed|object)\b/i.test(first)) {
