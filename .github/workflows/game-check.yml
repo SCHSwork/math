@@ -41,16 +41,20 @@ jobs:
           python3 -m http.server 8080 --bind 127.0.0.1 >/dev/null 2>&1 &
           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/index.html >/dev/null && break; sleep 1; done
       - name: Check games
+        # Ends well before the job's limit so the results are always saved below
+        timeout-minutes: 160
+        continue-on-error: true
         env:
           SITE_URL: http://127.0.0.1:8080/
           IDS: ${{ github.event.inputs.ids }}
           BATCH: ${{ github.event.inputs.batch }}
         run: |
           [[ "$BATCH" =~ ^[0-9]+$ ]] || BATCH=250
-          ARGS="--batch=$BATCH --minutes=150"
+          ARGS="--batch=$BATCH --minutes=140"
           if [[ "$IDS" =~ ^[0-9,]+$ ]]; then ARGS="$ARGS --ids=$IDS"; fi
           node tools/check_games.mjs $ARGS
       - name: Save the results
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
