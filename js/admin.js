@@ -322,11 +322,11 @@ async function renderGameCheck(force) {
         </div>`;
     box.innerHTML = `
         <p class="admin-summary">Checked ${entries.length.toLocaleString()} of ${(h.total || entries.length).toLocaleString()} games${when ? `, last run ${escapeHtmlText(when)}` : ""}:
-            <b class="gc-ok">${okN.toLocaleString()} working</b> · <b class="gc-bad">${broken.length} not starting</b> · ${slow.length} too slow to tell.
+            <b class="gc-ok">${okN.toLocaleString()} working</b> · <b class="gc-bad">${broken.length} not starting</b> · ${slow.length} couldn't tell.
             <button type="button" class="finder-chip" id="gc-refresh">Refresh</button></p>
-        <p class="admin-footnote">Every night about 250 games are opened in a real browser, plus every game that failed last time, so each game is checked about once a week. "Not starting" means no game appeared within 45 seconds (checked twice). Some of these work fine for players (they need a click, a login or a site the test can't reach), so open one before turning it off.</p>
+        <p class="admin-footnote">Every night about 250 games are opened in a real browser, plus every game that failed last time, so each game is checked about once a week. "Not starting" means no game appeared within 45 seconds (checked twice). "Couldn't tell" means the game was still loading, or the test server couldn't download its files. Some "not starting" games still work for players (they need a click or a login), so open one before turning it off.</p>
         ${broken.length ? `<h4 class="gc-h">Not starting (${broken.length})</h4>${broken.sort((a, b) => off(a) - off(b) || String(a.z.name).localeCompare(b.z.name)).map(row).join("")}` : `<p>No broken games found. 🎉</p>`}
-        ${slow.length ? `<details class="gc-slow"><summary>Too slow to tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}`;
+        ${slow.length ? `<details class="gc-slow"><summary>Couldn't tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}`;
     box.querySelector("#gc-refresh").onclick = () => renderGameCheck(true);
     box.querySelectorAll(".gc-row").forEach(r => {
         const id = r.dataset.id;

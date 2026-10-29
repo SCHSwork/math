@@ -30,14 +30,45 @@ health.games ||= {};
 // Things a test browser shouldn't touch: the site's database (online count,
 // error reports, accounts) and trackers
 const BLOCK = /(^|\.)(firestore\.googleapis\.com|firebase\w*\.googleapis\.com|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firebaseinstallations\.googleapis\.com|google-analytics\.com|googletagmanager\.com)$/;
-const NOISE = /firestore|favicon|sha\.txt|api\.github|googletagmanager|google-analytics|data\.jsdelivr|^Failed to load resource|gameanalytics|fonts\.(googleapis|gstatic)/i;
+const NOISE = /firestore|favicon|sha\.txt|api\.github|googletagmanager|google-analytics|data\.jsdelivr|^Failed to load resource|gameanalytics|fonts\.(googleapis|gstatic)|google\.com\/jsapi/i;
 
 // Software WebGL, so 3D games can draw without a graphics card
 const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
+// jsDelivr often refuses the test server (GitHub's machines): HTTP 403 or a
+// dropped connection, for files players download fine. When that happens, get
+// the same file from GitHub directly, so a game is only called broken for a
+// real problem and not because the test server was turned away.
+const MIME = { js: "application/javascript", mjs: "application/javascript", css: "text/css", html: "text/html", htm: "text/html", json: "application/json",
+    wasm: "application/wasm", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
+    mp3: "audio/mpeg", ogg: "audio/ogg", wav: "audio/wav", m4a: "audio/mp4", mp4: "video/mp4", webm: "video/webm", swf: "application/x-shockwave-flash",
+    xml: "application/xml", txt: "text/plain", ttf: "font/ttf", woff: "font/woff", woff2: "font/woff2" };
+const JSD_GH = /^https?:\/\/(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([^/]+)\/([^/@]+)(?:@([^/]+))?\/([^?#]*)/;
+async function viaGitHub(route) {
+    const url = route.request().url();
+    let res = null;
+    try { res = await route.fetch({ timeout: 30000 }); } catch (e) {}
+    if (res && (res.status() < 400 || res.status() === 404)) return route.fulfill({ response: res });
+    const m = url.match(JSD_GH);
+    const ref = !m[3] || ["latest", "main", "master"].includes(m[3]) ? "HEAD" : m[3];
+    try {
+        const raw = await fetch(`https://raw.githubusercontent.com/${m[1]}/${m[2]}/${ref}/${m[4]}`, { signal: AbortSignal.timeout(60000) });
+        if (raw.ok) {
+            const ext = (m[4].split("/").pop().match(/\.([a-z0-9]+)$/i) || [])[1] || "";
+            return route.fulfill({ status: 200, body: Buffer.from(await raw.arrayBuffer()),
+                headers: { "content-type": MIME[ext.toLowerCase()] || "application/octet-stream", "access-control-allow-origin": "*" } });
+        }
+    } catch (e) {}
+    cdnRefused.add(url);
+    if (res) return route.fulfill({ response: res });
+    return route.abort();
+}
+const cdnRefused = new Set();
+
 async function makePage() {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
     await ctx.route(url => BLOCK.test(new URL(url).hostname), r => r.abort());
+    await ctx.route(JSD_GH, viaGitHub);
     const page = await ctx.newPage();
     const st = { errors: [] };
     // (Offline-cache helpers can't start inside the game window; that's harmless)
@@ -76,6 +107,7 @@ const measure = () => {
 async function check(w, z, waitMs) {
     const { page, st } = w;
     st.errors.length = 0;
+    cdnRefused.clear();
     await page.evaluate(id => openZone(zones.find(x => String(x.id) === id)), String(z.id));
     let m = null;
     const until = Date.now() + waitMs;
@@ -92,6 +124,11 @@ async function check(w, z, waitMs) {
     if (m.surface > 0.05 || m.other) return { s: "ok" };
     const loading = /load|download|\d+\s*%|please wait|starting|initiali/i.test(m.text);
     if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)" };
+    // Something on screen and nothing went wrong: a game drawn without a canvas (e.g. Coreball)
+    if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas" };
+    // Only problem: files the test server couldn't download from jsDelivr or GitHub
+    const cdnOnly = errors.length && errors.every(e => /^(Failed|HTTP (403|429|5\d\d)) https?:\/\/[^/]*(jsdelivr\.net|githubusercontent\.com|githack\.com)\//.test(e) || [...cdnRefused].some(u => e.includes(u.slice(0, 150))) || /^Script error: \w+ is not defined$/.test(e));
+    if (cdnOnly && errors.some(e => !e.startsWith("Script error"))) return { s: "slow", why: "The test server couldn't download this game's files (it usually works for players)", errors };
     if (loading) return { s: "slow", why: `Still loading after ${Math.round(waitMs / 1000)}s: "${m.text.slice(0, 60)}"`, errors };
     if (errors.length) return { s: "broken", why: pickWhy(), errors };
     return { s: "broken", why: m.textLen ? `Shows only: "${m.text.slice(0, 60)}"` : "Blank page", errors };
