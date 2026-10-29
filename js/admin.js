@@ -196,7 +196,7 @@ async function openAdminPanel() {
     const modOnly = !isSiteAdmin();
     if (modOnly) document.getElementById("popupTitle").textContent = "Mod Panel";
     body.innerHTML = `
-        <div class="admin-tabs" role="tablist">
+        <div class="admin-tabs admin-tabs-wrap" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
             <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
