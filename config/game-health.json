@@ -17,16 +17,9 @@
    "at": "2026-10-27"
   },
   "4": {
-   "s": "slow",
-   "at": "2026-10-27",
-   "why": "Still loading after 45s: \"Gladihoppers 0% of 23MB Loading...\"",
-   "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/gladihoppper/Build/Gladihoppers.data.unityweb.part1",
-    "HTTP 403 https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/gladihoppper/Build/Gladihoppers.wasm.code.unityweb.part2",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/gladihoppper/screenshots/4.jpg",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/gladihoppper/screenshots/4.png"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:16:41.720Z"
   },
   "5": {
    "s": "ok",
@@ -713,14 +706,9 @@
    "at": "2026-10-27"
   },
   "195": {
-   "s": "slow",
-   "at": "2026-10-27",
-   "why": "Still loading after 45s: \"LOADING...\"",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/giorgirick2-gif/game-webports-onawebsite@b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/repo/Build/NewestBuild.wasm.gz.part1",
-    "Failed https://cdn.jsdelivr.net/gh/giorgirick2-gif/game-webports-onawebsite@b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/repo/Build/NewestBuild.data.gz.part2"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:16:24.302Z"
   },
   "196": {
    "s": "ok",
@@ -989,13 +977,9 @@
   },
   "263": {
    "s": "slow",
-   "at": "2026-10-27",
-   "why": "Still loading after 45s: \"LOADING...\"",
-   "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/263-fix3.html",
-    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/263-fix3.html",
-    "Failed https://fastly.jsdelivr.net/gh/bubblfan/quake3@57acb6f5de92d7fa83992d7470779f1e8dce2776/Quake3.js.part1"
-   ],
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:17:43.827Z",
+   "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-10-27"
   },
   "264": {
@@ -1012,10 +996,11 @@
   },
   "267": {
    "s": "slow",
-   "at": "2026-10-27",
-   "why": "Still loading after 45s: \"Downloading...\"",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:17:55.793Z",
+   "why": "The test server couldn't download this game's files (it usually works for players)",
    "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/giorgirick2-gif/game-webports-onawebsite@b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/pizza-tower/game.unx.part1"
+    "Failed https://cdn.jsdelivr.net/gh/giorgirick2-gif/game-webports-onawebsite@b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/pizza-tower/game.unx.part10"
    ],
    "since": "2026-10-27"
   },
@@ -1036,6 +1021,289 @@
    "at": "2026-10-29",
    "t": "2026-10-29T03:10:47.965406+00:00"
   },
+  "272": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:17:51.437Z"
+  },
+  "273": {
+   "s": "slow",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:11.684Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://rawcdn.githack.com/genizy/assets/4e2ced5ad916836e4d6bc31dab3b9c660b51d678/blockpost/screenshots/2-small.jpg"
+   ],
+   "since": "2026-10-29"
+  },
+  "274": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:17:58.889Z"
+  },
+  "275": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:01.857Z"
+  },
+  "276": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:14.916Z"
+  },
+  "277": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:19.614Z"
+  },
+  "278": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:22.819Z"
+  },
+  "279": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:26.101Z"
+  },
+  "280": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:49.042Z"
+  },
+  "281": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:18:57.396Z"
+  },
+  "282": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:03.915Z"
+  },
+  "283": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:07.729Z"
+  },
+  "284": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:11.368Z"
+  },
+  "285": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:15.971Z"
+  },
+  "286": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:14.657Z"
+  },
+  "287": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:35.359Z"
+  },
+  "288": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:36.596Z"
+  },
+  "289": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:55.363Z"
+  },
+  "290": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:19:55.152Z"
+  },
+  "291": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:12.994Z"
+  },
+  "292": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:13.966Z"
+  },
+  "293": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:41.156Z"
+  },
+  "294": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:20.876Z"
+  },
+  "295": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:25.188Z"
+  },
+  "297": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:28.491Z"
+  },
+  "298": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:40.652Z"
+  },
+  "299": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:49.187Z"
+  },
+  "300": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:01.151Z"
+  },
+  "301": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:53.772Z"
+  },
+  "302": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:20:57.689Z"
+  },
+  "303": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:02.375Z"
+  },
+  "304": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:04.489Z"
+  },
+  "305": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:43.784Z"
+  },
+  "306": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:14.707Z"
+  },
+  "307": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:20.867Z"
+  },
+  "308": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:37.762Z"
+  },
+  "309": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:43.655Z"
+  },
+  "310": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:58.983Z"
+  },
+  "311": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:21:47.374Z"
+  },
+  "312": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:22:07.898Z"
+  },
+  "313": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:22:02.010Z"
+  },
+  "314": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:22:18.599Z"
+  },
+  "315": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:22:28.926Z"
+  },
+  "316": {
+   "s": "broken",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:31.805Z",
+   "why": "Script error: Module \"payments\" is not supported.",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/images/loading_image_bird.png",
+    "Script error: Module \"payments\" is not supported.",
+    "HTTP 404 http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds/appcache.nocache.manifest",
+    "HTTP 404 http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds111/appcache.nocache.manifest"
+   ],
+   "since": "2026-10-29"
+  },
+  "317": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:22:33.511Z"
+  },
+  "318": {
+   "s": "slow",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:45.027Z",
+   "why": "The test server couldn't download this game's files (it usually works for players)",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/freebuisness/assets@0723b1b0d9f3baf5c277ad1e1f9b369889f7f66e/318/Build/SideEffectsWebBuild_V0.1.data.br.part5"
+   ],
+   "since": "2026-10-29"
+  },
+  "319": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:34.939Z"
+  },
+  "320": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:40.465Z"
+  },
+  "321": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:43.415Z"
+  },
+  "322": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:46.376Z"
+  },
+  "324": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:49.345Z"
+  },
+  "325": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:53.683Z"
+  },
+  "326": {
+   "s": "ok",
+   "at": "2026-10-29",
+   "t": "2026-10-29T16:23:57.186Z"
+  },
   "447": {
    "s": "slow",
    "at": "2026-10-29",
@@ -1054,11 +1322,12 @@
    "at": "2026-10-27"
   }
  },
- "next": 250,
- "updated": "2026-10-27T16:08:51.031Z",
+ "next": 500,
+ "updated": "2026-10-29T16:23:57.186Z",
  "total": 1900,
  "counts": {
-  "ok": 247,
-  "slow": 5
+  "ok": 299,
+  "slow": 5,
+  "broken": 1
  }
 }
