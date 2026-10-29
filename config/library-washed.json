@@ -634,7 +634,7 @@
   "990134": {
    "name": "Chess",
    "extra": true,
-   "author": "",
+   "author": "Stefano Gioffré",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/chess",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -681,7 +681,7 @@
   "990137": {
    "name": "2048 Cupcakes",
    "extra": true,
-   "author": "",
+   "author": "0x0800 (2048 by Gabriele Cirulli)",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/cupcakes",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -807,7 +807,7 @@
   "990147": {
    "name": "Flappy 2048",
    "extra": true,
-   "author": "",
+   "author": "hczhcz",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/flappy-2048",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -899,7 +899,7 @@
   "990153": {
    "name": "Horse Master",
    "extra": true,
-   "author": "",
+   "author": "Tom McHenry",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse mster",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1099,7 +1099,7 @@
   "990171": {
    "name": "Sleeping Beauty",
    "extra": true,
-   "author": "",
+   "author": "Ondřej Žára",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/sleeping beauty",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1129,7 +1129,7 @@
   "990173": {
    "name": "Space Invaders",
    "extra": true,
-   "author": "",
+   "author": "Tóth Róbert",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/spaceinvaders",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1143,7 +1143,7 @@
   "990174": {
    "name": "Stack",
    "extra": true,
-   "author": "",
+   "author": "BMQB",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/stack",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1305,7 +1305,7 @@
   "990189": {
    "name": "Bomb It 2",
    "extra": true,
-   "author": "",
+   "author": "Zlong Games",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/bombit2",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
