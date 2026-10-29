@@ -2073,6 +2073,9 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .admin-tabs.fade-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
 .admin-tabs.fade-start { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); }
 .admin-tabs.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
+/* Admin Panel: its tabs go onto a second row instead of scrolling, so none
+   of them (Game check, New games…) hide off the edge of a phone screen */
+.admin-tabs.admin-tabs-wrap { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; }
 @media (max-width: 480px) {
     .admin-tabs button { padding: 0.5rem 0.6rem; font-size: 13px; }
     .set-tabs button { padding: 0.5rem 0.35rem; }

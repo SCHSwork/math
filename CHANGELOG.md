@@ -12,6 +12,7 @@ All the changes to GN 2.0, newest first.
 ### Fixed
 - **Games that stayed silent now get their sound.** Browsers keep sound off until you tap or press a key, and Safari (iPads, iPhones, Macs) only counts taps inside the game itself, so games that set up their sound too early never played any. Every game page now turns sound on with your first tap, click or key press in the game (`gameAudioUnlockHook` in js/app.js): it wakes sound the browser put to sleep and restarts music the browser refused. Sound a game paused or muted itself is left alone.
 - The game frame now allows autoplay, fullscreen and controllers.
+- **Admin Panel tabs no longer hide off the edge on phones.** Admins have 8 tabs, so Game check and New games were scrolled out of sight (mods only have 4, so they could see it). The tabs now go onto a second row.
 
 ## October 26, 2026 — Nightly game check
 
