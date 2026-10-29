@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 28, 2026 — Game sound fix
+
+### Fixed
+- **Games that stayed silent now get their sound.** Browsers keep sound off until you tap or press a key, and Safari (iPads, iPhones, Macs) only counts taps inside the game itself, so games that set up their sound too early never played any. Every game page now turns sound on with your first tap, click or key press in the game (`gameAudioUnlockHook` in js/app.js): it wakes sound the browser put to sleep and restarts music the browser refused. Sound a game paused or muted itself is left alone.
+- The game frame now allows autoplay, fullscreen and controllers.
+
 ## October 26, 2026 — Nightly game check
 
 ### Added
