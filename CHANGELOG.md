@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 28, 2026 — Authors for the new games
+
+### Fixed
+- **The 82 added games (ids 990000+) said just "by" with no name.** Games with no known author now show nothing there instead of an empty "by".
+- **Game info works for them.** It used to look them up in the main library's repo, where they don't exist, and got stuck on "Loading...". It now shows the name, author (or "Unknown"), where the files came from and a description.
+- Filled in the authors we know for sure: Paper Minecraft and Appel (griffpatch), Edge Surf (Microsoft), Interactive Buddy (Shock Value), Kitten Cannon (Dan Fessler), MineKhan (Willard Pierce), Space Company (sparksp), Weave Silk (Yuri Vishnevsky), WebGL Fluid Simulation (Pavel Dobryakov), You Are Jeff Bezos (Kris Lorischild), Papa Louie: When Pizzas Attack (Flipline Studios), Sugar, Sugar (Bart Bonte), Fireboy and Watergirl (Oslo Albet). The rest can be added in config/library-washed.json ("author").
+
 ## October 28, 2026 — Mark games fixed
 
 ### Added

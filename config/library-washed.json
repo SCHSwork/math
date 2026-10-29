@@ -253,7 +253,7 @@
   "990104": {
    "name": "Appel",
    "extra": true,
-   "author": "",
+   "author": "griffpatch",
    "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Appel.html",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -300,7 +300,7 @@
   "990110": {
    "name": "Paper Minecraft",
    "extra": true,
-   "author": "",
+   "author": "griffpatch",
    "source": "https://github.com/Avioso/strongdog/blob/f85f28d947e1bb06696246f47ba446d02d56a33d/html/Paper Minecraft.html",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -759,7 +759,7 @@
   "990143": {
    "name": "Edge Surf",
    "extra": true,
-   "author": "",
+   "author": "Microsoft",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/edge-surf",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -933,7 +933,7 @@
   "990156": {
    "name": "Interactive Buddy",
    "extra": true,
-   "author": "",
+   "author": "Shock Value",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/interactivebuddy",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -965,7 +965,7 @@
   "990158": {
    "name": "Kitten Cannon",
    "extra": true,
-   "author": "",
+   "author": "Dan Fessler",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/kittencannon",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -997,7 +997,7 @@
   "990160": {
    "name": "MineKhan",
    "extra": true,
-   "author": "",
+   "author": "Willard Pierce",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/minekhan",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1113,7 +1113,7 @@
   "990172": {
    "name": "Space Company",
    "extra": true,
-   "author": "",
+   "author": "sparksp",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/spacecompany",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1224,7 +1224,7 @@
   "990181": {
    "name": "Weave Silk",
    "extra": true,
-   "author": "",
+   "author": "Yuri Vishnevsky",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/weavesilk",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1242,7 +1242,7 @@
   "990182": {
    "name": "WebGL Fluid Simulation",
    "extra": true,
-   "author": "",
+   "author": "Pavel Dobryakov",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/webgl-fluid-simulation",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1273,7 +1273,7 @@
   "990185": {
    "name": "You Are Jeff Bezos",
    "extra": true,
-   "author": "",
+   "author": "Kris Lorischild",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/you-are-bezos",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1361,7 +1361,7 @@
   "990196": {
    "name": "Papa Louie: When Pizzas Attack!",
    "extra": true,
-   "author": "",
+   "author": "Flipline Studios",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/louie1",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1419,7 +1419,7 @@
   "990200": {
    "name": "Sugar, Sugar",
    "extra": true,
-   "author": "",
+   "author": "Bart Bonte",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/sugar",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1433,7 +1433,7 @@
   "990201": {
    "name": "Fireboy and Watergirl",
    "extra": true,
-   "author": "",
+   "author": "Oslo Albet",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/swf/waterboy",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"

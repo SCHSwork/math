@@ -1657,7 +1657,7 @@ function openZone(file) {
         // Partner game (html5games.com): plays from Famobi's own site and may show their ads
         document.getElementById('zoneName').textContent = file.name;
         document.getElementById('zoneId').textContent = file.id;
-        document.getElementById('zoneAuthor').textContent = "by " + file.author;
+        document.getElementById('zoneAuthor').textContent = file.author ? "by " + file.author : "";
         document.getElementById('zoneAuthor').href = file.authorLink;
         setPartnerNotice(file);
         zoneViewer.style.display = "flex";
@@ -1679,7 +1679,7 @@ function openZone(file) {
         // Show viewer immediately with a loading indicator
         document.getElementById('zoneName').textContent = file.name;
         document.getElementById('zoneId').textContent = file.id;
-        document.getElementById('zoneAuthor').textContent = "by " + file.author;
+        document.getElementById('zoneAuthor').textContent = file.author ? "by " + file.author : "";
         if (file.authorLink) {
             document.getElementById('zoneAuthor').href = file.authorLink;
         } else {
@@ -4607,6 +4607,9 @@ function showZoneInfo() {
     if (partner) { showPartnerInfo(partner); return; }
     const ubz = typeof isUbzoneZone === "function" && isUbzoneZone(id) ? zones.find(z => Number(z.id) === id) : null;
     if (ubz) { showUbzoneInfo(ubz); return; }
+    // Washed games from other collections (ids 990000+): not in the library repo
+    const extra = id >= 990000 ? zones.find(z => Number(z.id) === id) : null;
+    if (extra) { showExtraGameInfo(extra); return; }
     fetch(`https://api.github.com/repos/freebuisness/html/commits?path=${id}.html`).then(res => res.json()).then(async json => {
         let stats = await getStats (id);
         idjson = zones.filter(a=>a.id===id)[0]
@@ -4632,6 +4635,20 @@ function showZoneInfo() {
         <b>Times Played (Globally)</b>: ${Number(stats).toLocaleString("en-US")}
         </p>`;
     })
+}
+
+function showExtraGameInfo(zone) {
+    const esc = escapeHtmlText;
+    document.getElementById("popupTitle").textContent = `${zone.name} Info`;
+    document.getElementById("popupBody").innerHTML = `
+        <p>
+        <b>Id</b>: ${esc(zone.id)}<br>
+        <b>Name</b>: ${esc(zone.name)}<br>
+        <b>Game Author</b>: ${zone.author ? esc(zone.author) : `<span style="color:var(--text-muted);">Unknown</span>`}<br>
+        ${zone.authorLink ? `<b>Source</b>: <a href="${esc(zone.authorLink)}" target="_blank" rel="noopener noreferrer">${esc(zone.authorLink.replace(/^https:\/\//, "").slice(0, 60))}</a><br>` : ""}
+        ${zone.description ? `<b>About</b>: ${esc(zone.description)}<br>` : ""}
+        </p>
+        <p style="color:var(--text-muted);font-size:13px;">Its files were checked for trackers, ads and hidden scripts before it was added, and it always loads that checked version. All credit goes to the game's creators. Own this game? <a href="#" onclick="openTakedownForm(zones.find(z => z.id === ${Number(zone.id)})); return false;">Send a takedown request</a>.</p>`;
 }
 
 function closePopup() {
