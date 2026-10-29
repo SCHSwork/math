@@ -329,10 +329,8 @@
    "at": "2026-10-27"
   },
   "83": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Shows only: \"Game Start CoreBall level 1 RESET\"",
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "84": {
    "s": "ok",
@@ -375,16 +373,8 @@
    "at": "2026-10-27"
   },
   "94": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Script error: UnityLoader is not defined",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@8eb9fe7b44472f52c64eae46d8c2c5b881be43c9/UnityLoader.js",
-    "Failed https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@8eb9fe7b44472f52c64eae46d8c2c5b881be43c9/style/style.css",
-    "Failed https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@8eb9fe7b44472f52c64eae46d8c2c5b881be43c9/UnityProgress.js",
-    "Script error: UnityLoader is not defined"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "95": {
    "s": "ok",
@@ -511,25 +501,12 @@
    "at": "2026-10-27"
   },
   "127": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Script error: Cannot read properties of undefined (reading 'on')",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/fashion-battle/__modules__.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/fashion-battle/__start__.js",
-    "Script error: Cannot read properties of undefined (reading 'on')"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "128": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/slice-it-all/main.js",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/slice-it-all/main.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/slice-it-all/VOODOO-H5SDK.youtube.js"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "129": {
    "s": "ok",
@@ -537,11 +514,13 @@
   },
   "130": {
    "s": "broken",
-   "at": "2026-10-27",
+   "at": "2026-10-29",
    "why": "Script error: Cannot set properties of null (setting 'innerText')",
    "errors": [
-    "HTTP 404 https://cdn.jsdelivr.net/gh/MartinMMCyt/osu@65e500d1cb100306acbfeffb310c84294da933c4/undefined/pages/home.html",
-    "Script error: Cannot set properties of null (setting 'innerText')"
+    "Script error: Cannot set properties of null (setting 'innerText')",
+    "Failed https://cdn.jsdelivr.net/gh/MartinMMCyt/osu@65e500d1cb100306acbfeffb310c84294da933c4/undefined/pages/home.html",
+    "Script error: Failed to fetch",
+    "Failed https://api.sayobot.cn/beatmaplist?0=20&1=0&2=2&5=1"
    ],
    "since": "2026-10-27"
   },
@@ -594,14 +573,8 @@
    "at": "2026-10-27"
   },
   "158": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "HTTP 403 https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/pac-man-superfast/assets/main-DYEgUXZA.js",
-   "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/pac-man-superfast/assets/main-DYEgUXZA.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/pac-man-superfast/assets/main-DYEgUXZA.js"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "159": {
    "s": "ok",
@@ -616,16 +589,8 @@
    "at": "2026-10-27"
   },
   "162": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/tower-crash-3d/html5games/gameapi/famobi_analytics_v1.js",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/tower-crash-3d/html5games/gameapi/famobi_analytics_v1.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/tower-crash-3d/__settings__.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/tower-crash-3d/__start__.js",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@7a07c4e4e329f22db1493829dafaa992c62bc783/tower-crash-3d/__loading__.js"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "163": {
    "s": "ok",
@@ -701,11 +666,8 @@
   },
   "181": {
    "s": "broken",
-   "at": "2026-10-27",
-   "why": "HTTP 403 https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/181-fix.html",
-   "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/181-fix.html"
-   ],
+   "at": "2026-10-29",
+   "why": "Blank page",
    "since": "2026-10-27"
   },
   "182": {
@@ -771,16 +733,8 @@
    "at": "2026-10-27"
   },
   "198": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@51462750d29b68ac1e33887c1bf13d9c478d5ead/198/TemplateData/UnityProgress.js",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@51462750d29b68ac1e33887c1bf13d9c478d5ead/198/TemplateData/style.css",
-    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@51462750d29b68ac1e33887c1bf13d9c478d5ead/198/TemplateData/UnityProgress.js",
-    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@51462750d29b68ac1e33887c1bf13d9c478d5ead/198/Build/UnityLoader.js",
-    "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@51462750d29b68ac1e33887c1bf13d9c478d5ead/198/Build/WEB1.2.1.data.unityweb.part1"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "199": {
    "s": "ok",
@@ -1079,28 +1033,20 @@
    "at": "2026-10-27"
   },
   "271": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "Failed https://cdn.jsdelivr.net/js/main.js",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/js/main.js",
-    "Failed https://devs-api.poki.comsa/gameinfo/@sdk?href=http%3A%2F%2F127.0.0.1%3A8080%2F&referrer=http%3A%2F%2F127.0.0.1%3A8080%2F",
-    "Failed https://imasdk.googleapis.comsa/js/sdkloader/ima3.js",
-    "Failed https://game-cdn.poki.comsa/scripts/prebid/2.44.4-0.js"
-   ],
-   "since": "2026-10-27"
+   "s": "ok",
+   "at": "2026-10-29"
   },
   "447": {
-   "s": "broken",
-   "at": "2026-10-27",
-   "why": "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
+   "s": "slow",
+   "at": "2026-10-29",
+   "why": "The test server couldn't download this game's files (it usually works for players)",
    "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
-    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/scripts/c3runtime.js",
-    "HTTP 403 https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/lodash.custom.min.js",
-    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http%3A/127.0.0.1%3A8080/lodash.custom.min.js"
+    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http://127.0.0.1:8080/scripts/c3runtime.js",
+    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http://127.0.0.1:8080/lodash.custom.min.js",
+    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http://127.0.0.1:8080/box2d.wasm.js",
+    "Failed https://cdn.jsdelivr.net/gh/gn-math/assets@4d7213da891d70555a3b0d6e343f7c948245dbb6/447/http://127.0.0.1:8080/Tween.js"
    ],
-   "since": "2026-10-27"
+   "since": "2026-10-29"
   },
   "990123": {
    "s": "ok",
@@ -1111,8 +1057,8 @@
  "updated": "2026-10-27T16:08:51.031Z",
  "total": 1900,
  "counts": {
-  "ok": 237,
-  "slow": 4,
-  "broken": 11
+  "ok": 245,
+  "slow": 5,
+  "broken": 2
  }
 }
