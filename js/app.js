@@ -389,7 +389,8 @@ async function listZones() {
         // Extra washed games that aren't in the library's list (e.g. Drive Mad, from
         // another collection), added like library games
         for (const [id, w] of Object.entries(washedGames)) {
-            if (!w || !w.extra || zones.some(z => String(z.id) === id)) continue;
+            // "hidden": taken off the site (e.g. inappropriate), kept in the list so it isn't re-added
+            if (!w || !w.extra || w.hidden || zones.some(z => String(z.id) === id)) continue;
             // A washed page in washed/, or a page used straight from a repo, locked to a commit
             const url = /^washed\/[\w.-]+\.html$/.test(w.path || "") ? "washed:" + w.path
                 : /^gh:[\w.-]+\/[\w.-]+@[0-9a-f]{40}\/[^\s?#]+$/.test(w.url || "") ? w.url : "";
