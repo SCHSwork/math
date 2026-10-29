@@ -273,7 +273,7 @@ service cloud.firestore {
         && d.by == request.auth.uid && d.at == request.time
         && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
                         'remove_ratings', 'remove_rating', 'delete_submissions',
-                        'make_trusted', 'remove_trusted']
+                        'make_trusted', 'remove_trusted', 'mark_fixed']
         && shortText(d.target, 128) && shortText(d.targetName, 40)
         && shortText(d.byName, 40) && shortText(d.detail, 200);
     }
@@ -309,7 +309,8 @@ service cloud.firestore {
     function zoneEntryOk(b, a, uid) {
       let vChanged = a.get('v', {}).diff(b.get('v', {})).affectedKeys();
       let rChanged = a.get('r', {}).diff(b.get('r', {})).affectedKeys();
-      return a.keys().hasOnly(['v', 'r'])
+      // 'fixed' (when an admin marked the game fixed) can be there, but only admins change it
+      return a.keys().hasOnly(['v', 'r', 'fixed']) && a.get('fixed', null) == b.get('fixed', null)
         && vChanged.hasOnly([uid]) && rChanged.hasOnly([uid])
         && (vChanged.size() == 0 || !(uid in a.get('v', {})) || a.v[uid] == 1 || a.v[uid] == -1)
         && (rChanged.size() == 0 || !(uid in a.get('r', {})) || a.r[uid] == request.time);

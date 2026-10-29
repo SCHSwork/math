@@ -2726,6 +2726,17 @@ async function renderOwnerReports(refresh) {
             renderOwnerReports(false);
         };
         row.appendChild(btn);
+        // Admins: clear its reports for everyone
+        if (typeof isSiteAdmin === "function" && isSiteAdmin() && typeof markGameFixed === "function") {
+            const fix = document.createElement("button");
+            fix.type = "button";
+            fix.className = "settings-button";
+            fix.style.cssText = "flex:0 0 auto;width:84px;min-width:0;padding:0.45rem 0;font-size:13px;white-space:nowrap;margin-left:0.35rem;";
+            fix.textContent = "Fixed";
+            fix.title = "Mark fixed: clear its broken reports for everyone";
+            fix.onclick = async () => { if (await markGameFixed(x.id)) renderOwnerReports(false); };
+            row.appendChild(fix);
+        }
         box.appendChild(row);
     }
 }

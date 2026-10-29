@@ -584,13 +584,16 @@ function summarizeStats(raw) {
     const cutoff = Date.now() - BROKEN_REPORT_DAYS * 86400000;
     for (const [zk, entry] of Object.entries(raw)) {
         const id = zk.slice(1);
-        const v = entry.v || {}, r = entry.r || {};
+        const fixed = Number(entry.fixed) || 0;
+        const v = entry.v || {};
+        // Reports from before an admin marked the game fixed don't count
+        const r = Object.fromEntries(Object.entries(entry.r || {}).filter(([, ms]) => ms > fixed));
         const values = Object.values(v);
         out[id] = {
             up: values.filter(x => x === 1).length,
             down: values.filter(x => x === -1).length,
             reports: Object.values(r).filter(ms => ms >= cutoff).length,
-            v, r
+            v, r, fixed
         };
     }
     return out;
@@ -613,6 +616,11 @@ async function loadGameStats({ force = false } = {}) {
                 if (!/^z-?\d+$/.test(zk) || !entry || typeof entry !== "object") continue;
                 const dest = raw[zk] || (raw[zk] = { v: {}, r: {} });
                 for (const [uid, val] of Object.entries(entry.v || {})) if (val === 1 || val === -1) dest.v[uid] = val;
+                // When an admin last marked the game fixed (older reports stop counting)
+                if (entry.fixed) {
+                    const fms = typeof entry.fixed.toMillis === "function" ? entry.fixed.toMillis() : Number(entry.fixed) || 0;
+                    dest.fixed = Math.max(dest.fixed || 0, fms);
+                }
                 for (const [uid, ts] of Object.entries(entry.r || {})) {
                     const ms = ts && typeof ts.toMillis === "function" ? ts.toMillis() : Number(ts) || 0;
                     dest.r[uid] = Math.max(dest.r[uid] || 0, ms);
@@ -705,6 +713,47 @@ async function reportBrokenShared(zone) {
         console.error(e);
         notify("Couldn't send the report: " + statsErrorText(e), { type: "error" });
     }
+}
+
+// ── Admins: mark a game fixed ───────────────────────────────────────────────
+// Clears every broken report on the game (so its warning flag goes away for
+// everyone) and saves when it was fixed, so the Game check list hides it until
+// a later nightly check finds it failing again. Database rules let only admins
+// change other people's reports.
+async function markGameFixed(id, { confirm = true } = {}) {
+    id = String(id);
+    if (!cloudUser || !cloudDb || typeof isSiteAdmin !== "function" || !isSiteAdmin()) {
+        notify("Only admins can mark games fixed.", { type: "error" });
+        return false;
+    }
+    const zone = typeof zoneById === "function" ? zoneById(id) : null;
+    const name = zone ? zone.name : `Game #${id}`;
+    const n = Object.keys(getZoneStats(id).r || {}).length;
+    if (confirm && !(await askConfirm(`${n ? `This clears its ${n} broken report${n === 1 ? "" : "s"} and takes the warning off for everyone.` : "It has no broken reports right now."} It also leaves the Game check list until a later nightly check finds it failing again.`,
+        { title: `Mark "${name}" fixed?`, confirmText: "Mark fixed" }))) return false;
+    const zk = "z" + id;
+    try {
+        await cloudDb.collection("gameStats").doc(shardFor(id)).set({
+            [zk]: { r: firebase.firestore.FieldValue.delete(), fixed: firebase.firestore.FieldValue.serverTimestamp() },
+            last: { z: zk, u: cloudUser.uid }
+        }, { merge: true });
+    } catch (e) {
+        console.error(e);
+        notify("Couldn't mark it fixed: " + statsErrorText(e), { type: "error" });
+        return false;
+    }
+    const cached = readJson(LIB_KEYS.statsCache, { t: 0, raw: {} });
+    const entry = cached.raw[zk] || (cached.raw[zk] = { v: {}, r: {} });
+    entry.r = {};
+    entry.fixed = Date.now();
+    writeJson(LIB_KEYS.statsCache, cached);
+    gameStats = summarizeStats(cached.raw);
+    // The owner's own browser tally too
+    if (typeof getBrokenReports === "function") { const local = getBrokenReports(); if (local[id]) { delete local[id]; setBrokenReports(local); } }
+    if (typeof logAction === "function") logAction("mark_fixed", id, name, n ? `cleared ${n} broken report${n === 1 ? "" : "s"}` : "");
+    refreshCards();
+    notify(`"${name}" is marked fixed.`, { type: "success" });
+    return true;
 }
 
 // Remove every rating and report this account made (used by Delete account).
