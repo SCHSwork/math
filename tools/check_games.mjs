@@ -134,12 +134,19 @@ async function check(w, z, waitMs) {
     return { s: "broken", why: m.textLen ? `Shows only: "${m.text.slice(0, 60)}"` : "Blank page", errors };
 }
 
+// A game that freezes the test browser makes page calls wait forever (one
+// night that used up the whole 3-hour run and nothing was saved). Every step
+// gets a time limit, and a stuck page is thrown away.
+const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(what), { stuck: true })), ms))]);
+const closeCtx = ctx => withTimeout(ctx.close(), 15000, "close").catch(() => {});
+const GAME_LIMIT_MS = { [WAIT_MS]: 75000, [CONFIRM_WAIT_MS]: 110000 };
+
 const w0 = await makePage();
 const all = await w0.page.evaluate(() => zones
     .filter(z => Number(z.id) >= 0 && z.url && !(typeof isPartnerZone === "function" && isPartnerZone(z)) && !String(z.url).startsWith("http") && !z.newTab)
     .map(z => ({ id: String(z.id), name: z.name })));
 all.sort((a, b) => Number(a.id) - Number(b.id));
-await w0.ctx.close();
+await closeCtx(w0.ctx);
 
 let list;
 const only = arg("ids");
@@ -156,37 +163,49 @@ if (only) {
 }
 console.log(`Checking ${list.length} of ${all.length} games`);
 
+// Results are saved after every game, so a run that's cut off still keeps what it checked
+function saveHealth(final) {
+    if (final) {
+        const ids = new Set(all.map(z => z.id));
+        for (const id of Object.keys(health.games)) if (!ids.has(id)) delete health.games[id];   // games that left the site
+    }
+    health.updated = new Date().toISOString();
+    health.total = all.length;
+    health.counts = Object.values(health.games).reduce((c, g) => (c[g.s] = (c[g.s] || 0) + 1, c), {});
+    fs.writeFileSync(OUT, JSON.stringify(health, null, 1) + "\n");
+    return health.counts;
+}
 const queue = [...list];
 const today = new Date().toISOString().slice(0, 10);
 async function worker() {
     let w = await makePage(), n = 0;
+    const fresh = async () => { await closeCtx(w.ctx); w = await makePage(); n = 0; };
+    const run = async (z, waitMs) => {
+        try { return await withTimeout(check(w, z, waitMs), GAME_LIMIT_MS[waitMs], "stuck"); }
+        catch (e) {
+            if (e.stuck) return { s: "slow", why: "The game froze the test browser (it may still work for players)", errors: [...new Set(w.st.errors)].slice(0, 4), stuck: true };
+            return { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) };
+        }
+    };
     while (queue.length && (Date.now() - started) / 60000 < MAX_MINUTES) {
         const z = queue.shift();
-        let r;
-        try { r = await check(w, z, WAIT_MS); } catch (e) { r = { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) }; }
+        let r = await run(z, WAIT_MS);
         // Double-check failures with more time and a fresh page before calling them broken
-        if (r.s !== "ok") {
-            try { await w.ctx.close(); } catch (e) {}
-            w = await makePage(); n = 0;
-            try { r = await check(w, z, CONFIRM_WAIT_MS); } catch (e) { r = { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) }; }
-        }
+        // (a game that froze the browser isn't tried again: it would just freeze it again)
+        if (r.stuck) await fresh();
+        else if (r.s !== "ok") { await fresh(); r = await run(z, CONFIRM_WAIT_MS); if (r.stuck) await fresh(); }
+        delete r.stuck;
         const prev = health.games[z.id];
         health.games[z.id] = { s: r.s, at: today, t: new Date().toISOString(), ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
             ...(r.s !== "ok" ? { since: prev && prev.s === r.s && prev.since ? prev.since : today } : {}) };
         console.log(`${z.id} ${z.name}: ${r.s}${r.why ? " - " + r.why : ""}`);
-        if (++n % 8 === 0) { try { await w.ctx.close(); } catch (e) {} w = await makePage(); }
+        saveHealth(false);
+        if (++n % 8 === 0) await fresh();
     }
-    try { await w.ctx.close(); } catch (e) {}
+    await closeCtx(w.ctx);
 }
-await Promise.all(Array.from({ length: WORKERS }, worker));
-await browser.close();
-
-// Forget games that left the site
-const ids = new Set(all.map(z => z.id));
-for (const id of Object.keys(health.games)) if (!ids.has(id)) delete health.games[id];
-health.updated = new Date().toISOString();
-health.total = all.length;
-const counts = Object.values(health.games).reduce((c, g) => (c[g.s] = (c[g.s] || 0) + 1, c), {});
-health.counts = counts;
-fs.writeFileSync(OUT, JSON.stringify(health, null, 1) + "\n");
-console.log("Done:", JSON.stringify(counts));
+// Stop by the time limit even if a worker is stuck somewhere unexpected
+await Promise.race([Promise.all(Array.from({ length: WORKERS }, worker)), new Promise(r => setTimeout(r, (MAX_MINUTES + 10) * 60000 - (Date.now() - started)))]);
+console.log("Done:", JSON.stringify(saveHealth(true)));
+await withTimeout(browser.close(), 20000, "close").catch(() => {});
+process.exit(0);
