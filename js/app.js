@@ -1357,6 +1357,70 @@ function h5AdsStub() {
     if (typeof window.adBreak !== "function") window.adBreak = function (o) { handle(o); };
     if (typeof window.adConfig !== "function") window.adConfig = function (o) { handle(o); };
 }
+// Game sound. Browsers keep sound off until the player taps or presses a key,
+// and Safari (iPad, iPhone, Mac) only counts taps inside the game page itself,
+// not the click on the game's card. Games that set up their sound before that
+// and never try again stayed silent for the whole session. This turns the
+// sound on with the player's first tap, click or key press inside the game:
+// it wakes sound engines the browser put to sleep and replays music the
+// browser refused to start. Sound a game turned off itself (pause, mute) is
+// left alone.
+function gameAudioUnlockHook() {
+    var contexts = [], blocked = [];
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+        var proto = AC.prototype;
+        var origSuspend = proto.suspend;
+        if (origSuspend) proto.suspend = function () { this.__gnGameSuspended = true; return origSuspend.apply(this, arguments); };
+        var origResume = proto.resume;
+        if (origResume) proto.resume = function () { this.__gnGameSuspended = false; return origResume.apply(this, arguments); };
+        var Wrapped = function () {
+            var ctx = Reflect.construct(AC, arguments);
+            contexts.push(ctx);
+            return ctx;
+        };
+        Wrapped.prototype = proto;
+        try { Object.setPrototypeOf(Wrapped, AC); } catch (e) {}
+        if (window.AudioContext) window.AudioContext = Wrapped;
+        if (window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+    }
+    if (window.HTMLMediaElement) {
+        var origPlay = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            var el = this, r = origPlay.apply(el, arguments);
+            if (r && r.catch) r.catch(function (e) { if (e && e.name === "NotAllowedError" && blocked.indexOf(el) < 0) blocked.push(el); });
+            return r;
+        };
+        // The game stopped it itself: don't start it again
+        var origPause = HTMLMediaElement.prototype.pause;
+        HTMLMediaElement.prototype.pause = function () {
+            var i = blocked.indexOf(this);
+            if (i >= 0) blocked.splice(i, 1);
+            return origPause.apply(this, arguments);
+        };
+    }
+    var unlock = function () {
+        contexts.forEach(function (ctx) {
+            if (ctx.state !== "suspended" || ctx.__gnGameSuspended) return;
+            try {
+                // Safari: a tiny silent sound started during the tap unlocks the context
+                var src = ctx.createBufferSource();
+                src.buffer = ctx.createBuffer(1, 1, 22050);
+                src.connect(ctx.destination);
+                src.start(0);
+            } catch (e) {}
+            try { var p = origResume ? origResume.call(ctx) : ctx.resume(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+        });
+        // Music the browser refused earlier (only if the game still wants it playing)
+        blocked.splice(0).forEach(function (el) {
+            if (!el.paused || el.ended) return;
+            try { var p = origPlay.call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+        });
+    };
+    ["pointerdown", "mousedown", "touchstart", "touchend", "keydown", "click"].forEach(function (t) {
+        window.addEventListener(t, unlock, { capture: true, passive: true });
+    });
+}
 // Helper workers from the game's own folder. Browsers only start a worker from
 // the page's own site, and game files come from jsDelivr, so games that use one
 // (e.g. RPG Maker's music decoder) failed with "Failed to construct 'Worker'".
@@ -1509,6 +1573,7 @@ function cleanGameHtml(html) {
         (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
+        `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
@@ -1661,6 +1726,8 @@ function replaceZoneFrame() {
     if (zoneFrame && zoneFrame.parentNode) zoneFrame.parentNode.removeChild(zoneFrame);
     zoneFrame = document.createElement("iframe");
     zoneFrame.id = "zoneFrame";
+    // Let the game play sound and use fullscreen/controllers like a normal page
+    zoneFrame.setAttribute("allow", "autoplay; fullscreen; gamepad");
     zoneViewer.appendChild(zoneFrame);
     if (typeof attachPanicKeyToFrame === "function") zoneFrame.addEventListener("load", attachPanicKeyToFrame);
 }
