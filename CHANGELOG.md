@@ -13,6 +13,7 @@ All the changes to GN 2.0, newest first.
 - **Minecraft 1.8.8 starts again** (it was a black screen for everyone). The site removes accidental second copies of a game page by cutting at the first `</html>`, but Eaglercraft has `</html>` inside its own code (text for a popup window), so half the game was thrown away. Only a real end of page counts now. Checked every library and washed game page: Minecraft was the only one affected.
 - **The nightly game check can't lose a night anymore.** On Oct 28 a game froze the test browser, the run hit GitHub's 3-hour limit and nothing was saved. Every game now has a time limit (a frozen game goes under "Couldn't tell"), results are saved after each game, and the save step always runs.
 - **8 more authors for the added games:** Chess (Stefano Gioffré), 2048 Cupcakes (0x0800), Flappy 2048 (hczhcz), Sleeping Beauty (Ondřej Žára), Space Invaders (Tóth Róbert), Stack (BMQB), Horse Master (Tom McHenry), Bomb It 2 (Zlong Games). Found in the games' own license files and pages, or confirmed online.
+- **Flappy Plane is off the site.** It looks like a 9/11 joke game. It's marked `"hidden"` in config/library-washed.json, so it stays off.
 - **osu! no longer shows as "not starting".** Its menu is a normal web page, not a game canvas; a page with a full menu on screen now counts as working.
 
 ## October 28, 2026 — Authors for the new games

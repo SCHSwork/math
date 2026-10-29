@@ -830,7 +830,9 @@
    "path": "washed/sd-flappyplane.html",
    "removed": [],
    "sha256": "811b6cfbb431b8fe0263f0414240daf0f9092ef9df7c71e366b5720302dadba6",
-   "cover": "washed/covers/sd-flappy-plane.jpg"
+   "cover": "washed/covers/sd-flappy-plane.jpg",
+   "hidden": true,
+   "hiddenWhy": "Looks like a 9/11 joke game (from a repo named terrorist.group); taken off the site Oct 29, 2026"
   },
   "990149": {
    "name": "Flip Hero",
