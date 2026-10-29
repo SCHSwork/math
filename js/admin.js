@@ -251,11 +251,7 @@ async function openAdminPanel() {
         if (b.dataset.tab === "newgames") renderNewLibraryGames();
         if (b.dataset.tab === "submissions" && typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
     });
-    loadGameHealth().then(h => {
-        const c = document.getElementById("gamecheck-tab-count");
-        const broken = h ? Object.entries(h.games || {}).filter(([id, g]) => g.s === "broken" && !(typeof isZoneDisabled === "function" && isZoneDisabled(id))).length : 0;
-        if (c && broken) { c.textContent = broken; c.hidden = false; }
-    });
+    updateGameCheckCount();
     // How many reports and ideas are waiting, shown on the tab
     if (typeof updateFeedbackTabCount === "function") {
         cloudDb.collection("feedback").where("status", "==", "open").get().then(snap => {
@@ -299,6 +295,20 @@ function loadGameHealth(force) {
     if (!gameHealthPromise || force) gameHealthPromise = fetch("config/game-health.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
     return gameHealthPromise;
 }
+function updateGameCheckCount() {
+    loadGameHealth().then(h => {
+        const c = document.getElementById("gamecheck-tab-count");
+        if (!c) return;
+        const broken = h ? Object.entries(h.games || {}).filter(([id, g]) => g.s === "broken" && !(typeof isZoneDisabled === "function" && isZoneDisabled(id)) && !gameCheckFixed(id, g)).length : 0;
+        c.textContent = broken; c.hidden = !broken;
+    });
+}
+// Marked fixed by an admin after this check ran: hidden until a later check fails again
+function gameCheckFixed(id, g) {
+    const fixed = typeof getZoneStats === "function" ? getZoneStats(id).fixed || 0 : 0;
+    const ran = Date.parse(g.t || "") || Date.parse(g.at || "") || 0;
+    return fixed > ran;
+}
 async function renderGameCheck(force) {
     const box = document.getElementById("admin-gamecheck");
     if (!box) return;
@@ -309,7 +319,9 @@ async function renderGameCheck(force) {
         return;
     }
     const entries = Object.entries(h.games).map(([id, g]) => ({ id, g, z: typeof zoneById === "function" ? zoneById(id) : null })).filter(x => x.z);
-    const broken = entries.filter(x => x.g.s === "broken"), slow = entries.filter(x => x.g.s === "slow");
+    const fixedList = entries.filter(x => x.g.s !== "ok" && gameCheckFixed(x.id, x.g));
+    const broken = entries.filter(x => x.g.s === "broken" && !gameCheckFixed(x.id, x.g)), slow = entries.filter(x => x.g.s === "slow" && !gameCheckFixed(x.id, x.g));
+    const admin = typeof isSiteAdmin === "function" && isSiteAdmin();
     const okN = entries.filter(x => x.g.s === "ok").length;
     const off = x => typeof isZoneDisabled === "function" && isZoneDisabled(x.id);
     const when = h.updated ? timeAgo(h.updated) : "";
@@ -318,6 +330,7 @@ async function renderGameCheck(force) {
             <div class="gc-why">${escapeHtmlText(x.g.why || "")}</div>
             ${x.g.errors && x.g.errors.length > 1 ? `<details class="gc-errs"><summary>${x.g.errors.length} errors</summary>${x.g.errors.map(e => `<div>${escapeHtmlText(e)}</div>`).join("")}</details>` : ""}</div>
             <div class="gc-actions"><button type="button" class="finder-chip gc-open">Open</button>
+            ${admin && !gameCheckFixed(x.id, x.g) ? `<button type="button" class="finder-chip gc-fixed">Mark fixed</button>` : ""}
             ${typeof isOwnerBrowser === "function" && isOwnerBrowser() ? `<button type="button" class="finder-chip gc-toggle">${off(x) ? "Turn on" : "Turn off"}</button>` : ""}</div>
         </div>`;
     box.innerHTML = `
@@ -326,11 +339,14 @@ async function renderGameCheck(force) {
             <button type="button" class="finder-chip" id="gc-refresh">Refresh</button></p>
         <p class="admin-footnote">Every night about 250 games are opened in a real browser, plus every game that failed last time, so each game is checked about once a week. "Not starting" means no game appeared within 45 seconds (checked twice). "Couldn't tell" means the game was still loading, or the test server couldn't download its files. Some "not starting" games still work for players (they need a click or a login), so open one before turning it off.</p>
         ${broken.length ? `<h4 class="gc-h">Not starting (${broken.length})</h4>${broken.sort((a, b) => off(a) - off(b) || String(a.z.name).localeCompare(b.z.name)).map(row).join("")}` : `<p>No broken games found. 🎉</p>`}
-        ${slow.length ? `<details class="gc-slow"><summary>Couldn't tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}`;
+        ${slow.length ? `<details class="gc-slow"><summary>Couldn't tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}
+        ${fixedList.length ? `<details class="gc-slow"><summary>Marked fixed (${fixedList.length})</summary><p class="admin-footnote">These come back if a later nightly check finds them failing again.</p>${fixedList.map(row).join("")}</details>` : ""}`;
     box.querySelector("#gc-refresh").onclick = () => renderGameCheck(true);
     box.querySelectorAll(".gc-row").forEach(r => {
         const id = r.dataset.id;
         r.querySelector(".gc-open").onclick = () => { const z = zoneById(id); if (z) { closePopup(); openZone(z); } };
+        const fx = r.querySelector(".gc-fixed");
+        if (fx) fx.onclick = async () => { if (await markGameFixed(id)) { renderGameCheck(); updateGameCheckCount(); } };
         const t = r.querySelector(".gc-toggle");
         if (t) t.onclick = () => { setZoneDisabled(id, !isZoneDisabled(id)); renderGameCheck(); };
     });
@@ -409,7 +425,7 @@ const ACTION_LABELS = {
     suspend: "suspended", unsuspend: "unsuspended", make_mod: "made a mod:", remove_mod: "removed mod from",
     make_admin: "made an admin:", remove_admin: "removed admin from", remove_ratings: "removed all ratings & reports from",
     remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of",
-    make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from"
+    make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from", mark_fixed: "marked a game fixed:"
 };
 let actionLogCache = null, actionLogFilter = "";
 async function renderActionLog() {

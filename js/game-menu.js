@@ -176,6 +176,7 @@ function toggleGameMenu(ev) {
         ["⬇", "Download game file", () => downloadZone()],
         "-",
         ["⚠", "Report broken", () => reportCurrentZone()],
+        ...(typeof isSiteAdmin === "function" && isSiteAdmin() && typeof markGameFixed === "function" ? [["✓", "Mark fixed (clear reports)", () => markGameFixed(zone.id)]] : []),
         ["📝", "Report a problem…", () => openFeedback("bug")],
         ["©", "Copyright takedown…", () => openTakedownForm(zone)],
         ...((gameCaches()[String(zone.id)] || []).length ? [["⟳", "Re-download game files", () => redownloadCurrentGame()]] : []),

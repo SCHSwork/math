@@ -171,7 +171,7 @@ async function worker() {
             try { r = await check(w, z, CONFIRM_WAIT_MS); } catch (e) { r = { s: "broken", why: "Test error: " + String(e.message || e).slice(0, 120) }; }
         }
         const prev = health.games[z.id];
-        health.games[z.id] = { s: r.s, at: today, ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
+        health.games[z.id] = { s: r.s, at: today, t: new Date().toISOString(), ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
             ...(r.s !== "ok" ? { since: prev && prev.s === r.s && prev.since ? prev.since : today } : {}) };
         console.log(`${z.id} ${z.name}: ${r.s}${r.why ? " - " + r.why : ""}`);
         if (++n % 8 === 0) { try { await w.ctx.close(); } catch (e) {} w = await makePage(); }
