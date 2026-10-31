@@ -27,16 +27,32 @@ const genreCache = new Map();
 // Hand-written info for each game (config/game-info.json): genres "g",
 // a one-line description "d", keywords "k" and "p": 2 for 2-player games.
 // Games without an entry fall back to guessing from the name.
+// At startup only the genres and 2-player flags are loaded (config/game-genres.json,
+// built from game-info.json by tools/build_game_genres.py): that's all the
+// filters need, and it's a fraction of the size. The descriptions and keywords
+// are loaded by loadGameInfoDetails() when the game finder opens.
 let GAME_INFO = {};
 function getGameInfo(id) { return GAME_INFO[String(id)] || null; }
-const gameInfoReady = fetch("config/game-info.json")
-    .then(r => (r.ok ? r.json() : {}))
-    .then(data => {
-        GAME_INFO = data && typeof data === "object" ? data : {};
-        genreCache.clear();
-        if (Array.isArray(zones) && zones.length) { updateFilterCounts(); if (extraFiltersActive()) applyFilters(); }
-    })
-    .catch(() => {});
+function useGameInfo(data) {
+    GAME_INFO = data && typeof data === "object" ? data : {};
+    genreCache.clear();
+    if (Array.isArray(zones) && zones.length) { updateFilterCounts(); if (extraFiltersActive()) applyFilters(); }
+}
+let gameInfoDetailsPromise = null;
+function loadGameInfoDetails() {
+    if (!gameInfoDetailsPromise) {
+        gameInfoDetailsPromise = fetch("config/game-info.json")
+            .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+            .then(useGameInfo)
+            .catch(() => { gameInfoDetailsPromise = null; });   // try again next time
+    }
+    return gameInfoDetailsPromise;
+}
+const gameInfoReady = fetch("config/game-genres.json")
+    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(data => { if (!gameInfoDetailsPromise) useGameInfo(data); })
+    // No genres file (not built yet): load the full info instead, like before
+    .catch(() => loadGameInfoDetails());
 function zoneGenres(zone) {
     const key = zone.id + "|" + zone.name;
     if (genreCache.has(key)) return genreCache.get(key);
