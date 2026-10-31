@@ -53,10 +53,10 @@ async function loadOriginals() {
                 return j;
             }
         });
-        try { localStorage.setItem(ORIGINALS_CACHE_KEY, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
+        gnBackup.put(ORIGINALS_CACHE_KEY, list);
         originalsState = "live";
     } catch (err) {
-        try { list = JSON.parse(localStorage.getItem(ORIGINALS_CACHE_KEY))?.data; } catch (e) {}
+        try { list = (await gnBackup.get(ORIGINALS_CACHE_KEY))?.data; } catch (e) {}
         if (!Array.isArray(list)) { originalsState = "failed"; console.warn("GN Originals list unavailable", err); return []; }
         originalsState = "cache";
     }

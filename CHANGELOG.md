@@ -7,6 +7,13 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Game list backups out of localStorage
+
+### Changed
+- **Frees up to about 1.3 MB of browser storage.** The site keeps a copy of the last game lists that loaded (the library, GN Originals, UBZone and partner lists) to show when a source is down. They were kept in localStorage, which holds only about 5 MB for the whole site and is shared with settings and game data. They now go in Cache Storage, which has its own, much larger space (`gnBackup` in js/ui.js). Copies already saved move over on the next visit.
+- The backups are only rewritten when a list changed. The service worker (sw.js) leaves them alone when it clears out old caches.
+- Browsers without Cache Storage keep using localStorage, like before.
+
 ## October 30, 2026 — Smaller game info at startup
 
 ### Changed

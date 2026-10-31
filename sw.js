@@ -13,7 +13,8 @@ self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (!key.startsWith(VERSION)) await caches.delete(key);
+      // gn-backups holds the offline copies of the game lists (gnBackup in js/ui.js)
+      if (!key.startsWith(VERSION) && key !== "gn-backups") await caches.delete(key);
     }
     await self.clients.claim();
   })());
