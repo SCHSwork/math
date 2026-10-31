@@ -2,7 +2,9 @@
   "siteMode": "open",
   "disabledZones": [
     "653",
-    "300013"
+    "300013",
+    "316",
+    "447"
   ],
   "announcement": {
     "text": "HUGE UPDATE! account system to save progress and various things!",

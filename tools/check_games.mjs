@@ -21,6 +21,11 @@ const arg = name => (process.argv.find(a => a.startsWith(`--${name}=`)) || "").s
 const BATCH = Number(arg("batch") || 275);
 const WORKERS = Number(arg("workers") || 2);
 const WAIT_MS = 20000, CONFIRM_WAIT_MS = 45000;
+// Big games (50 MB+) can still be downloading after 45s. On the second try, keep
+// waiting (up to this much longer) as long as their loading text keeps changing
+// ("34 MB / 54 MB", "part 14/23"); a game whose loading is stuck still fails.
+const LOADING_EXTRA_MS = 120000;
+const LOADING_RE = /load|download|\d+\s*%|please wait|starting|initiali/i;
 const MAX_MINUTES = Number(arg("minutes") || 150);
 const started = Date.now();
 
@@ -110,11 +115,18 @@ async function check(w, z, waitMs) {
     cdnRefused.clear();
     await page.evaluate(id => openZone(zones.find(x => String(x.id) === id)), String(z.id));
     let m = null;
-    const until = Date.now() + waitMs;
+    const t0 = Date.now();
+    let until = t0 + waitMs;
+    const hardEnd = until + (waitMs === CONFIRM_WAIT_MS ? LOADING_EXTRA_MS : 0);
+    let lastText = "", changedAt = Date.now();
     while (Date.now() < until) {
         await page.waitForTimeout(2500);
         m = await page.evaluate(measure).catch(() => null);
         if (m && (m.surface > 0.05 || m.other)) break;       // a game is showing
+        if (m && m.text !== lastText) { lastText = m.text; changedAt = Date.now(); }
+        // Still downloading and making progress: give it a bit longer
+        if (m && Date.now() >= until - 2500 && until < hardEnd && LOADING_RE.test(m.text) && Date.now() - changedAt < 15000)
+            until = Math.min(hardEnd, until + 15000);
     }
     try { await page.evaluate(() => closeZone()); await page.waitForTimeout(400); } catch (e) {}
     const errors = [...new Set(st.errors)].slice(0, 4);
@@ -122,7 +134,7 @@ async function check(w, z, waitMs) {
     const pickWhy = () => errors.find(e => e.startsWith("Script error")) || errors.find(e => /\.(js|wasm|data|unityweb|pck|swf|html?|json)(\?|$)/i.test(e)) || errors[0];
     if (!m) return { s: "broken", why: "The test browser crashed on this game", errors };
     if (m.surface > 0.05 || m.other) return { s: "ok" };
-    const loading = /load|download|\d+\s*%|please wait|starting|initiali/i.test(m.text);
+    const loading = LOADING_RE.test(m.text);
     if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)" };
     // A whole menu on screen (e.g. osu!) is a working game even if a side script failed
     if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)" };
@@ -131,7 +143,7 @@ async function check(w, z, waitMs) {
     // Only problem: files the test server couldn't download from jsDelivr or GitHub
     const cdnOnly = errors.length && errors.every(e => /^(Failed|HTTP (403|429|5\d\d)) https?:\/\/[^/]*(jsdelivr\.net|githubusercontent\.com|githack\.com)\//.test(e) || [...cdnRefused].some(u => e.includes(u.slice(0, 150))) || /^Script error: \w+ is not defined$/.test(e));
     if (cdnOnly && errors.some(e => !e.startsWith("Script error"))) return { s: "slow", why: "The test server couldn't download this game's files (it usually works for players)", errors };
-    if (loading) return { s: "slow", why: `Still loading after ${Math.round(waitMs / 1000)}s: "${m.text.slice(0, 60)}"`, errors };
+    if (loading) return { s: "slow", why: `Still loading after ${Math.round((Date.now() - t0) / 1000)}s: "${m.text.slice(0, 60)}"`, errors };
     if (errors.length) return { s: "broken", why: pickWhy(), errors };
     return { s: "broken", why: m.textLen ? `Shows only: "${m.text.slice(0, 60)}"` : "Blank page", errors };
 }
@@ -141,7 +153,7 @@ async function check(w, z, waitMs) {
 // gets a time limit, and a stuck page is thrown away.
 const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(what), { stuck: true })), ms))]);
 const closeCtx = ctx => withTimeout(ctx.close(), 15000, "close").catch(() => {});
-const GAME_LIMIT_MS = { [WAIT_MS]: 75000, [CONFIRM_WAIT_MS]: 110000 };
+const GAME_LIMIT_MS = { [WAIT_MS]: 75000, [CONFIRM_WAIT_MS]: 110000 + LOADING_EXTRA_MS };
 
 const w0 = await makePage();
 const all = await w0.page.evaluate(() => zones

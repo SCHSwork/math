@@ -7,6 +7,17 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Flagged games checked by hand
+
+### Fixed
+- **The nightly game check waits for big games.** Slime Rancher (54 MB) and Buster Jam were flagged "still loading" after 45 seconds but work fine. On its second try the check now keeps waiting, up to 2 more minutes, while a game's loading text keeps changing ("34 MB / 54 MB", "part 14/23"). A game whose loading is stuck still fails.
+
+### Changed
+- **Turned off 2 games that don't work for anyone:** Angry Birds Chrome (316), an old Chrome Web Store app that needs Google sign-in and Chrome-only features, and Nijika's Ahoge (447), whose library copy was hand-edited for a different way of loading games and can't find its own files here. Both are in `disabledZones` in config/owner-settings.json and can be turned back on from the Owner Panel.
+
+### Checked
+- Quake III Arena and BlockPost (flagged "froze the test browser") and Fallout (flagged "couldn't download") were opened by hand and all work. Quake III and BlockPost are just heavy for a test browser without a graphics card, and Fallout is about 440 MB.
+
 ## October 30, 2026 — Admin Panel loads only when opened
 
 ### Changed
