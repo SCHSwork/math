@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Username in the search box
+
+### Fixed
+- **Your username no longer shows up in the search box** after a refresh or signing in. Chrome's password manager was filling it in: "Focus search on load" puts the cursor in the box, and the old guard unlocked the box on any focus, so Chrome treated it as a username field. Now only a real click, tap or key press unlocks it, and text that appears without you typing it is put back to what you had, any time it happens (the old guard only watched the first 5 seconds).
+
 ## October 29, 2026 — Minecraft 1.8.8 and the nightly check
 
 ### Fixed
