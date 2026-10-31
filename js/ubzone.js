@@ -92,10 +92,10 @@ async function loadUbzone() {
         const res = await fetch(UBZONE_LIST_URL, { cache: "no-cache" });
         if (!res.ok) throw new Error("UBZone list " + res.status);
         data = await res.json();
-        try { localStorage.setItem(UBZONE_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
+        gnBackup.put(UBZONE_CACHE_KEY, data);
         ubzoneState = "live";
     } catch (err) {
-        try { data = JSON.parse(localStorage.getItem(UBZONE_CACHE_KEY))?.data; } catch (e) {}
+        try { data = (await gnBackup.get(UBZONE_CACHE_KEY))?.data; } catch (e) {}
         if (!data) { ubzoneState = "failed"; console.warn("UBZone list unavailable", err); return []; }
         ubzoneState = "cache";
     }

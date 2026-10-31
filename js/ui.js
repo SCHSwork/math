@@ -344,3 +344,69 @@ document.addEventListener("keydown", e => {
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
 })();
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Offline backups of the game lists (gnBackup.put / gnBackup.get / gnBackup.remove)
+//
+// The site keeps the last game lists that loaded, to show something when a
+// source is down. They used to be saved in localStorage, which only holds about
+// 5 MB per site and is shared with settings and game data: the lists alone
+// took 1 MB or more. They now go in Cache Storage (its own, much larger space).
+//   • put() skips the write when the list hasn't changed since last time.
+//   • get() also reads an old localStorage copy, so nothing is lost moving over.
+//   • Where Cache Storage isn't available, localStorage is used as before.
+// Saved values look the same as before: { t: savedAt, data }.
+// ═════════════════════════════════════════════════════════════════════════════
+window.gnBackup = (function () {
+    const CACHE = "gn-backups";   // sw.js leaves this one alone when it cleans up
+    const hasCaches = () => { try { return typeof caches !== "undefined" && window.isSecureContext; } catch { return false; } };
+    const url = key => new URL("__backup/" + encodeURIComponent(key), location.href).href;
+    const sigKey = key => key + "-sig";
+    function quickSig(text) {
+        let h = 0;
+        for (let i = 0; i < text.length; i += 7) h = (h * 31 + text.charCodeAt(i)) | 0;
+        return text.length + ":" + (h >>> 0).toString(36);
+    }
+    function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
+    function lsRemove(key) { try { localStorage.removeItem(key); } catch {} }
+
+    async function put(key, data) {
+        let text;
+        try { text = JSON.stringify(data); } catch { return; }
+        const sig = quickSig(text);
+        let oldSig = null;
+        try { oldSig = localStorage.getItem(sigKey(key)); } catch {}
+        const body = JSON.stringify({ t: Date.now(), data });
+        if (hasCaches()) {
+            try {
+                const c = await caches.open(CACHE);
+                // Same list as last time and still saved: nothing to do
+                if (oldSig === sig && await c.match(url(key))) { lsRemove(key); return; }
+                await c.put(url(key), new Response(body, { headers: { "Content-Type": "application/json" } }));
+                lsRemove(key);   // the old localStorage copy, if any
+                try { localStorage.setItem(sigKey(key), sig); } catch {}
+                return;
+            } catch (e) { /* fall back to localStorage */ }
+        }
+        try { localStorage.setItem(key, body); localStorage.setItem(sigKey(key), sig); } catch {}
+    }
+    async function get(key) {
+        if (hasCaches()) {
+            try {
+                const c = await caches.open(CACHE);
+                const res = await c.match(url(key));
+                if (res) {
+                    const v = await res.json();
+                    if (v && v.data !== undefined) return v;
+                }
+            } catch (e) {}
+        }
+        const v = lsGet(key);
+        return v && v.data !== undefined ? v : null;
+    }
+    async function remove(key) {
+        lsRemove(key); lsRemove(sigKey(key));
+        if (hasCaches()) { try { await (await caches.open(CACHE)).delete(url(key)); } catch {} }
+    }
+    return { put, get, remove };
+})();

@@ -78,8 +78,8 @@ function toPartnerZone(p) {
 //   • they're fetched from one fixed URL with cache "no-cache": the browser asks
 //     GitHub Pages "changed?" and gets an empty "not modified" reply when it hasn't,
 //     instead of downloading the whole list again every 10 minutes;
-//   • the localStorage backup copy (for when the site is offline) is only
-//     rewritten when the list actually changed, not on every visit;
+//   • the offline backup copy (gnBackup in ui.js) is only rewritten when the
+//     list actually changed, not on every visit;
 //   • a platform found blocked on this network isn't downloaded at all next visit
 //     (see PARTNER_REACH_KEY below), and nothing is downloaded while partner
 //     games are switched off.
@@ -88,26 +88,14 @@ async function loadPartnerList(url, cacheKey) {
     try {
         const res = await fetch(url, { cache: "no-cache" });
         if (!res.ok) throw new Error("HTTP " + res.status);
-        const text = await res.text();
-        list = JSON.parse(text);
+        list = await res.json();
         if (!Array.isArray(list)) throw new Error("bad partner list");
-        const sig = text.length + ":" + quickHash(text);
-        try {
-            if (localStorage.getItem(cacheKey + "-sig") !== sig) {
-                localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data: list }));
-                localStorage.setItem(cacheKey + "-sig", sig);
-            }
-        } catch (e) {}
+        gnBackup.put(cacheKey, list);
     } catch (err) {
-        try { list = JSON.parse(localStorage.getItem(cacheKey))?.data; } catch (e) {}
+        try { list = (await gnBackup.get(cacheKey))?.data; } catch (e) {}
         if (!Array.isArray(list)) { console.warn("Partner games list unavailable", url, err); return []; }
     }
     return list;
-}
-function quickHash(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i += 7) h = (h * 31 + s.charCodeAt(i)) | 0;
-    return (h >>> 0).toString(36);
 }
 
 // Whether each platform could be reached from this network last time:
@@ -157,7 +145,7 @@ async function loadPartners() {
         blockedProviders.add(prov);
         // Its saved backup copy is useless here and uses up localStorage space
         // (cloud saves and settings live there too)
-        try { localStorage.removeItem(PARTNER_LISTS[prov].key); localStorage.removeItem(PARTNER_LISTS[prov].key + "-sig"); } catch {}
+        gnBackup.remove(PARTNER_LISTS[prov].key);
     }
     const lists = await Promise.all(provs.map(prov =>
         hidden || blockedProviders.has(prov) ? [] : loadPartnerProvider(prov)));

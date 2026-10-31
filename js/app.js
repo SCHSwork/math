@@ -305,12 +305,12 @@ async function loadZoneList(sha) {
                 return j;
             }
         });
-        try { localStorage.setItem(ZONES_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch {}
+        gnBackup.put(ZONES_CACHE_KEY, data);
         libraryListState = "live";
         return data;
     } catch (err) {
         let cached = null;
-        try { cached = JSON.parse(localStorage.getItem(ZONES_CACHE_KEY)); } catch {}
+        try { cached = await gnBackup.get(ZONES_CACHE_KEY); } catch {}
         if (cached && Array.isArray(cached.data)) {
             libraryListState = "cache";
             showSourceNotice(`Couldn't reach the game library, so this is the list saved on ${new Date(cached.t).toLocaleDateString()}. Some games may not load until it's back.`);
