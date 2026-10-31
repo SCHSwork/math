@@ -20,7 +20,8 @@ def stamp(match):
     digest = hashlib.sha1(file.read_bytes()).hexdigest()[:10]
     return f'{attr}="{path}?v={digest}"'
 
-html = re.sub(r'(src|href)="((?:css|js)/[^"?]+)(?:\?v=[0-9a-f]+)?"', stamp, html)
+# data-src: files the page loads later itself (e.g. the Admin Panel)
+html = re.sub(r'(src|href|data-src)="((?:css|js)/[^"?]+)(?:\?v=[0-9a-f]+)?"', stamp, html)
 # Site style files are loaded by a script in index.html, which reads this map
 skins = {f.stem: hashlib.sha1(f.read_bytes()).hexdigest()[:10] for f in sorted((root / "css/skins").glob("*.css"))}
 html = re.sub(r"/\*SKIN_CSS_VERSIONS\*/.*?/\*END\*/", lambda m: "/*SKIN_CSS_VERSIONS*/" + json.dumps(skins, separators=(",", ":")) + "/*END*/", html, flags=re.S)

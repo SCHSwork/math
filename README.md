@@ -118,7 +118,8 @@ js/
   filters.js           Genre / Source / Show filters
   finder.js            ✨ game finder and random game options
   submit.js            Submit a game form and owner review
-  admin.js             Admin Panel: accounts, roles, suspensions
+  admin-core.js        Role checks, profile heartbeat, action log (every page)
+  admin.js             Admin Panel: accounts, roles, suspensions (loaded when opened)
   loading-bar.js       game loading bar
   game-menu.js         the ⋯ More menu and per-game data clearing
   url-options.js, service-worker-setup.js    small start-up helpers
