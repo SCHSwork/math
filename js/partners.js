@@ -74,32 +74,113 @@ function toPartnerZone(p) {
     };
 }
 
+// The lists are big (the Playgama one is over 500 KB), so:
+//   • they're fetched from one fixed URL with cache "no-cache": the browser asks
+//     GitHub Pages "changed?" and gets an empty "not modified" reply when it hasn't,
+//     instead of downloading the whole list again every 10 minutes;
+//   • the localStorage backup copy (for when the site is offline) is only
+//     rewritten when the list actually changed, not on every visit;
+//   • a platform found blocked on this network isn't downloaded at all next visit
+//     (see PARTNER_REACH_KEY below), and nothing is downloaded while partner
+//     games are switched off.
 async function loadPartnerList(url, cacheKey) {
     let list = null;
     try {
-        const res = await fetch(url + "?t=" + Math.floor(Date.now() / 600000), { cache: "no-cache" });
+        const res = await fetch(url, { cache: "no-cache" });
         if (!res.ok) throw new Error("HTTP " + res.status);
-        list = await res.json();
+        const text = await res.text();
+        list = JSON.parse(text);
         if (!Array.isArray(list)) throw new Error("bad partner list");
-        try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
+        const sig = text.length + ":" + quickHash(text);
+        try {
+            if (localStorage.getItem(cacheKey + "-sig") !== sig) {
+                localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data: list }));
+                localStorage.setItem(cacheKey + "-sig", sig);
+            }
+        } catch (e) {}
     } catch (err) {
         try { list = JSON.parse(localStorage.getItem(cacheKey))?.data; } catch (e) {}
         if (!Array.isArray(list)) { console.warn("Partner games list unavailable", url, err); return []; }
     }
     return list;
 }
-async function loadPartners() {
-    const [famobi, playgama] = await Promise.all([
-        loadPartnerList(PARTNER_LIST_URL, PARTNER_CACHE_KEY),
-        loadPartnerList(PLAYGAMA_LIST_URL, PLAYGAMA_CACHE_KEY)
-    ]);
+function quickHash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i += 7) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+}
+
+// Whether each platform could be reached from this network last time:
+// { famobi: { ok: true|false, at: ms }, playgama: {...} }. Checked again in the
+// background every visit, so a platform that gets unblocked comes back next visit.
+const PARTNER_REACH_KEY = "gnmath-partner-reach";
+const PARTNER_REACH_RECHECK_MS = 24 * 60 * 60 * 1000;   // trust "blocked" for a day at most
+// One small picture per platform, used to test whether it's reachable before the
+// big list has been downloaded
+const PARTNER_PROBE_IMG = {
+    famobi: PARTNER_THUMB_BASE + "CookingBlastTeaser.jpg",
+    playgama: PLAYGAMA_IMG_BASE + "bee-swarm/big_preview/fa0742c7b53342189f39f3203d7f8369?width=320"
+};
+const PARTNER_LISTS = {
+    famobi: { url: PARTNER_LIST_URL, key: PARTNER_CACHE_KEY },
+    playgama: { url: PLAYGAMA_LIST_URL, key: PLAYGAMA_CACHE_KEY }
+};
+function partnerReach() { try { return JSON.parse(localStorage.getItem(PARTNER_REACH_KEY)) || {}; } catch { return {}; } }
+function savePartnerReach(prov, ok) {
+    const r = partnerReach();
+    r[prov] = { ok, at: Date.now() };
+    try { localStorage.setItem(PARTNER_REACH_KEY, JSON.stringify(r)); } catch {}
+}
+// Known blocked here (recently), so skip downloading its list
+function partnerKnownBlocked(prov) {
+    const r = partnerReach()[prov];
+    return !!(r && r.ok === false && Date.now() - r.at < PARTNER_REACH_RECHECK_MS);
+}
+const partnerListsLoaded = new Set();
+function partnerZonesFrom(prov, list) {
     const ok = v => /^[a-z0-9][a-z0-9-]*$/.test(String(v || ""));
-    const zonesOut = [
-        ...famobi.filter(p => p && isPartnerZone(p.id) && p.name && ok(p.pkg)).map(toPartnerZone),
-        ...playgama.filter(p => p && p.provider === "playgama" && isPartnerZone(p.id) && p.name && ok(p.slug)).map(toPartnerZone)
-    ];
-    if (!getStoredHidePartner()) checkPartnerReachable(zonesOut);
+    return prov === "playgama"
+        ? list.filter(p => p && p.provider === "playgama" && isPartnerZone(p.id) && p.name && ok(p.slug)).map(toPartnerZone)
+        : list.filter(p => p && isPartnerZone(p.id) && p.name && ok(p.pkg)).map(toPartnerZone);
+}
+async function loadPartnerProvider(prov) {
+    partnerListsLoaded.add(prov);
+    const { url, key } = PARTNER_LISTS[prov];
+    return partnerZonesFrom(prov, await loadPartnerList(url, key));
+}
+async function loadPartners() {
+    const hidden = getStoredHidePartner();
+    const provs = Object.keys(PARTNER_PROVIDERS);
+    // Blocked platforms are hidden anyway, so don't spend the download on them
+    for (const prov of provs) {
+        if (hidden || !partnerKnownBlocked(prov)) continue;
+        blockedProviders.add(prov);
+        // Its saved backup copy is useless here and uses up localStorage space
+        // (cloud saves and settings live there too)
+        try { localStorage.removeItem(PARTNER_LISTS[prov].key); localStorage.removeItem(PARTNER_LISTS[prov].key + "-sig"); } catch {}
+    }
+    const lists = await Promise.all(provs.map(prov =>
+        hidden || blockedProviders.has(prov) ? [] : loadPartnerProvider(prov)));
+    const zonesOut = lists.flat();
+    if (!hidden) checkPartnerReachable();
     return zonesOut;
+}
+// Download lists skipped at startup (partner games were off, or the platform
+// looked blocked) and add them to the game list. Used when the visitor turns
+// partner games back on or chooses "show them anyway".
+async function loadSkippedPartners() {
+    const missing = Object.keys(PARTNER_PROVIDERS).filter(p => !partnerListsLoaded.has(p));
+    // ZONES_ALL (filters.js) is the full game list; the page shows a filtered copy
+    if (!missing.length || typeof ZONES_ALL === "undefined") return;
+    if (!ZONES_ALL) { setTimeout(loadSkippedPartners, 2000); return; }   // game list not built yet
+    const added = (await Promise.all(missing.map(loadPartnerProvider))).flat();
+    const have = new Set(ZONES_ALL.map(z => String(z.id)));
+    const fresh = added.filter(z => !have.has(String(z.id)) && !z.libraryDuplicate);
+    if (fresh.length) {
+        ZONES_ALL = ZONES_ALL.concat(fresh);
+        if (typeof refreshVisibleZones === "function") refreshVisibleZones();
+    }
+    updatePartnerToggle();
 }
 
 // Small "AD" badge used on cards, the player header and the info panel
@@ -184,17 +265,26 @@ function showPartnerInfo(zone) {
 // hides that platform's games if not.
 const blockedProviders = new Set(); // platforms that couldn't be reached from this network
 let partnerBlockOverride = false;   // the visitor chose to show them anyway
-function checkPartnerReachable(list) {
+function checkPartnerReachable() {
     for (const prov of Object.keys(PARTNER_PROVIDERS)) {
-        const sample = (list || []).find(z => partnerProvider(z) === prov && z.cover && !z.thumbGuessed);
-        if (!sample) continue;
+        const probe = PARTNER_PROBE_IMG[prov];
+        if (!probe) continue;
         const img = new Image();
         let done = false;
         const finish = ok => {
             if (done) return;
             done = true;
             clearTimeout(timer);
-            if (ok || blockedProviders.has(prov)) return;
+            savePartnerReach(prov, ok);
+            if (ok) {
+                // Was skipped as blocked, but it works now: bring its games back
+                if (blockedProviders.delete(prov)) {
+                    updatePartnerToggle();
+                    loadSkippedPartners();
+                }
+                return;
+            }
+            if (blockedProviders.has(prov)) return;
             blockedProviders.add(prov);
             if (typeof scheduleFullRefresh === "function") scheduleFullRefresh();
             else if (typeof refreshVisibleZones === "function") refreshVisibleZones();
@@ -203,7 +293,7 @@ function checkPartnerReachable(list) {
         const timer = setTimeout(() => finish(false), 10000);
         img.onload = () => finish(img.naturalWidth > 0);
         img.onerror = () => finish(false);
-        img.src = sample.cover + (sample.cover.includes("?") ? "&" : "?") + "probe=" + Date.now();
+        img.src = probe + (probe.includes("?") ? "&" : "?") + "probe=" + Date.now();
     }
 }
 function partnerHiddenByBlock(zone) {
@@ -225,7 +315,10 @@ function updatePartnerToggle() {
     const all = typeof ZONES_ALL !== "undefined" && ZONES_ALL ? ZONES_ALL : [];
     const n = all.filter(isPartnerZone).length;
     const row = document.getElementById("partnerToggleRow");
-    if (row) row.hidden = n === 0;
+    // Keep the switch while a list is still to be downloaded (partner games
+    // were off or blocked at startup), so they can be turned back on
+    const skipped = Object.keys(PARTNER_PROVIDERS).some(p => !partnerListsLoaded.has(p));
+    if (row) row.hidden = n === 0 && !skipped;
     btn.setAttribute("aria-checked", shown ? "true" : "false");
     btn.classList.toggle("on", shown);
     const blocked = shown ? [...blockedProviders].filter(() => !partnerBlockOverride) : [];
@@ -247,6 +340,7 @@ function togglePartnerGames() {
         try { localStorage.setItem(HIDE_PARTNER_KEY, "false"); } catch {}
         if (typeof refreshVisibleZones === "function") refreshVisibleZones();
         updatePartnerToggle();
+        loadSkippedPartners();
         notify("All partner games are shown, but some of their sites look blocked on this network, so those probably won't load.", { type: "info" });
         return;
     }
@@ -256,6 +350,7 @@ function togglePartnerGames() {
     if (hide && src && src.value === "partner") src.value = "all";
     if (typeof refreshVisibleZones === "function") refreshVisibleZones();
     updatePartnerToggle();
+    if (!hide) { loadSkippedPartners(); checkPartnerReachable(); }
     notify(hide ? "Partner games are hidden. Turn them back on above All games." : "Partner games are shown again. They may have ads.", { type: "success" });
 }
 document.addEventListener("DOMContentLoaded", updatePartnerToggle);

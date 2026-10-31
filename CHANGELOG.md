@@ -7,6 +7,19 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Faster loading and a nightly check fix
+
+### Changed
+- **Return visits download about 630 KB less.** The partner game lists (Playgama is over 500 KB) were downloaded on every visit, even on networks where those sites are blocked and the games are hidden anyway. Now a platform found blocked isn't downloaded at all on the next visit (it's checked again in the background each visit, and comes back by itself if it gets unblocked). Nothing is downloaded while partner games are switched off; turning them on or choosing "show them anyway" downloads them right then.
+- **The partner and UBZone lists are only downloaded again when they change.** They used a new web address every 10 minutes, so the browser fetched the whole file again; now the browser just asks "changed?" and gets an empty reply when it hasn't.
+- The saved backup copy of a partner list is only rewritten when the list changed, and is removed on networks where that platform is blocked (it took up about 600 KB of browser storage, which settings and saves share).
+
+### Fixed
+- **The nightly game check no longer skips games when it runs out of time.** It moved its "start here tomorrow" spot forward by the whole batch before checking anything, so the rest of a cut-off batch waited a full cycle. It now moves only past games it actually checked. The batch is now 275 games a night, so all 1,899 games get checked in a week.
+
+### Removed
+- `tools/__pycache__` (Python's cache files) and two unused screenshots (`filters-desk.png`, `filters-phone.png`). Python cache files are now ignored.
+
 ## October 30, 2026 — Username in the search box
 
 ### Fixed

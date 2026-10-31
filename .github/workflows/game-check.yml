@@ -1,4 +1,4 @@
-# Nightly game check: opens a batch of games in a real browser (about 250 a
+# Nightly game check: opens a batch of games in a real browser (about 275 a
 # night, so every game is checked every week or so, plus every game that failed
 # last time) and saves which ones never show a game to config/game-health.json.
 # The Admin Panel shows the results under "Game check".
@@ -16,7 +16,7 @@ on:
       batch:
         description: "How many games in the batch"
         required: false
-        default: "250"
+        default: "275"
 permissions:
   contents: write
 concurrency:
@@ -49,7 +49,7 @@ jobs:
           IDS: ${{ github.event.inputs.ids }}
           BATCH: ${{ github.event.inputs.batch }}
         run: |
-          [[ "$BATCH" =~ ^[0-9]+$ ]] || BATCH=250
+          [[ "$BATCH" =~ ^[0-9]+$ ]] || BATCH=275
           ARGS="--batch=$BATCH --minutes=140"
           if [[ "$IDS" =~ ^[0-9,]+$ ]]; then ARGS="$ARGS --ids=$IDS"; fi
           node tools/check_games.mjs $ARGS

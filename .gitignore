@@ -1,2 +1,4 @@
 new-games-ids.txt
 body.md
+__pycache__/
+*.pyc

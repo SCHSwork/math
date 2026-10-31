@@ -18,7 +18,7 @@ import fs from "fs";
 const SITE = process.env.SITE_URL || "http://127.0.0.1:8080/";
 const OUT = new URL("../config/game-health.json", import.meta.url);
 const arg = name => (process.argv.find(a => a.startsWith(`--${name}=`)) || "").split("=")[1];
-const BATCH = Number(arg("batch") || 250);
+const BATCH = Number(arg("batch") || 275);
 const WORKERS = Number(arg("workers") || 2);
 const WAIT_MS = 20000, CONFIRM_WAIT_MS = 45000;
 const MAX_MINUTES = Number(arg("minutes") || 150);
@@ -151,14 +151,23 @@ all.sort((a, b) => Number(a.id) - Number(b.id));
 await closeCtx(w0.ctx);
 
 let list;
+// Tonight's batch, and how far into it the run has got. "next" (where tomorrow's
+// batch starts) only moves past games that were actually checked, so a run cut
+// off by the time limit picks up where it stopped instead of skipping the rest.
+let batch = [], batchStart = 0, batchDone = 0;
+const checkedIds = new Set();
+function advanceNext() {
+    while (batchDone < batch.length && checkedIds.has(batch[batchDone].id)) batchDone++;
+    health.next = (batchStart + batchDone) % Math.max(1, all.length);
+}
 const only = arg("ids");
 if (only) {
     const want = new Set(only.split(","));
     list = all.filter(z => want.has(z.id));
 } else {
     const start = (health.next || 0) % Math.max(1, all.length);
-    const batch = all.slice(start, start + BATCH).concat(all.slice(0, Math.max(0, start + BATCH - all.length)));
-    health.next = (start + BATCH) % all.length;
+    batchStart = start;
+    batch = all.slice(start, start + BATCH).concat(all.slice(0, Math.max(0, Math.min(start, start + BATCH - all.length))));
     // Plus everything that failed last time
     const failed = all.filter(z => health.games[z.id] && health.games[z.id].s !== "ok" && !batch.includes(z));
     list = [...failed, ...batch];
@@ -201,6 +210,8 @@ async function worker() {
         health.games[z.id] = { s: r.s, at: today, t: new Date().toISOString(), ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
             ...(r.s !== "ok" ? { since: prev && prev.s === r.s && prev.since ? prev.since : today } : {}) };
         console.log(`${z.id} ${z.name}: ${r.s}${r.why ? " - " + r.why : ""}`);
+        checkedIds.add(z.id);
+        if (batch.length) advanceNext();
         saveHealth(false);
         if (++n % 8 === 0) await fresh();
     }
