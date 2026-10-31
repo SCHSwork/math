@@ -88,7 +88,8 @@ function toUbzoneZone(g, repo, ref) {
 async function loadUbzone() {
     let data = null;
     try {
-        const res = await fetch(UBZONE_LIST_URL + "?t=" + Math.floor(Date.now() / 600000), { cache: "no-cache" });
+        // One fixed URL + "no-cache": the browser only re-downloads it when it changed
+        const res = await fetch(UBZONE_LIST_URL, { cache: "no-cache" });
         if (!res.ok) throw new Error("UBZone list " + res.status);
         data = await res.json();
         try { localStorage.setItem(UBZONE_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
