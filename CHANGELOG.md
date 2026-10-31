@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Admin Panel loads only when opened
+
+### Changed
+- **Players no longer download the Admin Panel** (about 55 KB) on every visit. It's now split in two: js/admin-core.js (11 KB: role checks, the signed-in profile heartbeat, the action log and the new-library-games notice), which every page loads, and js/admin.js (the panel itself), which is downloaded the first time someone opens the Admin or Mod Panel.
+- tools/stamp_versions.py also stamps `data-src` links, so the panel always loads in its newest version.
+
 ## October 30, 2026 — Game list backups out of localStorage
 
 ### Changed
