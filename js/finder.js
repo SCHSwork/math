@@ -142,7 +142,8 @@ function setupRandomButtons() {
 
 // ── Game finder ─────────────────────────────────────────────────────────────
 // Understands a description by matching it against what we know about every
-// game (config/game-info.json: genres, a one-line description and keywords),
+// game (config/game-info.json: genres, a one-line description and keywords,
+// loaded when the finder opens),
 // plus your own play history. Runs entirely in the browser.
 
 // Everyday words that point to a genre
@@ -605,7 +606,8 @@ function openGameFinder(prefill) {
     });
     document.getElementById("popupOverlay").style.display = "flex";
     const start = () => finderSearch(prefill || "");
-    if (typeof gameInfoReady !== "undefined") gameInfoReady.then(start); else start();
+    // Descriptions and keywords load the first time the finder opens
+    if (typeof loadGameInfoDetails === "function") loadGameInfoDetails().then(start); else start();
     setTimeout(() => input.focus(), 30);
 }
 

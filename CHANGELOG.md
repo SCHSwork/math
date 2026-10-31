@@ -7,6 +7,12 @@ All the changes to GN 2.0, newest first.
 
 
 
+## October 30, 2026 — Smaller game info at startup
+
+### Changed
+- **The page downloads about 160 KB less at startup** (about 48 KB less after compression). config/game-info.json (220 KB) was loaded on every visit, but the filters only need each game's genres and 2-player flag. Those now come from config/game-genres.json (61 KB), and the descriptions and keywords load the first time the game finder opens. Filter results are exactly the same.
+- Keep editing config/game-info.json as usual: a new workflow (`.github/workflows/game-genres.yml`, `tools/build_game_genres.py`) rebuilds game-genres.json whenever it changes. If the small file is ever missing, the page loads the full one like before.
+
 ## October 30, 2026 — Faster loading and a nightly check fix
 
 ### Changed

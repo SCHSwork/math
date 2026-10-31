@@ -1,0 +1,33 @@
+# Keeps config/game-genres.json (just the genres and 2-player flags from
+# config/game-info.json, which the page loads at startup) in step with
+# game-info.json. Edit game-info.json as usual; this rebuilds the small file.
+name: Update game genres
+on:
+  push:
+    branches: [main]
+    paths:
+      - config/game-info.json
+      - tools/build_game_genres.py
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: game-genres
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the genres file
+        run: python3 tools/build_game_genres.py
+      - name: Save it if it changed
+        run: |
+          if git diff --quiet -- config/game-genres.json && git ls-files --error-unmatch config/game-genres.json >/dev/null 2>&1; then
+            echo "No changes"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git add config/game-genres.json
+          git commit -m "chore: update game genres"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
