@@ -191,49 +191,67 @@
 })();
 
 // ── Keep browsers from auto-filling the saved username into search boxes ────
-// Chrome's password manager sometimes ignores autocomplete="off" and drops the
-// signed-in username into the first text box on the page. Search boxes marked
-// data-no-autofill start read-only (password managers skip read-only fields)
-// until you click, tap or tab into them, and any text that appears without you
-// typing it is cleared straight away.
+// Chrome's password manager ignores autocomplete="off" and drops the saved
+// username into a search box, on reload and after signing in. Search boxes
+// marked data-no-autofill:
+//  - stay read-only (password managers skip those) until you really click,
+//    tap or type in them. The site focusing the box by itself ("Focus search
+//    on load") doesn't unlock it; that was what let Chrome fill it.
+//  - remember the last text you typed (or the site set). Text that shows up
+//    without you typing it is put back to that, whenever it happens.
 (function () {
-    const typed = new WeakSet();
-    const guarded = el => el && el.matches && el.matches("input[data-no-autofill]");
-    const unlock = e => { if (guarded(e.target)) e.target.readOnly = false; };
-    const markTyped = e => { if (guarded(e.target)) typed.add(e.target); };
-    ["pointerdown", "focusin", "touchstart"].forEach(t => document.addEventListener(t, unlock, true));
-    ["keydown", "paste", "drop", "compositionstart", "cut"].forEach(t => document.addEventListener(t, markTyped, true));
-    const isAutofilled = el => { try { return el.matches(":autofill") || el.matches(":-webkit-autofill"); } catch { return false; } };
-    function scrub(el) {
-        if (!el.value || typed.has(el)) return false;
-        el.value = "";
+    const guarded = el => !!(el && el.matches && el.matches("input[data-no-autofill]"));
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    const lastAct = new WeakMap();   // box → time of your last key, paste, click…
+    const keep = new WeakMap();      // box → text you (or the site) put there
+    const recent = el => Date.now() - (lastAct.get(el) || 0) < 1500;
+    function adopt(el) {
+        if (!guarded(el) || el.__gnGuarded) return;
+        el.__gnGuarded = true;
+        keep.set(el, "");
+        // The site's own code setting the text is fine; browsers autofill
+        // without going through this, so their text gets reverted
+        Object.defineProperty(el, "value", { configurable: true, enumerable: true,
+            get() { return desc.get.call(this); },
+            set(v) { desc.set.call(this, v); keep.set(this, desc.get.call(this)); } });
+        if (document.activeElement !== el) el.readOnly = true;
+        else if (!recent(el)) el.readOnly = true;
+    }
+    function revert(el) {
+        const want = keep.get(el) || "";
+        if (desc.get.call(el) === want) return false;
+        desc.set.call(el, want);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
         return true;
     }
-    // Runs before the box's own handlers, so a filled-in name never triggers a search
+    const act = e => {
+        const el = e.type === "keydown" ? document.activeElement : e.target;
+        if (!guarded(el)) return;
+        adopt(el);
+        lastAct.set(el, Date.now());
+        if (el.readOnly && (e.type !== "keydown" || !["Tab", "Shift", "Escape"].includes(e.key))) el.readOnly = false;
+    };
+    ["pointerdown", "touchstart", "keydown", "paste", "drop", "cut", "compositionstart"].forEach(t => document.addEventListener(t, act, true));
+    // Runs before the box's own handlers, so an autofilled name never triggers a search
     window.addEventListener("input", e => {
         const el = e.target;
-        if (!guarded(el) || typed.has(el)) return;
-        if (el.value && (isAutofilled(el) || !e.isTrusted || !e.inputType)) {
-            el.value = "";
-            e.stopImmediatePropagation();
-            el.dispatchEvent(new Event("input", { bubbles: true }));
-        }
+        if (!guarded(el)) return;
+        adopt(el);
+        if (e.isTrusted && recent(el)) { keep.set(el, desc.get.call(el)); return; }   // you typed it
+        if (!e.isTrusted) return;                                                     // the site's own event
+        if (desc.get.call(el) !== (keep.get(el) || "")) { e.stopImmediatePropagation(); revert(el); }
     }, true);
-    function setup() {
-        const boxes = document.querySelectorAll("input[data-no-autofill]");
-        boxes.forEach(el => { if (document.activeElement !== el) el.readOnly = true; });
-        // Catch values that appear without any event during the first seconds
-        [50, 300, 1000, 2500, 5000].forEach(ms => setTimeout(() => {
-            // Nothing on this site fills these boxes by itself, so any text that's
-            // there before you've typed came from the browser.
-            document.querySelectorAll("input[data-no-autofill]").forEach(el => {
-                if (scrub(el)) el.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-        }, ms));
-    }
+    // Some fills fire no event at all: check now and then
+    setInterval(() => {
+        document.querySelectorAll("input[data-no-autofill]").forEach(el => {
+            adopt(el);
+            if (!recent(el)) revert(el);
+        });
+    }, 700);
+    function setup() { document.querySelectorAll("input[data-no-autofill]").forEach(adopt); }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup); else setup();
     // Search boxes added later (game finder, admin search) get the same treatment
-    window.protectFromAutofill = el => { if (el) { el.setAttribute("data-no-autofill", ""); if (document.activeElement !== el) el.readOnly = true; } };
+    window.protectFromAutofill = el => { if (el) { el.setAttribute("data-no-autofill", ""); adopt(el); } };
 })();
 
 // ── "/" jumps to the search box (like YouTube and GitHub) ────────────────────
