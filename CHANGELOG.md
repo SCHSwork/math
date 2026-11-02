@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 1, 2026 — Halloween is over 🎃
+
+### Changed
+- **Halloween week ended.** The Halloween decorations, banner and 🎃 Spooky tab are gone and everyone's own theme is back. Halloween week now runs Oct 24 – Oct 31 and comes back by itself next year. Badges people earned (Trick or Treat, Spooky Season) stay on their profiles.
+
 ## October 30, 2026 — Flagged games checked by hand
 
 ### Fixed

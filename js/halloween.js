@@ -1,16 +1,17 @@
 // ═════════════════════════════════════════════════════════════════════════════
-// Halloween week (Oct 24 – Nov 1, the visitor's own time). While it's on:
+// Halloween week (Oct 24 – Oct 31, the visitor's own time). While it's on:
 //   • the site wears the Halloween scene (moon, bats, graveyard) for everyone
 //     who hasn't switched it off; picking any theme in Settings switches it off
 //   • a 🎃 Spooky tab on the home page lists horror and Halloween games
 //   • two limited-time badges (achievements.js): Trick or Treat (play on
 //     Halloween) and Spooky Season (play 5 spooky games during the week)
-// Nothing is saved to the visitor's theme; on Nov 2 everything goes back.
+// Nothing is saved to the visitor's theme; on Nov 1 everything goes back.
+// It comes back by itself next October.
 // ═════════════════════════════════════════════════════════════════════════════
 const HALLOWEEN_OFF_KEY = "gnmath-halloween-off";
 function halloweenActive(d = new Date()) {
     const y = d.getFullYear();
-    return d >= new Date(y, 9, 24) && d < new Date(y, 10, 2);
+    return d >= new Date(y, 9, 24) && d < new Date(y, 10, 1);
 }
 function isHalloweenDay(d = new Date()) { return d.getMonth() === 9 && d.getDate() === 31; }
 function halloweenOff() { try { return localStorage.getItem(HALLOWEEN_OFF_KEY) === String(new Date().getFullYear()); } catch { return false; } }
