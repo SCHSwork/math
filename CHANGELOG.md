@@ -7,6 +7,15 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 2, 2026 — New games checked
+
+### Fixed
+- **Washed games no longer crash the ad stand-in.** In 67 washed games the page already has its own stand-in for Google's `adsbygoogle`, and the site's H5 ads stand-in crashed on it ("queued.forEach is not a function"), so `adBreak` was never set up and rewarded "watch an ad" buttons could hang. It now only reads `adsbygoogle` when it's a real list.
+- **The game check sees SVG games.** Games drawn with SVG (like Konnekt) were called "blank page"; the check now counts an SVG the same as a canvas.
+
+### Checked
+- All 181 games added since October 17 were opened in the test browser. None are broken for players. Connect 3 and Horse Master were flagged but work when opened by hand (Connect 3 is all colored boxes, Horse Master is a text game). Ballistic Chickens, Eel Slap! and Idle Shark only failed because the test machine couldn't download jQuery/kaboom from their CDNs.
+
 ## November 1, 2026 — Halloween is over 🎃
 
 ### Changed

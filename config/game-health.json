@@ -3153,11 +3153,10 @@
    "t": "2026-11-02T19:08:11.930Z"
   },
   "990135": {
-   "s": "broken",
+   "s": "ok",
    "at": "2026-11-02",
-   "t": "2026-11-02T19:09:01.907Z",
-   "why": "Blank page",
-   "since": "2026-11-02"
+   "t": "2026-11-02T20:00:00.000Z",
+   "note": "checked by hand: works (no canvas or text for the check to see)"
   },
   "990136": {
    "s": "ok",
@@ -3236,23 +3235,16 @@
    "t": "2026-11-02T19:09:29.011Z"
   },
   "990153": {
-   "s": "broken",
+   "s": "ok",
    "at": "2026-11-02",
-   "t": "2026-11-02T19:10:36.585Z",
-   "why": "Failed http://www.noncanon.com/2013/twine/apartmentday.png",
-   "errors": [
-    "Failed http://www.noncanon.com/2013/twine/apartmentday.png",
-    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/alleydaydone.png",
-    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/apartmentday",
-    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/apartmentdaydone"
-   ],
-   "since": "2026-11-02"
+   "t": "2026-11-02T20:00:00.000Z",
+   "note": "checked by hand: works (no canvas or text for the check to see)"
   },
   "990155": {
-   "s": "broken",
+   "s": "slow",
    "at": "2026-11-02",
    "t": "2026-11-02T19:10:40.002Z",
-   "why": "Script error: $ is not defined",
+   "why": "The test server couldn't download this game's files (it usually works for players)",
    "errors": [
     "Failed https://cdn.jsdelivr.net/npm/jquery@2.1.1/dist/jquery.min.js",
     "Failed https://cdn.jsdelivr.net/npm/underscore@1.13.6/underscore-min.js",
@@ -3276,14 +3268,9 @@
    "t": "2026-11-02T19:10:33.151Z"
   },
   "990159": {
-   "s": "broken",
+   "s": "ok",
    "at": "2026-11-02",
-   "t": "2026-11-02T19:11:44.197Z",
-   "why": "Script error: queued.forEach is not a function",
-   "errors": [
-    "Script error: queued.forEach is not a function"
-   ],
-   "since": "2026-11-02"
+   "t": "2026-11-02T19:13:20.195Z"
   },
   "990160": {
    "s": "ok",
@@ -3414,14 +3401,34 @@
    "s": "ok",
    "at": "2026-11-02",
    "t": "2026-11-02T19:12:43.064Z"
+  },
+  "990198": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:12:46.395Z"
+  },
+  "990199": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:12:51.139Z"
+  },
+  "990200": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:12:46.012Z"
+  },
+  "990201": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:12:55.587Z"
   }
  },
  "next": 798,
- "updated": "2026-11-02T19:12:43.065Z",
+ "updated": "2026-11-02T19:13:20.218Z",
  "total": 1898,
  "counts": {
-  "ok": 708,
-  "slow": 5,
-  "broken": 6
+  "ok": 715,
+  "slow": 6,
+  "broken": 2
  }
 }
