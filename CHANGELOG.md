@@ -7,6 +7,11 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 2, 2026 — ROAM0120.EXE updated
+
+### Changed
+- **ROAM0120.EXE (875) is on its newest version.** The library re-uploaded it as `875-f3.html`, pointing at a newer build where its porter fixed a game data file. Washed again (nothing to remove, the 5 code files checked clean), locked to web-ports/roam0120 `22de8d3`, and it loads fine in the test browser.
+
 ## November 2, 2026 — New games checked
 
 ### Fixed
