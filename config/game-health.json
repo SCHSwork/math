@@ -3235,18 +3235,88 @@
    "at": "2026-11-02",
    "t": "2026-11-02T19:09:29.011Z"
   },
+  "990153": {
+   "s": "broken",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:36.585Z",
+   "why": "Failed http://www.noncanon.com/2013/twine/apartmentday.png",
+   "errors": [
+    "Failed http://www.noncanon.com/2013/twine/apartmentday.png",
+    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/alleydaydone.png",
+    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/apartmentday",
+    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/hearse%20mster/apartmentdaydone"
+   ],
+   "since": "2026-11-02"
+  },
+  "990155": {
+   "s": "broken",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:40.002Z",
+   "why": "Script error: $ is not defined",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/npm/jquery@2.1.1/dist/jquery.min.js",
+    "Failed https://cdn.jsdelivr.net/npm/underscore@1.13.6/underscore-min.js",
+    "Script error: $ is not defined"
+   ],
+   "since": "2026-11-02"
+  },
   "990156": {
    "s": "ok",
    "at": "2026-11-02",
    "t": "2026-11-02T19:10:05.084Z"
+  },
+  "990157": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:30.021Z"
+  },
+  "990158": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:33.151Z"
+  },
+  "990160": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:39.733Z"
+  },
+  "990162": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:54.005Z"
+  },
+  "990163": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:43.293Z"
+  },
+  "990164": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:48.071Z"
+  },
+  "990166": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:52.679Z"
+  },
+  "990167": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:55.705Z"
+  },
+  "990170": {
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:10:57.055Z"
   }
  },
  "next": 798,
- "updated": "2026-11-02T19:10:05.085Z",
+ "updated": "2026-11-02T19:10:57.055Z",
  "total": 1898,
  "counts": {
-  "ok": 680,
+  "ok": 689,
   "slow": 5,
-  "broken": 3
+  "broken": 5
  }
 }
