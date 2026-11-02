@@ -1020,11 +1020,9 @@
    "t": "2026-10-29T16:17:51.437Z"
   },
   "273": {
-   "s": "slow",
-   "at": "2026-11-01",
-   "t": "2026-11-01T16:10:04.869Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-10-29"
+   "s": "ok",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:37:39.917Z"
   },
   "274": {
    "s": "ok",
@@ -2323,14 +2321,14 @@
   },
   "796": {
    "s": "slow",
-   "at": "2026-11-01",
-   "t": "2026-11-01T16:11:16.612Z",
-   "why": "Still loading after 46s: \"LOADING... 0.00 MB / 58.96 MB\"",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:38:30.444Z",
+   "why": "Still loading after 47s: \"LOADING... 0.00 MB / 58.96 MB\"",
    "errors": [
     "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/UnityLoader.js",
     "Failed https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/UnityLoader.js",
-    "HTTP 403 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part2",
-    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part1"
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part1",
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part2"
    ],
    "since": "2026-10-31"
   },
@@ -2380,15 +2378,15 @@
    "t": "2026-10-31T15:32:19.157Z"
   },
   "806": {
-   "s": "slow",
-   "at": "2026-11-01",
-   "t": "2026-11-01T16:11:31.276Z",
-   "why": "Still loading after 47s: \"LOADING... 298.62 MB / 298.61 MB\"",
+   "s": "broken",
+   "at": "2026-11-02",
+   "t": "2026-11-02T19:38:59.828Z",
+   "why": "The test browser crashed on this game",
    "errors": [
     "Script error: UnityLoader is not defined",
     "Script error: Failed to execute 'put' on 'Cache': Unexpected internal error."
    ],
-   "since": "2026-10-31"
+   "since": "2026-11-02"
   },
   "807": {
    "s": "ok",
@@ -3424,11 +3422,11 @@
   }
  },
  "next": 798,
- "updated": "2026-11-02T19:13:20.218Z",
+ "updated": "2026-11-02T19:38:59.829Z",
  "total": 1898,
  "counts": {
-  "ok": 715,
-  "slow": 6,
-  "broken": 2
+  "ok": 716,
+  "slow": 4,
+  "broken": 3
  }
 }
