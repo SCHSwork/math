@@ -1352,7 +1352,8 @@ function h5AdsStub() {
         run(o.adBreakDone, { breakType: o.type, breakName: o.name || "", breakFormat: o.type === "preroll" ? "preroll" : "interstitial", breakStatus: "notReady" });
     };
     var q = window.adsbygoogle = window.adsbygoogle || [];
-    var queued = q.slice ? q.slice() : [];
+    // Washed games may already have a stand-in adsbygoogle that isn't a real list
+    var queued = Array.isArray(q) ? q.slice() : [];
     try { Object.defineProperty(q, "push", { configurable: true, value: function () { for (var i = 0; i < arguments.length; i++) handle(arguments[i]); return q.length; } }); } catch (e) {}
     queued.forEach(handle);
     if (typeof window.adBreak !== "function") window.adBreak = function (o) { handle(o); };

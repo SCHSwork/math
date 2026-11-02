@@ -96,7 +96,7 @@ const measure = () => {
     const W = f.contentWindow.innerWidth, H = f.contentWindow.innerHeight;
     let best = 0;
     const look = (doc, depth) => {
-        for (const el of doc.querySelectorAll("canvas,embed,object,video,iframe,ruffle-player,ruffle-embed,ruffle-object")) {
+        for (const el of doc.querySelectorAll("canvas,svg,embed,object,video,iframe,ruffle-player,ruffle-embed,ruffle-object")) {
             const r = el.getBoundingClientRect();
             const cs = doc.defaultView.getComputedStyle(el);
             if (r.width < 80 || r.height < 60 || cs.display === "none" || cs.visibility === "hidden") continue;
