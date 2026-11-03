@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 3, 2026 — Smaller covers
+
+### Changed
+- **Covers download 74% less.** Many covers were far bigger than the card they're shown on: the library's covers added up to 341 MB (half were over 200 KB, 97 were over 1 MB and one was 12 MB), and UBZone's to 85 MB, for cards about 250 px wide. The site now shows a small copy of each one: 856 covers, 416.9 MB → 108.6 MB in all.
+- **Same picture, only smaller.** Each copy is the original scaled down to fit 640 px (never cropped, enlarged or filtered; colors and transparency kept). It's only compressed where that can't be told apart from the original (otherwise it's saved lossless), and animated covers are left alone.
+- **Covers show on more networks.** The copies come from the site itself (`covers-small/`), so they show even where GitHub and jsDelivr are blocked. If a copy is missing, the original loads like before.
+- New covers get a copy the next day: `.github/workflows/small-covers.yml` runs `tools/build_small_covers.py` daily and redoes any cover the library changes.
+
 ## November 3, 2026 — Games load when jsDelivr is blocked
 
 ### Fixed

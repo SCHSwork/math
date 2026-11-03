@@ -1,0 +1,39 @@
+# Keeps covers-small/ (small copies of the game covers) and
+# config/small-covers.json up to date. Covers for new games, and covers the
+# library changes, get a copy the next day; the site uses the original until
+# then. See tools/build_small_covers.py.
+name: Update small covers
+on:
+  schedule:
+    - cron: "17 10 * * *"
+  push:
+    branches: [main]
+    paths:
+      - config/ubzone-games.json
+      - tools/build_small_covers.py
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: small-covers
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pillow
+        run: pip install "pillow>=10"
+      - name: Make the small copies
+        run: python3 tools/build_small_covers.py
+      - name: Save them if anything changed
+        run: |
+          git add -A covers-small config/small-covers.json tools/small-covers-state.json
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update small covers"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
