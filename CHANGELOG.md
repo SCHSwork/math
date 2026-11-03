@@ -7,16 +7,6 @@ All the changes to GN 2.0, newest first.
 
 
 
-## November 3, 2026 — Daily Guess 🧩
-
-### Added
-- **Daily Guess**, a new home tab: name the game from a zoomed-in piece of its cover. Everyone gets the same game each day. You have 6 tries, and every miss zooms the picture out and unlocks a clue: the genre, then who made it, then the shape of the name, then its first letters. A wrong guess that shares a genre or creator with the answer is marked close (≈). Can't think of anything? **Skip** uses a try to get the next clue.
-- Win or lose, it ends with a **Play** button for that game, so even a miss finds you something new to try.
-- **Copy result** copies an emoji grid (🟩 right, 🟨 close, 🟥 wrong, ⬛ skipped) to send to friends without spoiling the answer.
-- Your played count, solve rate, streak, best streak and how many tries your wins took are kept with your other progress, so cloud saves carry them to every device.
-- **4 new badges:** Sharp Eye (solve one), Know-It-All (solve 15), Eagle Eye (solve on the first try) and Picture Perfect (solve 5 days in a row). Each solve also gives 15 XP.
-- Two days a week the answer is a featured game, so it isn't always a deep cut. It's never the same game as Today's pick.
-
 ## November 2, 2026 — ROAM0120.EXE updated
 
 ### Changed

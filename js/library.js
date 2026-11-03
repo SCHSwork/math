@@ -314,7 +314,6 @@ function setYourGamesTab(tab) {
 function renderPersonalRows() {
     if (!Array.isArray(zones) || !zones.length) return;
     renderGameOfTheDay();
-    if (typeof renderDailyGuess === "function") renderDailyGuess();
     const section = document.getElementById("yourGames");
     if (!section) return;
     renderNewRow();
