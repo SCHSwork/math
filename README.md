@@ -102,6 +102,8 @@ index.html             the page (plus the tiny tab-cloak script that must run fi
 sw.js                  background helper: caches covers, lets the site open offline
 manifest.json          app name and icons for "install as app"
 CHANGELOG.md           everything that's changed, newest first (also in the site footer)
+covers-small/          small copies of the game covers (same picture, scaled to fit 640 px),
+                       made daily by tools/build_small_covers.py; listed in config/small-covers.json
 
 css/styles.css         the shared styles, scenes, and the style picker's previews
 css/skins/<style>.css  one file per site style (Arcade, Aquarium, Receipt...), loaded only

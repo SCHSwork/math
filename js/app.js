@@ -403,14 +403,38 @@ function gameMirrorHook(MAP, T, DOWN) {
 }
 // A game page found a source down while running
 window.gnMirrorFailed = function (name) { if (MIRRORS[name]) markMirror(name, false); };
+// Small copies of the covers (covers-small/, made by tools/build_small_covers.py).
+// Many covers are far bigger than the card they're shown on (some are over
+// 10 MB); the copy is the same picture, only scaled down to fit (640 px at
+// most). It comes from the site itself, so it also shows on networks that
+// block GitHub and jsDelivr. The original stays as the fallback.
+let smallCovers = null;
+fetch("config/small-covers.json").then(r => r.ok ? r.json() : null)
+    .then(j => { if (j && j.covers) smallCovers = j.covers; }).catch(() => {});
+// Same hash as key_hash() in tools/build_small_covers.py
+function smallCoverHash(key) {
+    const fnv = (str, h) => { for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16).padStart(8, "0"); };
+    return fnv(key, 2166136261) + fnv("gn2-cover:" + key, 2166136261);
+}
+function smallCoverUrl(key) {
+    if (!smallCovers) return null;
+    const h = smallCoverHash(key), v = smallCovers[h];
+    return v ? new URL(`covers-small/${h}.webp?v=${v}`, location.href).href : null;
+}
 // Cover image URL from the best working source, with the rest kept as fallbacks
 function coverSources(cover) {
     if (!cover) return [];
     const gh = typeof parseGhUrl === "function" && parseGhUrl(cover);
-    if (gh) return mirrorUrls(gh.owner, gh.repo, gh.ref, gh.path);
+    if (gh) {
+        const small = smallCoverUrl(`${gh.owner}/${gh.repo}@${gh.ref}/${gh.path}`);
+        const list = mirrorUrls(gh.owner, gh.repo, gh.ref, gh.path);
+        return small ? [small, ...list] : list;
+    }
     if (!cover.includes("{COVER_URL}")) return [cover.replace("{HTML_URL}", htmlURL)];
     const path = cover.replace("{COVER_URL}/", "").replace("{COVER_URL}", "");
-    return mirrorUrls("freebuisness", "covers", "main", path);
+    const small = smallCoverUrl("freebuisness/covers@main/" + path);
+    const list = mirrorUrls("freebuisness", "covers", "main", path);
+    return small ? [small, ...list] : list;
 }
 function setCoverImage(img, cover, lazy) {
     const list = coverSources(cover);
@@ -430,7 +454,7 @@ function setCoverImage(img, cover, lazy) {
         img.dataset.fallbacks = JSON.stringify(rest.slice(1));
         img.src = rest[0];
     };
-    if (lazy) img.dataset.src = list[0]; else img.src = list[0];
+    if (lazy) { img.dataset.src = list[0]; img.dataset.cover = cover; } else img.src = list[0];
 }
 // Simple picture with the game's name, for covers that couldn't be loaded
 function coverPlaceholder(name) {
@@ -845,7 +869,8 @@ function getLazyImageObserver() {
             entries.forEach(entry => {
                 if (entry.isIntersecting && !zoneViewer.hidden) {
                     const img = entry.target;
-                    img.src = img.dataset.src;
+                    // Worked out again now, in case the small-cover list arrived after the card was made
+                    if (img.dataset.cover) setCoverImage(img, img.dataset.cover, false); else img.src = img.dataset.src;
                     img.classList.remove("lazy-zone-img");
                     observer.unobserve(img);
                 }

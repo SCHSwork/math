@@ -1,7 +1,8 @@
 // GN 2.0 service worker
 // - The site page and its own files (css/, js/, icons): network first so updates show
 //   right away, saved copy when offline.
-// - Game cover images: served from a local cache for faster repeat visits.
+// - Game cover images (the site's small copies and the originals): served from a
+//   local cache for faster repeat visits.
 // - Everything else (games, accounts, saves) is not touched.
 const VERSION = "gn2-v2";
 const PAGE_CACHE = `${VERSION}-page`;
@@ -21,6 +22,8 @@ self.addEventListener("activate", event => {
 });
 
 function isCover(url) {
+  // The site's own small copies (covers-small/), or an original from a mirror
+  if (url.origin === self.location.origin) return /\/covers-small\/[0-9a-f]+\.webp$/.test(url.pathname);
   return COVER_HOSTS.includes(url.hostname) && /\/covers[@/]/.test(url.pathname) && /\.(png|jpe?g|webp|gif)$/i.test(url.pathname);
 }
 
