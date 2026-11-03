@@ -7,6 +7,19 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 3, 2026 — Games load when jsDelivr is blocked
+
+### Fixed
+- **Games no longer break on networks that block all of jsDelivr.** When cdn.jsdelivr.net was down, games were switched to jsDelivr's backup addresses (fastly, gcore, testingcf) without checking them, but school filters usually block every jsdelivr.net address, so any game whose files come from jsDelivr failed even though GitHub was reachable. Now the backups, githack and GitHub are checked first (all at once, at most a few seconds, once per visit) and games use one that answered.
+- **Files a game asks for while it runs follow along.** Unity data, Godot packs, split game parts and anything else a game downloads by itself used to go straight to the blocked address. Those requests are now moved to the working source too, and if one still fails it's tried on the others and the site stops using that source.
+- **GitHub works as a last resort.** Browsers won't run scripts or stylesheets straight from GitHub (it labels every file as plain text), so when GitHub is the only source left those are downloaded from it and given to the game as local copies.
+- Checking whether a source is up now downloads half a KB (manifest.json) instead of the game list (about 30 KB).
+
+### Checked
+- **16 random library games with every jsDelivr address and githack blocked: 7 started before, 14 now.** The other two work too: one was still downloading (part 23 of 50) and the other waits on its own Play screen. Slope, Minecraft 1.8.8 and Geometry Dash were also checked by hand.
+- Nothing changes when jsDelivr works: game pages are left exactly as they were.
+- Games whose GitHub repo was deleted (jsDelivr still has a copy, GitHub doesn't), like Hollow Knight, and games built from JavaScript modules, like Celeste, still can't load from GitHub alone.
+
 ## November 2, 2026 — ROAM0120.EXE updated
 
 ### Changed

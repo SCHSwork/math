@@ -106,11 +106,12 @@ const mirrorDownAt = (() => {
     } catch { return {}; }
 })();
 const mirrorDown = new Set(Object.keys(mirrorDownAt));
+const mirrorOkAt = {};   // sources that answered during this visit
 function markMirror(name, ok) {
     if (!name) return;
     const before = mirrorDown.has(name);
-    if (ok) { mirrorDown.delete(name); delete mirrorDownAt[name]; }
-    else { mirrorDown.add(name); mirrorDownAt[name] = Date.now(); }
+    if (ok) { mirrorDown.delete(name); delete mirrorDownAt[name]; mirrorOkAt[name] = Date.now(); }
+    else { mirrorDown.add(name); mirrorDownAt[name] = Date.now(); delete mirrorOkAt[name]; }
     if (before !== mirrorDown.has(name)) {
         try { localStorage.setItem(MIRROR_DOWN_KEY, JSON.stringify(mirrorDownAt)); } catch {}
         console.info(`Game source ${name} is ${ok ? "back up" : "unavailable"}`);
@@ -124,7 +125,8 @@ const mirrorProbeAt = {};
 async function probeMirror(name) {
     if (!MIRRORS[name]) return null;
     mirrorProbeAt[name] = Date.now();
-    const url = MIRRORS[name]("SCHSwork", "math", "main", "config/library-pinned.json") + "?probe=" + Date.now();
+    // manifest.json is about half a KB, so checking several sources at once is cheap
+    const url = MIRRORS[name]("SCHSwork", "math", "main", "manifest.json") + "?probe=" + Date.now();
     try {
         await fetchFirst([url], { timeoutMs: 8000, track: false, validate: async r => { await r.json(); return true; } });
         markMirror(name, true);
@@ -241,19 +243,166 @@ function useLocalRuffle(html) {
         // often blocked or slow: use the site's copy for those too
         .replace(/https?:\/\/(?:unpkg\.com|(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/npm)\/@ruffle-rs\/ruffle(?:@latest)?(?:\/ruffle(?:\.min)?\.js)?(?=["'\s>])/g, local);
 }
-// When jsDelivr is unreachable, point the jsDelivr links inside a game at backups
-function rewriteForMirrors(html) {
-    if (!mirrorDown.has("jsdelivr") || typeof html !== "string") return html;
-    // A working jsDelivr backup address takes the exact same links (including npm)
-    const alt = BACKUP_MIRRORS.find(m => !mirrorDown.has(m));
-    if (alt) return html.replace(/https?:\/\/cdn\.jsdelivr\.net\//g, `https://${alt}.jsdelivr.net/`);
-    return html
-        .replace(/https?:\/\/cdn\.jsdelivr\.net\/gh\/([^\/@\s"'`<>]+)\/([^\/@\s"'`<>]+)(?:@([^\/\s"'`<>]+))?\//g,
-            (m, o, r, ref) => `https://rawcdn.githack.com/${o}/${r}/${!ref || ref === "latest" ? "HEAD" : ref}/`)
-        .replace(/https?:\/\/cdn\.jsdelivr\.net\/npm\//g, "https://unpkg.com/")
-        // jsDelivr makes .min.js files on request; unpkg only has what's in the package
-        .replace(/(https:\/\/unpkg\.com\/@ruffle-rs\/ruffle@[^\/\s"'`<>]+\/ruffle)\.min\.js/g, "$1.js");
+// ── Game files from a source that works ─────────────────────────────────────
+// Games link to their files on jsDelivr (sometimes githack or GitHub). When the
+// source a game uses is down or blocked, its links are moved to one that works:
+// jsDelivr's backup addresses first, then githack, then GitHub itself. Sources
+// nobody has checked yet are checked first (all at once, a few seconds at most),
+// because a school filter that blocks cdn.jsdelivr.net often blocks every
+// jsdelivr.net address, and switching to a blocked backup broke every game.
+// The same switch is made inside the game while it runs (gameMirrorHook), for
+// files the game asks for itself (Unity data, Godot packs, split parts).
+const GH_MIRROR_ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "github"];
+const GAME_MIRROR_URL_RE = /https?:\/\/(?:(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net|raw\.githubusercontent\.com|raw(?:cdn)?\.githack\.com)\/[^\s"'`<>()\\]*/g;
+// Moves one link to source T if its own source is in DOWN. Self-contained:
+// it's also copied into each game page for gameMirrorHook.
+function gnMirrorUrl(u, T, DOWN) {
+    if (typeof u !== "string" || u.indexOf("://") < 0) return u;
+    var m, name, o, r, ref, path, J = ["jsdelivr", "fastly", "gcore", "testingcf"];
+    var jname = function (h) { return h === "cdn" ? "jsdelivr" : h; };
+    if ((m = /^https?:\/\/(cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/npm\/(.*)$/.exec(u))) {
+        if (DOWN.indexOf(jname(m[1])) < 0) return u;
+        var up = J.filter(function (x) { return DOWN.indexOf(x) < 0; })[0];
+        if (up) return "https://" + (up === "jsdelivr" ? "cdn" : up) + ".jsdelivr.net/npm/" + m[2];
+        // unpkg only has the files in the package (jsDelivr makes .min.js ones on request)
+        return ("https://unpkg.com/" + m[2]).replace(/(\/@ruffle-rs\/ruffle@[^\/]+\/ruffle)\.min\.js/, "$1.js");
+    }
+    if ((m = /^https?:\/\/(cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([\w.-]+)\/([\w.-]+?)(?:@([^\/]+))?(?:\/(.*))?$/.exec(u))) { name = jname(m[1]); o = m[2]; r = m[3]; ref = m[4] || "latest"; path = m[5] || ""; }
+    else if ((m = /^https?:\/\/raw\.githubusercontent\.com\/([\w.-]+)\/([\w.-]+)\/(?:refs\/heads\/)?([^\/]+)\/(.*)$/.exec(u))) { name = "github"; o = m[1]; r = m[2]; ref = m[3]; path = m[4]; }
+    else if ((m = /^https?:\/\/raw(?:cdn)?\.githack\.com\/([\w.-]+)\/([\w.-]+)\/([^\/]+)\/(.*)$/.exec(u))) { name = "githack"; o = m[1]; r = m[2]; ref = m[3]; path = m[4]; }
+    else return u;
+    if (name === T || DOWN.indexOf(name) < 0) return u;
+    var branch = ref === "latest" ? "HEAD" : ref;
+    if (T === "github") return "https://raw.githubusercontent.com/" + o + "/" + r + "/" + branch + "/" + path;
+    if (T === "githack") return "https://rawcdn.githack.com/" + o + "/" + r + "/" + branch + "/" + path;
+    return "https://" + (T === "jsdelivr" ? "cdn" : T) + ".jsdelivr.net/gh/" + o + "/" + r + "@" + (ref === "HEAD" ? "latest" : ref) + "/" + path;
 }
+const mirrorProbing = {};
+function probeMirrorOnce(name) {
+    if (!mirrorProbing[name]) mirrorProbing[name] = probeMirror(name).finally(() => { setTimeout(() => { delete mirrorProbing[name]; }, 60000); });
+    return mirrorProbing[name];
+}
+// The source game links should use right now
+async function bestGameMirror() {
+    const usable = () => GH_MIRROR_ORDER.filter(m => !mirrorDown.has(m));
+    if (usable()[0] === "jsdelivr") return "jsdelivr";   // the usual case: nothing to check
+    const unknown = usable().filter(m => !mirrorOkAt[m]);
+    if (unknown.length) await Promise.race([Promise.all(unknown.map(probeMirrorOnce)), new Promise(r => setTimeout(r, 5000))]);
+    return usable().find(m => mirrorOkAt[m]) || usable()[0] || "github";
+}
+// Browsers won't run scripts or stylesheets straight from GitHub (it labels every
+// file as plain text). When GitHub is the only source left, those are downloaded
+// from it and handed to the game as local copies.
+async function loadGithubScriptsAndStyles(html) {
+    const baseHref = (html.match(/<base\b[^>]*\bhref\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
+    const base = baseHref ? (() => { try { return new URL(baseHref, location.href).href; } catch { return location.href; } })() : location.href;
+    const abs = u => { try { return new URL(u.replace(/&amp;/g, "&"), base).href; } catch { return ""; } };
+    const isGh = u => /^https:\/\/raw\.githubusercontent\.com\//.test(u);
+    const jobs = [];
+    // Modules are left alone: they load their other files by relative path, which a copy can't do
+    html.replace(/<script\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)[^>]*>/gi, (tag, src) => { if (isGh(abs(src)) && !/\btype\s*=\s*["']?module/i.test(tag)) jobs.push({ src, url: abs(src), css: false }); return tag; });
+    html.replace(/<link\b[^>]*>/gi, tag => {
+        const href = (tag.match(/\bhref\s*=\s*["']?([^"'\s>]+)/i) || [])[1];
+        if (href && /\brel\s*=\s*["']?stylesheet/i.test(tag) && isGh(abs(href))) jobs.push({ src: href, url: abs(href), css: true });
+        return tag;
+    });
+    if (!jobs.length) return html;
+    const blobs = {};
+    await Promise.all([...new Map(jobs.map(j => [j.url, j])).values()].map(async j => {
+        try {
+            const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 30000);
+            const res = await fetch(j.url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+            if (!res.ok) return;
+            let text = await res.text();
+            // A stylesheet's own links (fonts, pictures) were relative to where it lived
+            if (j.css) text = text.replace(/url\(\s*(["']?)(?!data:|blob:|https?:|\/\/|#)([^"')]+)\1\s*\)/gi, (m, q, u) => { try { return `url("${new URL(u, j.url).href}")`; } catch { return m; } });
+            blobs[j.url] = URL.createObjectURL(new Blob([text], { type: j.css ? "text/css" : "text/javascript" }));
+        } catch {}
+    }));
+    const swap = (tag, attr) => tag.replace(new RegExp(`(\\b${attr}\\s*=\\s*["']?)([^"'\\s>]+)`, "i"), (m, pre, u) => blobs[abs(u)] ? pre + blobs[abs(u)] : m);
+    return html.replace(/<script\b[^>]*\bsrc\s*=[^>]*>/gi, tag => /\btype\s*=\s*["']?module/i.test(tag) ? tag : swap(tag, "src"))
+        .replace(/<link\b[^>]*>/gi, tag => /\brel\s*=\s*["']?stylesheet/i.test(tag) ? swap(tag, "href") : tag);
+}
+// Called on every game page before it's written into the frame
+async function adaptGameToMirrors(html) {
+    if (typeof html !== "string") return html;
+    GAME_MIRROR_URL_RE.lastIndex = 0;
+    if (!GH_MIRROR_ORDER.some(m => mirrorDown.has(m))) return html;   // every source works (as far as we know)
+    const target = await bestGameMirror();
+    const down = GH_MIRROR_ORDER.filter(m => mirrorDown.has(m));
+    if (!down.length) return html;
+    html = html.replace(GAME_MIRROR_URL_RE, u => gnMirrorUrl(u, target, down));
+    if (target === "github" || /<script\b[^>]*raw\.githubusercontent\.com/i.test(html)) html = await loadGithubScriptsAndStyles(html);
+    const hook = `<script>(${gameMirrorHook.toString()})(${gnMirrorUrl.toString()},${JSON.stringify(target)},${JSON.stringify(down)});<\/script>`;
+    // Before the site's other hooks, so the link-pinning hook (pinLinksHook) runs first
+    if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, m => m + hook);
+    if (/<!doctype[^>]*>/i.test(html)) return html.replace(/<!doctype[^>]*>/i, m => m + hook);
+    return hook + html;
+}
+// Runs inside the game page: moves the links the game asks for while it runs,
+// and if a source still fails, tries the others and tells the site.
+function gameMirrorHook(MAP, T, DOWN) {
+    try {
+        var ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "github"];
+        var GH = /^https:\/\/raw\.githubusercontent\.com\//;
+        var nameOf = function (u) {
+            var m = /^https?:\/\/([^\/]+)\//.exec(u || ""); if (!m) return "";
+            var h = m[1];
+            if (/^(cdn|fastly|gcore|testingcf)\.jsdelivr\.net$/.test(h)) return h.split(".")[0] === "cdn" ? "jsdelivr" : h.split(".")[0];
+            return h === "raw.githubusercontent.com" ? "github" : /githack\.com$/.test(h) ? "githack" : "";
+        };
+        var map = function (u) { try { return MAP(String(u), T, DOWN); } catch (e) { return u; } };
+        var abs = function (u) { try { return new URL(String(u), document.baseURI).href; } catch (e) { return String(u); } };
+        var tell = function (n) { try { if (parent && parent.gnMirrorFailed) parent.gnMirrorFailed(n); } catch (e) {} };
+        var of = window.fetch;
+        if (of) window.fetch = function (u, o) {
+            var self = this, s = typeof u === "string" ? u : u instanceof URL ? String(u) : (u && u.url) || "";
+            var m = map(s);
+            if (m !== s) { if (typeof u === "string" || u instanceof URL) u = m; else { try { u = new Request(m, u); } catch (e) {} } }
+            return of.call(self, u, o).catch(function (err) {
+                var cur = abs(typeof u === "string" ? u : u instanceof URL ? String(u) : (u && u.url) || ""), n = nameOf(cur);
+                if (!n) throw err;
+                tell(n);
+                var down = DOWN.concat([n]), alts = ORDER.filter(function (t) { return down.indexOf(t) < 0; });
+                var next = function (i) {
+                    if (i >= alts.length) return Promise.reject(err);
+                    var u2 = MAP(cur, alts[i], down);
+                    if (u2 === cur) return next(i + 1);
+                    return of.call(self, u2, o).catch(function () { tell(alts[i]); down.push(alts[i]); return next(i + 1); });
+                };
+                return next(0);
+            });
+        };
+        var xo = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (meth, u) { if (typeof u === "string" || u instanceof URL) arguments[1] = map(abs(u)) === abs(u) ? u : map(abs(u)); return xo.apply(this, arguments); };
+        // A script from GitHub only runs as a local copy (see loadGithubScriptsAndStyles)
+        var viaCopy = function (u, done) {
+            of(u).then(function (r) { if (!r.ok) throw 0; return r.text(); })
+                .then(function (t) { done(URL.createObjectURL(new Blob([t], { type: "text/javascript" }))); })
+                .catch(function () { done(u); });
+        };
+        var setLink = function (el, v, set) {
+            var a = abs(v), m = map(a);
+            if (m === a && !GH.test(a)) return set(v);
+            if (el instanceof HTMLScriptElement && GH.test(m) && el.type !== "module") return viaCopy(m, set);
+            set(m);
+        };
+        [[window.HTMLScriptElement, "src"], [window.HTMLImageElement, "src"], [window.HTMLMediaElement, "src"], [window.HTMLSourceElement, "src"], [window.HTMLLinkElement, "href"]].forEach(function (x) {
+            var C = x[0], k = x[1]; if (!C) return;
+            var d = Object.getOwnPropertyDescriptor(C.prototype, k);
+            if (!d || !d.set) return;
+            Object.defineProperty(C.prototype, k, { configurable: true, enumerable: d.enumerable, get: d.get, set: function (v) { var el = this; setLink(el, v, function (w) { d.set.call(el, w); }); } });
+        });
+        var sa = Element.prototype.setAttribute;
+        Element.prototype.setAttribute = function (n, v) {
+            var el = this;
+            if (/^(src|href)$/i.test(n) && typeof v === "string" && v.indexOf("data:") !== 0 && v.indexOf("blob:") !== 0) return setLink(el, v, function (w) { sa.call(el, n, w); });
+            return sa.apply(el, arguments);
+        };
+    } catch (e) {}
+}
+// A game page found a source down while running
+window.gnMirrorFailed = function (name) { if (MIRRORS[name]) markMirror(name, false); };
 // Cover image URL from the best working source, with the rest kept as fallbacks
 function coverSources(cover) {
     if (!cover) return [];
@@ -1604,14 +1753,14 @@ async function fetchWithFallback(rawUrl, onTry) {
         // "no-cache": always ask whether the page changed (cheap when it hasn't), so a
         // fixed game reaches players right away instead of after the 10-minute cache
         const html = await fetchFirst(urls, { timeoutMs: 30000, stagger: 2500, onTry, cache: "no-cache", validate: res => res.text() });
-        return rewriteForMirrors(cleanGameHtml(html));
+        return adaptGameToMirrors(cleanGameHtml(html));
     }
     // GN Originals: "gh:owner/repo@sha/path"
     if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) {
         let html = await fetchOriginalHtml(rawUrl, onTry);
         // UBZone games: keep their own links on the checked version (ubzone.js)
         if (typeof isUbzoneGhUrl === "function" && isUbzoneGhUrl(rawUrl)) html = pinUbzoneRefs(html);
-        return rewriteForMirrors(html);
+        return adaptGameToMirrors(html);
     }
     // Game pages: try every source (jsDelivr, GitHub, githack), working ones first
     const suffix = rawUrl.replace("{HTML_URL}", "").replace("{COVER_URL}", "").replace(/^\//, "");
@@ -1620,7 +1769,7 @@ async function fetchWithFallback(rawUrl, onTry) {
         ? mirrorUrls("freebuisness", "html", LIBRARY_REF, suffix)
         : [rawUrl.replace("{COVER_URL}", coverURL).replace("{HTML_URL}", htmlURL)];
     const html = await fetchFirst(candidates, { timeoutMs: 30000, stagger: 2500, onTry, validate: res => res.text() });
-    return rewriteForMirrors(cleanGameHtml(html));
+    return adaptGameToMirrors(cleanGameHtml(html));
 }
 
 // Game pages started early (card hover). Kept briefly, at most a few.

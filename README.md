@@ -48,7 +48,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - To add more later, scan the new files the same way and only point `ref` or `pins` at commits you've checked.
 
 **Reliable**
-- Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, links inside games are rewritten when jsDelivr is down, and the last game list is kept as an offline backup.
+- Every game-library file has three sources (jsDelivr → GitHub → githack). Failed or filtered sources are skipped automatically, and the last game list is kept as an offline backup. When the source a game uses is down or blocked, its links move to one that's been checked and works (jsDelivr's backup addresses, then githack, then GitHub), both in the page and for files the game asks for while it runs (`adaptGameToMirrors` / `gameMirrorHook` in js/app.js). When GitHub is the only source left, scripts and stylesheets are loaded from it as local copies, since browsers won't run them straight from GitHub.
 
 **Clean games**
 - Ad loaders, ad banners and Google Analytics are stripped from every library and GN Originals game before it runs, and known ad and tracking hosts are blocked as a backup.
