@@ -2321,14 +2321,14 @@
   },
   "796": {
    "s": "slow",
-   "at": "2026-11-02",
-   "t": "2026-11-02T19:38:30.444Z",
+   "at": "2026-11-03",
+   "t": "2026-11-03T17:11:59.595Z",
    "why": "Still loading after 47s: \"LOADING... 0.00 MB / 58.96 MB\"",
    "errors": [
     "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/UnityLoader.js",
     "Failed https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/UnityLoader.js",
     "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part1",
-    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.asm.code.unityweb.part2"
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/SLENDYTUBBIES@efd9ef91acd1282a9ec4cae5bfd2fadc4f9f07ce/1/Build/ST1.data.unityweb.part1"
    ],
    "since": "2026-10-31"
   },
@@ -2378,15 +2378,15 @@
    "t": "2026-10-31T15:32:19.157Z"
   },
   "806": {
-   "s": "broken",
-   "at": "2026-11-02",
-   "t": "2026-11-02T19:38:59.828Z",
-   "why": "The test browser crashed on this game",
+   "s": "slow",
+   "at": "2026-11-03",
+   "t": "2026-11-03T17:11:57.052Z",
+   "why": "Still loading after 46s: \"LOADING... 298.62 MB / 298.61 MB\"",
    "errors": [
     "Script error: UnityLoader is not defined",
     "Script error: Failed to execute 'put' on 'Cache': Unexpected internal error."
    ],
-   "since": "2026-11-02"
+   "since": "2026-11-03"
   },
   "807": {
    "s": "ok",
@@ -2606,11 +2606,9 @@
    "t": "2026-11-02T19:00:53.760Z"
   },
   "300013": {
-   "s": "broken",
-   "at": "2026-11-02",
-   "t": "2026-11-02T19:02:01.510Z",
-   "why": "Blank page",
-   "since": "2026-11-02"
+   "s": "ok",
+   "at": "2026-11-03",
+   "t": "2026-11-03T17:12:02.624Z"
   },
   "300015": {
    "s": "ok",
@@ -3113,17 +3111,9 @@
    "t": "2026-11-02T19:07:37.551Z"
   },
   "990128": {
-   "s": "slow",
-   "at": "2026-11-02",
-   "t": "2026-11-02T19:08:47.797Z",
-   "why": "The test server couldn't download this game's files (it usually works for players)",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/npm/kaboom@2001.0.0-alpha.21/dist/kaboom.js",
-    "Script error: kaboom is not defined",
-    "Script error: getData is not defined",
-    "Script error: scene is not defined"
-   ],
-   "since": "2026-11-02"
+   "s": "ok",
+   "at": "2026-11-03",
+   "t": "2026-11-03T17:12:07.151Z"
   },
   "990129": {
    "s": "ok",
@@ -3427,11 +3417,11 @@
   }
  },
  "next": 798,
- "updated": "2026-11-02T20:24:22.211Z",
+ "updated": "2026-11-03T17:12:07.152Z",
  "total": 1899,
  "counts": {
-  "ok": 717,
+  "ok": 719,
   "slow": 4,
-  "broken": 3
+  "broken": 1
  }
 }
