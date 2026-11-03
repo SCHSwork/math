@@ -8,7 +8,6 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 
 **Playing**
 - **Today's pick** (game of the day) at the top of the page, the same for everyone each day
-- **🧩 Daily Guess** (home tab): name the game from a zoomed-in piece of its cover. Same puzzle for everyone each day, 6 tries; each miss zooms out and unlocks a clue (genre, creator, the shape of the name, first letters), and misses that share a genre or creator count as close. Ends with a Play button, streak stats and a copyable emoji result. Two days a week it's a featured game. Kept in `gnmath-guess` (`js/guess.js`)
 - **Smart search** that handles typos, missing spaces and abbreviations ("geomtry dash", "fnaf"), and works together with tag filters
 - Sort by name, newest, date added, popular, trending, top rated or my most played
 - Filter by **genre** (17 genres), **source** (library / GN Originals / js13k / partner games), **show** (not played yet, played, favorites, hide broken, well liked) and **type** (ports, Flash, emulators…)

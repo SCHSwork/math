@@ -69,8 +69,7 @@ function achStats() {
         night: a.night, early: a.early, weekendDays: a.weekendDays.length,
         genres: genres.size, originals, jam, newPlays: a.newPlays,
         bestDay: Math.max(0, ...Object.values(perDay)),
-        halloween: (a.hw || []).length, spooky: Object.keys(a.spooky || {}).length,
-        ...(() => { const g = typeof guessStats === "function" ? guessStats() : {}; return { guessWins: g.wins || 0, guessAce: g.ace || 0, guessBest: g.best || 0 }; })()
+        halloween: (a.hw || []).length, spooky: Object.keys(a.spooky || {}).length
     };
 }
 
@@ -107,10 +106,6 @@ const ACH_BADGES = [
     ["weekend", "🛋️", "Weekend Warrior", "Play on 4 weekend days", "weekendDays", 4, 50],
     ["originals", "🏠", "Homegrown", "Play 5 GN Originals", "originals", 5, 75],
     ["jam", "🧩", "Jam Session", "Play 10 js13k jam games", "jam", 10, 75],
-    ["guess1", "🔎", "Sharp Eye", "Solve a Daily Guess", "guessWins", 1, 25],
-    ["guess2", "🧠", "Know-It-All", "Solve 15 Daily Guesses", "guessWins", 15, 150],
-    ["guessace", "🎯", "Eagle Eye", "Solve a Daily Guess on the first try", "guessAce", 1, 100],
-    ["guessstreak", "📸", "Picture Perfect", "Solve the Daily Guess 5 days in a row", "guessBest", 5, 150],
     ["trickortreat", "🎃", "Trick or Treat", "Play a game on Halloween (Oct 31). Limited time!", "halloween", 1, 100],
     ["spookyseason", "👻", "Spooky Season", "Play 5 spooky games during Halloween week. Limited time!", "spooky", 5, 150]
 ].map(([id, icon, name, desc, stat, goal, xp]) => ({ id, icon, name, desc, stat, goal, xp }));
@@ -127,7 +122,6 @@ function achXp(stats, earned) {
         stats.ratings * 5 +
         Math.min(stats.reports, 20) * 10 +
         stats.gotd * 25 +
-        (stats.guessWins || 0) * 15 +
         earned.reduce((n, b) => n + b.xp, 0)
     );
 }
