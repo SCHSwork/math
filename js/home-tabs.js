@@ -1,5 +1,6 @@
 // ═════════════════════════════════════════════════════════════════════════════
-// Home page tabs. Top 10, Featured, New, Recent, Favorites and GN Originals
+// Home page tabs. Top 10, Featured, New, Recent, Favorites, GN Originals and
+// the Daily Guess puzzle (js/guess.js)
 // used to be stacked rows; now they share one spot and you pick one with the
 // tabs (the choice is remembered). The rows still fill themselves exactly as
 // before; this only decides which one is showing. Game of the Day sits at the
@@ -20,7 +21,8 @@
         { id: "new", label: "New", icon: "🆕", panel: "newGamesWrapper", ok: () => !$("newGamesWrapper").hidden, count: () => (($("newGamesSummary") || {}).querySelector?.(".section-count") || {}).textContent || "" },
         { id: "recent", label: "Recent", icon: "🕘", panel: "yourGames", ok: () => shelfCount("recentZones") > 0, your: "recent" },
         { id: "favorites", label: "Favorites", icon: "♥", panel: "yourGames", ok: () => shelfCount("favoriteZones") > 0, your: "favorites", count: () => String(shelfCount("favoriteZones") || "") },
-        { id: "originals", label: "GN Originals", icon: "🏠", panel: "originalsWrapper", ok: () => !$("originalsWrapper").hidden }
+        { id: "originals", label: "GN Originals", icon: "🏠", panel: "originalsWrapper", ok: () => !$("originalsWrapper").hidden },
+        { id: "guess", label: "Daily Guess", icon: "🧩", panel: "guessWrapper", ok: () => !$("guessWrapper").hidden, count: () => typeof guessTabCount === "function" ? guessTabCount() : "" }
     ];
     let current = null;
     try { current = localStorage.getItem(KEY); } catch {}
@@ -77,6 +79,7 @@
     }
     function select(id, byUser) {
         current = id;
+        if (id === "guess" && byUser && typeof guessMarkSeen === "function") guessMarkSeen();
         if (byUser) { picked = true; try { localStorage.setItem(KEY, id); } catch {} }
         bar.dataset.sig = "";
         render();
@@ -97,7 +100,7 @@
     let timer = null;
     const soon = () => { if (applying) return; clearTimeout(timer); timer = setTimeout(render, 60); };
     const mo = new MutationObserver(soon);
-    ["top10Wrapper", "featuredZonesWrapper", "newGamesWrapper", "originalsWrapper", "yourGames", "spookyWrapper"].forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
+    ["top10Wrapper", "featuredZonesWrapper", "newGamesWrapper", "originalsWrapper", "yourGames", "spookyWrapper", "guessWrapper"].forEach(id => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
     ["featuredZones", "recentZones", "favoriteZones", "newGamesSummary"].forEach(id => { const el = $(id); if (el) mo.observe(el, { childList: true, characterData: true, subtree: id === "newGamesSummary" }); });
     window.renderHomeTabs = render;
     render();

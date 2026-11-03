@@ -3328,3 +3328,68 @@ body.skin-no-scenes .scenes-off-note { display: block; margin: .4rem 0 .2rem; fo
 .gc-h { margin: 0.9rem 0 0.5rem; }
 .gc-ok { color: #4ade80; } .gc-bad { color: #f87171; }
 .gc-slow { margin-top: 0.8rem; } .gc-slow > summary { cursor: pointer; font-weight: 700; margin-bottom: 0.5rem; }
+
+/* ── Daily Guess (js/guess.js) ─────────────────────────────────────────── */
+.guess-section[hidden] { display: none; }
+.guess-body { display: flex; gap: 1.25rem; align-items: flex-start; }
+.guess-frame { position: relative; flex: 0 0 auto; width: min(260px, 42vw); aspect-ratio: 1; overflow: hidden; border-radius: var(--radius); background: var(--bg-secondary); border: 1px solid var(--border); box-shadow: var(--shadow-sm); user-select: none; }
+.guess-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.7s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.guess-frame.solved { border-color: var(--success); }
+.guess-frame.pop { animation: guess-pop 0.6s ease; }
+@keyframes guess-pop { 0% { transform: scale(1); } 40% { transform: scale(1.05); box-shadow: 0 0 0 6px color-mix(in srgb, var(--success) 35%, transparent); } 100% { transform: scale(1); } }
+.guess-zoom { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #fff; background: rgb(0 0 0 / 0.55); backdrop-filter: blur(4px); }
+.guess-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.guess-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.guess-label { font-size: 1.15rem; font-weight: 800; }
+.guess-tries { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+.guess-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.guess-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm); font-size: 14px; background: var(--surface-hover); border: 1px solid var(--border); }
+.guess-list .g-mark { width: 1.1em; text-align: center; font-weight: 800; }
+.guess-list .g-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guess-list .g-note { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.guess-list .g-wrong .g-mark { color: var(--primary); }
+.guess-list .g-close { border-color: color-mix(in srgb, var(--warning) 55%, var(--border)); background: color-mix(in srgb, var(--warning) 12%, var(--surface)); }
+.guess-list .g-close .g-mark { color: var(--warning); }
+.guess-list .g-right { border-color: var(--success); background: color-mix(in srgb, var(--success) 14%, var(--surface)); }
+.guess-list .g-right .g-mark { color: var(--success); }
+.guess-list .g-skip { color: var(--text-muted); font-style: italic; }
+.guess-list .shake { animation: guess-shake 0.35s ease; }
+@keyframes guess-shake { 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
+.guess-clues { display: flex; flex-wrap: wrap; gap: 6px; }
+.guess-clue { display: inline-flex; align-items: baseline; gap: 0.4rem; padding: 0.3rem 0.65rem; border-radius: 999px; background: var(--accent-light); font-size: 13px; }
+.guess-clue .gc-name { font-weight: 700; color: var(--accent-text); }
+.guess-clue.g-shape .gc-value { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.08em; white-space: pre; }
+.guess-form { position: relative; }
+.guess-row { display: flex; gap: 0.5rem; }
+.guess-row input { flex: 1; min-width: 0; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 15px; }
+.guess-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+.guess-skip, .gr-share { padding: 0.6rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+.guess-skip:hover, .gr-share:hover { background: var(--surface-hover); }
+.guess-suggest { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
+.guess-suggest[hidden] { display: none; }
+.guess-suggest li { padding: 0.5rem 0.65rem; border-radius: 6px; cursor: pointer; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guess-suggest li.on, .guess-suggest li:hover { background: var(--primary-light); }
+.guess-result { display: flex; flex-direction: column; gap: 0.45rem; }
+.gr-title { font-size: 13px; font-weight: 700; color: var(--accent-text); }
+.gr-name { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+.gr-by { font-size: 13px; color: var(--text-muted); margin-top: -0.3rem; }
+.gr-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+.gr-actions .gr-play { width: auto; min-width: 0; margin: 0; padding: 0.6rem 1.4rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-stats { display: flex; gap: 1.25rem; margin-top: 0.3rem; }
+.gr-stats div { display: flex; flex-direction: column; }
+.gr-stats b { font-size: 1.2rem; }
+.gr-stats span { font-size: 12px; color: var(--text-muted); }
+.gr-dist { display: flex; flex-direction: column; gap: 3px; max-width: 320px; }
+.gd-row { display: flex; align-items: center; gap: 0.4rem; font-size: 12px; }
+.gd-n { width: 0.8em; color: var(--text-muted); font-weight: 700; }
+.gd-bar { min-width: 1.6em; padding: 1px 6px; border-radius: 4px; text-align: right; font-weight: 700; background: var(--surface-hover); color: var(--text-muted); }
+.gd-row.today .gd-bar { background: var(--success); color: #fff; }
+.gr-next { font-size: 12px; color: var(--text-light); }
+@media (max-width: 640px) {
+    .guess-body { flex-direction: column; align-items: stretch; }
+    .guess-frame { width: min(240px, 70vw); align-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .guess-frame img { transition: none; }
+    .guess-frame.pop, .guess-list .shake { animation: none; }
+}
