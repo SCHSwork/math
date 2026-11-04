@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 4, 2026 — More games work on more computers
+
+### Fixed
+- **Games no longer depend on outside library sites.** About 40 games load common libraries (jQuery, JSZip, Phaser, p5, Font Awesome and others) from code.jquery.com, cdnjs, Google's library site, jsDelivr or unpkg, and stopped at a black screen or "$ is not defined" wherever a filter blocks one of those. The site now keeps its own copies of all 29 (`vendor/libs/`, made by `tools/vendor_libs.py`) and games use those. They're the exact published files: jQuery straight from jQuery's own CDN repo, the rest from npm, checked against npm's hash. Among them: all four Five Nights at Freddy's games, DOOM, Doom 2, Fallout, The Oregon Trail, Sandtris, Idle Shark, Eel Slap! and Ballistic Chickens.
+- **Games keep going when browser storage is full or off.** 25 games save their download with the browser's cache and waited for that to finish before starting, so in a private window, with storage turned off by a school, or with a full disk they never started (Slendytubbies 2 stopped at "LOADING... 298 MB / 298 MB"). A failed save is now skipped and the game starts; it just downloads again next time. A game whose save hits a full browser storage no longer crashes either, and the player is told saving isn't working.
+- **A message instead of a black screen without 3D graphics.** When a game needs WebGL and the browser has it turned off or blocked, players now get a message saying to turn on "Use graphics acceleration when available".
+- **Slendytubbies 1 starts again.** Its game files were replaced in their repo by a different build, so the page couldn't find them (HTTP 404). Both Slendytubbies games are now locked to the last version that has the files their pages use (web-ports/SLENDYTUBBIES `98de1c0`).
+
 ## November 3, 2026 — Smaller covers
 
 ### Changed
