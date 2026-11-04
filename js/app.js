@@ -243,6 +243,23 @@ function useLocalRuffle(html) {
         // often blocked or slow: use the site's copy for those too
         .replace(/https?:\/\/(?:unpkg\.com|(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/npm)\/@ruffle-rs\/ruffle(?:@latest)?(?:\/ruffle(?:\.min)?\.js)?(?=["'\s>])/g, local);
 }
+// Common libraries (jQuery, JSZip, Phaser, p5…): games that load them from
+// code.jquery.com, cdnjs, ajax.googleapis.com, jsDelivr or unpkg get the site's
+// own copy (vendor/libs/, made by tools/vendor_libs.py: the exact published
+// files). A filter that blocks one of those CDNs used to leave the game at a
+// black screen or "$ is not defined".
+let localLibs = {};   // CDN address (no https://) → copy in vendor/libs/
+const LIB_CDN_RE = /(?:https?:)?\/\/(code\.jquery\.com|ajax\.googleapis\.com|cdnjs\.cloudflare\.com|(?:maxcdn|stackpath)\.bootstrapcdn\.com|(?:cdn|fastly|gcore|testingcf|quantil)\.jsdelivr\.net\/npm|unpkg\.com)\/([^\s"'`<>()\\?#]+)/gi;
+function localLibUrl(host, path) {
+    host = host.toLowerCase();
+    const key = /jsdelivr\.net\/npm$|^unpkg\.com$/.test(host) ? "npm/" + path : host + "/" + path;
+    const copy = localLibs[key];
+    return copy ? new URL("vendor/libs/" + copy, location.href).href : null;
+}
+function useLocalLibs(html) {
+    if (typeof html !== "string" || !localLibs || !Object.keys(localLibs).length) return html;
+    return html.replace(LIB_CDN_RE, (m, host, path) => localLibUrl(host, path) || m);
+}
 // ── Game files from a source that works ─────────────────────────────────────
 // Games link to their files on jsDelivr (sometimes githack or GitHub). When the
 // source a game uses is down or blocked, its links are moved to one that works:
@@ -1306,6 +1323,10 @@ function loadPartSizes() {
         fetch("config/library-pins.json")
             .then(r => r.ok ? r.json() : null)
             .then(j => { libraryPins = (j && j.pins) || {}; })
+            .catch(() => {}),
+        fetch("config/local-libs.json")
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { localLibs = (j && j.libs) || {}; })
             .catch(() => {})
     ]);
     return partSizesPromise;
@@ -1602,6 +1623,81 @@ function gameAudioUnlockHook() {
 // (e.g. RPG Maker's music decoder) failed with "Failed to construct 'Worker'".
 // Start those workers from a tiny same-site file that loads the real one, and
 // make the worker's own relative links point at the game's folder.
+// Runs inside every game page. Things that used to stop games for some players:
+// - Browser storage full, turned off, or in a private window: games that save
+//   their download with the Cache API ("await cache.put(…)") stopped before
+//   starting, and games whose save hit a full localStorage crashed. Now a
+//   failed save is skipped (the game runs, it just can't keep that copy) and
+//   the player is told once that saving isn't working.
+// - No 3D graphics (WebGL off or blocked): the game showed a black screen with
+//   no explanation; now the player is told what to turn on.
+function gameStorageHook() {
+    var tell = function (kind) { try { if (parent && parent.gnGameNotice) parent.gnGameNotice(kind); } catch (e) {} };
+    try {
+        var noopCache = {
+            match: function () { return Promise.resolve(undefined); }, matchAll: function () { return Promise.resolve([]); },
+            put: function () { return Promise.resolve(); }, add: function () { return Promise.resolve(); }, addAll: function () { return Promise.resolve(); },
+            delete: function () { return Promise.resolve(false); }, keys: function () { return Promise.resolve([]); }
+        };
+        if (window.CacheStorage && CacheStorage.prototype.open) {
+            var co = CacheStorage.prototype.open;
+            CacheStorage.prototype.open = function () {
+                try { return co.apply(this, arguments).catch(function () { tell("cache"); return noopCache; }); }
+                catch (e) { tell("cache"); return Promise.resolve(noopCache); }
+            };
+            var cm = CacheStorage.prototype.match;
+            if (cm) CacheStorage.prototype.match = function () { try { return cm.apply(this, arguments).catch(function () { return undefined; }); } catch (e) { return Promise.resolve(undefined); } };
+        }
+        if (window.Cache) ["put", "add", "addAll"].forEach(function (k) {
+            var o = Cache.prototype[k];
+            if (o) Cache.prototype[k] = function () {
+                try { return o.apply(this, arguments).catch(function (e) { tell("cache"); console.warn("[gn] Couldn't save to the browser's cache:", e && e.message); }); }
+                catch (e) { tell("cache"); return Promise.resolve(); }
+            };
+        });
+        // No Cache API at all (some private windows and older browsers)
+        if (!("caches" in window)) Object.defineProperty(window, "caches", { configurable: true, value: {
+            open: function () { return Promise.resolve(noopCache); }, match: function () { return Promise.resolve(undefined); },
+            has: function () { return Promise.resolve(false); }, delete: function () { return Promise.resolve(false); }, keys: function () { return Promise.resolve([]); } } });
+    } catch (e) {}
+    try {
+        var si = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (k, v) {
+            try { return si.call(this, k, v); }
+            catch (e) {
+                if (e && (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED" || e.code === 22 || e.code === 1014)) {
+                    tell("full"); console.warn("[gn] Browser storage is full; this save was skipped");
+                    return;
+                }
+                throw e;
+            }
+        };
+    } catch (e) {}
+    try {
+        var gc = HTMLCanvasElement.prototype.getContext, told = false;
+        HTMLCanvasElement.prototype.getContext = function (type) {
+            var r = gc.apply(this, arguments);
+            if (!r && !told && /^(webgl2?|experimental-webgl)$/i.test(type)) {
+                // Null can just mean this canvas already has a 2D context; check a fresh one
+                var t = document.createElement("canvas");
+                if (!(gc.call(t, "webgl") || gc.call(t, "experimental-webgl"))) { told = true; tell("webgl"); }
+            }
+            return r;
+        };
+    } catch (e) {}
+}
+// A game page ran into one of the problems above: tell the player once per game
+const gameNoticesShown = new Set();
+window.gnGameNotice = function (kind) {
+    const id = typeof currentGameId !== "undefined" ? currentGameId : "";
+    const key = kind + "|" + id;
+    if (gameNoticesShown.has(key)) return;
+    gameNoticesShown.add(key);
+    const name = (document.getElementById("zoneName") || {}).textContent || "This game";
+    if (kind === "cache") console.info(`${name} couldn't save its download in the browser's storage, so it will download again next time`);
+    else if (kind === "full") notify(`Your browser's storage is full, so ${name} can't save your progress. Deleting other sites' data in your browser settings frees space.`, { type: "error", duration: 9000 });
+    else if (kind === "webgl") notify(`${name} needs 3D graphics (WebGL), which is off or not available in this browser. Turning on "Use graphics acceleration when available" in your browser's settings usually fixes it.`, { type: "error", duration: 10000 });
+};
 function crossOriginWorkerHook() {
     var W = window.Worker;
     if (!W) return;
@@ -1712,6 +1808,7 @@ function cleanGameHtml(html) {
     html = pinLibraryLinks(html, pagePins);
     html = fixMergedUnityParts(html);
     html = useLocalRuffle(html);
+    html = useLocalLibs(html);
     // A typo in one library copy (Ace Attorney Investigations): the "a" of
     // response.arrayBuffer() ended up after EJS_color = "…";
     html = html.replace(/\.rrayBuffer\(/g, ".arrayBuffer(").replace(/(EJS_color\s*=\s*"[^"\n]*";)a(\s)/g, "$1$2");
@@ -1756,6 +1853,7 @@ function cleanGameHtml(html) {
         (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
+        `<script>(${gameStorageHook.toString()})();<\/script>` +
         `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
