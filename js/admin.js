@@ -287,7 +287,8 @@ const ACTION_LABELS = {
     suspend: "suspended", unsuspend: "unsuspended", make_mod: "made a mod:", remove_mod: "removed mod from",
     make_admin: "made an admin:", remove_admin: "removed admin from", remove_ratings: "removed all ratings & reports from",
     remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of",
-    make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from", mark_fixed: "marked a game fixed:"
+    make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from", mark_fixed: "marked a game fixed:",
+    give_site_access: "let in while the site is closed:", remove_site_access: "removed closed-site access from"
 };
 let actionLogCache = null, actionLogFilter = "";
 async function renderActionLog() {
@@ -590,6 +591,15 @@ function adminRow(p) {
         notify(isMod ? `${p.username} is no longer a mod.` : `${p.username} is now a mod.`, { type: "success" });
         renderAdminList();
     });
+    if (typeof isAccessAllowed === "function") {
+        const allowed = isAccessAllowed(p.uid);
+        btn(allowed ? "Remove from closed-site access" : "Let in while site is closed", async () => {
+            setAccessAllowed(p.uid, allowed ? null : String(p.username || ""));
+            logAction(allowed ? "remove_site_access" : "give_site_access", p.uid, String(p.username || ""), "");
+            notify(allowed ? `${p.username} no longer gets in while the site is closed.` : `${p.username} can now get in while the site is closed.`, { type: "success" });
+            renderAdminList();
+        }, !isSiteOwner() ? { disabled: "Only the site owner can change this." } : {});
+    }
     btn(trusted ? "Remove trusted reporter" : "Make trusted reporter", async () => {
         const list = getTrustedReporters();
         setTrustedReporters(trusted ? list.filter(x => x.uid !== p.uid) : [...list, { uid: p.uid, name: String(p.username || "").slice(0, 40) }]);

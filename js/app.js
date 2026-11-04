@@ -2376,6 +2376,53 @@ let siteModePreview = false;
 const SITE_MODE_NAMES = { open: "open", locked: "locked", maintenance: "in maintenance", shutdown: "shut down" };
 function ownerBypassesLock() { return typeof ownerUnlockedThisTab === "function" && ownerUnlockedThisTab(); }
 
+// ── Getting in while the site is closed ─────────────────────────────────────
+// The owner can let chosen accounts through the lock, maintenance and shutdown
+// screens, and set a password that lets anyone who knows it through. Both are
+// saved with the other owner settings (siteAccess in config/owner-settings.json).
+// That file is public, so only a salted PBKDF2 hash of the password is kept.
+const SITE_ACCESS_KEY = "gnmath-owner-site-access";
+const SITE_PASS_OK_KEY = "gnmath-site-pass-ok";   // the hash this browser unlocked with
+const SITE_PASS_ITER = 150000;
+function getSiteAccess() {
+    let a = null;
+    try { a = JSON.parse(localStorage.getItem(SITE_ACCESS_KEY) || "null"); } catch {}
+    const allowed = a && Array.isArray(a.allowed) ? a.allowed.filter(x => x && typeof x.uid === "string" && /^[A-Za-z0-9_.@-]{6,128}$/.test(x.uid)).map(x => ({ uid: x.uid, name: String(x.name || "").slice(0, 40) })) : [];
+    const p = a && a.pass;
+    const pass = p && /^[0-9a-f]{32}$/.test(p.salt || "") && /^[0-9a-f]{64}$/.test(p.hash || "") && Number.isInteger(p.iter) && p.iter >= 10000 && p.iter <= 5000000 ? { salt: p.salt, hash: p.hash, iter: p.iter } : null;
+    return { allowed, pass };
+}
+function setSiteAccess(access) {
+    try { localStorage.setItem(SITE_ACCESS_KEY, JSON.stringify({ allowed: access.allowed || [], pass: access.pass || null })); } catch {}
+}
+async function hashSitePassword(password, saltHex, iter) {
+    const enc = new TextEncoder();
+    const salt = new Uint8Array(saltHex.match(/../g).map(h => parseInt(h, 16)));
+    const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, key, 256);
+    return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+// "account", "password" or "" (no way through)
+function siteAccessBypass() {
+    const a = getSiteAccess();
+    const me = typeof cloudUser !== "undefined" && cloudUser ? cloudUser.uid : "";
+    if (me && a.allowed.some(x => x.uid === me)) return "account";
+    let ok = "";
+    try { ok = localStorage.getItem(SITE_PASS_OK_KEY) || ""; } catch {}
+    if (a.pass && ok && ok === a.pass.hash) return "password";
+    return "";
+}
+async function trySitePassword(password) {
+    const a = getSiteAccess();
+    if (!a.pass || !password) return false;
+    let h = "";
+    try { h = await hashSitePassword(password, a.pass.salt, a.pass.iter); } catch { return false; }
+    if (h !== a.pass.hash) return false;
+    try { localStorage.setItem(SITE_PASS_OK_KEY, h); } catch {}
+    return true;
+}
+let siteAccessToldFor = "";
+
 // Called after each save: did the change go through?
 function noteSiteModeSaved(ok) {
     if (!siteModeSync.mode || siteModeSync.phase !== "saving") return;
@@ -2616,7 +2663,13 @@ function applyOwnerSiteMode() {
     if (mode === "open") siteModePreview = false;
     renderOwnerModeBar();
 
-    if (mode === "open" || (ownerBypassesLock() && !siteModePreview)) {
+    const via = mode === "open" || siteModePreview ? "" : siteAccessBypass();
+    if (via && !ownerBypassesLock() && siteAccessToldFor !== mode + via) {
+        siteAccessToldFor = mode + via;
+        notify(`GN 2.0 is ${SITE_MODE_NAMES[mode] || "closed"} for everyone else. You're in because ${via === "account" ? "your account has access" : "you entered the password"}.`, { duration: 7000 });
+    }
+    if (mode === "open") siteAccessToldFor = "";
+    if (mode === "open" || (ownerBypassesLock() && !siteModePreview) || via) {
         clearInterval(siteModeRecheckTimer);
         siteModeRecheckTimer = null;
         document.documentElement.classList.remove("site-mode-closed");
@@ -2630,7 +2683,9 @@ function applyOwnerSiteMode() {
 
     const note = getOwnerSiteMessage().trim();
     const backAt = mode === "shutdown" ? "" : getSiteBackAt();
-    const key = mode + "|" + note + "|" + backAt + "|" + siteModePreview;
+    const access = getSiteAccess();
+    const signedInAs = typeof cloudUser !== "undefined" && cloudUser && typeof currentUsername === "function" ? currentUsername() : "";
+    const key = mode + "|" + note + "|" + backAt + "|" + siteModePreview + "|" + !!access.pass + "|" + access.allowed.length + "|" + signedInAs;
     if (existingOverlay && existingOverlay.dataset.key === key && !existingOverlay.classList.contains("site-overlay-leaving")) return;
     if (existingOverlay) existingOverlay.remove();
 
@@ -2665,11 +2720,35 @@ function applyOwnerSiteMode() {
                 </button>
                 <span id="site-mode-checked" class="site-mode-checked"></span>
             </div>
+            ${access.pass || access.allowed.length ? `<div class="site-mode-access">
+                ${access.pass ? `<form class="site-mode-pass" autocomplete="off">
+                    <input type="password" class="site-mode-pass-input" placeholder="Have the password?" aria-label="Password to get in" autocomplete="off">
+                    <button type="submit" class="site-mode-pass-go">Enter</button>
+                </form><p class="site-mode-pass-msg" role="alert"></p>` : ""}
+                ${access.allowed.length ? (signedInAs
+                    ? `<p class="site-mode-signed">Signed in as <b></b>, which doesn't have access. <button type="button" class="site-mode-signin">Switch account</button></p>`
+                    : `<button type="button" class="site-mode-signin">Have an account with access? Sign in</button>`) : ""}
+            </div>` : ""}
             ${siteModePreview
                 ? `<button type="button" class="site-mode-preview-close">Close preview (this is what visitors see)</button>`
                 : `<button type="button" class="site-mode-owner">Owner access</button>`}
         </div>`;
     if (note) overlay.querySelector(".site-mode-note-text").textContent = note;
+    const signedB = overlay.querySelector(".site-mode-signed b");
+    if (signedB) signedB.textContent = signedInAs;
+    const signinBtn = overlay.querySelector(".site-mode-signin");
+    if (signinBtn) signinBtn.onclick = () => { if (typeof openAccountPanel === "function") openAccountPanel(); };
+    const passForm = overlay.querySelector(".site-mode-pass");
+    if (passForm) passForm.onsubmit = async e => {
+        e.preventDefault();
+        const input = passForm.querySelector("input"), go = passForm.querySelector("button"), msg = overlay.querySelector(".site-mode-pass-msg");
+        go.disabled = true; msg.textContent = "Checking…"; msg.classList.remove("bad");
+        const ok = await trySitePassword(input.value);
+        if (ok) { msg.textContent = ""; if (siteModePreview) { notify("That's the right password. (You're previewing, so the screen stays up.)", { type: "success" }); go.disabled = false; return; } applyOwnerSiteMode(); return; }
+        await new Promise(r => setTimeout(r, 800));   // slows down guessing
+        go.disabled = false; input.value = ""; input.focus();
+        msg.textContent = "That's not the password."; msg.classList.add("bad");
+    };
     overlay.querySelector("#site-mode-check").onclick = () => recheckSiteMode(true);
     // Owner access lets the owner in (with the owner bar) without reopening the site for everyone
     const ownerBtn = overlay.querySelector(".site-mode-owner");
@@ -2751,6 +2830,22 @@ function renderOwnerPanel() {
         </div>
         <button class="settings-button" type="button" onclick="saveSiteMessageFromPanel()">Save Message &amp; Time</button>
         <p style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);">Visitors' screens check every minute and open by themselves when you switch back to Open (GitHub can take a few minutes to pass the change on).</p>
+        <h4 style="margin:1.25rem 0 0.35rem;">Who can still get in</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">These accounts, and anyone with the password, get past the lock, maintenance and shutdown screens. Everyone else still sees the screen.</p>
+        <div id="owner-access-list" class="owner-panel-list"></div>
+        <form id="owner-access-add" style="display:flex;gap:0.5rem;margin:0.5rem 0;" onsubmit="ownerAddAccessAccount(event)">
+            <input type="text" id="owner-access-username" placeholder="Username to let in" autocomplete="off" spellcheck="false"
+                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">
+            <button class="settings-button" type="submit" style="width:auto;padding:0 1rem;">Add</button>
+        </form>
+        <label style="display:block;margin:0.75rem 0 0.4rem;">Password to get in <span id="owner-access-pass-state" style="font-weight:400;font-size:13px;color:var(--text-muted);"></span></label>
+        <form style="display:flex;gap:0.5rem;" onsubmit="ownerSetAccessPassword(event)">
+            <input type="password" id="owner-access-pass" placeholder="New password" autocomplete="new-password"
+                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">
+            <button class="settings-button" type="submit" style="width:auto;padding:0 1rem;">Set</button>
+            <button class="settings-button" type="button" id="owner-access-pass-clear" style="width:auto;padding:0 1rem;" onclick="ownerClearAccessPassword()">Remove</button>
+        </form>
+        <p style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);">Changing or removing the password signs out everyone who used the old one. Use one that's hard to guess: it's checked in the visitor's browser, like the rest of the lock.</p>
     </div>
 
     <div class="settings-section">
@@ -2897,6 +2992,7 @@ function renderOwnerPanel() {
     document.getElementById('popupOverlay').style.display = "flex";
     renderOwnerReports(true);
     renderOwnerTrusted();
+    renderOwnerAccess();
     if (typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
     renderOwnerModeBar();
 }
@@ -2906,6 +3002,92 @@ function timeAgo(ms) {
     if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`;
     if (s < 86400) return `${Math.round(s / 3600)} h ago`;
     return `${Math.round(s / 86400)} days ago`;
+}
+
+function renderOwnerAccess() {
+    const list = document.getElementById("owner-access-list");
+    if (!list) return;
+    const a = getSiteAccess();
+    list.innerHTML = "";
+    if (!a.allowed.length) {
+        const p = document.createElement("p");
+        p.style.cssText = "margin:0.25rem;color:var(--text-muted);font-size:13px;";
+        p.textContent = "No accounts yet.";
+        list.appendChild(p);
+    }
+    a.allowed.forEach(t => {
+        const row = document.createElement("div");
+        row.className = "owner-game-row";
+        row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.4rem 0.25rem;";
+        const name = document.createElement("span");
+        name.textContent = t.name || t.uid;
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "settings-button"; btn.style.width = "auto"; btn.textContent = "Remove";
+        btn.onclick = () => setAccessAllowed(t.uid, null);
+        row.append(name, btn);
+        list.appendChild(row);
+    });
+    const st = document.getElementById("owner-access-pass-state");
+    if (st) st.textContent = a.pass ? "(a password is set)" : "(none set)";
+    const clr = document.getElementById("owner-access-pass-clear");
+    if (clr) clr.disabled = !a.pass;
+}
+// Add (name given) or remove (name null) an account; used here and in the Admin Panel
+function setAccessAllowed(uid, name) {
+    const a = getSiteAccess();
+    a.allowed = a.allowed.filter(x => x.uid !== uid);
+    if (name !== null) a.allowed.push({ uid, name: String(name || "").slice(0, 40) });
+    setSiteAccess(a);
+    githubAutoSync();
+    renderOwnerAccess();
+    applyOwnerSiteMode();
+    if (!getGithubPat()) notify("Saved in this browser only. Add your GitHub token above so it applies for everyone.", { type: "error" });
+}
+function isAccessAllowed(uid) { return !!uid && getSiteAccess().allowed.some(x => x.uid === uid); }
+async function ownerAddAccessAccount(e) {
+    e.preventDefault();
+    const input = document.getElementById("owner-access-username");
+    const name = (typeof normalizeUsername === "function" ? normalizeUsername(input.value) : input.value.trim().toLowerCase());
+    if (!name) return;
+    if (typeof cloudUser !== "undefined" && cloudUser && currentUsername().toLowerCase() === name) {
+        setAccessAllowed(cloudUser.uid, currentUsername()); input.value = "";
+        notify(`${currentUsername()} can now get in while the site is closed.`, { type: "success" });
+        return;
+    }
+    if (typeof cloudDb === "undefined" || !cloudDb) { notify("Accounts haven't loaded yet. Try again in a moment.", { type: "error" }); return; }
+    try {
+        const snap = await cloudDb.collection("profiles").where("username", "==", name).limit(1).get();
+        if (snap.empty) { notify(`No account called "${name}". It has to have visited the site while signed in at least once.`, { type: "error" }); return; }
+        const doc = snap.docs[0];
+        setAccessAllowed(doc.id, doc.data().username || name);
+        input.value = "";
+        notify(`${doc.data().username || name} can now get in while the site is closed.`, { type: "success" });
+    } catch (err) {
+        notify("Couldn't look that account up. Sign in to your owner account on this browser first.", { type: "error" });
+    }
+}
+async function ownerSetAccessPassword(e) {
+    e.preventDefault();
+    const input = document.getElementById("owner-access-pass");
+    const pw = input.value;
+    if (pw.length < 6) { notify("Use at least 6 characters.", { type: "error" }); return; }
+    const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+    const hash = await hashSitePassword(pw, salt, SITE_PASS_ITER);
+    const a = getSiteAccess();
+    a.pass = { salt, hash, iter: SITE_PASS_ITER };
+    setSiteAccess(a);
+    input.value = "";
+    githubAutoSync();
+    renderOwnerAccess();
+    notify(getGithubPat() ? "Password set. Anyone who enters it gets in while the site is closed." : "Password saved in this browser only. Add your GitHub token above so it applies for everyone.", { type: getGithubPat() ? "success" : "error" });
+}
+function ownerClearAccessPassword() {
+    const a = getSiteAccess();
+    a.pass = null;
+    setSiteAccess(a);
+    githubAutoSync();
+    renderOwnerAccess();
+    notify("Password removed. Only the accounts in the list can get in now.", { type: "success" });
 }
 
 function renderOwnerTrusted() {
@@ -3388,6 +3570,7 @@ function buildOwnerSettingsObject() {
         footerLinks: getFooterLinks() || [],
         visitorDefaults: getOwnerVisitorDefaults(),
         trustedReporters: getTrustedReporters(),
+        siteAccess: getSiteAccess(),
         ownerUid: getSiteOwnerUid(),
         updatedAt: new Date().toISOString()
     };
@@ -3418,6 +3601,10 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     }
     if (settings.statusOverride && typeof settings.statusOverride === "object") {
         setStatusOverride(settings.statusOverride, { sync: false });
+    }
+    if (settings.siteAccess && typeof settings.siteAccess === "object") {
+        setSiteAccess(settings.siteAccess);   // checked again whenever it's read (getSiteAccess)
+        setSiteAccess(getSiteAccess());
     }
     if (typeof settings.siteMode === "string") {
         localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, settings.siteMode);

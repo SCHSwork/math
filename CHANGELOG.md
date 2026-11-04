@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 4, 2026 — Let people in while the site is closed
+
+### Added
+- **Choose who still gets in** when the site is locked, in maintenance or shut down. In the Owner Panel under Website Status → "Who can still get in", add accounts by username (or use "Let in while site is closed" on an account in the Admin Panel). Those accounts skip the closed screen as soon as they sign in; everyone else still sees it.
+- **A password to get in.** Set one in the same place, and the closed screen gets a "Have the password?" box. Whoever enters it gets in on that browser until the password changes, so changing or removing it locks out everyone who used the old one. Wrong guesses are slowed down, and only a salted hash of the password is saved in config/owner-settings.json, never the password itself.
+- The closed screen also has "Have an account with access? Sign in", and people who get in are told the site is still closed for everyone else.
+- The modes themselves (Open, Locked, Maintenance, Shut down) work the same as before.
+
 ## November 4, 2026 — More games work on more computers
 
 ### Fixed

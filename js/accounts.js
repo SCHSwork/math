@@ -629,6 +629,8 @@ async function initCloudAccounts() {
             const wasSignedIn = !!cloudUser;
             cloudUser = user;
             updateAccountButton();
+            // An account the owner let in gets past the closed screen
+            if (typeof applyOwnerSiteMode === "function") applyOwnerSiteMode();
             if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
             clearInterval(cloudAutosaveTimer);
             if (user) {
