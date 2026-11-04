@@ -273,7 +273,8 @@ service cloud.firestore {
         && d.by == request.auth.uid && d.at == request.time
         && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
                         'remove_ratings', 'remove_rating', 'delete_submissions',
-                        'make_trusted', 'remove_trusted', 'mark_fixed']
+                        'make_trusted', 'remove_trusted', 'mark_fixed',
+                        'give_site_access', 'remove_site_access']
         && shortText(d.target, 128) && shortText(d.targetName, 40)
         && shortText(d.byName, 40) && shortText(d.detail, 200);
     }
