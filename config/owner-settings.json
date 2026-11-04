@@ -9,7 +9,7 @@
     "enabled": false,
     "type": "info"
   },
-  "siteMessage": "Test",
+  "siteMessage": "",
   "siteBackAt": "2026-11-04T20:20:00.000Z",
   "statusOverride": {
     "level": "auto",
@@ -48,5 +48,5 @@
     }
   ],
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-04T19:06:00.849Z"
+  "updatedAt": "2026-11-04T19:12:00.854Z"
 }
