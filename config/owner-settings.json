@@ -13,7 +13,7 @@
   "siteBackAt": "2026-11-04T20:20:00.000Z",
   "statusOverride": {
     "level": "auto",
-    "text": ""
+    "text": "get an account"
   },
   "motd": {
     "text": "Test",
@@ -48,5 +48,5 @@
     }
   ],
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-04T19:28:06.359Z"
+  "updatedAt": "2026-11-04T19:28:29.154Z"
 }
