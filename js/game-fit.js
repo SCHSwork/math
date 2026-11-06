@@ -125,8 +125,19 @@ function gameFitHook() {
         } catch (e) {}
         return false;
     }
+    // Unity works out where you click from the canvas's unscaled size, so when
+    // it's drawn bigger or smaller with a CSS scale every click and drag lands in
+    // the wrong spot (Angry Birds' slingshot couldn't be grabbed, -3's menu
+    // buttons missed). Unity games are made bigger for real instead, like Flash
+    // games: Unity then draws at the new size and clicks line up. Fixing the
+    // canvas's size also stops games that change their own resolution from
+    // shrinking on screen (-3 shrank to a few pixels).
+    function resizeInstead(el) {
+        if (/^RUFFLE/.test(el.tagName)) return true;
+        try { return el.tagName === "CANVAS" && !!(window.UnityLoader || window.createUnityInstance || window.unityInstance); } catch (e) { return false; }
+    }
     function apply(el, box, w, h, s) {
-        var ruffle = /^RUFFLE/.test(el.tagName);
+        var ruffle = resizeInstead(el);
         if (!cur || cur.box !== box) {
             restore();
             cur = { el: el, box: box, ruffle: ruffle, saved: box.getAttribute("style"), savedEl: el.getAttribute("style") };
@@ -134,12 +145,12 @@ function gameFitHook() {
         cur.w = w; cur.h = h; cur.s = s; cur.ew = el.offsetWidth; cur.eh = el.offsetHeight;
         var place = { position: "fixed", left: "50%", top: "50%", margin: "0", "max-width": "none", "max-height": "none", "min-width": "0", "min-height": "0", "box-sizing": "border-box" };
         if (ruffle) {
-            // Flash: make the player itself bigger, so it draws sharp at the new size
+            // Flash and older Unity: make the game itself bigger, so it draws sharp at the new size
             place.width = Math.floor(w * s) + "px"; place.height = Math.floor(h * s) + "px";
             place.transform = "translate(-50%, -50%)";
             set(box === el ? el : box, place);
             if (box !== el) set(el, { width: "100%", height: "100%" });
-            blackBackground(true);
+            blackBackground(/^RUFFLE/.test(el.tagName) || undefined);
         } else {
             if (s === 1 && cur.centerOnly) {
                 // Just centered: whole pixels, no transform, so even games that
@@ -163,8 +174,17 @@ function gameFitHook() {
         }
         blackBackground();
     }
+    var gaveUp = false, selfResized = 0;
     function check() {
-        if (!document.body) return;
+        if (!document.body || gaveUp) return;
+        // Some games size themselves from the page around them (-3 did); once the
+        // game was moved out of the page, they shrank it again and again until it
+        // was 5×5 pixels. If the game we placed shrinks to almost nothing, put it
+        // back where it was and leave this page alone.
+        if (cur && !cur.ruffle && document.contains(cur.el) && cur.ew > 0 &&
+            (cur.el.offsetWidth < Math.min(200, cur.ew * 0.5) || cur.el.offsetHeight < Math.min(150, cur.eh * 0.5))) {
+            restore(); gaveUp = true; return;
+        }
         var el = pickMain();
         if (!el) { if (cur && !document.contains(cur.el)) restore(); return; }
         var W = window.innerWidth, H = window.innerHeight;
@@ -180,8 +200,12 @@ function gameFitHook() {
             // Already placed: just follow size changes of the game and the window
             var w = cur.ruffle ? cur.w : cur.box.offsetWidth, h = cur.ruffle ? cur.h : cur.box.offsetHeight;
             if (!cur.ruffle && (Math.abs(el.offsetWidth - cur.ew) > 2 || Math.abs(el.offsetHeight - cur.eh) > 2 || Math.abs(w - cur.w) > 2 || Math.abs(h - cur.h) > 2)) {
-                // The game resized itself; if it now fills the window by itself, step back
-                restore(); stable.n = 0; return;
+                // The game resized itself; if it now fills the window by itself, step back.
+                // A game that keeps resizing itself each time it's placed (it sizes
+                // itself from the page) would never settle, so after twice it's left alone.
+                restore(); stable.n = 0;
+                if (++selfResized >= 2) gaveUp = true;
+                return;
             }
             var s = Math.min(W / w, H / h, 4);
             if (cur.centerOnly) s = Math.min(s, 1) > 0.995 ? 1 : Math.min(s, 1);
@@ -205,7 +229,7 @@ function gameFitHook() {
         // Pages with lots of text around the game (instructions, articles) keep their layout
         if (!over && textOutside(box) > 600) return;
         var s = Math.min(W / bw, H / bh, 4);
-        var centerOnly = !/^RUFFLE/.test(el.tagName) && !knownEngine(el);
+        var centerOnly = !resizeInstead(el) && !knownEngine(el);
         if (centerOnly) s = over ? Math.min(s, 1) : 1;
         apply(el, box, bw, bh, s);
         cur.centerOnly = centerOnly;

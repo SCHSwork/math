@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 6, 2026 — Fixes for games reported broken
+
+### Fixed
+- **Angry Birds: the slingshot works again.** Unity games work out where you click from the game's normal size, so when "Fit game to screen" drew one bigger, clicks and drags landed in the wrong spot and the bird couldn't be pulled back. Unity games are now made bigger for real (like Flash games) instead of being stretched, so they draw sharp and clicks line up.
+- **-3 no longer shrinks to a dot.** It changes its own resolution, and with nothing holding its size it shrank every time it was fitted until it was a few pixels wide (a black screen with a dot in the corner). Its size is now held while it's fitted, and if a game keeps resizing itself or shrinks to almost nothing, Fit game to screen backs off and leaves it alone.
+- **Big games stop failing with "out of memory".** About 120 games download in pieces and join them into one file. For the biggest ones the browser sometimes couldn't read that joined file back (Getting Over It, 692 MB, stopped at the Unity logo about half the time, and I Have No Mouth, and I Must Scream, 945 MB, never started). The site now hands the game the pieces it already downloaded straight from memory, then lets them go.
+- The nightly game check now includes every game players reported broken, and can be run for just those (Actions → Nightly game check → "Only the games players reported broken").
+
 ## November 6, 2026 — Save backups, mute, game sizes and game links
 
 ### Added
