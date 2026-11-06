@@ -1321,6 +1321,117 @@ function partGuardHook(SIZES, BIG) {
     } catch (e) {}
 }
 
+// Big games split into pieces (about 120 of them) download every piece, join
+// them with new Blob([...]) and hand the game a blob: link to the joined file.
+// For a file of hundreds of MB the browser keeps that copy in its blob storage,
+// and reading it back can fail with ERR_BLOB_OUT_OF_MEMORY on computers short on
+// memory (Getting Over It, 692 MB, stopped at the Unity logo about half the time).
+// This keeps the pieces the page joined, and when the game fetches that blob:
+// link it gets them straight from memory instead, as one download. The pieces
+// are let go once the game has read them. Anything else the page does with the
+// blob (save it, read it another way) still uses the real blob.
+function bigBlobHook() {
+    var OB = window.Blob, BIG = 64 * 1024 * 1024;
+    if (!OB || !window.WeakMap || !window.ReadableStream) return;
+    var pieces = new WeakMap(), byUrl = {};
+    var isBytes = function (x) { return x instanceof ArrayBuffer || ArrayBuffer.isView(x); };
+    try {
+        var B = function Blob(parts, opts) {
+            var b = new OB(parts, opts);
+            try {
+                if (Array.isArray(parts) && parts.length > 1 && parts.every(isBytes)) {
+                    var n = 0;
+                    for (var i = 0; i < parts.length; i++) n += parts[i].byteLength;
+                    if (n >= BIG && n === b.size) pieces.set(b, { parts: parts.slice(), size: n });
+                }
+            } catch (e) {}
+            return b;
+        };
+        B.prototype = OB.prototype;
+        try { Object.setPrototypeOf(B, OB); } catch (e) {}
+        window.Blob = B;
+        var cou = URL.createObjectURL, rou = URL.revokeObjectURL;
+        URL.createObjectURL = function (obj) {
+            var url = cou.apply(URL, arguments);
+            try { var p = obj && pieces.get(obj); if (p) byUrl[url] = { parts: p.parts, size: p.size, type: obj.type || "" }; } catch (e) {}
+            return url;
+        };
+        URL.revokeObjectURL = function (url) { delete byUrl[url]; return rou.apply(URL, arguments); };
+    } catch (e) { return; }
+    // XMLHttpRequest (DOSBox and older loaders): the same, as one ArrayBuffer
+    try {
+        var XP = XMLHttpRequest.prototype, xopen = XP.open, xsend = XP.send;
+        XP.open = function (method, url) {
+            this.__gnJoined = String(method).toUpperCase() === "GET" && byUrl[String(url)] ? String(url) : null;
+            return xopen.apply(this, arguments);
+        };
+        XP.send = function () {
+            var url = this.__gnJoined, p = url && byUrl[url], xhr = this;
+            if (!p || (xhr.responseType && xhr.responseType !== "arraybuffer")) return xsend.apply(this, arguments);
+            delete byUrl[url];
+            try { console.info("[GN 2.0] Joined file (" + Math.round(p.size / 1048576) + " MB) handed to the game from memory"); } catch (e) {}
+            var out;
+            try {
+                out = new Uint8Array(p.size);
+                for (var i = 0, at = 0; i < p.parts.length; i++) {
+                    var part = p.parts[i];
+                    out.set(part instanceof ArrayBuffer ? new Uint8Array(part) : new Uint8Array(part.buffer, part.byteOffset, part.byteLength), at);
+                    at += part.byteLength; p.parts[i] = null;
+                }
+            } catch (e) { return xsend.apply(this, arguments); }   // not enough memory for that: try the real blob
+            var state = 1;
+            var def = function (k, get) { try { Object.defineProperty(xhr, k, { configurable: true, get: get }); } catch (e) {} };
+            def("readyState", function () { return state; });
+            def("status", function () { return state === 4 ? 200 : 0; });
+            def("statusText", function () { return state === 4 ? "OK" : ""; });
+            def("response", function () { return state === 4 ? out.buffer : null; });
+            def("responseURL", function () { return url; });
+            xhr.getResponseHeader = function (h) { return /^content-length$/i.test(h) ? String(p.size) : /^content-type$/i.test(h) ? (p.type || "application/octet-stream") : null; };
+            xhr.getAllResponseHeaders = function () { return "content-length: " + p.size + "\r\ncontent-type: " + (p.type || "application/octet-stream") + "\r\n"; };
+            var fire = function (type, progress) {
+                try { xhr.dispatchEvent(progress ? new ProgressEvent(type, { lengthComputable: true, loaded: p.size, total: p.size }) : new Event(type)); } catch (e) {}
+            };
+            setTimeout(function () {
+                fire("loadstart", true);
+                state = 2; fire("readystatechange");
+                state = 3; fire("readystatechange"); fire("progress", true);
+                state = 4; fire("readystatechange");
+                fire("load", true); fire("loadend", true);
+            }, 0);
+        };
+    } catch (e) {}
+    var of = window.fetch;
+    if (!of) return;
+    window.fetch = function (input, init) {
+        var url = typeof input === "string" ? input : (input && input.url) || "";
+        var p = byUrl[url];
+        var method = (init && init.method) || (input && input.method) || "GET";
+        if (!p || String(method).toUpperCase() !== "GET") return of.apply(this, arguments);
+        delete byUrl[url];   // once: if the game asks again, it gets the real blob
+        try { console.info("[GN 2.0] Joined file (" + Math.round(p.size / 1048576) + " MB) handed to the game from memory"); } catch (e) {}
+        var i = 0, CH = 4 * 1024 * 1024, at = 0;
+        var body = new ReadableStream({
+            pull: function (c) {
+                while (i < p.parts.length) {
+                    var part = p.parts[i];
+                    var bytes = part instanceof ArrayBuffer ? new Uint8Array(part) : new Uint8Array(part.buffer, part.byteOffset, part.byteLength);
+                    if (at < bytes.byteLength) {
+                        // Copies of 4 MB at a time, so each piece can be let go once it's sent
+                        var end = Math.min(at + CH, bytes.byteLength);
+                        c.enqueue(bytes.slice(at, end));
+                        at = end;
+                        if (at >= bytes.byteLength) { p.parts[i] = null; i++; at = 0; }
+                        return;
+                    }
+                    p.parts[i] = null; i++; at = 0;
+                }
+                c.close();
+            }
+        });
+        var type = p.type || (/\.wasm/i.test(url) ? "application/wasm" : "application/octet-stream");
+        return Promise.resolve(new Response(body, { status: 200, headers: { "Content-Type": type, "Content-Length": String(p.size) } }));
+    };
+}
 // Sizes of split game files (config/part-sizes.json), loaded when the first game opens
 let gamePartSizes = null, gameBigFiles = {}, partSizesPromise = null;
 let libraryPins = {};   // "owner/repo@branch" → commit (config/library-pins.json)
@@ -1867,6 +1978,7 @@ function cleanGameHtml(html) {
         (typeof gameMuteHook === "function" ? `<script>(${gameMuteHook.toString()})();<\/script>` : "") +
         `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
+        (/new Blob\(/.test(html) && /\.part/i.test(html) ? `<script>(${bigBlobHook.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
     out = rewriteBigScripts(out, (partSizesForPage(html) || {}).big);
