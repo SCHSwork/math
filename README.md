@@ -20,7 +20,10 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
-- Fullscreen, rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
+- Fullscreen, **mute** (🔊, or Alt+M), rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, **save backups**, **copy link to this game**, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
+- **Save backups** (`js/game-extras.js`): each time a game closes, its progress is copied into the browser's `gnmath-backups` database (the last 3 different ones per game, plus copies made before clearing or restoring). ⋯ More → Save backups restores one, backs up now, or saves/loads a backup file. Backups only cover what the site saw the game save, the same list "Clear this game's data" uses, and they're left out of cloud saves.
+- **Download sizes**: games over 5 MB show their size on the card, and Show → **⚡ Quick to load** lists games under 10 MB. The nightly game check (`tools/check_games.mjs`) measures what each working game downloads while it starts and saves it to `config/game-sizes.json` (kilobytes per game id). js13k and WASM-4 games are always small, so they count as quick without being measured.
+- **Game links**: `?play=<id>` opens that game when the site loads (⋯ More → Copy link makes one), then it's taken out of the address bar
 
 **GN Originals**
 - A row of open-source games from [SCHSwork/GN-originals](https://github.com/SCHSwork/GN-originals), also under the **GN Originals** tag

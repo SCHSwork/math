@@ -7,6 +7,17 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 6, 2026 — Save backups, mute, game sizes and game links
+
+### Added
+- **Save backups.** Every time you close a game, a copy of its progress is kept in your browser (the last 3 that are different), and one is always made right before "Clear this game's data" or a restore. Open ⋯ More → **Save backups** to restore one, back up now, or save a backup as a file and load it again later (even on another computer). So a cleared or broken save can be undone. Restoring also backs up what you had first.
+- **Mute button** (🔊) in the game's top bar, or **Alt+M** while playing. It silences the game without closing it and stays on for every game until you turn it off or reload. Partner games come from another site, so those still need the browser's tab mute.
+- **Download sizes.** Games over 5 MB show how much they download on their card ("⬇ 75 MB"), and Sort & filter → Show → **⚡ Quick to load** lists games under 10 MB, for slow Wi-Fi. Sizes are measured by the nightly game check, so they fill in over the next week or so as it gets to each game.
+- **Copy link to this game** in ⋯ More. Whoever opens the link goes straight to that game.
+
+### Changed
+- Save backups stay on the device: they're left out of cloud saves and Export Data, so those don't get bigger.
+
 ## November 4, 2026 — Let people in while the site is closed
 
 ### Added

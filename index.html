@@ -53,7 +53,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=b445272a66">
+    <link rel="stylesheet" href="css/styles.css?v=c6d871fb1f">
     <script>
     // Each site style's look is in its own file (css/skins/), so only the one in use
     // is loaded. Load the saved one now, before the page is drawn, so it never flashes.
@@ -120,6 +120,7 @@
                     <option value="favorites">Favorites</option>
                     <option value="working">Hide games flagged broken</option>
                     <option value="liked">Well liked (80%+ 👍)</option>
+                    <option value="quick">⚡ Quick to load (under 10 MB)</option>
                 </select>
                 </label>
                 <label class="filter-field"><span>Type</span>
@@ -253,6 +254,7 @@
                         <circle cx="16" cy="16" r="1.2" fill="currentColor"></circle>
                     </svg>
                 </button>
+                <button id="muteButton" type="button" onclick="toggleGameMute()" title="Mute the game (Alt+M)" aria-label="Mute" aria-pressed="false">🔊</button>
                 <button onclick="fullscreenZone()">Fullscreen</button>
                 <span class="zone-rating">
                     <button id="rateUp" onclick="rateCurrentZone(1)" title="I like this game" aria-label="Like">👍 <span id="rateUpCount"></span></button>
@@ -299,16 +301,17 @@
     <script src="js/partners.js?v=6400e17490"></script>
 
     <script src="js/ubzone.js?v=7ec3f7299e"></script>
-    <script src="js/app.js?v=cae8dea953"></script>
+    <script src="js/app.js?v=d76efe6137"></script>
     <script src="js/url-options.js?v=c0a3615d83"></script>
     <script src="js/service-worker-setup.js?v=50176c563b"></script>
 <script src="js/firebase-pace.js?v=45d6769e77"></script>
-<script src="js/accounts.js?v=fb757de080"></script>
-<script src="js/library.js?v=327269beaa"></script>
+<script src="js/accounts.js?v=36e04215b3"></script>
+<script src="js/library.js?v=927b2a8b59"></script>
 <script src="js/loading-bar.js?v=258c33af1e"></script>
 <script src="js/game-fit.js?v=589d95dcb3"></script>
-<script src="js/game-menu.js?v=3f4a54c9f1"></script>
-<script src="js/filters.js?v=b8e3bc487e"></script>
+<script src="js/game-menu.js?v=0da567dae6"></script>
+<script src="js/game-extras.js?v=1ecdddf763"></script>
+<script src="js/filters.js?v=0e6262a7f1"></script>
 <script src="js/finder.js?v=ec398b0750"></script>
 <script src="js/feedback.js?v=1c01da9774"></script>
 <script src="js/submit.js?v=56be882b1f"></script>

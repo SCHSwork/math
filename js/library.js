@@ -503,6 +503,7 @@ function showShortcuts() {
     const rows = [
         ["/", "Jump to the search box"],
         [panic, panicOn ? "Panic: leave instantly for your safe website (works during games too)" : "Panic key (turned off in Settings)"],
+        ["Alt+M", "Mute or unmute the game you're playing"],
         ["?", "Show this list"],
         ["Esc", "Close a panel, menu or dialog"],
         ["Tab", "Move between buttons and links; Enter or Space presses them"],
