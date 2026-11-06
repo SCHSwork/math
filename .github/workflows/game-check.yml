@@ -17,6 +17,11 @@ on:
         description: "How many games in the batch"
         required: false
         default: "275"
+      reported:
+        description: "Only the games players reported broken"
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -48,10 +53,12 @@ jobs:
           SITE_URL: http://127.0.0.1:8080/
           IDS: ${{ github.event.inputs.ids }}
           BATCH: ${{ github.event.inputs.batch }}
+          REPORTED: ${{ github.event.inputs.reported }}
         run: |
           [[ "$BATCH" =~ ^[0-9]+$ ]] || BATCH=275
           ARGS="--batch=$BATCH --minutes=140"
           if [[ "$IDS" =~ ^[0-9,]+$ ]]; then ARGS="$ARGS --ids=$IDS"; fi
+          if [[ "$REPORTED" == "true" ]]; then ARGS="$ARGS --reported"; fi
           node tools/check_games.mjs $ARGS
       - name: Save the results
         if: always()
