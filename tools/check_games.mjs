@@ -9,6 +9,8 @@
 //   node tools/check_games.mjs                      # tonight's batch
 //   node tools/check_games.mjs --batch=50           # smaller batch
 //   node tools/check_games.mjs --ids=2,11,990123    # just these
+//   node tools/check_games.mjs --reported           # just the games players reported broken
+// Every night's batch also includes the games players reported broken.
 //
 // It also measures how much each working game downloads while it starts and
 // saves that to config/game-sizes.json (shown on cards for big games, and used
@@ -18,6 +20,7 @@
 // and the site served at SITE_URL (default http://127.0.0.1:8080/).
 import { chromium } from "playwright";
 import fs from "fs";
+import { reportedGames } from "./reported_games.mjs";
 
 const SITE = process.env.SITE_URL || "http://127.0.0.1:8080/";
 const OUT = new URL("../config/game-health.json", import.meta.url);
@@ -212,8 +215,18 @@ function advanceNext() {
     while (batchDone < batch.length && checkedIds.has(batch[batchDone].id)) batchDone++;
     health.next = (batchStart + batchDone) % Math.max(1, all.length);
 }
+// Games players reported broken in the last 2 weeks
+let reported = [];
+try {
+    reported = await reportedGames();
+    console.log(`Reported broken by players: ${reported.length}`);
+    for (const r of reported) console.log(`  report ${r.id} ${(all.find(z => z.id === r.id) || {}).name || "(not on the site)"}: ${r.reports} report(s)${r.trusted ? ", trusted reporter" : ""}, last ${r.last.slice(0, 10)}`);
+} catch (e) { console.log("Couldn't read the broken reports:", e.message); }
+const reportedIds = new Set(reported.map(r => r.id));
 const only = arg("ids");
-if (only) {
+if (process.argv.includes("--reported")) {
+    list = all.filter(z => reportedIds.has(z.id));
+} else if (only) {
     const want = new Set(only.split(","));
     list = all.filter(z => want.has(z.id));
 } else {
@@ -222,7 +235,8 @@ if (only) {
     batch = all.slice(start, start + BATCH).concat(all.slice(0, Math.max(0, Math.min(start, start + BATCH - all.length))));
     // Plus everything that failed last time
     const failed = all.filter(z => health.games[z.id] && health.games[z.id].s !== "ok" && !batch.includes(z));
-    list = [...failed, ...batch];
+    const rep = all.filter(z => reportedIds.has(z.id) && !batch.includes(z) && !failed.includes(z));
+    list = [...rep, ...failed, ...batch];
 }
 console.log(`Checking ${list.length} of ${all.length} games`);
 
