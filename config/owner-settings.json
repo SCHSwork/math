@@ -47,6 +47,15 @@
       "name": "lsp"
     }
   ],
+  "siteAccess": {
+    "allowed": [
+      {
+        "uid": "qka6JaQ3xNM1OTQH91KsYZMjZxb2",
+        "name": "poopmaster"
+      }
+    ],
+    "pass": null
+  },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-04T19:28:33.110Z"
+  "updatedAt": "2026-11-06T17:01:09.817Z"
 }
