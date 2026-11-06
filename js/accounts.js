@@ -44,8 +44,9 @@ function isCloudExcludedStorageKey(key) {
     return isProtectedStorageKey(key) || key.startsWith("gnmath-cloud-") || key.startsWith("gnmath-cache-") || key.startsWith("firebase:");
 }
 function isCloudExcludedDb(name) {
-    // Firebase's own login/cache databases, and Unity's download cache (game files, not progress)
-    return /^firebase|^firestore\//i.test(name) || name === "UnityCache";
+    // Firebase's own login/cache databases, Unity's download cache (game files, not progress),
+    // and the site's own save backups (game-extras.js), which would only make cloud saves bigger
+    return /^firebase|^firestore\//i.test(name) || name === "UnityCache" || name === "gnmath-backups";
 }
 
 // ── Value encoding (IndexedDB can hold binary data that JSON can't) ──────────

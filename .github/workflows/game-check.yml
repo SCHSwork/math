@@ -58,7 +58,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
-          git add config/game-health.json
+          git add config/game-health.json config/game-sizes.json
           git diff --cached --quiet && { echo "No changes"; exit 0; }
           git commit -m "chore: nightly game check"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done

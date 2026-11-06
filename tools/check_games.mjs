@@ -10,6 +10,10 @@
 //   node tools/check_games.mjs --batch=50           # smaller batch
 //   node tools/check_games.mjs --ids=2,11,990123    # just these
 //
+// It also measures how much each working game downloads while it starts and
+// saves that to config/game-sizes.json (shown on cards for big games, and used
+// by Show → "Quick to load").
+//
 // Needs: npm i playwright && npx playwright install --with-deps chromium,
 // and the site served at SITE_URL (default http://127.0.0.1:8080/).
 import { chromium } from "playwright";
@@ -17,6 +21,7 @@ import fs from "fs";
 
 const SITE = process.env.SITE_URL || "http://127.0.0.1:8080/";
 const OUT = new URL("../config/game-health.json", import.meta.url);
+const SIZES_OUT = new URL("../config/game-sizes.json", import.meta.url);
 const arg = name => (process.argv.find(a => a.startsWith(`--${name}=`)) || "").split("=")[1];
 const BATCH = Number(arg("batch") || 275);
 const WORKERS = Number(arg("workers") || 2);
@@ -31,6 +36,11 @@ const started = Date.now();
 
 const health = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { games: {}, next: 0 };
 health.games ||= {};
+const sizes = fs.existsSync(SIZES_OUT) ? JSON.parse(fs.readFileSync(SIZES_OUT, "utf8")) : {};
+sizes.kb ||= {};
+// After a game shows up, keep counting until its downloads stop (a Unity game
+// shows its loading bar long before its 100 MB of files are in)
+const QUIET_MS = 3000, SIZE_WAIT_MS = 90000;
 
 // Things a test browser shouldn't touch: the site's database (online count,
 // error reports, accounts) and trackers
@@ -38,7 +48,7 @@ const BLOCK = /(^|\.)(firestore\.googleapis\.com|firebase\w*\.googleapis\.com|id
 const NOISE = /firestore|favicon|sha\.txt|api\.github|googletagmanager|google-analytics|data\.jsdelivr|^Failed to load resource|gameanalytics|fonts\.(googleapis|gstatic)|google\.com\/jsapi/i;
 
 // Software WebGL, so 3D games can draw without a graphics card
-const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const browser = await chromium.launch({ ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}), args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
 // jsDelivr often refuses the test server (GitHub's machines): HTTP 403 or a
 // dropped connection, for files players download fine. When that happens, get
@@ -49,18 +59,30 @@ const MIME = { js: "application/javascript", mjs: "application/javascript", css:
     mp3: "audio/mpeg", ogg: "audio/ogg", wav: "audio/wav", m4a: "audio/mp4", mp4: "video/mp4", webm: "video/webm", swf: "application/x-shockwave-flash",
     xml: "application/xml", txt: "text/plain", ttf: "font/ttf", woff: "font/woff", woff2: "font/woff2" };
 const JSD_GH = /^https?:\/\/(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([^/]+)\/([^/@]+)(?:@([^/]+))?\/([^?#]*)/;
-async function viaGitHub(route) {
+// Downloads made by the game (not the site around it) are added to st.bytes while st.counting.
+const routedRequests = new WeakSet();
+function countBytes(st, req, n) {
+    try { if (!st.counting || !n || req.frame() === req.frame().page().mainFrame() && !/^(fetch|xhr)$/.test(req.resourceType())) return; } catch (e) { return; }
+    st.bytes += n;
+}
+async function viaGitHub(route, st) {
     const url = route.request().url();
+    routedRequests.add(route.request());
     let res = null;
     try { res = await route.fetch({ timeout: 30000 }); } catch (e) {}
-    if (res && (res.status() < 400 || res.status() === 404)) return route.fulfill({ response: res });
+    if (res && (res.status() < 400 || res.status() === 404)) {
+        if (res.status() < 400) { try { countBytes(st, route.request(), (await res.body()).length); } catch (e) {} }
+        return route.fulfill({ response: res });
+    }
     const m = url.match(JSD_GH);
     const ref = !m[3] || ["latest", "main", "master"].includes(m[3]) ? "HEAD" : m[3];
     try {
         const raw = await fetch(`https://raw.githubusercontent.com/${m[1]}/${m[2]}/${ref}/${m[4]}`, { signal: AbortSignal.timeout(60000) });
         if (raw.ok) {
+            const body = Buffer.from(await raw.arrayBuffer());
+            countBytes(st, route.request(), body.length);
             const ext = (m[4].split("/").pop().match(/\.([a-z0-9]+)$/i) || [])[1] || "";
-            return route.fulfill({ status: 200, body: Buffer.from(await raw.arrayBuffer()),
+            return route.fulfill({ status: 200, body,
                 headers: { "content-type": MIME[ext.toLowerCase()] || "application/octet-stream", "access-control-allow-origin": "*" } });
         }
     } catch (e) {}
@@ -73,9 +95,18 @@ const cdnRefused = new Set();
 async function makePage() {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
     await ctx.route(url => BLOCK.test(new URL(url).hostname), r => r.abort());
-    await ctx.route(JSD_GH, viaGitHub);
+    const st = { errors: [], bytes: 0, counting: false, inflight: new Set(), lastNet: 0 };
+    await ctx.route(JSD_GH, route => viaGitHub(route, st));
     const page = await ctx.newPage();
-    const st = { errors: [] };
+    const gameReq = rq => { try { return rq.frame() !== page.mainFrame() || /^(fetch|xhr)$/.test(rq.resourceType()); } catch (e) { return false; } };
+    page.on("request", rq => { if (st.counting && gameReq(rq)) { st.inflight.add(rq); st.lastNet = Date.now(); } });
+    const done = rq => { if (st.inflight.delete(rq)) st.lastNet = Date.now(); };
+    page.on("requestfailed", done);
+    page.on("requestfinished", async rq => {
+        done(rq);
+        if (!st.counting || routedRequests.has(rq) || !gameReq(rq)) return;
+        try { const s = await rq.sizes(); countBytes(st, rq, s.responseBodySize > 0 ? s.responseBodySize : 0); } catch (e) {}
+    });
     // (Offline-cache helpers can't start inside the game window; that's harmless)
     page.on("pageerror", e => { const m = String(e.message); if (!/ServiceWorker|serviceWorker|ResizeObserver/.test(m)) st.errors.push("Script error: " + m.slice(0, 160)); });
     page.on("response", res => { if (res.status() >= 400 && !NOISE.test(res.url())) st.errors.push(`HTTP ${res.status()} ${res.url().slice(0, 160)}`); });
@@ -112,6 +143,7 @@ const measure = () => {
 async function check(w, z, waitMs) {
     const { page, st } = w;
     st.errors.length = 0;
+    st.bytes = 0; st.inflight.clear(); st.counting = true; st.lastNet = Date.now();
     cdnRefused.clear();
     await page.evaluate(id => openZone(zones.find(x => String(x.id) === id)), String(z.id));
     let m = null;
@@ -128,18 +160,26 @@ async function check(w, z, waitMs) {
         if (m && Date.now() >= until - 2500 && until < hardEnd && LOADING_RE.test(m.text) && Date.now() - changedAt < 15000)
             until = Math.min(hardEnd, until + 15000);
     }
+    // A game is showing: wait for its downloads to finish, to know how big it is
+    let sizeKb = null;
+    if (m && (m.surface > 0.05 || m.other || m.textLen > 0)) {
+        const sizeEnd = Date.now() + SIZE_WAIT_MS;
+        while (Date.now() < sizeEnd && (st.inflight.size || Date.now() - st.lastNet < QUIET_MS)) await page.waitForTimeout(500);
+        sizeKb = Math.round(st.bytes / 1024);
+    }
+    st.counting = false;
     try { await page.evaluate(() => closeZone()); await page.waitForTimeout(400); } catch (e) {}
     const errors = [...new Set(st.errors)].slice(0, 4);
     // The most telling error: a script crash, or a game file that's missing
     const pickWhy = () => errors.find(e => e.startsWith("Script error")) || errors.find(e => /\.(js|wasm|data|unityweb|pck|swf|html?|json)(\?|$)/i.test(e)) || errors[0];
     if (!m) return { s: "broken", why: "The test browser crashed on this game", errors };
-    if (m.surface > 0.05 || m.other) return { s: "ok" };
+    if (m.surface > 0.05 || m.other) return { s: "ok", sizeKb };
     const loading = LOADING_RE.test(m.text);
-    if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)" };
+    if (m.textLen > 40 && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "page without a game canvas (menus or text)", sizeKb };
     // A whole menu on screen (e.g. osu!) is a working game even if a side script failed
-    if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)" };
+    if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)", sizeKb };
     // Something on screen and nothing went wrong: a game drawn without a canvas (e.g. Coreball)
-    if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas" };
+    if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas", sizeKb };
     // Only problem: files the test server couldn't download from jsDelivr or GitHub
     const cdnOnly = errors.length && errors.every(e => /^(Failed|HTTP (403|429|5\d\d)) https?:\/\/[^/]*(jsdelivr\.net|githubusercontent\.com|githack\.com)\//.test(e) || [...cdnRefused].some(u => e.includes(u.slice(0, 150))) || /^Script error: \w+ is not defined$/.test(e));
     if (cdnOnly && errors.some(e => !e.startsWith("Script error"))) return { s: "slow", why: "The test server couldn't download this game's files (it usually works for players)", errors };
@@ -196,6 +236,9 @@ function saveHealth(final) {
     health.total = all.length;
     health.counts = Object.values(health.games).reduce((c, g) => (c[g.s] = (c[g.s] || 0) + 1, c), {});
     fs.writeFileSync(OUT, JSON.stringify(health, null, 1) + "\n");
+    if (final) { const ids = new Set(all.map(z => z.id)); for (const id of Object.keys(sizes.kb)) if (!ids.has(id)) delete sizes.kb[id]; }
+    sizes.updated = new Date().toISOString();
+    fs.writeFileSync(SIZES_OUT, JSON.stringify(sizes) + "\n");
     return health.counts;
 }
 const queue = [...list];
@@ -218,6 +261,9 @@ async function worker() {
         if (r.stuck) await fresh();
         else if (r.s !== "ok") { await fresh(); r = await run(z, CONFIRM_WAIT_MS); if (r.stuck) await fresh(); }
         delete r.stuck;
+        // Only a game that worked was measured properly; a cut-off measurement (0) isn't kept
+        if (r.s === "ok" && r.sizeKb > 0) sizes.kb[z.id] = r.sizeKb;
+        delete r.sizeKb;
         const prev = health.games[z.id];
         health.games[z.id] = { s: r.s, at: today, t: new Date().toISOString(), ...(r.why ? { why: r.why } : {}), ...(r.errors && r.errors.length ? { errors: r.errors } : {}),
             ...(r.s !== "ok" ? { since: prev && prev.s === r.s && prev.since ? prev.since : today } : {}) };

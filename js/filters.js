@@ -87,6 +87,7 @@ function showMatches(zone, show) {
         case "new7":      return typeof isAddedWithinDays === "function" && isAddedWithinDays(zone, 7);
         case "new14":     return typeof isAddedWithinDays === "function" && isAddedWithinDays(zone, 14);
         case "favorites": return typeof isFavorite === "function" && isFavorite(zone.id);
+        case "quick":     return typeof isQuickGame === "function" && isQuickGame(zone);
         case "working":   return !(typeof isFlaggedBroken === "function" && isFlaggedBroken(zone.id));
         case "liked": {
             const s = typeof getZoneStats === "function" ? getZoneStats(zone.id) : null;

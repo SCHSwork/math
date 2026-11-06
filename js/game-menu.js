@@ -171,7 +171,9 @@ function toggleGameMenu(ev) {
         ["↻", "Restart game", () => openZone(zone)],
         ["ⓘ", "Game info", () => showZoneInfo()],
         ...(typeof isFitOff === "function" ? [["⤢", isFitOff(zone.id) ? "Fit game to screen: off" : "Fit game to screen: on", () => { toggleFitForGame(zone.id); openZone(zone); }]] : []),
+        ...(typeof openSaveBackups === "function" && !(typeof isPartnerZone === "function" && isPartnerZone(zone)) ? [["💾", "Save backups…", () => openSaveBackups(zone)]] : []),
         "-",
+        ...(typeof copyGameLink === "function" ? [["🔗", "Copy link to this game", () => copyGameLink(zone)]] : []),
         ["↗", "Open in new tab", () => aboutBlank()],
         ["⬇", "Download game file", () => downloadZone()],
         "-",
@@ -233,10 +235,14 @@ async function clearCurrentGameData() {
         notify(`No saved data found for "${zone.name}". The site can only clear data saved after this feature was added, so play it a bit and try again.`);
         return;
     }
-    if (!(await askConfirm(`All saved progress and settings for "${zone.name}" will be deleted. Other games aren't affected. You can only get it back from an older cloud save or export file.`, { title: "Clear this game's data?", confirmText: "Clear data", danger: true }))) return;
+    const canBackup = typeof backupGameSave === "function";
+    if (!(await askConfirm(`All saved progress and settings for "${zone.name}" will be deleted. Other games aren't affected.` +
+        (canBackup ? ` A backup is kept first, so you can undo this from ⋯ More → Save backups.` : ` You can only get it back from an older cloud save or export file.`),
+        { title: "Clear this game's data?", confirmText: "Clear data", danger: true }))) return;
     // Close the game first so it can't re-save what we delete
     closeZone();
     flushPlaytime && flushPlaytime();
+    if (canBackup) { await new Promise(r => setTimeout(r, 300)); await backupGameSave(zone.id, "before", "before clearing"); }
     const { removed, skipped } = await clearGameData(zone.id);
     notify(`Cleared ${removed} saved item${removed === 1 ? "" : "s"} for "${zone.name}".` +
         (skipped ? `\n${skipped} item${skipped === 1 ? " was" : "s were"} also used by another game and kept.` : "") +

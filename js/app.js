@@ -638,6 +638,13 @@ async function listZones() {
                 }
             }
         }
+        // Links from "Copy link to this game" (?play=<id>): open that game once
+        const playId = search.get('play');
+        if (playId && !embed) {
+            const zone = zones.find(z => String(z.id) === String(playId));
+            if (zone && !String(zone.url || "").startsWith("http")) setTimeout(() => openZone(zone), 0);
+            else if (!zone) notify("That game link is for a game that isn't on the site anymore.");
+        }
         if (!embed) clearZoneIdFromUrl();
         } catch(error){}
         let alltags = [];
@@ -863,6 +870,9 @@ function createZoneCard(file) {
     if (played >= 60) metaParts.push("⏱ " + formatPlaytime(played));
     const votes = stats.up + stats.down;
     if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(`👍 ${Math.round(stats.up / votes * 100)}%`);
+    // Download size, for big games (game-extras.js)
+    const sizeText = typeof gameSizeCardText === "function" ? gameSizeCardText(file) : "";
+    if (sizeText) metaParts.push(sizeText);
     if (cardCached("showPlays", getShowPlayCount)) {
         const plays = (popularityData['year']?.[file.id]) ?? 0;
         if (plays > 0) metaParts.push(`${compactNumber.format(plays)} plays`);
@@ -1854,6 +1864,7 @@ function cleanGameHtml(html) {
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
         `<script>(${gameStorageHook.toString()})();<\/script>` +
+        (typeof gameMuteHook === "function" ? `<script>(${gameMuteHook.toString()})();<\/script>` : "") +
         `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
@@ -2048,8 +2059,9 @@ function closeZone() {
 function clearZoneIdFromUrl() {
     try {
         const url = new URL(window.location);
-        if (!url.searchParams.has('id')) return;
+        if (!url.searchParams.has('id') && !url.searchParams.has('play')) return;
         url.searchParams.delete('id');
+        url.searchParams.delete('play');
         history.replaceState(null, '', url.toString());
     } catch (error) {}
 }
