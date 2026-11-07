@@ -13,6 +13,30 @@ function gameDataHook() {
         if (S) {
             var setItem = S.setItem;
             S.setItem = function (k) { if (this === window.localStorage) send({ t: "ls", key: String(k) }); return setItem.apply(this, arguments); };
+            // Games share the site's storage. A game's "reset progress" often calls
+            // localStorage.clear(), which also wiped the player's play time, level,
+            // favorites and cloud sync info (then syncing uploaded the wiped copy).
+            // Games can still clear and remove their own saves, never the site's.
+            var siteKey = function (k) { return /^gnmath-|^firebase:/.test(String(k)); };
+            var removeItem = S.removeItem, key = S.key, clear = S.clear;
+            S.removeItem = function (k) { if (this === window.localStorage && siteKey(k)) return; return removeItem.apply(this, arguments); };
+            S.clear = function () {
+                if (this !== window.localStorage) return clear.apply(this, arguments);
+                var keys = [];
+                for (var i = 0; i < this.length; i++) { var k = key.call(this, i); if (k !== null && !siteKey(k)) keys.push(k); }
+                for (var j = 0; j < keys.length; j++) removeItem.call(this, keys[j]);
+            };
+        }
+    } catch (e) {}
+    try {
+        // Same for the site's own databases (sign-in, save backups)
+        var F = window.IDBFactory && IDBFactory.prototype;
+        if (F && F.deleteDatabase) {
+            var del = F.deleteDatabase;
+            F.deleteDatabase = function (name) {
+                if (/^firebase|^gnmath-/i.test(String(name))) { var r = {}; setTimeout(function () { try { r.onsuccess && r.onsuccess({ target: r }); } catch (e) {} }, 0); return r; }
+                return del.apply(this, arguments);
+            };
         }
     } catch (e) {}
     try {

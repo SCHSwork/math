@@ -7,6 +7,15 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 6, 2026 — Your progress is safer
+
+### Fixed
+- **Games can't wipe your progress anymore.** Games share the site's storage, and some games' "reset progress" or "new game" clears all of it. That also erased your play time, level, favorites and sign-in sync info, and syncing afterwards could copy the wiped progress over your cloud save. Games can still clear their own saves, but never the site's.
+
+### Added
+- **Undo last cloud save** in Account. The cloud keeps the save from before it was last replaced, so if the wrong progress gets saved over your account, you can go back.
+- Choosing between this device's progress and your cloud save now shows the level and play time of each, and warns you before better progress gets replaced.
+
 ## November 6, 2026 — Fixes for games reported broken
 
 ### Fixed
