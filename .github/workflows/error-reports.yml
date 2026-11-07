@@ -1,0 +1,39 @@
+# Shows the site's automatic error reports for a game (or everything recent).
+# Actions → Read error reports → Run workflow. Usernames are left out (public logs).
+name: Read error reports
+on:
+  workflow_dispatch:
+    inputs:
+      game:
+        description: "Game id or name (empty = all)"
+        required: false
+        default: ""
+      hours:
+        description: "How many hours back"
+        required: false
+        default: "24"
+permissions:
+  contents: read
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Write the Firebase key
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+      - name: Read the reports
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          GAME: ${{ github.event.inputs.game }}
+          HOURS: ${{ github.event.inputs.hours }}
+        run: |
+          npm i --no-save --silent firebase-admin@12
+          node tools/error_reports.mjs
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
