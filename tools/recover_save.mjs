@@ -78,7 +78,7 @@ async function look(label, readTime) {
     for (const id of docs.keys()) { const g = id.replace(/_\d+$/, ""); gens.set(g, (gens.get(g) || 0) + 1); }
     console.log(`\n== ${label}`);
     if (!meta) { console.log("No cloud save."); return { meta, docs, gens }; }
-    console.log(`Current save ${meta.gen}, saved ${when(meta.updatedAt)}, ${meta.chunkCount} piece(s)` + (meta.prev ? `; earlier save kept: ${meta.prev.gen}` : ""));
+    console.log(`Current save ${meta.gen}, saved ${when(meta.updatedAt)}, ${meta.chunkCount} piece(s)` + (meta.kept && meta.kept.length ? `; earlier saves kept: ${meta.kept.map(k => k.gen).join(", ")}` : ""));
     for (const [g, n] of gens) {
         const isCur = g === meta.gen;
         const count = isCur ? meta.chunkCount : n;
@@ -119,10 +119,10 @@ if (restore) {
     await metaRef.set({
         gen: restore, chunkCount: n, hash, size: packed.length,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        prev: cur && cur.gen ? { gen: cur.gen, chunkCount: cur.chunkCount || 0, sum: cur.sum || null, at: cur.updatedAt || null } : null
+        kept: [...(cur && cur.gen ? [{ gen: cur.gen, chunkCount: cur.chunkCount || 0, sum: cur.sum || null, at: cur.updatedAt ? cur.updatedAt.toMillis() : Date.now(), until: Date.now() + 7 * 86400000 }] : []), ...((cur && cur.kept) || []).filter(k => k.gen !== restore)].slice(0, 6)
     });
     console.log(`\nRestored: ${restore} is ${username}'s cloud save again (${summarize(bundle)}).`);
-    console.log("The save it replaced is kept as the earlier save (Account → Undo last cloud save).");
+    console.log("The save it replaced is kept for 7 days (Account → Earlier cloud saves).");
     console.log(`Tell ${username}: open the site, Account → Load cloud save. Don't press Save now first.`);
     process.exit(0);
 }
