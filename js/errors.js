@@ -177,22 +177,47 @@ window.addEventListener("load", () => { if (errorReadQueue().length) errorFlushS
 // Runs in every game page (added by cleanGameHtml) and passes crashes up.
 function gameErrorHook() {
     var sent = 0;
+    // Everything the game prints (kept in the page, for ⋯ More → What the game said)
+    var log = window.__gnLog = [], t0 = Date.now();
+    var keep = function (level, args) {
+        try {
+            var text = Array.prototype.map.call(args, function (x) {
+                if (x instanceof Error) return x.message;
+                if (typeof x === "object") { try { return JSON.stringify(x).slice(0, 300); } catch (e) { return String(x); } }
+                return String(x);
+            }).join(" ").slice(0, 400);
+            log.push({ t: Date.now() - t0, level: level, text: text });
+            if (log.length > 300) log.splice(0, log.length - 300);
+        } catch (e) {}
+    };
+    ["log", "info", "warn", "error"].forEach(function (k) {
+        var orig = console[k];
+        if (typeof orig !== "function") return;
+        console[k] = function () { keep(k, arguments); return orig.apply(this, arguments); };
+    });
     var up = function (kind, message, stack) {
         if (sent >= 5) return;
         sent++;
         try { if (window.parent && window.parent !== window && window.parent.__gnmathGameError) window.parent.__gnmathGameError({ kind: kind, message: String(message || "").slice(0, 500), stack: String(stack || "").slice(0, 1500) }); } catch (e) {}
     };
     window.addEventListener("error", function (e) {
-        if (!(e instanceof ErrorEvent)) return;
+        if (!(e instanceof ErrorEvent)) {
+            // A file that didn't load (script, image)
+            try { var el = e.target; if (el && (el.src || el.href)) keep("error", ["Couldn't load " + (el.src || el.href)]); } catch (err) {}
+            return;
+        }
+        keep("error", [e.message + (e.filename ? " (" + e.filename + ":" + e.lineno + ")" : "")]);
         up("error", e.message, (e.error && e.error.stack) || (e.filename ? e.filename + ":" + e.lineno + ":" + e.colno : ""));
-    });
+    }, true);
     window.addEventListener("unhandledrejection", function (e) {
         var r = e.reason;
+        keep("error", ["Unhandled: " + (r && r.message ? r.message : String(r))]);
         up("rejection", r && r.message ? r.message : String(r), r && r.stack);
     });
     // Engines (Unity, Emscripten…) show fatal errors with alert()
     var origAlert = window.alert;
     window.alert = function (msg) {
+        keep("alert", [msg]);
         if (/abort\(|error|exception|failed|out of memory|cannot|could not|unable/i.test(String(msg))) up("alert", msg, "");
         return origAlert.apply(this, arguments);
     };
