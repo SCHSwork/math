@@ -6,6 +6,10 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 7, 2026 — New games
+
+### Added
+- **Castle Crashers**, **Minecraft: Story Mode** and **Feed and Grow Fish**, checked and cleaned (no ads or trackers) and locked to the exact versions that were checked.
 
 ## November 6, 2026 — New games
 
