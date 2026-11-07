@@ -202,7 +202,27 @@ async function renderGameCheck(force) {
             ${admin && !gameCheckFixed(x.id, x.g) ? `<button type="button" class="finder-chip gc-fixed">Mark fixed</button>` : ""}
             ${typeof isOwnerBrowser === "function" && isOwnerBrowser() ? `<button type="button" class="finder-chip gc-toggle">${off(x) ? "Turn on" : "Turn off"}</button>` : ""}</div>
         </div>`;
+    // Games players reported, with what the game said on their device
+    let reported = [];
+    try {
+        const snap = await cloudDb.collection("brokenDiag").orderBy("at", "desc").limit(200).get();
+        const by = new Map();
+        snap.docs.forEach(d => {
+            const r = d.data();
+            if (!by.has(r.gameId)) by.set(r.gameId, []);
+            by.get(r.gameId).push(r);
+        });
+        reported = [...by.entries()].map(([id, list]) => ({ id, list, z: typeof zoneById === "function" ? zoneById(id) : null }));
+    } catch (e) { console.warn("Couldn't load the report details", e); }
+    const repRow = x => `<div class="gc-row${off(x) ? " gc-off" : ""}" data-id="${escapeHtmlText(x.id)}">
+            <div class="gc-main"><b>${escapeHtmlText(x.z ? x.z.name : x.list[0].gameName)}</b> <small>#${escapeHtmlText(x.id)}${off(x) ? " · turned off" : ""} · ${x.list.length} report${x.list.length === 1 ? "" : "s"}, last ${escapeHtmlText(x.list[0].at && x.list[0].at.toDate ? timeAgo(x.list[0].at.toDate().toISOString()) : "just now")}</small>
+            ${x.list.map(r => `<details class="gc-errs"><summary>What the game said for ${escapeHtmlText(r.by || "someone")}${r.at && r.at.toDate ? ", " + escapeHtmlText(r.at.toDate().toLocaleString()) : ""}</summary><pre class="game-log">${escapeHtmlText(r.diag || "")}</pre></details>`).join("")}</div>
+            <div class="gc-actions">${x.z ? `<button type="button" class="finder-chip gc-open">Open</button>` : ""}
+            ${admin ? `<button type="button" class="finder-chip gc-fixed">Mark fixed</button>` : ""}
+            ${typeof isOwnerBrowser === "function" && isOwnerBrowser() ? `<button type="button" class="finder-chip gc-toggle">${off(x) ? "Turn on" : "Turn off"}</button>` : ""}</div>
+        </div>`;
     box.innerHTML = `
+        ${reported.length ? `<h4 class="gc-h">Reported by players (${reported.length})</h4><p class="admin-footnote">Each report comes with what the game said on that person's device. Mark fixed clears them.</p>${reported.map(repRow).join("")}` : ""}
         <p class="admin-summary">Checked ${entries.length.toLocaleString()} of ${(h.total || entries.length).toLocaleString()} games${when ? `, last run ${escapeHtmlText(when)}` : ""}:
             <b class="gc-ok">${okN.toLocaleString()} working</b> · <b class="gc-bad">${broken.length} not starting</b> · ${slow.length} couldn't tell.
             <button type="button" class="finder-chip" id="gc-refresh">Refresh</button></p>
@@ -213,7 +233,8 @@ async function renderGameCheck(force) {
     box.querySelector("#gc-refresh").onclick = () => renderGameCheck(true);
     box.querySelectorAll(".gc-row").forEach(r => {
         const id = r.dataset.id;
-        r.querySelector(".gc-open").onclick = () => { const z = zoneById(id); if (z) { closePopup(); openZone(z); } };
+        const op = r.querySelector(".gc-open");
+        if (op) op.onclick = () => { const z = zoneById(id); if (z) { closePopup(); openZone(z); } };
         const fx = r.querySelector(".gc-fixed");
         if (fx) fx.onclick = async () => { if (await markGameFixed(id)) { renderGameCheck(); updateGameCheckCount(); } };
         const t = r.querySelector(".gc-toggle");

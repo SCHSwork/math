@@ -176,6 +176,20 @@ service cloud.firestore {
     // with a count and the details of the latest time it happened. Anyone can
     // add a new one or add one to an existing count; only admins can read them
     // or mark them resolved, and nobody else can change what's in them.
+    // "What the game said" sent with a broken report, one per person per game.
+    // Staff read them (Admin → Game check); people can replace or delete their own.
+    match /brokenDiag/{id} {
+      allow read: if isStaff();
+      allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['gameId', 'gameName', 'uid', 'by', 'at', 'diag'])
+        && request.resource.data.uid == request.auth.uid
+        && id == request.resource.data.gameId + '_' + request.auth.uid
+        && shortText(request.resource.data.gameId, 12) && shortText(request.resource.data.gameName, 80)
+        && shortText(request.resource.data.by, 40) && shortText(request.resource.data.diag, 10000)
+        && request.resource.data.at == request.time;
+    }
+
     match /errorLogs/{id} {
       allow read, delete: if isAdmin();
       allow create: if id.matches('e[a-z0-9]{6,30}')
