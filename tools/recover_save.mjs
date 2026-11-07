@@ -15,12 +15,23 @@
 //     (longer only if point-in-time recovery is turned on)
 import admin from "firebase-admin";
 import zlib from "zlib";
+import fs from "fs";
 
 const username = String(process.env.USERNAME || "").trim().toLowerCase();
 const restore = String(process.env.RESTORE || "").trim();
 if (!/^[a-z0-9_]{3,20}$/.test(username)) { console.log("Give a username (3-20 letters, numbers or _)."); process.exit(1); }
 
-admin.initializeApp({ credential: admin.credential.applicationDefault() });
+// The key pasted into GitHub can have real line breaks inside its private key,
+// which isn't valid JSON, so read the three fields it needs either way.
+const keyText = fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, "utf8");
+let key;
+try { key = JSON.parse(keyText); }
+catch {
+    const field = name => { const m = new RegExp(`"${name}"\\s*:\\s*"([^"]*)"`).exec(keyText); return m ? m[1] : ""; };
+    key = { project_id: field("project_id"), client_email: field("client_email"), private_key: field("private_key") };
+}
+key.private_key = String(key.private_key || "").replace(/\\n/g, "\n");
+admin.initializeApp({ credential: admin.credential.cert({ projectId: key.project_id, clientEmail: key.client_email, privateKey: key.private_key }) });
 const db = admin.firestore();
 
 let user;
