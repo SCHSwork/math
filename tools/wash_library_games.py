@@ -140,6 +140,12 @@ def wash(game, lib_ref, tmp):
     if problems:
         return None, problems
 
+    # GitHub repos the page builds links to in code (like `.../gh/owner/repo@${BUILD_ID}`)
+    # can't be locked or scanned here, so they're listed to check by hand
+    for repo in sorted(set(re.findall(r"(?:cdn\.jsdelivr\.net/gh|raw\.githubusercontent\.com)/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)[@/]\$\{", page))):
+        if repo not in locked:
+            print(f"  NOTE: loads {repo} through a link built in code; check that repo and the commit it uses by hand")
+
     header = (f"<!-- Washed for GN 2.0 from the game library's {game['file']} (freebuisness/html {lib_ref[:7]}). "
               f"Removed: {', '.join(removed) or 'nothing'}. Game files locked to the commits checked. -->\n")
     page = header + page

@@ -1,18 +1,71 @@
 # Checks the game library every few hours for games added after its clean
-# version, and opens (or updates) a GitHub issue so the owner and admins get notified.
+# version. New games are washed (tools/wash_library_games.py) and put in a pull
+# request to look over and merge; games that can't be washed automatically are
+# listed in a GitHub issue so the owner and admins get notified.
+# Pull requests need Settings → Actions → General → "Allow GitHub Actions to
+# create and approve pull requests" turned on.
 name: New library games
 on:
   schedule:
     - cron: "23 */6 * * *"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   issues: write
+  pull-requests: write
+concurrency:
+  group: new-games
+  cancel-in-progress: false
 jobs:
-  check:
+  wash:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Wash new games
+        run: python3 tools/wash_library_games.py 2>&1 | tee wash.log
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Only washed games count (the script also updates washedFrom on every run)
+          new=$(git ls-files --others --exclude-standard washed/)
+          if [ -z "$new" ]; then echo "No new washed games"; exit 0; fi
+          branch=auto/new-library-games
+          ids=$(echo "$new" | sed -E 's#washed/([0-9]+)\.html#\1#' | sort -n | tr '\n' ' ')
+          names=$(python3 -c "import json,sys; g=json.load(open('config/library-washed.json'))['games']; print(', '.join(g[i]['name'] for i in sys.argv[1:] if i in g))" $ids)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add washed/ config/library-washed.json
+          git commit -qm "Wash new library games: $names"
+          {
+            echo "These new library games were washed (ads and trackers removed, game files locked to the commits that were scanned):"
+            echo; echo "**$names**"; echo
+            echo "Look over the log below, especially any **NOTE** lines (repos the script couldn't lock or scan), then merge. Add a CHANGELOG entry if you like."
+            echo; echo '```'; cat wash.log; echo '```'
+          } > pr.md
+          git push -f origin "$branch"
+          num=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          if [ -z "$num" ]; then
+            gh pr create --head "$branch" --title "New games: $names" --body-file pr.md \
+              || echo "::warning::Couldn't open the pull request. Turn on Settings → Actions → General → Allow GitHub Actions to create and approve pull requests, or open it by hand from the $branch branch."
+          else
+            gh pr edit "$num" --title "New games: $names" --body-file pr.md
+          fi
+  check:
+    needs: wash
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Count games waiting in the open pull request as handled
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open=$(gh pr list --head auto/new-library-games --state open --json number --jq 'length')
+          if [ "$open" != "0" ] && git fetch -q --depth 1 origin auto/new-library-games 2>/dev/null; then
+            git checkout FETCH_HEAD -- config/library-washed.json
+          fi
       - name: Find new games
         run: python3 tools/check_new_games.py > body.md
       - name: Open or update the issue
