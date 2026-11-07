@@ -497,3 +497,63 @@ function isQuickGame(zone) {
     const kb = gameSizeKb(zone);
     return kb !== null && kb < QUICK_KB;
 }
+
+// ── What the game said ──────────────────────────────────────────────────────
+// ⋯ More → What the game said: what the game printed and the details of this
+// device, for figuring out why a game is black or stuck on someone's device.
+function gameDiagnostics() {
+    const lines = [];
+    const add = s => lines.push(s);
+    const zone = currentZone();
+    add(`Game: ${zone ? zone.name + " (" + zone.id + ")" : "?"}`);
+    add(`Site: ${typeof errorSiteVersion === "function" ? errorSiteVersion() : "?"} · ${new Date().toLocaleString()}`);
+    add(`Browser: ${navigator.userAgent}`);
+    add(`Screen: ${screen.width}x${screen.height} @${(window.devicePixelRatio || 1).toFixed(2)} · window ${innerWidth}x${innerHeight} · memory ${navigator.deviceMemory || "?"} GB · cores ${navigator.hardwareConcurrency || "?"}`);
+    try {
+        const c = document.createElement("canvas");
+        const g2 = c.getContext("webgl2"), g1 = g2 ? null : c.getContext("webgl");
+        const g = g2 || g1;
+        let gpu = "";
+        if (g) { const ext = g.getExtension("WEBGL_debug_renderer_info"); gpu = ext ? g.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ""; }
+        add(`WebGL: ${g2 ? "2" : g1 ? "1 only" : "NOT AVAILABLE"}${gpu ? " · " + gpu : ""} · WebAssembly: ${typeof WebAssembly === "object" ? "yes" : "no"}`);
+    } catch (e) { add("WebGL: error " + e.message); }
+    let log = [];
+    try {
+        const w = zoneFrame.contentWindow, d = zoneFrame.contentDocument;
+        add(`Game frame: ${zoneFrame.clientWidth}x${zoneFrame.clientHeight} · page "${(d.title || "").slice(0, 60)}" · ${d.readyState}`);
+        const cs = [...d.querySelectorAll("canvas")];
+        add(`Canvases: ${cs.length ? cs.map(c => { const st = w.getComputedStyle(c); return `${c.id || "canvas"} ${c.width}x${c.height} shown ${c.clientWidth}x${c.clientHeight}${st.display === "none" || st.visibility === "hidden" ? " HIDDEN" : ""}`; }).join("; ") : "none"}`);
+        const engine = w.UnityLoader ? "Unity (UnityLoader)" + (w.UnityLoader.SystemInfo ? ` mobile=${w.UnityLoader.SystemInfo.mobile} webgl=${w.UnityLoader.SystemInfo.hasWebGL}` : "")
+            : w.createUnityInstance ? "Unity (2020+)" : w.RufflePlayer ? "Flash (Ruffle)" : w.EJS_player || w.EJS_core ? "Emulator" : w.Module ? "Emscripten" : "?";
+        add(`Engine: ${engine}`);
+        const pop = [...d.querySelectorAll("div,p,span")].filter(x => x.children.length < 3 && /not (currently )?supported|error|failed|out of memory/i.test(x.textContent || "") && x.offsetParent !== null).slice(0, 3);
+        pop.forEach(x => add(`On screen: "${x.textContent.trim().slice(0, 200)}"`));
+        log = w.__gnLog || [];
+    } catch (e) { add("Game frame: can't look inside (" + e.message + ")"); }
+    add("");
+    add(log.length ? `What the game printed (last ${Math.min(log.length, 80)}):` : "The game hasn't printed anything.");
+    log.slice(-80).forEach(l => add(`${(l.t / 1000).toFixed(1)}s ${l.level === "log" || l.level === "info" ? "" : l.level.toUpperCase() + " "}${l.text}`));
+    return lines.join("\n");
+}
+function openGameLog() {
+    const text = gameDiagnostics();
+    document.getElementById("popupTitle").textContent = "What the game said";
+    const body = document.getElementById("popupBody");
+    body.contentEditable = false;
+    body.innerHTML = "";
+    const p = document.createElement("p");
+    p.style.marginTop = "0";
+    p.textContent = "If this game doesn't work, take a screenshot of this or press Copy, and send it to the site's owner.";
+    const pre = document.createElement("pre");
+    pre.className = "game-log";
+    pre.textContent = text;
+    const copy = document.createElement("button");
+    copy.className = "settings-button"; copy.type = "button"; copy.textContent = "📋 Copy";
+    copy.onclick = async () => {
+        let ok = false;
+        try { await navigator.clipboard.writeText(text); ok = true; } catch {}
+        notify(ok ? "Copied." : "Couldn't copy here. Take a screenshot instead.", { type: ok ? "success" : "error" });
+    };
+    body.append(p, pre, copy);
+    document.getElementById("popupOverlay").style.display = "flex";
+}

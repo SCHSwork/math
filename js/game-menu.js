@@ -198,6 +198,7 @@ function toggleGameMenu(ev) {
         ...(typeof openSaveBackups === "function" && !(typeof isPartnerZone === "function" && isPartnerZone(zone)) ? [["💾", "Save backups…", () => openSaveBackups(zone)]] : []),
         "-",
         ...(typeof copyGameLink === "function" ? [["🔗", "Copy link to this game", () => copyGameLink(zone)]] : []),
+        ...(typeof openGameLog === "function" ? [["🔍", "What the game said", () => openGameLog()]] : []),
         ["↗", "Open in new tab", () => aboutBlank()],
         ["⬇", "Download game file", () => downloadZone()],
         "-",
