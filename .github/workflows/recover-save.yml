@@ -1,0 +1,41 @@
+# Looks for a player's lost cloud save, and can put it back.
+# Actions → Recover a cloud save → Run workflow → their username.
+# The log shows any old save it finds (level, play time); run it again with
+# "restore" set to that save's name to make it their cloud save again.
+# The repo is public, so the log only shows summaries, never save contents.
+name: Recover a cloud save
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "The player's username"
+        required: true
+      restore:
+        description: "Leave empty to just look. To put a save back: its name from the log"
+        required: false
+        default: ""
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Write the Firebase key
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+      - name: Look for the save
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          USERNAME: ${{ github.event.inputs.username }}
+          RESTORE: ${{ github.event.inputs.restore }}
+        run: |
+          npm i --no-save --silent firebase-admin@12
+          node tools/recover_save.mjs
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
