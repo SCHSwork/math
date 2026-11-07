@@ -2,6 +2,7 @@
 # Actions → Recover a cloud save → Run workflow → their username.
 # The log shows any old save it finds (level, play time); run it again with
 # "restore" set to that save's name to make it their cloud save again.
+# To give back a level and play time instead, fill in grant_level / grant_hours.
 # The repo is public, so the log only shows summaries, never save contents.
 name: Recover a cloud save
 on:
@@ -12,6 +13,18 @@ on:
         required: true
       restore:
         description: "Leave empty to just look. To put a save back: its name from the log"
+        required: false
+        default: ""
+      grant_level:
+        description: "Give back progress: the level they had (0 = don't)"
+        required: false
+        default: "0"
+      grant_hours:
+        description: "Give back progress: hours of play time to add (0 = don't)"
+        required: false
+        default: "0"
+      grant_note:
+        description: "Give back progress: a short note they see (optional)"
         required: false
         default: ""
 permissions:
@@ -33,6 +46,9 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
           USERNAME: ${{ github.event.inputs.username }}
           RESTORE: ${{ github.event.inputs.restore }}
+          GRANT_LEVEL: ${{ github.event.inputs.grant_level }}
+          GRANT_HOURS: ${{ github.event.inputs.grant_hours }}
+          GRANT_NOTE: ${{ github.event.inputs.grant_note }}
         run: |
           npm i --no-save --silent firebase-admin@12
           node tools/recover_save.mjs

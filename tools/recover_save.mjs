@@ -7,6 +7,7 @@
 //
 //   USERNAME=bob node tools/recover_save.mjs              # look
 //   USERNAME=bob RESTORE=<gen> node tools/recover_save.mjs  # make that save his cloud save again
+//   USERNAME=bob GRANT_LEVEL=9 GRANT_HOURS=5 node tools/recover_save.mjs  # give back level and play time
 //
 // Where an old save can still be:
 //  1. Leftover pieces in saves/{uid}/chunks whose name isn't the current save's
@@ -91,6 +92,18 @@ async function look(label, readTime) {
 }
 
 const now = await look("Now");
+
+// Give back lost progress: the site adds it on top of what they have when they
+// next open it signed in (applyGrant in js/achievements.js)
+const grantLevel = Number(process.env.GRANT_LEVEL || 0), grantHours = Number(process.env.GRANT_HOURS || 0);
+if (grantLevel > 0 || grantHours > 0) {
+    if (!now.meta) { console.log("\nNo cloud save yet, so there's nowhere to put the grant. They need to sign in once first."); process.exit(1); }
+    const grant = { id: "g" + Date.now().toString(36), level: Math.floor(grantLevel), playSec: Math.round(grantHours * 3600), note: String(process.env.GRANT_NOTE || "").slice(0, 200) };
+    await metaRef.set({ grant }, { merge: true });
+    console.log(`\nGrant ready: level ${grant.level || "unchanged"}, ${grantHours} h of play time.`);
+    console.log(`It's added on top of their progress the next time ${username} opens the site signed in.`);
+    process.exit(0);
+}
 
 if (restore) {
     let n = now.gens.get(restore), docs = now.docs, fromHistory = false;
