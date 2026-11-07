@@ -2,7 +2,24 @@
   "siteMode": "open",
   "disabledZones": [
     "653",
-    "300013"
+    "300013",
+    "375",
+    "381",
+    "385",
+    "387",
+    "388",
+    "389",
+    "390",
+    "395",
+    "396",
+    "402",
+    "406",
+    "407",
+    "408",
+    "416",
+    "419",
+    "421",
+    "422"
   ],
   "announcement": {
     "text": "HUGE UPDATE! account system to save progress and various things!",
@@ -57,5 +74,5 @@
     "pass": null
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-06T17:01:09.817Z"
+  "updatedAt": "2026-11-07T05:33:47.733200Z"
 }
