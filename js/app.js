@@ -1432,6 +1432,33 @@ function bigBlobHook() {
         return Promise.resolve(new Response(body, { status: 200, headers: { "Content-Type": type, "Content-Length": String(p.size) } }));
     };
 }
+// Older Unity games (UnityLoader, 2017-2019) won't start on phones and tablets
+// until you press OK on "Unity WebGL is not currently supported on mobiles",
+// and that box often ends up hidden, so the game just stays black (Angry
+// Birds). Most of these run fine on phones, so the check is skipped; a phone
+// without WebGL still gets Unity's own error.
+function unityMobileHook() {
+    var skip = function (L) {
+        try {
+            if (!L || L.__gnSkip) return;
+            L.__gnSkip = true;
+            var orig = L.compatibilityCheck;
+            L.compatibilityCheck = function (inst, ok, fail) {
+                try { if (L.SystemInfo && L.SystemInfo.hasWebGL) return ok(); } catch (e) {}
+                return orig ? orig.apply(this, arguments) : ok();
+            };
+        } catch (e) {}
+    };
+    try {
+        var cur = window.UnityLoader;
+        if (cur) { skip(cur); return; }
+        Object.defineProperty(window, "UnityLoader", {
+            configurable: true, enumerable: true,
+            get: function () { return cur; },
+            set: function (v) { cur = v; skip(v); }
+        });
+    } catch (e) {}
+}
 // Sizes of split game files (config/part-sizes.json), loaded when the first game opens
 let gamePartSizes = null, gameBigFiles = {}, partSizesPromise = null;
 let libraryPins = {};   // "owner/repo@branch" → commit (config/library-pins.json)
@@ -1978,6 +2005,7 @@ function cleanGameHtml(html) {
         (typeof gameMuteHook === "function" ? `<script>(${gameMuteHook.toString()})();<\/script>` : "") +
         `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
+        (/UnityLoader/.test(html) ? `<script>(${unityMobileHook.toString()})();<\/script>` : "") +
         (/new Blob\(/.test(html) && /\.part/i.test(html) ? `<script>(${bigBlobHook.toString()})();<\/script>` : "") +
         // Last, so it wraps the loading bar's fetch hook and sees what the game sees
         ((g => g ? `<script>(${partGuardHook.toString()})(${JSON.stringify(g.sizes).replace(/</g, "\\u003c")}, ${JSON.stringify(g.big).replace(/</g, "\\u003c")});<\/script>` : "")(partSizesForPage(html)));
