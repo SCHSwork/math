@@ -351,9 +351,11 @@ async function avoidRefusedRepos(html) {
     JSD_REFUSED_RE.lastIndex = 0;
     if (!JSD_REFUSED_RE.test(html)) return html;
     JSD_REFUSED_RE.lastIndex = 0;
-    html = html.replace(JSD_REFUSED_RE, u => gnMirrorUrl(u, "github", ["jsdelivr", "fastly", "gcore", "testingcf"]));
+    // GitHub, or githack (a copy of GitHub on other servers) when GitHub is blocked
+    const target = mirrorDown.has("github") && !mirrorDown.has("githack") ? "githack" : "github";
+    html = html.replace(JSD_REFUSED_RE, u => gnMirrorUrl(u, target, ["jsdelivr", "fastly", "gcore", "testingcf"]));
     // GitHub labels every file as plain text, so scripts and stylesheets are copied in
-    return loadGithubScriptsAndStyles(html);
+    return target === "github" ? loadGithubScriptsAndStyles(html) : html;
 }
 // Called on every game page before it's written into the frame
 async function adaptGameToMirrors(html) {
