@@ -32,3 +32,13 @@ for (const e of rows.slice(0, 60)) {
     if (s.detail) console.log(`  detail: ${String(s.detail).slice(0, 300)}`);
     console.log(`  ${s.browser || ""} · ${String(s.ua || "").slice(0, 140)} · screen ${s.screen || "?"} · memory ${s.memory || "?"} GB · site ${s.version || "?"} · ${s.secondsOnPage}s on page` + (s.blockedSources ? ` · blocked: ${s.blockedSources}` : ""));
 }
+
+// "What the game said" sent with broken reports (brokenDiag), without who sent them
+const diags = (await db.collection("brokenDiag").get()).docs.map(d => d.data())
+    .filter(r => !game || String(r.gameId) === game || String(r.gameName || "").toLowerCase().includes(game.toLowerCase()))
+    .sort((a, b) => (b.at ? b.at.toMillis() : 0) - (a.at ? a.at.toMillis() : 0));
+console.log(`\n${diags.length} broken report(s) with details` + (game ? ` for "${game}"` : "") + ":");
+for (const r of diags.slice(0, 30)) {
+    console.log(`\n── ${r.gameName} (${r.gameId}) · ${r.at ? r.at.toDate().toISOString().slice(0, 16) + "Z" : "?"}`);
+    console.log(String(r.diag || "").split("\n").map(l => "  " + l).join("\n"));
+}

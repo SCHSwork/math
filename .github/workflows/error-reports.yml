@@ -1,4 +1,5 @@
-# Shows the site's automatic error reports for a game (or everything recent).
+# Shows the site's automatic error reports for a game (or everything recent),
+# and the "What the game said" details sent with broken reports.
 # Actions → Read error reports → Run workflow. Usernames are left out (public logs).
 name: Read error reports
 on:

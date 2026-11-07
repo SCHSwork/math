@@ -707,9 +707,10 @@ async function reportBrokenShared(zone) {
     const how = trusted
         ? `You're a trusted reporter, so your report flags this game for everyone right away. Report it again later to take the flag back off.`
         : `When ${BROKEN_FLAG_THRESHOLD} or more people report a game within ${BROKEN_REPORT_DAYS} days, it gets a warning flag for everyone.`;
-    if (!(await askConfirm(how, { title: `Report "${zone.name}" as broken?`, confirmText: "Report" }))) return;
+    if (!(await askConfirm(how + " What the game said and this device's details (browser, screen, graphics) are sent along, to help fix it.", { title: `Report "${zone.name}" as broken?`, confirmText: "Report" }))) return;
     try {
         await writeGameStat(zone.id, "r", true);
+        if (typeof sendBrokenDiag === "function") sendBrokenDiag(zone);
         refreshCards();
         notify(`Thanks, "${zone.name}" was reported. It has ${getZoneStats(zone.id).reports} report(s) in the last ${BROKEN_REPORT_DAYS} days.`, { type: "success" });
     } catch (e) {
@@ -745,6 +746,11 @@ async function markGameFixed(id, { confirm = true } = {}) {
         notify("Couldn't mark it fixed: " + statsErrorText(e), { type: "error" });
         return false;
     }
+    // The reports' "What the game said" too
+    try {
+        const snap = await cloudDb.collection("brokenDiag").where("gameId", "==", id).get();
+        await Promise.all(snap.docs.map(d => d.ref.delete().catch(() => {})));
+    } catch (e) { console.warn("Couldn't clear the report details", e); }
     const cached = readJson(LIB_KEYS.statsCache, { t: 0, raw: {} });
     const entry = cached.raw[zk] || (cached.raw[zk] = { v: {}, r: {} });
     entry.r = {};

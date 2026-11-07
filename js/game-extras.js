@@ -558,3 +558,18 @@ function openGameLog() {
     body.append(p, pre, copy);
     document.getElementById("popupOverlay").style.display = "flex";
 }
+
+// Sent with every broken report: brokenDiag/{gameId}_{uid}, one per person per
+// game (a new report replaces it). Staff see them in Admin → Game check.
+async function sendBrokenDiag(zone) {
+    try {
+        if (!zone || typeof cloudUser === "undefined" || !cloudUser || !cloudDb) return;
+        const open = typeof currentGameId !== "undefined" && String(currentGameId) === String(zone.id);
+        const diag = (open ? gameDiagnostics() : `Game: ${zone.name} (${zone.id})\nReported from outside the game, so there's nothing from inside it.\nBrowser: ${navigator.userAgent}\nScreen: ${screen.width}x${screen.height} @${(window.devicePixelRatio || 1).toFixed(2)}`).slice(0, 9500);
+        await cloudDb.collection("brokenDiag").doc(`${zone.id}_${cloudUser.uid}`).set({
+            gameId: String(zone.id).slice(0, 12), gameName: String(zone.name || "").slice(0, 80),
+            uid: cloudUser.uid, by: (typeof currentUsername === "function" ? currentUsername() : "").slice(0, 40),
+            at: firebase.firestore.FieldValue.serverTimestamp(), diag
+        });
+    } catch (e) { console.warn("Couldn't send the report details", e); }
+}

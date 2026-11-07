@@ -20,6 +20,7 @@ All the changes to GN 2.0, newest first.
 ## November 6, 2026 — Fixes for games reported broken
 
 ### Added
+- **Broken reports come with "What the game said"** from the reporter's device. Staff see them under Admin → Game check → Reported by players, and Mark fixed clears them.
 - **⋯ More → What the game said** shows what a game printed while starting, plus this device's details (browser, screen, WebGL, graphics chip). If a game is black on your device, screenshot it and send it over.
 
 ### Fixed
