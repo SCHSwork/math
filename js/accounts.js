@@ -33,7 +33,8 @@ const CLOUD = {
     maxChars: 18000000,                      // ~18 MB compressed cap per save
     keys: {
         syncedGen: "gnmath-cloud-synced-gen",
-        syncedHash: "gnmath-cloud-synced-hash"
+        syncedHash: "gnmath-cloud-synced-hash",
+        pendingUndo: "gnmath-cloud-pending-undo"
     }
 };
 let cloudAuth = null, cloudDb = null, cloudUser = null;
@@ -278,6 +279,28 @@ function countFirestoreUse() {
 }
 
 // ── Firestore: saves/{uid} holds meta, saves/{uid}/chunks/{gen}_{i} hold data ─
+// The meta also keeps the save before the latest one (prev), so a save that
+// replaced better progress can be undone from Account → Undo last cloud save.
+// sum is a small summary (level, play time) to compare saves without loading them.
+
+// Level and total play time on this device
+function progressSummary() {
+    let level = 0, playSec = 0;
+    try { if (typeof achSummary === "function") level = achSummary().level || 0; } catch {}
+    try { if (typeof getPlaytimeMap === "function") playSec = Object.values(getPlaytimeMap()).reduce((n, v) => n + (Number(v) || 0), 0); } catch {}
+    return { level, playSec: Math.round(playSec) };
+}
+function describeProgress(sum) {
+    if (!sum) return "unknown progress";
+    const h = sum.playSec / 3600;
+    const time = sum.playSec < 60 ? "no play time" : h >= 1 ? `${h < 10 ? h.toFixed(1) : Math.round(h)} h played` : `${Math.round(sum.playSec / 60)} min played`;
+    return `level ${sum.level || 1}, ${time}`;
+}
+// True when a would clearly lose progress compared with b
+function progressIsLess(a, b) {
+    if (!a || !b) return false;
+    return (a.level || 0) < (b.level || 0) || (a.playSec || 0) + 600 < (b.playSec || 0) * 0.8;
+}
 function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 async function fetchCloudMeta() {
     const snap = await saveDocRef().get();
@@ -289,6 +312,7 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
     try {
         const json = JSON.stringify(await collectCloudBundle());
         const hash = await sha256Hex(json);
+        const sum = progressSummary();
         // Nothing changed since the last sync: skip the Firebase read entirely
         if (!force && hash === localStorage.getItem(CLOUD.keys.syncedHash) && localStorage.getItem(CLOUD.keys.syncedGen)) {
             setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
@@ -326,17 +350,24 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
         for (let i = 0; i < chunkCount; i++) {
             await chunks.doc(`${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) });
         }
+        // The save being replaced becomes prev (kept for Undo); the one before it is deleted.
+        // A plain autosave over the same device's save keeps prev as it was, so prev stays
+        // the last save from before a "replace" (another device, or Keep this device's).
+        const replacing = meta && meta.gen && (force || meta.gen !== localGen);
+        const prev = meta && meta.gen ? (replacing || !meta.prev ? { gen: meta.gen, chunkCount: meta.chunkCount || 0, sum: meta.sum || null, at: meta.updatedAt || null } : meta.prev) : null;
         await saveDocRef().set({
-            gen, chunkCount, hash,
+            gen, chunkCount, hash, sum,
             size: packed.length,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            prev
         });
         localStorage.setItem(CLOUD.keys.syncedGen, gen);
         localStorage.setItem(CLOUD.keys.syncedHash, hash);
-        if (meta && meta.gen) {
-            for (let i = 0; i < (meta.chunkCount || 0); i++) {
-                chunks.doc(`${meta.gen}_${i}`).delete().catch(() => {});
-            }
+        const drop = [];
+        if (meta && meta.gen && (!prev || prev.gen !== meta.gen)) drop.push(meta);
+        if (meta && meta.prev && meta.prev.gen && (!prev || prev.gen !== meta.prev.gen)) drop.push(meta.prev);
+        for (const old of drop) {
+            for (let i = 0; i < (old.chunkCount || 0); i++) chunks.doc(`${old.gen}_${i}`).delete().catch(() => {});
         }
         setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
         return true;
@@ -354,13 +385,17 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
         cloudBusy = false;
     }
 }
-async function downloadCloudSave() {
+async function downloadCloudSave({ previous = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
     try {
         setCloudStatus("Loading cloud save…");
-        const meta = await fetchCloudMeta();
+        let meta = await fetchCloudMeta();
         if (!meta) { setCloudStatus("No cloud save yet."); return false; }
+        if (previous) {
+            if (!meta.prev || !meta.prev.gen) { setCloudStatus("There's no earlier cloud save to go back to."); return false; }
+            meta = meta.prev;
+        }
         const chunks = saveDocRef().collection("chunks");
         const parts = await Promise.all(
             Array.from({ length: meta.chunkCount }, (_, i) => chunks.doc(`${meta.gen}_${i}`).get())
@@ -369,8 +404,14 @@ async function downloadCloudSave() {
         const json = await b64ToText(parts.map(p => p.data().d).join(""));
         if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
         await applyCloudBundle(JSON.parse(json));
-        localStorage.setItem(CLOUD.keys.syncedGen, meta.gen);
-        localStorage.setItem(CLOUD.keys.syncedHash, meta.hash);
+        if (previous) {
+            // Going back: the next save from this device becomes the cloud save again
+            localStorage.removeItem(CLOUD.keys.syncedHash);
+            localStorage.setItem(CLOUD.keys.pendingUndo, "1");
+        } else {
+            localStorage.setItem(CLOUD.keys.syncedGen, meta.gen);
+            localStorage.setItem(CLOUD.keys.syncedHash, meta.hash);
+        }
         window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
         location.reload(); // games read their saves on startup
         return true;
@@ -389,18 +430,34 @@ async function cloudSyncOnSignIn() {
         const meta = await fetchCloudMeta();
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (!meta) { await uploadCloudSave({ force: true }); return; }
+        if (localStorage.getItem(CLOUD.keys.pendingUndo)) {
+            // Just went back to the earlier cloud save: make it the cloud save again
+            localStorage.removeItem(CLOUD.keys.pendingUndo);
+            await uploadCloudSave({ force: true });
+            return;
+        }
         if (meta.gen === localGen) { await uploadCloudSave(); return; }
         const when = meta.updatedAt && meta.updatedAt.toDate ? meta.updatedAt.toDate().toLocaleString() : "earlier";
+        const here = progressSummary(), cloud = meta.sum || null;
+        const deviceLess = progressIsLess(here, cloud), cloudLess = progressIsLess(cloud, here);
         const choice = await askChoice(
-            `Your account has game progress saved on ${when}, and this device has its own. Which do you want to keep?`, {
+            `Your account has progress saved on ${when}` + (cloud ? ` (${describeProgress(cloud)})` : "") +
+            `, and this device has its own (${describeProgress(here)}). Which do you want to keep? The other one is replaced.` +
+            (deviceLess ? "\n\nThis device has less progress than your cloud save." : cloudLess ? "\n\nYour cloud save has less progress than this device." : ""), {
                 title: "Pick which progress to keep",
                 choices: [
-                    { value: "device", label: "Keep this device's" },
-                    { value: "cloud", label: "Load my cloud save", primary: true }
+                    { value: "device", label: "Keep this device's", primary: cloudLess },
+                    { value: "cloud", label: "Load my cloud save", primary: !cloudLess }
                 ]
             });
         if (choice === "cloud") await downloadCloudSave();
-        else if (choice === "device") await uploadCloudSave({ force: true });
+        else if (choice === "device") {
+            if (deviceLess && !(await askConfirm(`Your cloud save (${describeProgress(cloud)}) will be replaced with this device's (${describeProgress(here)}).`, { title: "Replace your better cloud save?", confirmText: "Replace it", danger: true }))) {
+                setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
+                return;
+            }
+            await uploadCloudSave({ force: true });
+        }
         else setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
     } catch (e) {
         console.error(e);
@@ -523,11 +580,36 @@ async function cloudDeleteAccount() {
     }
 }
 
+// Both say what each side has, and warn when the one being replaced has more progress
+async function cloudSums() {
+    let cloud = null;
+    try { const meta = await fetchCloudMeta(); cloud = meta && meta.sum || null; } catch {}
+    return { here: progressSummary(), cloud };
+}
 async function confirmUploadCloudSave() {
-    if (await askConfirm("This device's progress will replace your cloud save.", { title: "Save to cloud?", confirmText: "Save now" })) uploadCloudSave({ force: true });
+    const { here, cloud } = await cloudSums();
+    const less = progressIsLess(here, cloud);
+    const msg = `This device's progress (${describeProgress(here)}) will replace your cloud save` + (cloud ? ` (${describeProgress(cloud)})` : "") + "." +
+        (less ? " This device has less progress than your cloud save! You can undo this from Account afterwards." : "");
+    if (await askConfirm(msg, { title: less ? "Replace your better cloud save?" : "Save to cloud?", confirmText: less ? "Replace it" : "Save now", danger: less })) uploadCloudSave({ force: true });
 }
 async function confirmDownloadCloudSave() {
-    if (await askConfirm("Your cloud save will replace this device's game progress.", { title: "Load cloud save?", confirmText: "Load cloud save" })) downloadCloudSave();
+    const { here, cloud } = await cloudSums();
+    const less = progressIsLess(cloud, here);
+    const msg = "Your cloud save" + (cloud ? ` (${describeProgress(cloud)})` : "") + ` will replace this device's game progress (${describeProgress(here)}).` +
+        (less ? " Your cloud save has less progress than this device!" : "");
+    if (await askConfirm(msg, { title: less ? "Replace your better progress?" : "Load cloud save?", confirmText: "Load cloud save", danger: less })) downloadCloudSave();
+}
+// Goes back to the cloud save from before the last one that replaced it
+async function confirmUndoCloudSave() {
+    let meta = null;
+    try { meta = await fetchCloudMeta(); } catch (e) { notify("Couldn't reach the cloud: " + (e.message || e), { type: "error" }); return; }
+    if (!meta || !meta.prev || !meta.prev.gen) { notify("There's no earlier cloud save to go back to."); return; }
+    const at = meta.prev.at && meta.prev.at.toDate ? meta.prev.at.toDate().toLocaleString() : "earlier";
+    if (!(await askConfirm(`This device and your cloud save go back to the save from ${at}` + (meta.prev.sum ? ` (${describeProgress(meta.prev.sum)})` : "") +
+        `. What's saved now` + (meta.sum ? ` (${describeProgress(meta.sum)})` : "") + " is kept as the earlier save, so you can undo this too.",
+        { title: "Undo the last cloud save?", confirmText: "Go back" }))) return;
+    downloadCloudSave({ previous: true });
 }
 
 // ── UI ──────────────────────────────────────────────────────────────────────
@@ -551,6 +633,7 @@ function openAccountPanel(mode) {
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;">
                 <button class="settings-button" onclick="confirmUploadCloudSave()">Save now</button>
                 <button class="settings-button" onclick="confirmDownloadCloudSave()">Load cloud save</button>
+                <button class="settings-button" onclick="confirmUndoCloudSave()" title="Go back to the cloud save from before it was last replaced">Undo last cloud save</button>
                 <button class="settings-button" id="acct-signout" onclick="cloudSignOut()">Sign out</button>
             </div>
             ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
