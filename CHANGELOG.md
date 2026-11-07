@@ -23,6 +23,7 @@ All the changes to GN 2.0, newest first.
 - **⋯ More → What the game said** shows what a game printed while starting, plus this device's details (browser, screen, WebGL, graphics chip). If a game is black on your device, screenshot it and send it over.
 
 ### Fixed
+- **17 games that can't load anymore are switched off** (Clothing Shop 3D, Telekinesis Attack, Supermarket 3D, High Heels, Rich Run 3D and 12 more). Their files were in a GitHub repo that's been deleted, and there's no other copy, so they were only ever a black screen.
 - **Angry Birds and Slope aren't black anymore.** Their files are in a GitHub repo jsDelivr refuses to serve (it's too big for it), so they never loaded for anyone whose jsDelivr works. Those files now always come from GitHub.
 - **Angry Birds and other older Unity games start on phones.** They stopped at a hidden "Unity WebGL is not currently supported on mobiles, press OK" box and stayed black. The site now skips that check.
 - **Angry Birds: the slingshot works again.** Unity games work out where you click from the game's normal size, so when "Fit game to screen" drew one bigger, clicks and drags landed in the wrong spot and the bird couldn't be pulled back. Unity games are now made bigger for real (like Flash games) instead of being stretched, so they draw sharp and clicks line up.
