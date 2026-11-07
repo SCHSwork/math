@@ -1486,6 +1486,36 @@
     "web-ports/the-joy-of-creation-story-mode": "68cfd3bc098cc62819508197e4047db5ccbc0439"
    },
    "sha256": "a3b6443ac76b03bea493cdd3b3fe54fe568a7e3eb149eef63988f9cc8f1269a2"
+  },
+  "880": {
+   "name": "Castle Crashers",
+   "file": "880.html",
+   "path": "washed/880.html",
+   "removed": [],
+   "lockedTo": {
+    "thirstygithub/castlecrashers": "ea13505deba6eee1af52532ca4945ab15bf9d00c"
+   },
+   "sha256": "705ab1df506c8dde8b8cb895028447021999b08161dd940205763acbcef3111e"
+  },
+  "881": {
+   "name": "Feed and Grow Fish",
+   "file": "881.html",
+   "path": "washed/881.html",
+   "removed": [],
+   "lockedTo": {
+    "AlexBoops/Feed-and-Grow-Port": "d2e793be8d62f7755ef774bdafbf76a534e8e003"
+   },
+   "sha256": "edacbabe9bcfb70c240767a1e8569fbd868c3ff7cecf241ca084e4a67b16a51d"
+  },
+  "882": {
+   "name": "Minecraft: Story Mode",
+   "file": "882.html",
+   "path": "washed/882.html",
+   "removed": [],
+   "lockedTo": {
+    "thirstygithub/mcsmw": "e010befdc58c337a4b5692dd32fae0d23327e993"
+   },
+   "sha256": "fcc0348dc075b6f06182a7248b66cd37bc19ff19ca17996bdad82a37642b2b25"
   }
  }
 }
