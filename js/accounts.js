@@ -290,6 +290,7 @@ function progressSummary() {
     let level = 0, playSec = 0;
     try { if (typeof achSummary === "function") level = achSummary().level || 0; } catch {}
     try { if (typeof getPlaytimeMap === "function") playSec = Object.values(getPlaytimeMap()).reduce((n, v) => n + (Number(v) || 0), 0); } catch {}
+    try { if (typeof achBonus === "function") playSec += achBonus().sec; } catch {}
     return { level, playSec: Math.round(playSec) };
 }
 function describeProgress(sum) {
@@ -461,6 +462,8 @@ async function cloudSyncOnSignIn() {
     try {
         const meta = await fetchCloudMeta();
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
+        // Progress the owner gave back to this account (tools/recover_save.mjs)
+        if (meta && meta.grant && typeof applyGrant === "function") { try { applyGrant(meta.grant); } catch (e) { console.warn(e); } }
         if (!meta) { await uploadCloudSave({ force: true }); return; }
         if (localStorage.getItem(CLOUD.keys.pendingUndo)) {
             // Just went back to the earlier cloud save: make it the cloud save again

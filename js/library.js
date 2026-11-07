@@ -414,7 +414,7 @@ function openStatsPanel() {
         .map(([id, sec]) => ({ id, sec: Number(sec) || 0, zone: zoneById(id) }))
         .filter(x => x.sec > 0 && x.zone)
         .sort((a, b) => b.sec - a.sec);
-    const total = played.reduce((n, x) => n + x.sec, 0);
+    const total = played.reduce((n, x) => n + x.sec, 0) + (typeof achBonus === "function" ? achBonus().sec : 0);
     const tried = new Set([...played.filter(x => x.sec >= 60).map(x => x.id), ...getRecent().filter(id => zoneById(id))]);
     const library = zones.filter(z => !isZoneDisabled(z.id) && z.url && !z.url.startsWith("http")).length;
     const pct = library ? Math.round(tried.size / library * 100) : 0;
@@ -461,6 +461,8 @@ function openStatsPanel() {
 async function resetMyStats() {
     if (!(await askConfirm("Your play time and recently played list will be cleared. Favorites and game progress are kept.", { title: "Reset your stats?", confirmText: "Reset", danger: true }))) return;
     try { localStorage.removeItem(LIB_KEYS.playtime); localStorage.removeItem(LIB_KEYS.recent); } catch {}
+    // Play time given back by a grant counts as play time too
+    try { if (typeof achNote === "function") achNote(a => { if (a.bonus) a.bonus.sec = 0; }); } catch {}
     refreshCards();
     openStatsPanel();
 }

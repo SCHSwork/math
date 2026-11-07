@@ -32,7 +32,7 @@ function achStats() {
     const a = achState();
     const play = typeof getPlaytimeMap === "function" ? getPlaytimeMap() : {};
     const secs = Object.values(play).map(Number).filter(n => n > 0);
-    const totalSec = secs.reduce((n, x) => n + x, 0);
+    const totalSec = secs.reduce((n, x) => n + x, 0) + achBonus(a).sec;
     const tried = new Set(Object.keys(a.tried));
     (typeof getRecent === "function" ? getRecent() : []).forEach(id => tried.add(String(id)));
     Object.entries(play).forEach(([id, s]) => { if (Number(s) >= 60) tried.add(String(id)); });
@@ -122,8 +122,46 @@ function achXp(stats, earned) {
         stats.ratings * 5 +
         Math.min(stats.reports, 20) * 10 +
         stats.gotd * 25 +
-        earned.reduce((n, b) => n + b.xp, 0)
+        earned.reduce((n, b) => n + b.xp, 0) +
+        achBonus().xp
     );
+}
+// Progress given back by the owner (a grant, see applyGrant): extra play time and XP
+function achBonus(a = achState()) {
+    const b = a.bonus || {};
+    return { sec: Math.max(0, Number(b.sec) || 0), xp: Math.max(0, Number(b.xp) || 0) };
+}
+// XP needed to reach a level
+function achXpForLevel(level) {
+    let at = 0;
+    for (let n = 1; n < level; n++) at += 100 + 60 * (n - 1);
+    return at;
+}
+// A grant from the owner ({ id, level, playSec, note }), put on an account with
+// tools/recover_save.mjs to give back lost progress. Added on top of what the
+// player has, once per grant; it then travels with their save like everything else.
+function applyGrant(grant) {
+    if (!grant || !grant.id) return false;
+    const a = achState();
+    a.grants = a.grants || {};
+    if (a.grants[grant.id]) return false;
+    a.bonus = achBonus(a);
+    a.bonus.sec += Math.max(0, Number(grant.playSec) || 0);
+    a.grants[grant.id] = Date.now();
+    achWrite(a);
+    const target = Math.max(0, Math.floor(Number(grant.level) || 0));
+    const sum = achSummary();
+    if (sum.level < target) {
+        const b = achState();
+        b.bonus = achBonus(b);
+        b.bonus.xp += achXpForLevel(target) - sum.xp;
+        achWrite(b);
+    }
+    const now = achSummary();
+    const h = (Number(grant.playSec) || 0) / 3600;
+    notify(`Your progress was restored: you're level ${now.level}` + (h >= 0.1 ? `, with ${h < 10 ? h.toFixed(1) : Math.round(h)} hours of play time given back` : "") + `.` + (grant.note ? `\n${grant.note}` : ""), { type: "success", duration: 10000 });
+    try { achCheck(true); achRenderChip(); } catch {}
+    return true;
 }
 // Level n needs 100 + 60·(n-1) more XP than level n-1
 function achLevelFor(xp) {

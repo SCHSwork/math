@@ -14,6 +14,7 @@ All the changes to GN 2.0, newest first.
 
 ### Added
 - **Earlier cloud saves** in Account. Whenever your cloud save gets replaced (by another device, "Keep this device's" or Save now), the old one is kept for 7 days and you can go back to it. Loading a cloud save over a device's own progress keeps a 7-day copy of that too.
+- Lost progress can be given back: the site owner can restore a player's level and play time, and it's added on top of what they have the next time they open the site signed in.
 - Choosing between this device's progress and your cloud save now shows the level and play time of each. "Load my cloud save" is the default, and "Keep this device's" always asks first.
 
 ## November 6, 2026 — Fixes for games reported broken
