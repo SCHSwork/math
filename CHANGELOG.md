@@ -7,6 +7,14 @@ All the changes to GN 2.0, newest first.
 
 
 
+## November 6, 2026 — New games
+
+### Added
+- **Garten of Banban 1** and **The Joy of Creation: Story Mode**, checked and cleaned (no ads or trackers) and locked to the exact versions that were checked.
+
+### Fixed
+- Big games that join their download into one huge file before starting (like Feed and Grow Fish) no longer run out of memory at "Launching engine".
+
 ## November 6, 2026 — Your progress is safer
 
 ### Fixed
