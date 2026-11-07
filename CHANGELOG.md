@@ -23,6 +23,7 @@ All the changes to GN 2.0, newest first.
 - **⋯ More → What the game said** shows what a game printed while starting, plus this device's details (browser, screen, WebGL, graphics chip). If a game is black on your device, screenshot it and send it over.
 
 ### Fixed
+- **Angry Birds and Slope aren't black anymore.** Their files are in a GitHub repo jsDelivr refuses to serve (it's too big for it), so they never loaded for anyone whose jsDelivr works. Those files now always come from GitHub.
 - **Angry Birds and other older Unity games start on phones.** They stopped at a hidden "Unity WebGL is not currently supported on mobiles, press OK" box and stayed black. The site now skips that check.
 - **Angry Birds: the slingshot works again.** Unity games work out where you click from the game's normal size, so when "Fit game to screen" drew one bigger, clicks and drags landed in the wrong spot and the bird couldn't be pulled back. Unity games are now made bigger for real (like Flash games) instead of being stretched, so they draw sharp and clicks line up.
 - **-3 no longer shrinks to a dot.** It changes its own resolution, and with nothing holding its size it shrank every time it was fitted until it was a few pixels wide (a black screen with a dot in the corner). Its size is now held while it's fitted, and if a game keeps resizing itself or shrinks to almost nothing, Fit game to screen backs off and leaves it alone.

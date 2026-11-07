@@ -64,6 +64,7 @@ const MIME = { js: "application/javascript", mjs: "application/javascript", css:
 const JSD_GH = /^https?:\/\/(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([^/]+)\/([^/@]+)(?:@([^/]+))?\/([^?#]*)/;
 // Downloads made by the game (not the site around it) are added to st.bytes while st.counting.
 const routedRequests = new WeakSet();
+const jsdRefused = new Set();
 function countBytes(st, req, n) {
     try { if (!st.counting || !n || req.frame() === req.frame().page().mainFrame() && !/^(fetch|xhr)$/.test(req.resourceType())) return; } catch (e) { return; }
     st.bytes += n;
@@ -73,6 +74,12 @@ async function viaGitHub(route, st) {
     routedRequests.add(route.request());
     let res = null;
     try { res = await route.fetch({ timeout: 30000 }); } catch (e) {}
+    // jsDelivr refusing a repo (it's too big for it) breaks the game for every
+    // player whose jsDelivr works; here it would quietly come from GitHub instead
+    if (res && res.status() >= 400 && res.status() !== 404) {
+        const m = /jsdelivr\.net\/gh\/([\w.-]+\/[\w.-]+)/.exec(url);
+        if (m && !jsdRefused.has(m[1])) { jsdRefused.add(m[1]); console.log(`::warning::jsDelivr refuses ${m[1]} (HTTP ${res.status()}); add it to JSD_REFUSED_REPOS in js/app.js`); }
+    }
     if (res && (res.status() < 400 || res.status() === 404)) {
         if (res.status() < 400) { try { countBytes(st, route.request(), (await res.body()).length); } catch (e) {} }
         return route.fulfill({ response: res });

@@ -340,9 +340,25 @@ async function loadGithubScriptsAndStyles(html) {
     return html.replace(/<script\b[^>]*\bsrc\s*=[^>]*>/gi, tag => /\btype\s*=\s*["']?module/i.test(tag) ? tag : swap(tag, "src"))
         .replace(/<link\b[^>]*>/gi, tag => /\brel\s*=\s*["']?stylesheet/i.test(tag) ? swap(tag, "href") : tag);
 }
+// GitHub repos jsDelivr won't serve (too big for it: every file answers with an
+// error, on all of its addresses). Links to them always go to GitHub instead.
+// gn-math/assets broke Angry Birds, Slope and one more for anyone whose
+// jsDelivr works; the game check and test machines quietly used GitHub, so it
+// only showed up on players' devices.
+const JSD_REFUSED_REPOS = ["gn-math/assets"];
+const JSD_REFUSED_RE = new RegExp(`https?:\\/\\/(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net\\/gh\\/(?:${JSD_REFUSED_REPOS.map(r => r.replace(/[.\/]/g, "\\$&")).join("|")})[@\\/][^\\s"'\`<>()\\\\]*`, "gi");
+async function avoidRefusedRepos(html) {
+    JSD_REFUSED_RE.lastIndex = 0;
+    if (!JSD_REFUSED_RE.test(html)) return html;
+    JSD_REFUSED_RE.lastIndex = 0;
+    html = html.replace(JSD_REFUSED_RE, u => gnMirrorUrl(u, "github", ["jsdelivr", "fastly", "gcore", "testingcf"]));
+    // GitHub labels every file as plain text, so scripts and stylesheets are copied in
+    return loadGithubScriptsAndStyles(html);
+}
 // Called on every game page before it's written into the frame
 async function adaptGameToMirrors(html) {
     if (typeof html !== "string") return html;
+    html = await avoidRefusedRepos(html);
     GAME_MIRROR_URL_RE.lastIndex = 0;
     if (!GH_MIRROR_ORDER.some(m => mirrorDown.has(m))) return html;   // every source works (as far as we know)
     const target = await bestGameMirror();
