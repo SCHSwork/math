@@ -110,7 +110,11 @@ const ACH_BADGES = [
     ["spookyseason", "👻", "Spooky Season", "Play 5 spooky games during Halloween week. Limited time!", "spooky", 5, 150]
 ].map(([id, icon, name, desc, stat, goal, xp]) => ({ id, icon, name, desc, stat, goal, xp }));
 
-function achEarned(stats) { return ACH_BADGES.filter(b => (stats[b.stat] || 0) >= b.goal); }
+// Badges count when their goal is met, or when the owner gave them back (a grant)
+function achEarned(stats) {
+    const given = achState().givenBadges || {};
+    return ACH_BADGES.filter(b => (stats[b.stat] || 0) >= b.goal || given[b.id]);
+}
 
 // ── XP and levels ───────────────────────────────────────────────────────────
 function achXp(stats, earned) {
@@ -137,7 +141,7 @@ function achXpForLevel(level) {
     for (let n = 1; n < level; n++) at += 100 + 60 * (n - 1);
     return at;
 }
-// A grant from the owner ({ id, level, playSec, note }), put on an account with
+// A grant from the owner ({ id, level, playSec, badges, note }), put on an account with
 // tools/recover_save.mjs to give back lost progress. Added on top of what the
 // player has, once per grant; it then travels with their save like everything else.
 function applyGrant(grant) {
@@ -147,6 +151,11 @@ function applyGrant(grant) {
     if (a.grants[grant.id]) return false;
     a.bonus = achBonus(a);
     a.bonus.sec += Math.max(0, Number(grant.playSec) || 0);
+    // Badges by id; "limited" means every limited-time badge (Halloween ones)
+    const want = new Set((Array.isArray(grant.badges) ? grant.badges : []).map(String));
+    const badges = ACH_BADGES.filter(b => want.has(b.id) || (want.has("limited") && /Limited time/i.test(b.desc)));
+    a.givenBadges = a.givenBadges || {};
+    badges.forEach(b => { a.givenBadges[b.id] = Date.now(); });
     a.grants[grant.id] = Date.now();
     achWrite(a);
     const target = Math.max(0, Math.floor(Number(grant.level) || 0));
@@ -159,7 +168,8 @@ function applyGrant(grant) {
     }
     const now = achSummary();
     const h = (Number(grant.playSec) || 0) / 3600;
-    notify(`Your progress was restored: you're level ${now.level}` + (h >= 0.1 ? `, with ${h < 10 ? h.toFixed(1) : Math.round(h)} hours of play time given back` : "") + `.` + (grant.note ? `\n${grant.note}` : ""), { type: "success", duration: 10000 });
+    notify(`Your progress was restored: you're level ${now.level}` + (h >= 0.1 ? `, with ${h < 10 ? h.toFixed(1) : Math.round(h)} hours of play time given back` : "") + `.` +
+        (badges.length ? `\nBadges: ${badges.map(b => b.icon + " " + b.name).join(", ")}` : "") + (grant.note ? `\n${grant.note}` : ""), { type: "success", duration: 12000 });
     try { achCheck(true); achRenderChip(); } catch {}
     return true;
 }
@@ -295,7 +305,7 @@ function openAchievementsPanel() {
     const a = achState();
     const fmt = (b, v) => b.stat === "totalSec" || b.stat === "longest" ? `${Math.floor(v / 3600)}h ${Math.floor((v % 3600) / 60)}m / ${Math.round(b.goal / 3600)}h` : `${Math.min(v, b.goal)} / ${b.goal}`;
     const badges = ACH_BADGES.map(b => {
-        const v = sum.stats[b.stat] || 0, got = v >= b.goal;
+        const v = sum.stats[b.stat] || 0, got = v >= b.goal || sum.earned.includes(b);
         const pct = Math.min(100, Math.round(v / b.goal * 100));
         const when = got && a.unlocked[b.id] ? new Date(a.unlocked[b.id]).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
         return `<div class="ach-badge ${got ? "got" : ""}" title="${esc(b.desc)}">

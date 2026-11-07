@@ -23,6 +23,10 @@ on:
         description: "Give back progress: hours of play time to add (0 = don't)"
         required: false
         default: "0"
+      grant_badges:
+        description: "Give back progress: badge ids, comma separated (\"limited\" = all limited-time ones)"
+        required: false
+        default: ""
       grant_note:
         description: "Give back progress: a short note they see (optional)"
         required: false
@@ -48,6 +52,7 @@ jobs:
           RESTORE: ${{ github.event.inputs.restore }}
           GRANT_LEVEL: ${{ github.event.inputs.grant_level }}
           GRANT_HOURS: ${{ github.event.inputs.grant_hours }}
+          GRANT_BADGES: ${{ github.event.inputs.grant_badges }}
           GRANT_NOTE: ${{ github.event.inputs.grant_note }}
         run: |
           npm i --no-save --silent firebase-admin@12

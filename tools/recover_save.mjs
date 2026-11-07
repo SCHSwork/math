@@ -96,11 +96,13 @@ const now = await look("Now");
 // Give back lost progress: the site adds it on top of what they have when they
 // next open it signed in (applyGrant in js/achievements.js)
 const grantLevel = Number(process.env.GRANT_LEVEL || 0), grantHours = Number(process.env.GRANT_HOURS || 0);
-if (grantLevel > 0 || grantHours > 0) {
+const grantBadges = String(process.env.GRANT_BADGES || "").split(/[\s,]+/).map(x => x.trim()).filter(x => /^[a-z0-9]+$/i.test(x));
+if (grantLevel > 0 || grantHours > 0 || grantBadges.length) {
+    if (now.meta && now.meta.grant) console.log(`\nA grant from before (level ${now.meta.grant.level}, ${(now.meta.grant.playSec || 0) / 3600} h) hasn't been used yet; it's replaced by this one.`);
     if (!now.meta) { console.log("\nNo cloud save yet, so there's nowhere to put the grant. They need to sign in once first."); process.exit(1); }
-    const grant = { id: "g" + Date.now().toString(36), level: Math.floor(grantLevel), playSec: Math.round(grantHours * 3600), note: String(process.env.GRANT_NOTE || "").slice(0, 200) };
+    const grant = { id: "g" + Date.now().toString(36), level: Math.floor(grantLevel), playSec: Math.round(grantHours * 3600), badges: grantBadges, note: String(process.env.GRANT_NOTE || "").slice(0, 200) };
     await metaRef.set({ grant }, { merge: true });
-    console.log(`\nGrant ready: level ${grant.level || "unchanged"}, ${grantHours} h of play time.`);
+    console.log(`\nGrant ready: level ${grant.level || "unchanged"}, ${grantHours} h of play time` + (grantBadges.length ? `, badges: ${grantBadges.join(", ")}` : "") + ".");
     console.log(`It's added on top of their progress the next time ${username} opens the site signed in.`);
     process.exit(0);
 }
