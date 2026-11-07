@@ -524,7 +524,8 @@ function gameDiagnostics() {
         const cs = [...d.querySelectorAll("canvas")];
         add(`Canvases: ${cs.length ? cs.map(c => { const st = w.getComputedStyle(c); return `${c.id || "canvas"} ${c.width}x${c.height} shown ${c.clientWidth}x${c.clientHeight}${st.display === "none" || st.visibility === "hidden" ? " HIDDEN" : ""}`; }).join("; ") : "none"}`);
         const engine = w.UnityLoader ? "Unity (UnityLoader)" + (w.UnityLoader.SystemInfo ? ` mobile=${w.UnityLoader.SystemInfo.mobile} webgl=${w.UnityLoader.SystemInfo.hasWebGL}` : "")
-            : w.createUnityInstance ? "Unity (2020+)" : w.RufflePlayer ? "Flash (Ruffle)" : w.EJS_player || w.EJS_core ? "Emulator" : w.Module ? "Emscripten" : "?";
+            : w.createUnityInstance ? "Unity (2020+)" : d.querySelector("ruffle-player,ruffle-embed,ruffle-object") ? "Flash (Ruffle)"
+            : w.EJS_player || w.EJS_core ? "Emulator" : w.Module ? "Emscripten" : /UnityLoader|createUnityInstance/.test(d.documentElement.innerHTML) ? "Unity (its loader didn't load)" : "?";
         add(`Engine: ${engine}`);
         const pop = [...d.querySelectorAll("div,p,span")].filter(x => x.children.length < 3 && /not (currently )?supported|error|failed|out of memory/i.test(x.textContent || "") && x.offsetParent !== null).slice(0, 3);
         pop.forEach(x => add(`On screen: "${x.textContent.trim().slice(0, 200)}"`));
