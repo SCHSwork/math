@@ -1,5 +1,5 @@
 {
- "washedFrom": "492109e",
+ "washedFrom": "63c1608",
  "checked": "2026-10-25",
  "games": {
   "615": {
@@ -634,7 +634,7 @@
   "990134": {
    "name": "Chess",
    "extra": true,
-   "author": "Stefano Gioffré",
+   "author": "Stefano Gioffr\u00e9",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/chess",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1101,7 +1101,7 @@
   "990171": {
    "name": "Sleeping Beauty",
    "extra": true,
-   "author": "Ondřej Žára",
+   "author": "Ond\u0159ej \u017d\u00e1ra",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/sleeping beauty",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1131,7 +1131,7 @@
   "990173": {
    "name": "Space Invaders",
    "extra": true,
-   "author": "Tóth Róbert",
+   "author": "T\u00f3th R\u00f3bert",
    "source": "https://github.com/Avioso/strongdog/tree/f85f28d947e1bb06696246f47ba446d02d56a33d/html/spaceinvaders",
    "lockedTo": {
     "Avioso/strongdog": "f85f28d947e1bb06696246f47ba446d02d56a33d"
@@ -1466,6 +1466,26 @@
    "cover": "washed/covers/sd-among-us.jpg",
    "featured": true,
    "featuredOrder": 0.5
+  },
+  "878": {
+   "name": "Garten of Banban 1",
+   "file": "878-f.html",
+   "path": "washed/878.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/garten-of-banban": "a82c94ea3e9a2f2cbc2e1d925007947134b4f156"
+   },
+   "sha256": "4da204ecce8e7f842f7c6074496682ee3a55ae0b7b4982296d7b4a01fa392061"
+  },
+  "879": {
+   "name": "The Joy of Creation: Story Mode",
+   "file": "879.html",
+   "path": "washed/879.html",
+   "removed": [],
+   "lockedTo": {
+    "web-ports/the-joy-of-creation-story-mode": "68cfd3bc098cc62819508197e4047db5ccbc0439"
+   },
+   "sha256": "a3b6443ac76b03bea493cdd3b3fe54fe568a7e3eb149eef63988f9cc8f1269a2"
   }
  }
 }

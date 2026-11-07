@@ -1357,7 +1357,8 @@ function bigBlobHook() {
         var B = function Blob(parts, opts) {
             var b = new OB(parts, opts);
             try {
-                if (Array.isArray(parts) && parts.length > 1 && parts.every(isBytes)) {
+                // Pieces, or one big buffer a page already joined them into (Feed and Grow Fish)
+                if (Array.isArray(parts) && parts.length >= 1 && parts.every(isBytes)) {
                     var n = 0;
                     for (var i = 0; i < parts.length; i++) n += parts[i].byteLength;
                     if (n >= BIG && n === b.size) pieces.set(b, { parts: parts.slice(), size: n });
