@@ -1272,10 +1272,30 @@ function partGuardHook(SIZES, BIG) {
         var method = (init && init.method) || (input && input.method) || "GET";
         if (!/\.part\d+(\?|#|$)/.test(url) || String(method).toUpperCase() !== "GET") return origFetch.apply(this, arguments);
         var want = sizeOf(url), fixed = locked(url), self = this, first = arguments, seen = {};
+        // Where to get the piece on each try: where the game asked, then GitHub, then githack
+        var w = where(url), tries = [url];
+        if (w) {
+            var ghRef = ALIASES.indexOf(w.ref) >= 0 ? "HEAD" : w.ref, enc = w.path.split("/").map(encodeURIComponent).join("/");
+            ["https://raw.githubusercontent.com/" + w.repo + "/" + ghRef + "/" + enc, "https://rawcdn.githack.com/" + w.repo + "/" + ghRef + "/" + enc]
+                .forEach(function (u) { if (new URL(u).hostname !== new URL(url, document.baseURI).hostname) tries.push(u); });
+        }
+        var from = function (n) { return tries[(n - 1) % tries.length]; };
+        // A failed download (an error page, or no answer at all) used to go straight to the
+        // game, which then joined the error message in as if it were the piece (FISH: 167
+        // bytes instead of 20 MB, "Invalid binary data file size"). Try the other mirrors.
+        var failed = function (n, why, res) {
+            note(from(n) + " failed (" + why + ")" + (n < 4 ? ", trying " + from(n + 1).split("/")[2] : ""));
+            if (n >= 4) {
+                try { window.parent.__gnmathGameError({ kind: "download", message: "Piece failed to download after 4 tries", stack: url + " (" + why + ")" }); } catch (e) {}
+                if (res) return res;
+                throw new TypeError("Failed to download: " + url);
+            }
+            return new Promise(function (r) { setTimeout(r, 800 * n); }).then(function () { return tryOnce(n + 1); });
+        };
         var tryOnce = function (n) {
-            var args = n === 1 ? first : [url, Object.assign({}, init || {}, { cache: "reload" })];
+            var args = n === 1 ? first : [from(n), Object.assign({}, init || {}, { cache: "reload" })];
             return origFetch.apply(self, args).then(function (res) {
-                if (!res.ok) return res;
+                if (!res.ok) return failed(n, "HTTP " + res.status, res);
                 var cl = Number(res.headers.get("content-length")) || 0;
                 return res.arrayBuffer().then(function (buf) {
                     var got = buf.byteLength;
@@ -1292,8 +1312,8 @@ function partGuardHook(SIZES, BIG) {
                         throw new TypeError("Incomplete download: " + url);
                     }
                     return new Promise(function (r) { setTimeout(r, 800 * n); }).then(function () { return tryOnce(n + 1); });
-                });
-            });
+                }, function (err) { return failed(n, "cut off: " + ((err && err.message) || "stream error")); });
+            }, function (err) { return failed(n, (err && err.message) || "no answer"); });
         };
         return tryOnce(1);
     };
