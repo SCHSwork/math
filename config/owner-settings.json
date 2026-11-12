@@ -33,7 +33,7 @@
     "text": ""
   },
   "motd": {
-    "text": "Test",
+    "text": "Make an account to save your game progress!",
     "enabled": false
   },
   "footerLinks": [],
@@ -74,5 +74,5 @@
     "pass": null
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-07T05:33:47.733200Z"
+  "updatedAt": "2026-11-12T16:09:00.959Z"
 }
