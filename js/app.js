@@ -1270,7 +1270,12 @@ function partGuardHook(SIZES, BIG) {
             input = arguments[0]; url = alt;
         }
         var method = (init && init.method) || (input && input.method) || "GET";
-        if (!/\.part\d+(\?|#|$)/.test(url) || String(method).toUpperCase() !== "GET") return origFetch.apply(this, arguments);
+        if (String(method).toUpperCase() !== "GET") return origFetch.apply(this, arguments);
+        // Pieces (.part1…) get their size checked too. Any other game file from jsDelivr/GitHub
+        // is only downloaded again when the server refused it or broke (jsDelivr now and then
+        // answers 403 on big repos: Garten of Banban's clay-windows.ucas.10)
+        var isPart = /\.part\d+(\?|#|$)/.test(url);
+        if (!isPart && !where(url)) return origFetch.apply(this, arguments);
         var want = sizeOf(url), fixed = locked(url), self = this, first = arguments, seen = {};
         // Where to get the piece on each try: where the game asked, then GitHub, then githack
         var w = where(url), tries = [url];
@@ -1295,7 +1300,11 @@ function partGuardHook(SIZES, BIG) {
         var tryOnce = function (n) {
             var args = n === 1 ? first : [from(n), Object.assign({}, init || {}, { cache: "reload" })];
             return origFetch.apply(self, args).then(function (res) {
-                if (!res.ok) return failed(n, "HTTP " + res.status, res);
+                if (!res.ok) {
+                    if (!isPart && !(res.status === 403 || res.status === 429 || res.status >= 500)) return res;   // e.g. 404: really missing
+                    return failed(n, "HTTP " + res.status, res);
+                }
+                if (!isPart) return res;
                 var cl = Number(res.headers.get("content-length")) || 0;
                 return res.arrayBuffer().then(function (buf) {
                     var got = buf.byteLength;
