@@ -5,7 +5,7 @@ All the changes to GN 2.0, newest first.
 ## November 12, 2026 — Fixes
 
 ### Fixed
-- **Big games that come in pieces** (like FISH): a piece that failed to download used to be joined in as its error message, so the game stopped with "Invalid binary data file size". Failed pieces are now downloaded again from GitHub or githack.
+- **Big games that come in pieces** (like FISH): a piece that failed to download used to be joined in as its error message, so the game stopped with "Invalid binary data file size". Failed pieces are now downloaded again from GitHub or githack. The same goes for any game file jsDelivr refuses or fails to send (Garten of Banban: "Could not load … clay-windows.ucas.10 (HTTP 403)").
 - **Game check**: no longer flags working games as "Blank page". WASM-4 games (their screen is inside a hidden sub-page) and games drawn without a canvas (like 404ms) now count as working.
 
 
