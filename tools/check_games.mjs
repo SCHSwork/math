@@ -135,19 +135,39 @@ const measure = () => {
     let d; try { d = f.contentDocument; } catch (e) { return { other: true }; }
     if (!d || !d.body) return { empty: true };
     const W = f.contentWindow.innerWidth, H = f.contentWindow.innerHeight;
-    let best = 0;
+    let best = 0, painted = 0;
+    const SURFACES = /^(CANVAS|SVG|EMBED|OBJECT|VIDEO|IFRAME|RUFFLE-PLAYER|RUFFLE-EMBED|RUFFLE-OBJECT)$/;
+    // Every element, including ones inside shadow roots (WASM-4 games draw their
+    // canvas inside <wasm4-app>'s shadow root, which querySelectorAll can't see)
+    const each = function* (root) {
+        for (const el of root.querySelectorAll("*")) { yield el; if (el.shadowRoot) yield* each(el.shadowRoot); }
+    };
     const look = (doc, depth) => {
-        for (const el of doc.querySelectorAll("canvas,svg,embed,object,video,iframe,ruffle-player,ruffle-embed,ruffle-object")) {
+        const win = doc.defaultView;
+        for (const el of each(doc)) {
             const r = el.getBoundingClientRect();
-            const cs = doc.defaultView.getComputedStyle(el);
-            if (r.width < 80 || r.height < 60 || cs.display === "none" || cs.visibility === "hidden") continue;
-            best = Math.max(best, r.width * r.height);
-            if (el.tagName === "IFRAME" && depth < 2) { try { if (el.contentDocument) look(el.contentDocument, depth + 1); } catch (e) {} }
+            if (r.width < 2 || r.height < 2) continue;
+            const tag = el.tagName.toUpperCase();
+            if (SURFACES.test(tag)) {
+                const cs = win.getComputedStyle(el);
+                if (r.width < 80 || r.height < 60 || cs.display === "none" || cs.visibility === "hidden") continue;
+                best = Math.max(best, r.width * r.height);
+                if (tag === "IFRAME" && depth < 2) { try { if (el.contentDocument) look(el.contentDocument, depth + 1); } catch (e) {} }
+            } else if (depth === 0 && tag !== "HTML" && tag !== "BODY") {
+                // Games drawn with plain elements (colored boxes, images) instead of a canvas.
+                // A box covering (nearly) the whole page is just a background, so it doesn't count.
+                const area = Math.min(r.width, W) * Math.min(r.height, H);
+                if (area >= W * H * 0.9) continue;
+                const cs = win.getComputedStyle(el);
+                if (cs.visibility === "hidden" || cs.opacity === "0") continue;
+                const filled = tag === "IMG" || cs.backgroundImage !== "none" || !/rgba\(\d+, \d+, \d+, 0\)|transparent/.test(cs.backgroundColor);
+                if (filled) painted += area;
+            }
         }
     };
     look(d, 0);
     const text = (d.body.innerText || "").replace(/\s+/g, " ").trim();
-    return { surface: best / Math.max(1, W * H), text: text.slice(0, 120), textLen: text.length };
+    return { surface: best / Math.max(1, W * H), painted: painted / Math.max(1, W * H), text: text.slice(0, 120), textLen: text.length };
 };
 
 async function check(w, z, waitMs) {
@@ -172,7 +192,7 @@ async function check(w, z, waitMs) {
     }
     // A game is showing: wait for its downloads to finish, to know how big it is
     let sizeKb = null;
-    if (m && (m.surface > 0.05 || m.other || m.textLen > 0)) {
+    if (m && (m.surface > 0.05 || m.other || m.textLen > 0 || m.painted > 0.1)) {
         const sizeEnd = Date.now() + SIZE_WAIT_MS;
         while (Date.now() < sizeEnd && (st.inflight.size || Date.now() - st.lastNet < QUIET_MS)) await page.waitForTimeout(500);
         sizeKb = Math.round(st.bytes / 1024);
@@ -190,6 +210,8 @@ async function check(w, z, waitMs) {
     if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)", sizeKb };
     // Something on screen and nothing went wrong: a game drawn without a canvas (e.g. Coreball)
     if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas", sizeKb };
+    // Drawn with plain elements (boxes, images) rather than a canvas, e.g. 404ms
+    if (m.painted > 0.1 && !loading && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "game without a canvas", sizeKb };
     // Only problem: files the test server couldn't download from jsDelivr or GitHub
     const cdnOnly = errors.length && errors.every(e => /^(Failed|HTTP (403|429|5\d\d)) https?:\/\/[^/]*(jsdelivr\.net|githubusercontent\.com|githack\.com)\//.test(e) || [...cdnRefused].some(u => e.includes(u.slice(0, 150))) || /^Script error: \w+ is not defined$/.test(e));
     if (cdnOnly && errors.some(e => !e.startsWith("Script error"))) return { s: "slow", why: "The test server couldn't download this game's files (it usually works for players)", errors };
