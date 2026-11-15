@@ -2015,6 +2015,20 @@ function cleanGameHtml(html) {
     // right away instead (synchronously), so it's ready before the game starts.
     html = html.replace(/\bfetch\(\s*(["'])([^"'\s]*worker[^"'\s]*\.js)\1\s*\)\s*\.then\(\s*(\w+)\s*=>\s*\3\.text\(\)\s*\)/gi,
         (m, q, file) => `Promise.resolve((function(){try{var x=new XMLHttpRequest();x.open("GET",${JSON.stringify(file)},false);x.send();if(x.status>=200&&x.status<300)return x.responseText}catch(e){}return null})()).then(t=>t!==null?t:fetch(${JSON.stringify(file)}).then(r=>r.text()))`);
+    // "Only run on our own site" checks: when framed by any other site, Angry
+    // Birds Chrome deleted its game area every half second (black page).
+    html = html.replace(/\bwindow\.self\s*!==?\s*window\.top\s*&&\s*window\.top\.location\.host\.match\(/g, m => "false && " + m);
+    // Angry Birds Chrome: on screens wider than 1300px the game puts an ad into
+    // #rightBannerContainer, and its cutscenes use #ytPlayerContainer. This copy
+    // of the page has neither, so the game crashed before its menu on most
+    // computers. Give it empty, hidden ones.
+    if (/fowl\/fowl\.nocache\.js/.test(html)) {
+        const missing = ["rightBannerContainer", "ytPlayerContainer"].filter(id => !new RegExp(`id=["']${id}["']`).test(html));
+        if (missing.length) {
+            const divs = missing.map(id => `<div id="${id}" style="${id === "rightBannerContainer" ? "display:none" : "position:absolute;width:0;height:0;overflow:hidden"}"></div>`).join("");
+            html = /<\/body\s*>/i.test(html) ? html.replace(/<\/body\s*>/i, m => divs + m) : html + divs;
+        }
+    }
     let removed = 0;
     // The real Yandex SDK replaces the stand-in above and then never finishes starting
     if (/YaGames/.test(html)) html = html.replace(/<script\b[^>]*\bsrc\s*=\s*["']?[^"'\s>]*(?:yandex-sdk\.js|yandex\.ru\/games\/sdk|\/sdk\.js|^sdk\.js)[^>]*>\s*<\/script\s*>/gi, () => { removed++; return ""; });
@@ -2031,7 +2045,7 @@ function cleanGameHtml(html) {
     // Empty side-banner ad slots
     out = out.replace(/<div id="sidebarad[12]">\s*<div class="sidebar-close"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi, "");
     // Backup: if any ad script survives, stop it from loading anything from ad hosts.
-    const guard = `<script>window.dataLayer=[];window.gtag=function(){};window.ga=function(){};(function(){var bad=new RegExp(${JSON.stringify(AD_HOST_PATTERN)},"i");` +
+    const guard = `<script>window.dataLayer=[];window.gtag=function(){};window.ga=function(){};window._gaq=window._gaq||[];(function(){var bad=new RegExp(${JSON.stringify(AD_HOST_PATTERN)},"i");` +
         `function blocked(u){try{return bad.test(new URL(u,location.href).hostname)}catch(e){return false}}` +
         `[window.HTMLScriptElement,window.HTMLIFrameElement].forEach(function(C){if(!C)return;var d=Object.getOwnPropertyDescriptor(C.prototype,"src");` +
         `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v))return;d.set.call(this,v)}})});` +

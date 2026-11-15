@@ -7,6 +7,9 @@ All the changes to GN 2.0, newest first.
 ### Fixed
 - **Poly Track**: no longer stops with "Oh no! PolyTrack encountered an unexpected error!" on slower computers (Chromebooks). The game could start its helper (Worker) before the helper's code had downloaded.
 - **Crowd Drift City**, **Pokey Stick** and **Cyber City Driver**: scripts saved as ".javascript" files are now built into the page, since browsers refuse to run them from jsDelivr (Crowd Drift City stopped with "UnityProgress is not defined"). Also removed a broken script link from Crowd Drift City and a missing one from Cyber City Driver.
+- **Angry Birds Chrome**: starts again. The page deleted its own game area whenever it ran inside another site, and on screens wider than 1300px it crashed looking for an ad box that isn't there. Old games that use Google Analytics' "_gaq" no longer crash when it's removed.
+- **Horse Master**: two pictures pointed at files that don't exist instead of the pictures built into the game.
+- **Game check**: a page that shows its game and is only missing some pictures or sounds now counts as working.
 
 ## November 12, 2026 — Fixes
 

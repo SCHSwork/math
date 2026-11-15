@@ -210,6 +210,10 @@ async function check(w, z, waitMs) {
     if (m.textLen >= 300) return { s: "ok", note: "page without a game canvas (menus or text)", sizeKb };
     // Something on screen and nothing went wrong: a game drawn without a canvas (e.g. Coreball)
     if (m.textLen > 0 && !errors.length) return { s: "ok", note: "game without a canvas", sizeKb };
+    // Something on screen and the only problems are missing pictures or sounds, not
+    // code (Horse Master, a text game, links a few pictures that aren't there)
+    if (m.textLen > 0 && !loading && !errors.some(e => e.startsWith("Script error") || /\.(m?js|wasm|data|unityweb|pck|swf|html?|json)(\?|#|$)/i.test(e)))
+        return { s: "ok", note: "page without a game canvas; some pictures or sounds are missing", sizeKb };
     // Drawn with plain elements (boxes, images) rather than a canvas, e.g. 404ms
     if (m.painted > 0.1 && !loading && !errors.some(e => e.startsWith("Script error"))) return { s: "ok", note: "game without a canvas", sizeKb };
     // Only problem: files the test server couldn't download from jsDelivr or GitHub
