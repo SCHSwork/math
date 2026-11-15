@@ -705,7 +705,7 @@
    "from": "strongdog",
    "path": "washed/sd-cyber-city-driver.html",
    "removed": [],
-   "sha256": "3c301323325631269d7d45c2c320f5335b184a5b7a9a021e275e5eb07c228a69",
+   "sha256": "62e5864803b649754a2a7e1a315eba8a6bd89422c1131e090ce91e28a8e14e55",
    "cover": "washed/covers/sd-cyber-city-driver.jpg",
    "featured": true,
    "featuredOrder": 8
@@ -721,7 +721,7 @@
    "from": "strongdog",
    "path": "washed/sd-drift-city.html",
    "removed": [],
-   "sha256": "912fb868d66e322045960854cd7cc9693acd6baa86e4232385f65bb88902e72f",
+   "sha256": "379721439cc913ef4e09e3fca37108aa1609828f4a9391db85a8edaf618ec4a6",
    "cover": "washed/covers/sd-crowd-drift-city.jpg",
    "featured": true,
    "featuredOrder": 7
@@ -1039,7 +1039,7 @@
    "removed": [
     "ad/tracker script scr.js"
    ],
-   "sha256": "9e937e66454a9e9a84e334305346099bddb245a0291c0e922126fc51f50730a2",
+   "sha256": "a1c224207dd5fb0f1ee88861e6f1c154b9461b142b11ae81e3782255405d44bc",
    "cover": "washed/covers/sd-pokey-stick.jpg"
   },
   "990164": {

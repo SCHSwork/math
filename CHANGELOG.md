@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 15, 2026 — Fixes
+
+### Fixed
+- **Poly Track**: no longer stops with "Oh no! PolyTrack encountered an unexpected error!" on slower computers (Chromebooks). The game could start its helper (Worker) before the helper's code had downloaded.
+- **Crowd Drift City**, **Pokey Stick** and **Cyber City Driver**: scripts saved as ".javascript" files are now built into the page, since browsers refuse to run them from jsDelivr (Crowd Drift City stopped with "UnityProgress is not defined"). Also removed a broken script link from Crowd Drift City and a missing one from Cyber City Driver.
+
 ## November 12, 2026 — Fixes
 
 ### Fixed

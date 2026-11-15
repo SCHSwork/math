@@ -2008,6 +2008,13 @@ function cleanGameHtml(html) {
     // A typo in one library copy (Ace Attorney Investigations): the "a" of
     // response.arrayBuffer() ended up after EJS_color = "…";
     html = html.replace(/\.rrayBuffer\(/g, ".arrayBuffer(").replace(/(EJS_color\s*=\s*"[^"\n]*";)a(\s)/g, "$1$2");
+    // Some copies (Poly Track) download their worker's code with fetch() and
+    // turn it into a blob: URL, but the game can ask for the Worker before that
+    // download finishes, on slow connections or Chromebooks. It then starts a
+    // Worker at ".../undefined" and shows "unexpected error". Get the code
+    // right away instead (synchronously), so it's ready before the game starts.
+    html = html.replace(/\bfetch\(\s*(["'])([^"'\s]*worker[^"'\s]*\.js)\1\s*\)\s*\.then\(\s*(\w+)\s*=>\s*\3\.text\(\)\s*\)/gi,
+        (m, q, file) => `Promise.resolve((function(){try{var x=new XMLHttpRequest();x.open("GET",${JSON.stringify(file)},false);x.send();if(x.status>=200&&x.status<300)return x.responseText}catch(e){}return null})()).then(t=>t!==null?t:fetch(${JSON.stringify(file)}).then(r=>r.text()))`);
     let removed = 0;
     // The real Yandex SDK replaces the stand-in above and then never finishes starting
     if (/YaGames/.test(html)) html = html.replace(/<script\b[^>]*\bsrc\s*=\s*["']?[^"'\s>]*(?:yandex-sdk\.js|yandex\.ru\/games\/sdk|\/sdk\.js|^sdk\.js)[^>]*>\s*<\/script\s*>/gi, () => { removed++; return ""; });
