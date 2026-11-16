@@ -1899,10 +1899,35 @@ window.gnGameNotice = function (kind) {
 };
 function crossOriginWorkerHook() {
     var W = window.Worker;
+    // Hand-patched Construct 3 copies glue the <base> address in front of an
+    // address that's already complete ("https://cdn…/447/https://cdn…/x.js", or
+    // "…/447/https://this-site/x.js"). Use the inner address, moved into the
+    // game's folder if it pointed at this site.
+    var unwrap = function (u) {
+        var m = typeof u === "string" && u.match(/^https?:\/\/\S*?\/(https?:\/\/\S+)$/);
+        if (!m) return u;
+        try {
+            var inner = new URL(m[1]);
+            if (inner.origin !== location.origin) return inner.href;
+            var dir = location.href.replace(/[?#].*$/, "").replace(/[^\/]*$/, "");
+            return new URL(inner.href.indexOf(dir) === 0 ? inner.href.slice(dir.length) : inner.pathname.replace(/^\//, ""), document.baseURI).href;
+        } catch (e) { return u; }
+    };
+    try {
+        var of = window.fetch;
+        if (of) window.fetch = function (u, o) {
+            if (typeof u === "string" || u instanceof URL) { var f = unwrap(String(u)); if (f !== String(u)) u = f; }
+            else if (u && typeof Request !== "undefined" && u instanceof Request) { var r = unwrap(u.url); if (r !== u.url) u = new Request(r, u); }
+            return of.call(this, u, o);
+        };
+        var xo = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (m, u) { if (typeof u === "string" || u instanceof URL) arguments[1] = unwrap(String(u)); return xo.apply(this, arguments); };
+    } catch (e) {}
     if (!W) return;
     var Shim = function (url, opts) {
         try {
             if (typeof url === "string" || url instanceof URL) {
+                url = unwrap(String(url));
                 var abs = new URL(String(url), document.baseURI);
                 if (abs.origin !== location.origin && abs.protocol !== "blob:" && abs.protocol !== "data:") {
                     var a = JSON.stringify(abs.href);
@@ -1960,8 +1985,10 @@ function construct3Hook() {
     try {
         var RI;
         var wrap = function (C) {
-            // Some library copies were already hand-patched to find their files; leave those alone
-            try { if (/querySelector\(\s*['"]base['"]\s*\)/.test(Function.prototype.toString.call(C))) return C; } catch (e) {}
+            // Some library copies were hand-patched to find their worker through <base>,
+            // but their engine scripts still load from the page's address (this site),
+            // so they stopped at a blank screen (Nijika's Ahoge). They get the same
+            // treatment; the worker shim below undoes their patch's doubled addresses.
             var W = function (opts) {
                 opts = opts || {};
                 try {
