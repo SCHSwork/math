@@ -952,8 +952,10 @@ function setSectionTitle(el, title, count) {
 function displayFeaturedZones(featuredZones) {
     clearCards(featuredContainer);
     const visibleFeaturedZones = featuredZones.filter(file => !isZoneDisabled(file.id));
-    visibleFeaturedZones.forEach(file => {
-        featuredContainer.appendChild(createZoneCard(file));
+    visibleFeaturedZones.forEach((file, i) => {
+        const card = createZoneCard(file);
+        card.style.setProperty("--i", i);   // stagger for the ripple-in animation
+        featuredContainer.appendChild(card);
     });
     if (featuredContainer.innerHTML === "") {
         featuredContainer.textContent = "No featured games right now.";
@@ -1025,7 +1027,8 @@ function displayZones(zones) {
         const imgs = [];
         const stop = Math.min(visibleZones.length, rest.next + count);
         while (rest.next < stop) {
-            const card = createZoneCard(visibleZones[rest.next++]);
+            const card = createZoneCard(visibleZones[rest.next]);
+            card.style.setProperty("--i", rest.next++);   // stagger for the ripple-in animation
             const img = card.querySelector("img.lazy-zone-img");
             if (img) imgs.push(img);
             frag.appendChild(card);

@@ -6,6 +6,7 @@
 //   • theme colors cross-fade instead of snapping
 //   • popups animate closed instead of vanishing
 //   • home sections slide in as you scroll to them
+//   • closing a game drops the viewer away instead of blinking out
 // The rest (header icons, card shine, button presses, favorite pop, tab fades)
 // is plain CSS in styles.css under "Motion".
 // ═════════════════════════════════════════════════════════════════════════════
@@ -74,6 +75,37 @@
             clearTimeout(closeTimer);
             overlay.classList.remove("closing");
         }).observe(popupBox, { childList: true, subtree: true, characterData: true });
+    }
+
+    // ── Closing a game: a quick drop-away ───────────────────────────────────
+    // The real close still happens right away (the game stops, other code sees
+    // it closed); a picture-less stand-in of the header does the animation.
+    const viewer = document.getElementById("zoneViewer");
+    if (viewer && typeof closeZone === "function") {
+        const plainCloseZone = closeZone;
+        window.closeZone = closeZone = function (...args) {
+            const wasOpen = viewer.style.display === "flex";
+            const header = wasOpen && !reduced() ? viewer.querySelector(".zone-header") : null;
+            const result = plainCloseZone.apply(this, args);
+            if (header) {
+                document.querySelectorAll(".zv-ghost").forEach(g => g.remove());
+                const ghost = document.createElement("div");
+                ghost.className = "zv-ghost";
+                ghost.setAttribute("aria-hidden", "true");
+                const copy = header.cloneNode(true);
+                copy.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+                copy.removeAttribute("id");
+                ghost.appendChild(copy);
+                document.body.appendChild(ghost);
+                const done = () => ghost.remove();
+                ghost.addEventListener("animationend", done, { once: true });
+                setTimeout(done, 600);
+                // Opened another game right away: drop the stand-in
+                new MutationObserver((_, mo) => { if (viewer.style.display === "flex") { done(); mo.disconnect(); } })
+                    .observe(viewer, { attributes: true, attributeFilter: ["style"] });
+            }
+            return result;
+        };
     }
 
     // ── Home sections slide in as they come into view ───────────────────────

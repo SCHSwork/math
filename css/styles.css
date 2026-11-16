@@ -1,4 +1,8 @@
 :root {
+    /* Motion: one set of curves so everything moves the same way */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);       /* fast start, soft landing */
+    --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);   /* tiny overshoot */
+    --ease-in: cubic-bezier(0.55, 0, 1, 0.45);         /* for things leaving */
     --primary: #fc2651;
     --primary-hover: #e91e47;
     --primary-light: rgba(252, 38, 81, 0.1);
@@ -157,7 +161,7 @@ body {
     padding: 0;
     background: var(--bg);
     color: var(--text);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.35s var(--ease-out), color 0.35s var(--ease-out);
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -281,7 +285,7 @@ header {
     color: var(--text);
     font-size: 15px;
     outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.25s var(--ease-out), color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), transform 0.25s var(--ease-out);
     box-shadow: var(--shadow-sm);
 }
 
@@ -346,7 +350,7 @@ main {
     border-radius: var(--radius-lg);
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), border-color 0.25s ease, background-color 0.25s ease;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -359,17 +363,16 @@ main {
 #container .zone-item:nth-child(n+41) { animation: none; }
 #container .zone-item { content-visibility: auto; contain-intrinsic-size: auto 240px; }
 body.cards-list #container .zone-item { contain-intrinsic-size: auto 64px; }
-#container .zone-item:nth-child(2n), #featuredZones .zone-item:nth-child(2n) { animation-delay: 40ms; }
-#container .zone-item:nth-child(3n), #featuredZones .zone-item:nth-child(3n) { animation-delay: 80ms; }
-#container .zone-item:nth-child(5n), #featuredZones .zone-item:nth-child(5n) { animation-delay: 120ms; }
+/* Cards ripple in left-to-right, top-to-bottom (app.js sets --i on each one) */
+#container .zone-item, #featuredZones .zone-item { animation-delay: calc(min(var(--i, 0), 18) * 16ms); }
 
 @keyframes cardEnter {
-    from { opacity: 0; transform: translateY(14px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
 }
 
 .zone-item:hover {
-    transform: translateY(-8px) scale(1.02);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-xl);
     border-color: var(--primary);
 }
@@ -395,11 +398,11 @@ body.cards-list #container .zone-item { contain-intrinsic-size: auto 64px; }
     object-fit: cover;
     display: block;
     background: var(--border-light);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.6s var(--ease-out);
 }
 
 .zone-item:hover img {
-    transform: scale(1.05);
+    transform: scale(1.06);
 }
 
 /* ── Home layout ─────────────────────────────────────────────────────────── */
@@ -509,7 +512,7 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
 }
 .shelf[hidden] { display: none; }
 .shelf .zone-item { scroll-snap-align: start; flex-direction: column; align-self: start; animation: none; }
-.shelf .zone-item:hover { transform: translateY(-3px); }
+.shelf .zone-item:hover { transform: translateY(-4px); }
 .shelf .zone-item img { width: 100%; height: auto; }
 .shelf .zone-item > button:not(.card-fav) {
     display: -webkit-box;
@@ -918,7 +921,7 @@ body.cards-list .card-meta { margin: 0; padding: 0 0.75rem 0 0; flex-shrink: 0; 
     font-size: 14px;
     line-height: 1.4;
     text-align: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
     min-height: 70px;
     display: flex;
     align-items: center;
@@ -1338,16 +1341,13 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     z-index: 1000;
     display: none;
     flex-direction: column;
-    animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInUp 0.42s var(--ease-out);
 }
 
+/* A short rise + fade feels quicker than sliding the whole screen up from the bottom */
 @keyframes slideInUp {
-    from {
-        transform: translateY(100%);
-    }
-    to {
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(36px) scale(0.985); }
+    to { opacity: 1; transform: none; }
 }
 
 .zone-header {
@@ -1380,7 +1380,7 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     font-size: 14px;
     color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
     font-weight: 500;
 }
 
@@ -1403,7 +1403,7 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
 }
 
 .zone-controls button:hover {
@@ -1433,7 +1433,7 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     justify-content: center;
     z-index: 2000;
     padding: 1rem;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.25s ease-out;
 }
 
 @keyframes fadeIn {
@@ -1456,18 +1456,13 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border);
-    animation: slideInScale 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInScale 0.38s var(--ease-out);
 }
 
 @keyframes slideInScale {
-    from {
-        transform: scale(0.9) translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
+    from { transform: scale(0.94) translateY(14px); opacity: 0; }
+    60% { opacity: 1; }
+    to { transform: none; opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1503,7 +1498,7 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
     cursor: pointer;
     padding: 0.5rem;
     border-radius: var(--radius);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.25s var(--ease-out);
     line-height: 1;
     width: 36px;
     height: 36px;
@@ -1534,7 +1529,7 @@ body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::aft
     background: var(--bg-secondary);
     color: var(--text);
     font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     outline: none;
 }
 
@@ -1570,7 +1565,7 @@ footer {
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.2s ease, opacity 0.2s ease;
     padding: 0.5rem 1rem;
     border-radius: var(--radius);
 }
@@ -1690,7 +1685,7 @@ footer {
     font-weight: 600;
     border-radius: var(--radius);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
     box-shadow: var(--shadow-sm);
     min-width: 200px;
     width: 100%;
@@ -1722,7 +1717,7 @@ footer {
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s var(--ease-out), box-shadow 0.2s ease;
 }
 
 .theme-button:hover {
@@ -2308,11 +2303,13 @@ body.cards-list .zone-item::after { display: none; }
 
 /* Pressing a button pushes it in a little */
 .settings-button, .theme-button, .finder-chip, .filter-button, .control-button, .status-pill, .omb-actions button, .fb-vote, .site-mode-check {
-    transition: transform 0.12s ease, background-color 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, filter 0.15s;
+    transition: transform 0.3s var(--ease-spring), background-color 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s, filter 0.15s;
 }
+/* Press in fast, spring back out on release */
+:is(.settings-button, .theme-button, .finder-chip, .filter-button, .control-button, .status-pill, .omb-actions button, .fb-vote, .site-mode-check):active { transition-duration: 0.08s; transition-timing-function: ease-out; }
 .settings-button:active, .theme-button:active, .finder-chip:active, .filter-button:active, .omb-actions button:active, .fb-vote:active, .site-mode-check:active { transform: scale(0.96); }
 .control-button:active { transform: translateY(0) scale(0.92); }
-.zone-item:active { transform: translateY(-4px) scale(0.99); transition-duration: 0.1s; }
+.zone-item:active { transform: translateY(-3px) scale(0.985); transition-duration: 0.1s; }
 
 /* Favorite star pops when you turn it on */
 .zone-item button.card-fav.on { animation: mStarPop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
@@ -2325,19 +2322,19 @@ body.cards-list .zone-item::after { display: none; }
 
 /* Tabs: the new page fades in */
 .set-pane:not([hidden]), #admin-accounts:not([hidden]), #admin-submissions:not([hidden]),
-#admin-newgames:not([hidden]), #admin-feedback:not([hidden]), #fb-form, #fb-ideas { animation: mPaneIn 0.25s ease-out; }
-@keyframes mPaneIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#admin-newgames:not([hidden]), #admin-feedback:not([hidden]), #fb-form, #fb-ideas { animation: mPaneIn 0.32s var(--ease-out); }
+@keyframes mPaneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes mTabPop { 0% { transform: scale(0.94); } 100% { transform: scale(1); } }
 
 /* Popups close with a quick shrink instead of vanishing */
-#popupOverlay.closing { animation: mFadeOut 0.17s ease-in forwards; }
-#popupOverlay.closing .popup { animation: mPopOut 0.17s ease-in forwards; }
+#popupOverlay.closing { animation: mFadeOut 0.18s ease-in forwards; }
+#popupOverlay.closing .popup { animation: mPopOut 0.18s var(--ease-in) forwards; }
 @keyframes mFadeOut { to { opacity: 0; } }
-@keyframes mPopOut { to { opacity: 0; transform: scale(0.95) translateY(8px); } }
+@keyframes mPopOut { to { opacity: 0; transform: scale(0.96) translateY(6px); } }
 
 /* Home sections slide up as you scroll to them */
 .home-section.reveal { opacity: 0; transform: translateY(24px); }
-.home-section.reveal.in-view { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.home-section.reveal.in-view { opacity: 1; transform: none; transition: opacity 0.5s ease-out, transform 0.7s var(--ease-out); }
 
 /* Today's pick: a gentle shimmer on the Play button */
 #gotd .gotd-play { position: relative; overflow: hidden; }
@@ -2359,15 +2356,33 @@ body.cards-list .zone-item::after { display: none; }
 /* Dark/light switch: the new look spreads out in a circle (motion.js) */
 html.vt-reveal::view-transition-old(root), html.vt-reveal::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 html.vt-reveal::view-transition-new(root) { z-index: 2; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.3s; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; animation-timing-function: ease-out; }
 
 /* Everything above stops with Reduce motion (in Settings, or on the device) */
 @media (prefers-reduced-motion: reduce) {
     .zone-item::after, #gotd .gotd-play::after { display: none; }
     .control-icon, .zone-item button.card-fav.on, .set-pane, #popupOverlay.closing, #popupOverlay.closing .popup { animation: none !important; }
     .home-section.reveal { opacity: 1; transform: none; }
+    .zv-ghost { display: none; }
 }
 body.reduced-motion .home-section.reveal { opacity: 1; transform: none; }
+body.reduced-motion .zv-ghost { display: none; }
+
+/* Closing a game: the viewer drops away instead of blinking out (motion.js) */
+.zv-ghost {
+    position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+    display: flex; flex-direction: column; background: #000;
+    animation: zvGhostOut 0.26s var(--ease-in) forwards;
+}
+.zv-ghost > .zone-header { flex: none; }
+@keyframes zvGhostOut { to { opacity: 0; transform: translateY(28px) scale(0.985); } }
+
+/* Hover lifts only on real mice, so cards don't stay stuck "up" after a tap */
+@media (hover: none) {
+    .zone-item:hover, .shelf .zone-item:hover { transform: none; }
+    .zone-item:hover img { transform: none; }
+    .zone-item:hover::after { animation: none; }
+}
 
 /* ── Scene themes ────────────────────────────────────────────────────────── */
 /* Shared "always dark, glassy" look for every scene */
