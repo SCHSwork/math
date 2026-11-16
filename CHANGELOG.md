@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 16, 2026 — Smoother animations
+
+### Changed
+- **Everything moves on one set of curves**: quick start, soft landing, so buttons, cards, popups and tabs all feel the same instead of each doing its own thing.
+- **Game cards**: ripple in left-to-right, top-to-bottom instead of popping in at random. Hover lifts the card without stretching it (text stays sharp) and the cover zooms in slower. On touch screens cards no longer stay stuck "up" after a tap.
+- **Opening a game**: the viewer rises and fades in instead of sliding the whole screen up from the bottom. **Closing a game** drops it away instead of blinking out (the game still stops right away).
+- **Popups** open with a softer scale-in; **buttons** press in fast and spring back on release; **tabs** and settings pages slide in a little smoother.
+
+### Fixed
+- **Choppy animations**: several things animated "every property" at once (the page, every game card, the search box, buttons), which made the browser redo layout while moving and stutter on Chromebooks, especially when changing themes with ~2,000 cards on the page. They now only animate what actually moves.
+
 ## November 15, 2026 — Fixes
 
 ### Fixed
