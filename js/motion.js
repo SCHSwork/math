@@ -6,7 +6,7 @@
 //   • theme colors cross-fade instead of snapping
 //   • popups animate closed instead of vanishing
 //   • home sections slide in as you scroll to them
-//   • closing a game drops the viewer away instead of blinking out
+//   • opening a game grows it out of its card; closing shrinks it back in
 // The rest (header icons, card shine, button presses, favorite pop, tab fades)
 // is plain CSS in styles.css under "Motion".
 // ═════════════════════════════════════════════════════════════════════════════
@@ -77,18 +77,69 @@
         }).observe(popupBox, { childList: true, subtree: true, characterData: true });
     }
 
-    // ── Closing a game: a quick drop-away ───────────────────────────────────
-    // The real close still happens right away (the game stops, other code sees
-    // it closed); a picture-less stand-in of the header does the animation.
+    // ── Opening / closing a game ────────────────────────────────────────────
+    // Open: the card you clicked grows to fill the screen, then the game fades in
+    // over it. Close: the game shrinks back into its card (or drops away if the
+    // card isn't on screen). Only transform/opacity are animated, so it stays
+    // smooth even while the game is busy loading.
     const viewer = document.getElementById("zoneViewer");
+    let pressedCard = null, pressedAt = 0;
+    addEventListener("pointerdown", e => {
+        const card = e.target && e.target.closest && e.target.closest(".zone-item");
+        if (card) { pressedCard = card; pressedAt = performance.now(); }
+    }, { capture: true, passive: true });
+
+    const onScreen = r => r.width > 20 && r.height > 20 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth;
+    const toRect = r => `translate(${r.left}px, ${r.top}px) scale(${r.width / innerWidth}, ${r.height / innerHeight})`;
+    const cardFor = id => {
+        if (pressedCard && pressedCard.isConnected && pressedCard.dataset.id === String(id)
+            && performance.now() - pressedAt < 1500 && onScreen(pressedCard.getBoundingClientRect())) return pressedCard;
+        for (const c of document.querySelectorAll(`.zone-item[data-id="${CSS.escape(String(id))}"]`)) {
+            if (onScreen(c.getBoundingClientRect())) return c;
+        }
+        return null;
+    };
+    const clearFx = () => document.querySelectorAll(".zv-expand, .zv-ghost").forEach(g => g.remove());
+
+    if (viewer && typeof openZone === "function") {
+        const plainOpenZone = openZone;
+        window.openZone = openZone = function (file, ...rest) {
+            const wasOpen = viewer.style.display === "flex";
+            const card = !wasOpen && !reduced() && file && !String(file.url || "").startsWith("http") ? cardFor(file.id) : null;
+            clearFx();
+            viewer.classList.toggle("zv-from-card", !!card);
+            const result = plainOpenZone.call(this, file, ...rest);
+            if (card && viewer.style.display === "flex") {
+                const r = card.getBoundingClientRect();
+                const fx = document.createElement("div");
+                fx.className = "zv-expand";
+                fx.setAttribute("aria-hidden", "true");
+                const img = card.querySelector("img");
+                if (img && img.currentSrc && img.complete && img.naturalWidth) {
+                    const pic = new Image();
+                    pic.src = img.currentSrc;
+                    pic.alt = "";
+                    fx.appendChild(pic);
+                    pic.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 420, easing: "ease-out", fill: "forwards" });
+                }
+                document.body.appendChild(fx);
+                fx.animate([{ transform: toRect(r) }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" });
+                setTimeout(() => fx.remove(), 520);
+            }
+            return result;
+        };
+    }
+
     if (viewer && typeof closeZone === "function") {
         const plainCloseZone = closeZone;
         window.closeZone = closeZone = function (...args) {
             const wasOpen = viewer.style.display === "flex";
             const header = wasOpen && !reduced() ? viewer.querySelector(".zone-header") : null;
+            const idEl = document.getElementById("zoneId");
+            const id = idEl ? idEl.textContent : "";
             const result = plainCloseZone.apply(this, args);
+            clearFx();
             if (header) {
-                document.querySelectorAll(".zv-ghost").forEach(g => g.remove());
                 const ghost = document.createElement("div");
                 ghost.className = "zv-ghost";
                 ghost.setAttribute("aria-hidden", "true");
@@ -96,16 +147,23 @@
                 copy.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
                 copy.removeAttribute("id");
                 ghost.appendChild(copy);
+                const card = id ? cardFor(id) : null;
                 document.body.appendChild(ghost);
                 const done = () => ghost.remove();
-                ghost.addEventListener("animationend", done, { once: true });
+                if (card) {
+                    ghost.classList.add("zv-to-card");
+                    ghost.animate([{ transform: "none", opacity: 1 }, { opacity: 1, offset: 0.6 }, { transform: toRect(card.getBoundingClientRect()), opacity: 0 }],
+                        { duration: 320, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards" }).finished.then(done, done);
+                } else {
+                    ghost.addEventListener("animationend", done, { once: true });
+                }
                 setTimeout(done, 600);
-                // Opened another game right away: drop the stand-in
-                new MutationObserver((_, mo) => { if (viewer.style.display === "flex") { done(); mo.disconnect(); } })
-                    .observe(viewer, { attributes: true, attributeFilter: ["style"] });
             }
             return result;
         };
+        // Opened another game right away: drop any leftover close animation
+        new MutationObserver(() => { if (viewer.style.display === "flex") document.querySelectorAll(".zv-ghost").forEach(g => g.remove()); })
+            .observe(viewer, { attributes: true, attributeFilter: ["style"] });
     }
 
     // ── Home sections slide in as they come into view ───────────────────────

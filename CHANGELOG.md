@@ -2,6 +2,15 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 16, 2026 — Games open from their card
+
+### Changed
+- **Opening a game**: the card you clicked grows to fill the screen, then the game fades in over it. The header slides down into place.
+- **Closing a game**: it shrinks back into its card (or drops away if that card isn't on screen anymore).
+
+### Fixed
+- **Game cards showing behind a game**: scrolling or swiping fast while a game was open could show the game cards behind it. Once a game has opened, the page behind it is no longer drawn at all, and it comes back the moment you close the game.
+
 ## November 16, 2026 — Smoother animations
 
 ### Changed

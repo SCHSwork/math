@@ -1341,14 +1341,17 @@ html.site-mode-closed, html.site-mode-closed body { overflow: hidden; }
     z-index: 1000;
     display: none;
     flex-direction: column;
-    animation: slideInUp 0.42s var(--ease-out);
+    overscroll-behavior: none;
+    animation: zvFadeIn 0.28s ease-out;
 }
-
-/* A short rise + fade feels quicker than sliding the whole screen up from the bottom */
-@keyframes slideInUp {
-    from { opacity: 0; transform: translateY(36px) scale(0.985); }
-    to { opacity: 1; transform: none; }
-}
+/* Opened from a card: the card grows to fill the screen first (motion.js), then
+   the game fades in over it. The viewer never moves or shrinks, so there's no
+   gap at the edges where the page behind could show through. */
+#zoneViewer.zv-from-card { animation: zvFadeIn 0.22s ease-out 0.2s backwards; }
+#zoneViewer > .zone-header { animation: zvHeaderIn 0.4s var(--ease-out) 0.12s backwards; }
+#zoneViewer.zv-from-card > .zone-header { animation-delay: 0.26s; }
+@keyframes zvFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zvHeaderIn { from { transform: translateY(-100%); } to { transform: none; } }
 
 .zone-header {
     background: var(--gradient-primary);
@@ -2376,6 +2379,22 @@ body.reduced-motion .zv-ghost { display: none; }
 }
 .zv-ghost > .zone-header { flex: none; }
 @keyframes zvGhostOut { to { opacity: 0; transform: translateY(28px) scale(0.985); } }
+/* Closing with its card on screen: the game shrinks back into the card instead */
+.zv-ghost.zv-to-card { animation: none; transform-origin: 0 0; will-change: transform, opacity; overflow: hidden; }
+
+/* Opening: the card you clicked grows to fill the screen (motion.js) */
+.zv-expand {
+    position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 999;
+    pointer-events: none; overflow: hidden; background: var(--bg);
+    transform-origin: 0 0; will-change: transform;
+}
+.zv-expand img { width: 100%; height: 100%; object-fit: cover; display: block; will-change: opacity; }
+body.reduced-motion .zv-expand { display: none; }
+@media (prefers-reduced-motion: reduce) {
+    .zv-expand { display: none; }
+    #zoneViewer, #zoneViewer > .zone-header { animation: none !important; }
+}
+body.reduced-motion #zoneViewer, body.reduced-motion #zoneViewer > .zone-header { animation: none !important; }
 
 /* Hover lifts only on real mice, so cards don't stay stuck "up" after a tap */
 @media (hover: none) {
@@ -3378,4 +3397,9 @@ html.site-mode-closed #popupOverlay { z-index: 2000000; }
 
 /* While a game is open, the page behind it can't scroll: otherwise its
    scrollbar stays at the side of the screen next to the game and does nothing */
-html:has(#zoneViewer[style*="flex"]), html:has(#zoneViewer[style*="flex"]) body { overflow: hidden !important; }
+html:has(#zoneViewer[style*="flex"]), html:has(#zoneViewer[style*="flex"]) body { overflow: hidden !important; overscroll-behavior: none; }
+/* …and once the game has opened, the page behind it isn't drawn at all, so a fast
+   scroll/swipe (or the phone's address bar sliding) can never show cards behind
+   the game. It comes back the moment the game closes. */
+body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announcement-bar) { animation: zvPageAway 0s linear 0.5s forwards; }
+@keyframes zvPageAway { to { visibility: hidden; } }
