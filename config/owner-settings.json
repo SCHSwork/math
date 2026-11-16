@@ -69,6 +69,10 @@
       {
         "uid": "qka6JaQ3xNM1OTQH91KsYZMjZxb2",
         "name": "poopmaster"
+      },
+      {
+        "uid": "BV8O6nJ9myWb7h2JKI29564bk5x1",
+        "name": "death"
       }
     ],
     "pass": {
@@ -78,5 +82,5 @@
     }
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-16T21:38:45.749Z"
+  "updatedAt": "2026-11-16T21:39:42.661Z"
 }
