@@ -26,8 +26,8 @@
     "enabled": false,
     "type": "info"
   },
-  "siteMessage": "",
-  "siteBackAt": "2026-11-04T20:20:00.000Z",
+  "siteMessage": "Will be back in a sec!",
+  "siteBackAt": "2026-11-16T20:20:00.000Z",
   "statusOverride": {
     "level": "auto",
     "text": ""
@@ -74,5 +74,5 @@
     "pass": null
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-16T21:35:08.791Z"
+  "updatedAt": "2026-11-16T21:35:28.298Z"
 }
