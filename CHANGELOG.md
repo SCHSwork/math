@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 16, 2026 — Game fixes
+
+### Fixed
+- **Blumgi Rocket** and **Nijika's Ahoge** (blank screen): these copies were hand-edited to find their files, but the edit glued two full addresses together ("…/game/https://…/game/scripts/…") and the game's engine still looked for its files on this site. The site now undoes the doubled addresses and points them at the game's real folder.
+
 ## November 16, 2026 — Games open from their card
 
 ### Changed
