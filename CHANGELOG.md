@@ -9,6 +9,7 @@ All the changes to GN 2.0, newest first.
 - **Closing a game**: it shrinks back into its card (or drops away if that card isn't on screen anymore).
 
 ### Fixed
+- **Useless scrollbars inside games**: lots of games are a few pixels bigger than the screen, which put a scrollbar next to the game with nothing to scroll to. Now the scrollbar only shows when the game really is bigger than the screen (it's checked again as the game resizes itself).
 - **Game cards showing behind a game**: scrolling or swiping fast while a game was open could show the game cards behind it. Once a game has opened, the page behind it is no longer drawn at all, and it comes back the moment you close the game.
 
 ## November 16, 2026 — Smoother animations

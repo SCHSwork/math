@@ -2204,6 +2204,7 @@ function openZone(file) {
         zoneFrame.contentDocument.open();
         zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
         zoneFrame.contentDocument.close();
+        startGameScrollTidy();
         loadZoneHtml(file.url).then(html => {
             if (token !== zoneOpenToken) return; // another game was opened meanwhile
             if (zoneFrame.contentDocument === null) replaceZoneFrame();
@@ -2211,6 +2212,7 @@ function openZone(file) {
             zoneFrame.contentDocument.open();
             zoneFrame.contentDocument.write(html);
             zoneFrame.contentDocument.close();
+            startGameScrollTidy();
         }).catch(error => {
             endGameLoad(true);
             closeZone();
@@ -2224,6 +2226,45 @@ function openZone(file) {
         });
     }
 }
+
+// ── No scrollbar inside a game unless there's really somewhere to scroll ──
+// Lots of games are a few pixels taller/wider than the screen (the page's default
+// margin, a canvas set to 100vh, an "overflow: scroll" left on), which puts a
+// useless scrollbar next to the game. If the game fits (within a little slack),
+// its scrollbars are hidden; if it's really bigger than the screen, they stay.
+// Checked about once a second, since games resize themselves after they load.
+const GAME_SCROLL_SLACK = 24;   // px of overflow that still counts as "fits"
+let gameScrollTimer = null;
+function tidyGameScrollbars() {
+    if (zoneViewer.style.display !== "flex" || !zoneFrame) return;
+    let doc;
+    try { doc = zoneFrame.contentDocument; } catch (_) { return; }   // other site's page: can't touch it
+    if (!doc || !doc.documentElement || !doc.body) return;
+    try {
+        const sc = doc.scrollingElement || doc.documentElement;
+        const fits = sc.scrollWidth - sc.clientWidth <= GAME_SCROLL_SLACK
+                  && sc.scrollHeight - sc.clientHeight <= GAME_SCROLL_SLACK;
+        let tag = doc.getElementById("gn-no-scrollbar");
+        if (fits && !tag) {
+            tag = doc.createElement("style");
+            tag.id = "gn-no-scrollbar";
+            tag.textContent = "html, body { overflow: hidden !important; }";
+            (doc.head || doc.documentElement).appendChild(tag);
+            sc.scrollTop = 0; sc.scrollLeft = 0;
+        } else if (!fits && tag) {
+            tag.remove();   // the game grew past the screen: let it scroll again
+        }
+    } catch (_) {}
+}
+function startGameScrollTidy() {
+    clearInterval(gameScrollTimer);
+    gameScrollTimer = setInterval(() => {
+        if (zoneViewer.style.display !== "flex") { clearInterval(gameScrollTimer); gameScrollTimer = null; return; }
+        tidyGameScrollbars();
+    }, 1000);
+    setTimeout(tidyGameScrollbars, 50);
+}
+addEventListener("resize", () => { if (gameScrollTimer) setTimeout(tidyGameScrollbars, 150); });
 
 let zoneOpenToken = 0;
 function replaceZoneFrame() {
@@ -2258,6 +2299,7 @@ function closeZone() {
     if (typeof closeGameMenu === "function") closeGameMenu();
     if (typeof currentGameId !== "undefined") currentGameId = null;
     if (typeof endGameLoad === "function") endGameLoad(true);
+    clearInterval(gameScrollTimer); gameScrollTimer = null;
     zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
     if (zoneFrame && zoneFrame.parentNode === zoneViewer) zoneViewer.removeChild(zoneFrame);
