@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Sessions and booting (admins)
+
+### Added
+- **Admin Panel → Sessions**: every browser with the site open in the last 10 minutes, with or without an account. Shows when the visit started, when it was last active, the game open, the account (or "Guest session"), browser, system, device type, screen size, language, time zone and site address.
+- **Boot**: remove a session from the site for 10 minutes, 1 hour, 1 day, 1 week or until lifted, with a reason they see. Their progress is saved first (cloud save too, if signed in), their game closes, and every tab in that browser shows a "you've been removed" screen. Takes effect within about 2 minutes. Boots and lifted boots are saved in the Log.
+- The Privacy Policy now describes the online heartbeat and session records.
+
 ## November 17, 2026 — 208 more games (BCHS and Radon)
 
 ### Added

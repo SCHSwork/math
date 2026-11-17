@@ -72,6 +72,8 @@ function profileStats() {
     const v = document.getElementById("zoneViewer");
     const id = typeof currentGameId !== "undefined" && currentGameId ? String(currentGameId) : "";
     out.playing = v && v.style.display === "flex" && /^\d{1,7}$/.test(id) ? id : "";
+    // This browser's session id (js/presence.js), so admins can match the account to its session
+    try { const sid = typeof window.gnSessionId === "function" ? window.gnSessionId() : ""; if (/^[A-Za-z0-9]{20}$/.test(sid)) out.sid = sid; } catch (e) {}
     return out;
 }
 async function profileBeat(force) {
