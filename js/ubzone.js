@@ -4,6 +4,8 @@
 //   UBZone games   config/ubzone-games.json    ids 300000+  (github.com/s0n-1m-cr1n3/sc13nc3)
 //   Selenite games config/selenite-games.json  ids 400000+  (github.com/selenite-cc/selenite-old)
 //   55GMS games    config/55gms-games.json     ids 500000+  (github.com/55gms/assets)
+//   BCHS games     config/bchs-games.json      ids 600000+  (github.com/tw31122007/BCHS-Unblocked-Games)
+//   Radon games    config/radon-games.json     ids 700000+  (github.com/Radon-Games/Radon-Games-Assets)
 // Every game file was scanned before it was listed, so each collection loads
 // from that exact checked version (its "ref" commit) and never from a newer
 // one, the same way the main library is pinned after the Oct 11
@@ -26,6 +28,15 @@ const MIRROR_COLLECTIONS = [
     {
         key: "55gms", list: "config/55gms-games.json", base: 500000, label: "55GMS", source: "55GMS games",
         site: "https://github.com/55gms/55gms", checked: "November 17, 2026", clean: true
+    },
+    {
+        // Mostly Flash games, listed as .swf files (mirrorSwfPage makes their page)
+        key: "bchs", list: "config/bchs-games.json", base: 600000, label: "BCHS Unblocked Games", source: "BCHS games",
+        site: "https://github.com/tw31122007/BCHS-Unblocked-Games", checked: "November 17, 2026", clean: true
+    },
+    {
+        key: "radon", list: "config/radon-games.json", base: 700000, label: "Radon Games", source: "Radon games",
+        site: "https://github.com/Radon-Games/Radon-Games-Assets", checked: "November 17, 2026", clean: true
     }
 ];
 const UBZONE_ID_BASE = 300000;
@@ -114,6 +125,22 @@ function pinUbzoneRefs(html, rawUrl) {
     if (c.clean) cleaned = cleaned.replace(MIRROR_SDK_TAGS, "").replace(MIRROR_FRAME_BUSTER, "");
     if (cleaned === html) return html;
     return /<head\b[^>]*>/i.test(cleaned) ? cleaned.replace(/<head\b[^>]*>/i, m => m + UBZONE_TRACKER_STUB) : UBZONE_TRACKER_STUB + cleaned;
+}
+
+// Flash games listed as a .swf file (BCHS): the page that plays them is made
+// here, with the site's own copy of Ruffle. Links the game tries to open
+// ("more games", ad clicks) are blocked.
+function mirrorSwfPage(rawUrl) {
+    const g = typeof parseGhUrl === "function" && parseGhUrl(rawUrl);
+    if (!g || !/\.swf$/i.test(g.path)) return null;
+    const swf = `https://cdn.jsdelivr.net/gh/${g.owner}/${g.repo}@${g.ref}/${g.path.split("/").map(encodeURIComponent).join("/")}`;
+    const base = swf.slice(0, swf.lastIndexOf("/") + 1);
+    const ruffle = new URL("vendor/ruffle/ruffle.js", location.href).href;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game,#game>*{width:100%;height:100%}</style></head>` +
+        `<body><div id="game"></div><script src="${ruffle}"><\/script><script>(function(){` +
+        `window.RufflePlayer=window.RufflePlayer||{};window.RufflePlayer.config={autoplay:"on",unmuteOverlay:"hidden",splashScreen:false,openUrlMode:"deny",allowScriptAccess:false};` +
+        `var start=function(){var p=window.RufflePlayer.newest().createPlayer();document.getElementById("game").appendChild(p);p.load({url:${JSON.stringify(swf)},base:${JSON.stringify(base)}});};` +
+        `if(document.readyState==="complete")start();else window.addEventListener("load",start);})();<\/script></body></html>`;
 }
 
 function toUbzoneZone(g, c, repo, ref) {
