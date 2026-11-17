@@ -4,6 +4,25 @@
 // and action log it uses are in js/admin-core.js, which every page loads.
 // ═════════════════════════════════════════════════════════════════════════════
 let adminData = null;   // { profiles, admins:Set, bans:Map, subs:Map uid→count, stats:Map uid→{votes,reports} }
+// Usernames of accounts from before emails, saved in usernames/ so new
+// accounts can't take them. Runs once per admin device (writes one small
+// document per account that doesn't have one yet).
+async function backfillUsernames() {
+    const KEY = "gnmath-usernames-backfilled";
+    try { if (localStorage.getItem(KEY)) return; } catch {}
+    if (!adminData || !isSiteAdmin()) return;
+    try {
+        const have = new Set((await cloudDb.collection("usernames").get()).docs.map(d => d.id));
+        const todo = adminData.profiles.filter(p => /^[a-z0-9_]{3,20}$/.test(p.username || "") && !have.has(p.username));
+        for (let i = 0; i < todo.length; i += 400) {
+            const b = cloudDb.batch();
+            todo.slice(i, i + 400).forEach(p => b.set(cloudDb.collection("usernames").doc(p.username), { uid: p.uid, e: false }));
+            await b.commit();
+        }
+        if (typeof fbCount === "function") fbCount(have.size + 1, todo.length);
+        try { localStorage.setItem(KEY, String(Date.now())); } catch {}
+    } catch (e) { console.warn("Couldn't save usernames", e); }
+}
 async function loadAdminData() {
     const [profiles, admins, mods, bans, subs, stats, feedback] = await Promise.all([
         cloudDb.collection("profiles").get(),
@@ -156,6 +175,7 @@ async function openAdminPanel() {
         await loadAdminData();
         renderAdminList();
         renderVisitors();
+        backfillUsernames();
     } catch (e) {
         console.error(e);
         document.getElementById("admin-summary").textContent = "Couldn't load accounts: " + (typeof statsErrorText === "function" ? statsErrorText(e) : e.message || e);

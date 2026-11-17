@@ -82,7 +82,7 @@ async function profileBeat(force) {
     if (!force && (document.hidden || (typeof fbBackgroundPaused === "function" && fbBackgroundPaused()))) return;
     profileBeatAt = Date.now();
     const base = {
-        username: (user.email || "").split("@")[0].slice(0, 40),
+        username: (typeof currentUsername === "function" && cloudUser === user ? currentUsername() : (user.email || "").split("@")[0]).slice(0, 40),
         createdAt: user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime).toISOString() : "",
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
     };

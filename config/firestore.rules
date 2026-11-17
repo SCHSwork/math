@@ -6,7 +6,7 @@ service cloud.firestore {
 
     // Cloud saves: only the owning account can read or write them.
     match /saves/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if verifiedOk() && request.auth.uid == uid;
     }
 
     // Ratings + broken reports, split across shard docs s0..s15:
@@ -15,7 +15,7 @@ service cloud.firestore {
     // remove their OWN vote/report, for one game per write.
     match /gameStats/{shard} {
       allow read: if true;
-      allow create, update: if request.auth != null
+      allow create, update: if verifiedOk()
         && shard.matches('s([0-9]|1[0-5])')
         && ((validStatsWrite() && !isBanned()) || isAdmin());
     }
@@ -24,7 +24,7 @@ service cloud.firestore {
     // read or delete their own. Admins and mods can read all of them and change
     // status/note.
     match /submissions/{id} {
-      allow create: if request.auth != null && !isBanned() && validSubmission(request.resource.data);
+      allow create: if verifiedOk() && !isBanned() && validSubmission(request.resource.data);
       allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isStaff());
       allow update: if isStaff()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note'])
@@ -94,9 +94,9 @@ service cloud.firestore {
     // played, games tried and the game open now (shown in the Admin Panel)
     match /profiles/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
-      allow create, update: if request.auth != null && request.auth.uid == uid
+      allow create, update: if verifiedOk() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen', 'level', 'xp', 'badges', 'played', 'tried', 'playing', 'sid'])
-        && request.resource.data.username == request.auth.token.email.split('@')[0]
+        && ownsUsername(request.resource.data.username)
         && shortText(request.resource.data.createdAt, 40)
         && request.resource.data.lastSeen == request.time
         && optInt(request.resource.data, 'level', 0, 1000)
@@ -139,6 +139,25 @@ service cloud.firestore {
         && shortText(request.resource.data.sc, 12) && shortText(request.resource.data.lang, 20)
         && shortText(request.resource.data.tz, 60) && shortText(request.resource.data.host, 100);
       allow delete: if isAdmin();
+    }
+
+    // Usernames. Accounts made before emails were added sign in as
+    // <username>@gnmath.local, so their username is in their sign-in email.
+    // Accounts with a real email (new ones, and old ones that added one) claim
+    // their username here: usernames/<name> { uid, e: has a real email }.
+    // Anyone can look one up (to see if it's taken); only admins can list them.
+    match /usernames/{name} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if name.matches('[a-z0-9_]{3,20}')
+        && request.resource.data.keys().hasOnly(['uid', 'e']) && request.resource.data.e is bool
+        && request.resource.data.uid is string
+        && (isAdmin() || (request.auth != null && request.resource.data.uid == request.auth.uid
+          && (request.auth.token.email == name + '@gnmath.local' || !isLegacyAuth())));
+      allow update: if request.auth != null && resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'e']) && request.resource.data.e is bool
+        && request.resource.data.uid == resource.data.uid;
+      allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
     }
 
     // Live site mode (js/realtime.js): the owner's browser writes the site
@@ -202,7 +221,7 @@ service cloud.firestore {
     // and admins can read a report. Approved ideas are readable by every
     // signed-in player, who can add or remove only their own vote.
     match /feedback/{id} {
-      allow create: if request.auth != null && !isBanned() && validFeedback(request.resource.data);
+      allow create: if verifiedOk() && !isBanned() && validFeedback(request.resource.data);
       allow read: if request.auth != null && (resource.data.uid == request.auth.uid || isStaff()
         || (resource.data.type == 'feature' && resource.data.status in ['approved', 'done']));
       allow update: if isStaff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'note', 'reviewedBy', 'reviewedAt'])
@@ -210,7 +229,7 @@ service cloud.firestore {
         && (!('note' in request.resource.data) || shortText(request.resource.data.note, 200))
         && (!('reviewedBy' in request.resource.data) || shortText(request.resource.data.reviewedBy, 40))
         && (!('reviewedAt' in request.resource.data) || request.resource.data.reviewedAt == request.time);
-      allow update: if request.auth != null && !isBanned()
+      allow update: if verifiedOk() && !isBanned()
         && resource.data.type == 'feature' && resource.data.status == 'approved'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes'])
         && request.resource.data.get('votes', {}).diff(resource.data.get('votes', {})).affectedKeys().hasOnly([request.auth.uid])
@@ -226,7 +245,7 @@ service cloud.firestore {
     match /brokenDiag/{id} {
       allow read: if isStaff();
       allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
-      allow create, update: if request.auth != null
+      allow create, update: if verifiedOk()
         && request.resource.data.keys().hasOnly(['gameId', 'gameName', 'uid', 'by', 'at', 'diag'])
         && request.resource.data.uid == request.auth.uid
         && id == request.resource.data.gameId + '_' + request.auth.uid
@@ -319,6 +338,21 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && (isOwnerUid(request.auth.uid)
         || exists(/databases/$(db)/documents/admins/$(request.auth.uid)));
+    }
+    // Accounts from before emails (<username>@gnmath.local) are fine as they
+    // are; accounts with a real email must have verified it first
+    function isLegacyAuth() { return request.auth.token.email.matches('.*@gnmath[.]local'); }
+    function verifiedOk() {
+      return request.auth != null && request.auth.token.email is string
+        && (isLegacyAuth() || request.auth.token.email_verified == true);
+    }
+    // The username in a profile is this account's: from its old-style sign-in
+    // email, or claimed in usernames/
+    function ownsUsername(name) {
+      return name is string && name.matches('[a-z0-9_]{3,20}')
+        && ((isLegacyAuth() && name == request.auth.token.email.split('@')[0])
+          || (exists(/databases/$(db)/documents/usernames/$(name))
+            && get(/databases/$(db)/documents/usernames/$(name)).data.uid == request.auth.uid));
     }
     function isOwner() { return request.auth != null && isOwnerUid(request.auth.uid); }
     // Admins, or mods who aren't suspended
