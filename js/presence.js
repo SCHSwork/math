@@ -1,11 +1,23 @@
 // ═════════════════════════════════════════════════════════════════════════════
 // "People online now". Each open copy of the site writes a tiny note to the
 // Firestore collection presence/<random id> every couple of minutes:
-// { t: server time, s: "gn2" }. Nothing about the person is stored; the id is
-// random and lives only in this browser. Anyone seen in the last 5 minutes
-// counts as online. Counting uses Firestore's count query, which costs about
-// about one read per 1,000 people online. Works without an account.
-// Needs the presence rule from config/firestore.rules to be published.
+// { t: server time, s: "gn2", g: game open now }. The id is random and lives
+// only in this browser. Anyone seen in the last 5 minutes counts as online.
+// Counting uses Firestore's count query, which costs about one read per 1,000
+// people online. Works without an account.
+//
+// Sessions (Admin Panel → Sessions): at the start of each visit the same
+// browser also writes sessions/<same id> with when the visit started and its
+// browser, system, screen, language, time zone and site address. Only admins
+// can read those. A signed-in account's profile notes its session id, so
+// admins can see which account a session belongs to.
+//
+// Booting: an admin can write boots/<session id> (until when, and why). The
+// database then refuses that browser's heartbeats; when this page sees that,
+// it saves the player's progress (cloud save if signed in), closes the game
+// and shows a "you've been removed" screen until the boot ends. Every tab in
+// that browser shows it.
+// Needs the presence, sessions and boots rules from config/firestore.rules.
 // ═════════════════════════════════════════════════════════════════════════════
 const PRESENCE = {
     heartbeatMs: 2 * 60 * 1000,   // how often an open tab says "still here"
@@ -13,7 +25,8 @@ const PRESENCE = {
     countEveryMs: 3 * 60 * 1000,  // how often the number refreshes
     site: "gn2",
     idKey: "gnmath-presence-id",
-    sharedKey: "gnmath-presence-shared"   // last heartbeat + count, shared by tabs
+    sharedKey: "gnmath-presence-shared",  // last heartbeat + count, shared by tabs
+    bootKey: "gnmath-booted"              // { until, reason } while this browser is booted
 };
 // Busy times stretch these (firebase-pace.js). The heartbeat stays under
 // activeMs so people don't drop out of the count.
@@ -82,6 +95,125 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             return viewer && viewer.style.display === "flex" && /^\d{1,7}$/.test(id) && !document.hidden ? id : "";
         } catch { return ""; }
     }
+
+    window.gnSessionId = presenceId;
+
+    // ── Session details (written once per visit, admins-only) ─────────────────
+    function browserInfo() {
+        const ua = navigator.userAgent || "";
+        const uad = navigator.userAgentData;
+        let browser = "Other", os = "Other";
+        const m = (re) => { const r = re.exec(ua); return r ? r[1].split(".")[0] : ""; };
+        if (/Edg\//.test(ua)) browser = "Edge " + m(/Edg\/([\d.]+)/);
+        else if (/OPR\//.test(ua)) browser = "Opera " + m(/OPR\/([\d.]+)/);
+        else if (/Firefox\//.test(ua)) browser = "Firefox " + m(/Firefox\/([\d.]+)/);
+        else if (/CriOS\//.test(ua)) browser = "Chrome (iOS) " + m(/CriOS\/([\d.]+)/);
+        else if (/Chrome\//.test(ua)) browser = "Chrome " + m(/Chrome\/([\d.]+)/);
+        else if (/Safari\//.test(ua) && /Version\//.test(ua)) browser = "Safari " + m(/Version\/([\d.]+)/);
+        if (/CrOS/.test(ua)) os = "ChromeOS";
+        else if (/Windows NT 10/.test(ua)) os = "Windows 10/11";
+        else if (/Windows NT/.test(ua)) os = "Windows";
+        else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
+        else if (/Mac OS X/.test(ua)) os = (navigator.maxTouchPoints > 1 ? "iPadOS" : "macOS");
+        else if (/Android/.test(ua)) os = "Android " + m(/Android ([\d.]+)/);
+        else if (/Linux/.test(ua)) os = "Linux";
+        if (uad && uad.platform === "Chrome OS") os = "ChromeOS";
+        const mobile = (uad && uad.mobile) || /Mobi|iPhone|Android.+Mobile/.test(ua);
+        const tablet = !mobile && (/iPad|Tablet|Android/.test(ua) || (os === "iPadOS"));
+        let tz = "";
+        try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch {}
+        const str = (v, n) => ({ stringValue: String(v || "").slice(0, n) });
+        return {
+            s: { stringValue: PRESENCE.site },
+            b: str(browser, 40),
+            os: str(os, 40),
+            d: str(mobile ? "phone" : tablet ? "tablet" : "computer", 10),
+            sc: str(`${screen.width || 0}x${screen.height || 0}`, 12),
+            lang: str(navigator.language, 20),
+            tz: str(tz, 60),
+            host: str(location.host, 100)
+        };
+    }
+    const PRESENCE_NO_SESSION_KEY = "gnmath-presence-no-session";
+    async function writeSession() {
+        try { if (Date.now() - Number(localStorage.getItem(PRESENCE_NO_SESSION_KEY) || 0) < 6 * 3600000) return; } catch {}
+        try {
+            if (fbOn()) fbCount(0, 1);
+            await post("commit", { writes: [{
+                update: { name: `projects/${P}/databases/(default)/documents/sessions/${presenceId()}`, fields: browserInfo() },
+                updateTransforms: [{ fieldPath: "st", setToServerValue: "REQUEST_TIME" }]
+            }] });
+        } catch (e) {
+            // Rules without sessions yet: try again in a few hours
+            if (/HTTP 403/.test(e.message)) { try { localStorage.setItem(PRESENCE_NO_SESSION_KEY, String(Date.now())); } catch {} }
+        }
+    }
+
+    // ── Booting ─────────────────────────────────────────────────────────────────
+    let booted = false;
+    function bootFlag() {
+        try { const b = JSON.parse(localStorage.getItem(PRESENCE.bootKey) || "null"); return b && b.until > Date.now() ? b : null; } catch { return null; }
+    }
+    // Asks the database whether this browser is booted (one read; only after a
+    // refused heartbeat or when a boot is remembered here)
+    async function fetchBoot() {
+        const res = await fetch(`${API}/boots/${presenceId()}?key=${encodeURIComponent(KEY)}`);
+        if (fbOn()) fbCount(1, 0);
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const f = (await res.json()).fields || {};
+        const until = Date.parse(f.until?.timestampValue || "") || 0;
+        return until > Date.now() ? { until, reason: f.reason?.stringValue || "" } : null;
+    }
+    async function applyBoot(b) {
+        if (booted) return;
+        booted = true;
+        try { localStorage.setItem(PRESENCE.bootKey, JSON.stringify(b)); } catch {}
+        // Save their progress first: games save into this browser, and a
+        // signed-in player's cloud save gets one last upload
+        try {
+            if (typeof cloudUser !== "undefined" && cloudUser && typeof uploadCloudSave === "function") {
+                await Promise.race([uploadCloudSave({ background: true }), new Promise(r => setTimeout(r, 8000))]);
+            }
+        } catch {}
+        try { if (typeof closeZone === "function") closeZone(); } catch {}
+        showBootScreen(b);
+    }
+    function showBootScreen(b) {
+        let el = document.getElementById("gn-boot-screen");
+        if (!el) {
+            el = document.createElement("div");
+            el.id = "gn-boot-screen";
+            el.setAttribute("role", "alertdialog");
+            el.style.cssText = "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:24px;background:#0b0b10;color:#fff;font:16px/1.5 system-ui,sans-serif;text-align:center";
+            document.body.appendChild(el);
+        }
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const forever = b.until > Date.now() + 5 * 365 * 86400000;
+        const when = forever ? "" : new Date(b.until).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+        el.innerHTML = `<div style="max-width:420px"><h2 style="margin:0 0 8px;font-size:24px">You've been removed from GN 2.0</h2>` +
+            (b.reason ? `<p style="margin:0 0 8px">Reason: ${esc(b.reason)}</p>` : "") +
+            `<p style="margin:0;opacity:.75">${forever ? "An admin removed this session." : `You can come back after ${esc(when)}.`} Your game progress was saved.</p></div>`;
+        document.documentElement.style.overflow = "hidden";
+    }
+    // Every tab in this browser: show it when another tab finds the boot
+    window.addEventListener("storage", e => {
+        if (e.key === PRESENCE.bootKey && !booted) { const b = bootFlag(); if (b) applyBoot(b); }
+    });
+    // A boot remembered from before: show it right away, then ask the database
+    // whether it still stands (an admin may have lifted it)
+    (function () {
+        const b = bootFlag();
+        if (!b) return;
+        const show = () => { booted = true; showBootScreen(b); };
+        if (document.body) show(); else document.addEventListener("DOMContentLoaded", show);
+        fetchBoot().then(now => {
+            if (now) { try { localStorage.setItem(PRESENCE.bootKey, JSON.stringify(now)); } catch {} return; }
+            try { localStorage.removeItem(PRESENCE.bootKey); } catch {}
+            location.reload();
+        }).catch(() => {});
+    })();
+
     let gameNoted = "";
     function beatBody(withUsage) {
         const fields = { s: { stringValue: PRESENCE.site } };
@@ -101,17 +233,25 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         }] };
     }
     async function beat() {
-        if (document.hidden || (fbOn() && fbBackgroundPaused())) return;
+        if (booted || document.hidden || (fbOn() && fbBackgroundPaused())) return;
         lastBeat = Date.now();
         // Tabs in this browser share one id, so one heartbeat covers them all
-        if (Date.now() - (presenceShared().beatAt || 0) < presenceBeatMs() - 30000) return;
+        const prevBeat = presenceShared().beatAt || 0;
+        if (Date.now() - prevBeat < presenceBeatMs() - 30000) return;
         setPresenceShared({ beatAt: Date.now() });
+        // Nothing from this browser for a while: a new visit, so a new session
+        const newVisit = Date.now() - Math.max(prevBeat, presenceShared().sessionAt || 0) > PRESENCE.activeMs;
         try {
             if (fbOn()) fbCount(0, 1);
             const withUsage = presenceUsageAllowed();
             try {
                 await post("commit", beatBody(withUsage));
             } catch (e) {
+                // Refused: first check whether an admin booted this browser
+                if (/HTTP 403/.test(e.message)) {
+                    const b = await fetchBoot().catch(() => null);
+                    if (b) { applyBoot(b); return; }
+                }
                 // Old database rules don't allow the game field yet: stop sending it for a while
                 if (/HTTP 403/.test(e.message) && gameNoted) {
                     try { localStorage.setItem(PRESENCE_NO_GAME_KEY, String(Date.now())); } catch {}
@@ -125,6 +265,7 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
                 if (fbOn()) fbCount(0, 1);
                 await post("commit", beatBody(false));
             }
+            if (newVisit) { setPresenceShared({ sessionAt: Date.now() }); writeSession(); }
         } catch (e) {
             window.gnActiveUsers.error = String(e.message || e);
             console.info("Online count unavailable:", e.message || e);
@@ -220,6 +361,6 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         }, 30000);
     }, 4000);
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && lastBeat && Date.now() - lastBeat >= presenceBeatMs()) { beat().then(() => count(true)); }
+        if (!booted && !document.hidden && lastBeat && Date.now() - lastBeat >= presenceBeatMs()) { beat().then(() => count(true)); }
     });
 })();

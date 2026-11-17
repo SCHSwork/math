@@ -67,6 +67,7 @@ async function openAdminPanel() {
     body.innerHTML = `
         <div class="admin-tabs admin-tabs-wrap" role="tablist">
             <button type="button" role="tab" data-tab="accounts" aria-selected="true">Accounts</button>
+            ${modOnly ? "" : `<button type="button" role="tab" data-tab="sessions" aria-selected="false">Sessions</button>`}
             <button type="button" role="tab" data-tab="feedback" aria-selected="false">Reports</button>
             ${modOnly ? "" : `<button type="button" role="tab" data-tab="takedowns" aria-selected="false">Takedowns</button>`}
             <button type="button" role="tab" data-tab="submissions" aria-selected="false">Submissions</button>
@@ -94,6 +95,7 @@ async function openAdminPanel() {
             ${modOnly ? `<p class="admin-footnote">You're a mod, so this list is view-only. Ask an admin to suspend someone or change roles.</p>` : ""}
             <p class="admin-footnote">Passwords and cloud saves are private, even from admins. To delete an account completely or reset a password, use the Firebase console (Authentication → Users). Accounts show up here after they next visit the site.</p>
         </div>
+        <div id="admin-sessions" hidden></div>
         <div id="admin-submissions" hidden><div id="owner-submissions" class="owner-panel-list"></div></div>
         <div id="admin-newgames" hidden></div>
         <div id="admin-feedback" hidden></div>
@@ -105,6 +107,8 @@ async function openAdminPanel() {
         body.querySelectorAll(".admin-tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
         b.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
         document.getElementById("admin-accounts").hidden = b.dataset.tab !== "accounts";
+        document.getElementById("admin-sessions").hidden = b.dataset.tab !== "sessions";
+        if (b.dataset.tab === "sessions") renderSessions();
         document.getElementById("admin-submissions").hidden = b.dataset.tab !== "submissions";
         document.getElementById("admin-newgames").hidden = b.dataset.tab !== "newgames";
         document.getElementById("admin-feedback").hidden = b.dataset.tab !== "feedback";
@@ -291,6 +295,168 @@ async function renderVisitors() {
     box.querySelectorAll(".av-game").forEach(b => b.onclick = () => { const z = zoneById(b.dataset.id); if (z) { closePopup(); openZone(z); } });
 }
 
+// ── Sessions (admins) ─────────────────────────────────────────────────────────
+// Every browser with the site open (js/presence.js), with or without an
+// account: when the visit started, what's open, browser, system, screen,
+// language, time zone and site address. Boot one to remove it from the site
+// for a while: its progress is saved, its game closes and it sees a "you've
+// been removed" screen until the boot runs out or is lifted. A boot follows
+// the browser, not the person: another browser, or clearing site data, gets
+// a new session. Costs about two reads per session listed.
+const BOOT_TIMES = [["10m", "10 minutes", 10 * 60000], ["1h", "1 hour", 3600000], ["1d", "1 day", 86400000], ["7d", "1 week", 7 * 86400000], ["forever", "Until I lift it", 50 * 365 * 86400000]];
+async function renderSessions() {
+    const box = document.getElementById("admin-sessions");
+    if (!box) return;
+    box.innerHTML = `<p class="admin-summary">Loading sessions…</p>`;
+    let pres, boots;
+    try {
+        const TS = firebase.firestore.Timestamp;
+        [pres, boots] = await Promise.all([
+            cloudDb.collection("presence").where("t", ">", TS.fromMillis(Date.now() - 10 * 60000)).get(),
+            cloudDb.collection("boots").where("until", ">", TS.now()).get().catch(() => ({ docs: [] }))
+        ]);
+        if (!adminData) await loadAdminData();
+    } catch (e) {
+        box.innerHTML = `<p class="admin-summary">Couldn't load sessions: ${escapeHtmlText(e.message || e)}</p>`;
+        return;
+    }
+    const live = pres.docs.map(d => ({ id: d.id, ...(d.data() || {}) })).sort((a, b) => (b.t?.toMillis?.() || 0) - (a.t?.toMillis?.() || 0));
+    const details = new Map();
+    for (let i = 0; i < live.length; i += 30) {
+        const ids = live.slice(i, i + 30).map(x => x.id);
+        try {
+            const snap = await cloudDb.collection("sessions").where(firebase.firestore.FieldPath.documentId(), "in", ids).get();
+            snap.docs.forEach(d => details.set(d.id, d.data() || {}));
+        } catch (e) { /* rules not published yet */ }
+    }
+    if (typeof fbCount === "function") fbCount(live.length + details.size + boots.docs.length + 2, 0);
+    const bootMap = new Map(boots.docs.map(d => [d.id, d.data() || {}]));
+    const bySid = new Map((adminData?.profiles || []).filter(p => p.sid).map(p => [p.sid, p]));
+    const mine = typeof window.gnSessionId === "function" ? window.gnSessionId() : "";
+    const ms = v => v && v.toMillis ? v.toMillis() : Number(v) || 0;
+    const fmtTime = v => { const t = ms(v); return t ? new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "–"; };
+    const label = (id, acct) => acct ? acct.username : `Guest session ${id.slice(0, 6)}`;
+
+    box.innerHTML = `
+        <div class="admin-toolbar"><button type="button" class="finder-chip" id="sessions-refresh">Refresh</button></div>
+        <p class="admin-summary">${live.length} session${live.length === 1 ? "" : "s"} open in the last 10 minutes · ${bootMap.size} booted</p>
+        <div id="sessions-list" class="admin-list"></div>
+        ${bootMap.size ? `<h3 class="admin-subhead">Booted</h3><div id="sessions-booted" class="admin-list"></div>` : ""}
+        <p class="admin-footnote">A session is one browser with the site open. Without an account it shows as a guest session. Booting saves their progress, closes their game and shows them a "you've been removed" screen until it runs out; it takes effect within about 2 minutes (their next check-in). It follows the browser, so another browser or clearing site data gets a new session. Boots are saved in the Log.</p>`;
+    document.getElementById("sessions-refresh").onclick = () => renderSessions();
+    const list = document.getElementById("sessions-list");
+
+    const bootControls = (row, id, name, info) => {
+        const box2 = document.createElement("div");
+        box2.className = "admin-actions";
+        const b = bootMap.get(id);
+        if (b) {
+            const until = ms(b.until), forever = until > Date.now() + 5 * 365 * 86400000;
+            const line = document.createElement("small");
+            line.className = "admin-id";
+            line.textContent = `Booted ${forever ? "until lifted" : "until " + fmtTime(b.until)} by ${b.by || "an admin"}${b.reason ? " · " + b.reason : ""}`;
+            box2.appendChild(line);
+            const un = document.createElement("button");
+            un.type = "button"; un.className = "finder-chip"; un.textContent = "Lift boot";
+            un.onclick = async () => {
+                un.disabled = true;
+                try {
+                    await loggedWrite("unboot", id, name, "", w => w.delete(cloudDb.collection("boots").doc(id)));
+                    notify(`${name} can come back now.`, { type: "success" });
+                    renderSessions();
+                } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); un.disabled = false; }
+            };
+            box2.appendChild(un);
+        } else if (id === mine) {
+            const line = document.createElement("small");
+            line.className = "admin-id";
+            line.textContent = "This is you.";
+            box2.appendChild(line);
+        } else {
+            const reason = document.createElement("input");
+            reason.type = "text"; reason.maxLength = 200; reason.placeholder = "Reason (they'll see it)"; reason.className = "submit-note"; reason.setAttribute("aria-label", `Boot reason for ${name}`);
+            reason.setAttribute("data-lpignore", "true");
+            const time = document.createElement("select");
+            time.setAttribute("aria-label", "How long");
+            BOOT_TIMES.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; time.appendChild(o); });
+            time.value = "1h";
+            const go = document.createElement("button");
+            go.type = "button"; go.className = "finder-chip danger"; go.textContent = "Boot";
+            go.onclick = async () => {
+                const [, tl, dur] = BOOT_TIMES.find(x => x[0] === time.value);
+                const why = reason.value.trim().slice(0, 200);
+                if (!(await askConfirm(`${name} will be removed from the site ${time.value === "forever" ? "until you lift it" : "for " + tl}. Their progress is saved first.${why ? " Reason shown to them: " + why : ""}`, { title: "Boot this session?", confirmText: "Boot", danger: true }))) return;
+                go.disabled = true;
+                try {
+                    const data = {
+                        until: firebase.firestore.Timestamp.fromMillis(Date.now() + dur), reason: why,
+                        by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp(),
+                        name: String(name).slice(0, 40), info: String(info || "").slice(0, 200)
+                    };
+                    await loggedWrite("boot", id, name, `${tl}${why ? " · " + why : ""}`, w => w.set(cloudDb.collection("boots").doc(id), data));
+                    notify(`${name} is booted. It takes effect within about 2 minutes.`, { type: "success" });
+                    renderSessions();
+                } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); go.disabled = false; }
+            };
+            box2.append(reason, time, go);
+        }
+        row.appendChild(box2);
+    };
+
+    if (!live.length) list.innerHTML = `<p class="admin-summary">Nobody has the site open right now.</p>`;
+    for (const p of live) {
+        const d = details.get(p.id) || {};
+        const acct = bySid.get(p.id);
+        const name = label(p.id, acct);
+        const game = p.g && typeof zoneById === "function" ? zoneById(p.g) : null;
+        const row = document.createElement("details");
+        row.className = "admin-row";
+        const sum = document.createElement("summary");
+        const st = document.createElement("span");
+        st.className = "admin-presence on";
+        st.textContent = game ? `Playing ${game.name}` : "Browsing";
+        const b = document.createElement("b");
+        b.textContent = name;
+        sum.append(st, b);
+        const tags = [];
+        if (!acct) tags.push(["Guest", "guest"]);
+        if (p.s === "light") tags.push(["GN Light", "light"]);
+        if (bootMap.has(p.id)) tags.push(["Booted", "banned"]);
+        for (const [t, cls] of tags) { const x = document.createElement("span"); x.className = "admin-badge " + cls; x.textContent = t; sum.appendChild(x); }
+        const meta = document.createElement("small");
+        const info = [d.b, d.os ? "on " + d.os : "", d.d && d.d !== "computer" ? `(${d.d})` : ""].filter(Boolean).join(" ");
+        meta.textContent = [d.st ? "opened " + timeAgo(d.st) : "", "active " + timeAgo(p.t), info].filter(Boolean).join(" · ");
+        sum.appendChild(meta);
+        row.appendChild(sum);
+        const more = document.createElement("div");
+        more.className = "admin-activity";
+        const lines = [
+            ["Opened", d.st ? fmtTime(d.st) : "–"],
+            ["Last active", fmtTime(p.t)],
+            ["Playing", game ? game.name : "Nothing open"],
+            ["Account", acct ? acct.username : "None (guest)"],
+            ["Browser", d.b || "–"], ["System", [d.os, d.d].filter(Boolean).join(", ") || "–"],
+            ["Screen", d.sc || "–"], ["Language", d.lang || "–"], ["Time zone", d.tz || "–"],
+            ["Site address", d.host || "–"], ["Session ID", p.id]
+        ];
+        more.innerHTML = `<dl class="admin-session-info">${lines.map(([k, v]) => `<dt>${escapeHtmlText(k)}</dt><dd>${escapeHtmlText(v)}</dd>`).join("")}</dl>` +
+            (!details.has(p.id) ? `<p class="admin-footnote">No session details yet (they opened the site before this was added, or on GN Light).</p>` : "");
+        row.appendChild(more);
+        if (p.s !== "light") bootControls(row, p.id, name, info);
+        list.appendChild(row);
+    }
+    const bl = document.getElementById("sessions-booted");
+    if (bl) for (const [id, b] of bootMap) {
+        const row = document.createElement("div");
+        row.className = "admin-row";
+        const head = document.createElement("div");
+        head.innerHTML = `<b>${escapeHtmlText(b.name || "Session " + id.slice(0, 6))}</b> <small>${escapeHtmlText([b.info, "booted " + (b.at ? timeAgo(b.at) : "")].filter(Boolean).join(" · "))}</small>`;
+        row.appendChild(head);
+        bootControls(row, id, b.name || "Session " + id.slice(0, 6), b.info);
+        bl.appendChild(row);
+    }
+}
+
 // ── Action log ──────────────────────────────────────────────────────────────
 // Role and suspension changes are saved in one batch with their log entry and
 // auditLog's pointer (auditLast/<account>); the rules refuse them otherwise.
@@ -309,7 +475,8 @@ const ACTION_LABELS = {
     make_admin: "made an admin:", remove_admin: "removed admin from", remove_ratings: "removed all ratings & reports from",
     remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of",
     make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from", mark_fixed: "marked a game fixed:",
-    give_site_access: "let in while the site is closed:", remove_site_access: "removed closed-site access from"
+    give_site_access: "let in while the site is closed:", remove_site_access: "removed closed-site access from",
+    boot: "booted", unboot: "lifted the boot on"
 };
 let actionLogCache = null, actionLogFilter = "";
 async function renderActionLog() {
