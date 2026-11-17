@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — 213 more games
+
+### Added
+- **66 Selenite games** and **147 55GMS games**, from those two unblocked sites' GitHub repos, that GN 2.0 didn't have yet. Among them: Clicker Heroes, Townscaper, Pandemic 1 and 2, the Gun Mayhem games, three Henry Stickmin games, Super Smash Bros, Metroid: Zero Mission, Balatro, Bee Swarm Simulator, Level Devil, Kick the Buddy, Tiny Towers, Street Fighter II and III, Mortal Kombat, the Blumgi games and six Pokémon games.
+- Pick **Selenite games** or **55GMS games** under Source to see just them. Each one's Info panel says where its files come from (and who made it, when 55GMS lists that).
+- They're locked to the checked version of each repo, like the UBZone games. Ad SDKs the games bring along (Poki, CrazyGames, GameDistribution) are switched off before they run, and the sites' own trackers and ads are taken out.
+- More ad and tracking hosts are blocked inside every game (Poki's ad servers, Amazon ads, GameAnalytics, Clicky, ad4game, arc.io, MochiBot).
+
+### Left out on purpose
+- Games that load other ad networks or trackers the site can't switch off, Flash games with ads built into the file, games that need the 55GMS server (Roblox, now.gg), games that didn't start in the test browser, and games GN 2.0 already had.
+
 ## November 16, 2026 — Game fixes
 
 ### Fixed

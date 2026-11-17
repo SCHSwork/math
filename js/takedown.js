@@ -106,7 +106,7 @@ function openTakedownForm(zone = null) {
         const g = zone && zone.name.toLowerCase() === q ? zone : (typeof zones !== "undefined" ? zones.find(z => z.name.toLowerCase() === q) : null);
         const isUb = g && typeof isUbzoneZone === "function" && isUbzoneZone(g);
         ubBox.hidden = !isUb;
-        ubBox.innerHTML = isUb ? `<p><b>Where this copy comes from.</b> GN 2.0 loads this game from these GitHub repos (from the unblockedzone collection). Your request here removes it from GN 2.0; to have the files themselves taken down, contact those repos too or send GitHub a DMCA notice at <a href="https://github.com/contact/dmca" target="_blank" rel="noopener noreferrer">github.com/contact/dmca</a>.</p>${ubzoneSourceListHtml(g)}` : "";
+        ubBox.innerHTML = isUb ? `<p><b>Where this copy comes from.</b> GN 2.0 loads this game from these GitHub repos (from ${mirrorCollectionName(g)}). Your request here removes it from GN 2.0; to have the files themselves taken down, contact those repos too or send GitHub a DMCA notice at <a href="https://github.com/contact/dmca" target="_blank" rel="noopener noreferrer">github.com/contact/dmca</a>.</p>${ubzoneSourceListHtml(g)}` : "";
     };
     input.addEventListener("input", showUbzoneSource);
     input.addEventListener("change", showUbzoneSource);
@@ -249,7 +249,7 @@ function drawModTakedowns() {
                 if (i) src.append(", ");
                 const a = el("a", "", l.label); a.href = l.url; a.target = "_blank"; a.rel = "noopener noreferrer"; src.appendChild(a);
             });
-            src.append(" (UBZone game; tell the requester they can also contact these repos or GitHub)");
+            src.append(` (${mirrorCollectionOf(z).source.replace(/s$/, "")}; tell the requester they can also contact these repos or GitHub)`);
             row.appendChild(src);
         }
         if (t.uid) row.appendChild(el("small", "fb-ctx", "Sent while signed in to a GN 2.0 account."));

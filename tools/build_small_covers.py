@@ -84,12 +84,17 @@ def cover_keys():
         if c.startswith("{COVER_URL}/"):
             keys["freebuisness/covers@main/" + c[len("{COVER_URL}/"):]] = 0
     lib = len(keys)
-    # UBZone (config/ubzone-games.json): a path in its repo, or owner/repo@sha/path
-    ub = json.loads((ROOT / "config" / "ubzone-games.json").read_text(encoding="utf-8"))
-    for g in ub.get("games", []):
-        c = g.get("cover")
-        if c:
-            keys[c if re.search(r"@[0-9a-f]{40}/", c) else f"{ub['repo']}@{ub['ref']}/{c.lstrip('/')}"] = 0
+    # Checked collections (config/ubzone-, selenite-, 55gms-games.json): a path in
+    # the collection's repo, or owner/repo@sha/path
+    for name in ("ubzone", "selenite", "55gms"):
+        f = ROOT / "config" / f"{name}-games.json"
+        if not f.exists():
+            continue
+        ub = json.loads(f.read_text(encoding="utf-8"))
+        for g in ub.get("games", []):
+            c = g.get("cover")
+            if c:
+                keys[c if re.search(r"@[0-9a-f]{40}/", c) else f"{ub['repo']}@{ub['ref']}/{c.lstrip('/')}"] = 0
     ubn = len(keys) - lib
     # GN Originals: only the big ones (most are a few KB)
     _, body = get(f"{RAW}/SCHSwork/GN-originals/main/games.json")
@@ -99,7 +104,7 @@ def cover_keys():
         if g.get("cover"):
             keys["SCHSwork/GN-originals@main/" + g["cover"].lstrip("/")] = ORIGINALS_MIN_BYTES
             orig += 1
-    print(f"{lib} library, {ubn} UBZone and {orig} GN Originals covers")
+    print(f"{lib} library, {ubn} UBZone/Selenite/55GMS and {orig} GN Originals covers")
     return keys
 
 

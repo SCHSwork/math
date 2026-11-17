@@ -145,10 +145,11 @@ def main():
             m = re.match(r"gh:([\w.-]+/[\w.-]+)@([0-9a-f]{40})/(.+)$", w.get("url") or "")
             if m:  # page used straight from a repo: count the repo it's in
                 pages[f"washed-gh:{gid}"] = f'<base href="https://cdn.jsdelivr.net/gh/{m.group(1)}@{m.group(2)}/{m.group(3).rsplit("/", 1)[0] + "/" if "/" in m.group(3) else ""}">'
-        ub = json.loads((ROOT / "config/ubzone-games.json").read_text())
-        ub_paths = sorted({g["path"] for g in ub["games"] if g.get("path")})
-        print(f"Reading {len(ub_paths)} UBZone pages…")
-        pages.update(pages_from_repo(tmp, ub["repo"], ub["ref"], ub_paths))
+        for name in ("ubzone", "selenite", "55gms"):
+            ub = json.loads((ROOT / f"config/{name}-games.json").read_text())
+            ub_paths = sorted({g["path"] for g in ub["games"] if g.get("path")})
+            print(f"Reading {len(ub_paths)} {name} pages…")
+            pages.update(pages_from_repo(tmp, ub["repo"], ub["ref"], ub_paths))
 
         pages = {k: pin_links(v) for k, v in pages.items()}
         targets = set()
