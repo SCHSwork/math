@@ -86,7 +86,7 @@ def cover_keys():
     lib = len(keys)
     # Checked collections (config/ubzone-, selenite-, 55gms-games.json): a path in
     # the collection's repo, or owner/repo@sha/path
-    for name in ("ubzone", "selenite", "55gms"):
+    for name in ("ubzone", "selenite", "55gms", "bchs", "radon"):
         f = ROOT / "config" / f"{name}-games.json"
         if not f.exists():
             continue

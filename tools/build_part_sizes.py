@@ -145,7 +145,7 @@ def main():
             m = re.match(r"gh:([\w.-]+/[\w.-]+)@([0-9a-f]{40})/(.+)$", w.get("url") or "")
             if m:  # page used straight from a repo: count the repo it's in
                 pages[f"washed-gh:{gid}"] = f'<base href="https://cdn.jsdelivr.net/gh/{m.group(1)}@{m.group(2)}/{m.group(3).rsplit("/", 1)[0] + "/" if "/" in m.group(3) else ""}">'
-        for name in ("ubzone", "selenite", "55gms"):
+        for name in ("ubzone", "selenite", "55gms", "bchs", "radon"):
             ub = json.loads((ROOT / f"config/{name}-games.json").read_text())
             ub_paths = sorted({g["path"] for g in ub["games"] if g.get("path")})
             print(f"Reading {len(ub_paths)} {name} pages…")

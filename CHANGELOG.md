@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — 208 more games (BCHS and Radon)
+
+### Added
+- **194 Flash games from BCHS Unblocked Games** and **14 games from Radon Games** that GN 2.0 didn't have. Among them: the Sift Heads, Tactical Assassin and Strike Force Heroes series, Earn to Die, Motherload, Stick War, Robot Unicorn Attack, Portal (Flash), the Submachine games, Bloons and its player packs, QWOP, Super Mario Flash 1 and 2, Zombotron 1 and 2, Microsoft Flight Simulator and Sans Fight.
+- Pick **BCHS games** or **Radon games** under Source.
+- Flash games with ads built into the file were left out, and links a Flash game tries to open are blocked.
+
 ## November 17, 2026 — 213 more games
 
 ### Added

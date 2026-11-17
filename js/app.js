@@ -1163,7 +1163,7 @@ function filterZones() { applyFilters(); }
 // a fake "Download" ad pushing a browser-hijacker extension, plus an anti-adblock
 // trap that wipes the page if its ad box is removed. We strip the loader before
 // the game runs (so the trap never starts) and block known ad hosts as a backup.
-const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com|mc\\.yandex\\.ru|yandex\\.ru|yandex\\.net|igroutka\\.ru|id\\.net|playtomic\\.com|stats\\.unity3d\\.com|cloud\\.unity3d\\.com|unblockedgamesroblox\\.weebly\\.com|gamemonetize\\.com|gamedistribution\\.com|cpmstar\\.com|adinplay\\.com|api\\.adinplay\\.com|imasdk\\.googleapis\\.com|poki\\.io|poki-gdn\\.com|crazygames\\.com|improvedigital\\.com|prebid\\.org|clarity\\.ms|hotjar\\.com|statcounter\\.com|histats\\.com|cloudflareinsights\\.com|a\\.poki\\.com|poki-cdn\\.com|amazon-adsystem\\.com|gameanalytics\\.com|ad4game\\.com|getclicky\\.com|arc\\.io|mochibot\\.com)$";
+const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com|mc\\.yandex\\.ru|yandex\\.ru|yandex\\.net|igroutka\\.ru|id\\.net|playtomic\\.com|stats\\.unity3d\\.com|cloud\\.unity3d\\.com|unblockedgamesroblox\\.weebly\\.com|gamemonetize\\.com|gamedistribution\\.com|cpmstar\\.com|adinplay\\.com|api\\.adinplay\\.com|imasdk\\.googleapis\\.com|poki\\.io|poki-gdn\\.com|crazygames\\.com|improvedigital\\.com|prebid\\.org|clarity\\.ms|hotjar\\.com|statcounter\\.com|histats\\.com|cloudflareinsights\\.com|a\\.poki\\.com|poki-cdn\\.com|amazon-adsystem\\.com|gameanalytics\\.com|ad4game\\.com|getclicky\\.com|arc\\.io|mochibot\\.com|mochiads\\.com|cpmstar\\.com|ngads\\.com)$";
 
 function isObfuscatedAdScript(code) {
     if (/r9x\.in/i.test(code)) return true;
@@ -2130,7 +2130,9 @@ async function fetchWithFallback(rawUrl, onTry) {
     }
     // GN Originals: "gh:owner/repo@sha/path"
     if (typeof parseGhUrl === "function" && parseGhUrl(rawUrl)) {
-        let html = await fetchOriginalHtml(rawUrl, onTry);
+        // Flash games listed as a .swf (checked collections): the page is made here
+        const swfPage = typeof isUbzoneGhUrl === "function" && isUbzoneGhUrl(rawUrl) && typeof mirrorSwfPage === "function" ? mirrorSwfPage(rawUrl) : null;
+        let html = swfPage || await fetchOriginalHtml(rawUrl, onTry);
         // Checked collections (UBZone, Selenite, 55GMS): keep their own links on the
         // checked version (ubzone.js); Selenite and 55GMS pages also get the ad cleaner
         if (typeof isUbzoneGhUrl === "function" && isUbzoneGhUrl(rawUrl)) {
