@@ -95,7 +95,7 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
       allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen', 'level', 'xp', 'badges', 'played', 'tried', 'playing'])
+        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen', 'level', 'xp', 'badges', 'played', 'tried', 'playing', 'sid'])
         && request.resource.data.username == request.auth.token.email.split('@')[0]
         && shortText(request.resource.data.createdAt, 40)
         && request.resource.data.lastSeen == request.time
@@ -104,13 +104,15 @@ service cloud.firestore {
         && optInt(request.resource.data, 'badges', 0, 500)
         && optInt(request.resource.data, 'played', 0, 100000000)
         && optInt(request.resource.data, 'tried', 0, 100000)
-        && (!('playing' in request.resource.data) || (request.resource.data.playing is string && request.resource.data.playing.matches('[0-9]{0,7}')));
+        && (!('playing' in request.resource.data) || (request.resource.data.playing is string && request.resource.data.playing.matches('[0-9]{0,7}')))
+        && (!('sid' in request.resource.data) || (request.resource.data.sid is string && request.resource.data.sid.matches('[A-Za-z0-9]{20}')));
       allow delete: if request.auth != null && (request.auth.uid == uid || isAdmin());
     }
 
     // "People online now": each open tab writes { t: server time, s: site } to
     // presence/<random id> every couple of minutes. No account or personal
     // info; anyone can read it so the site and status page can count it.
+    // A booted browser's heartbeats are refused (boots/ below).
     // Optional u: { "<YYYYMMDD>": { r, w } } is that browser's Firebase read and
     // write count for today, added up by the site to estimate daily usage.
     match /presence/{id} {
@@ -120,7 +122,42 @@ service cloud.firestore {
         && (!('g' in request.resource.data) || (request.resource.data.g is string && request.resource.data.g.matches('[0-9]{1,7}')))
         && request.resource.data.t == request.time
         && request.resource.data.s in ['gn2', 'light']
-        && (!('u' in request.resource.data) || validUsage(request.resource.data.u));
+        && (!('u' in request.resource.data) || validUsage(request.resource.data.u))
+        && !isBooted(id);
+    }
+
+    // Sessions (Admin Panel → Sessions): written once per visit by the browser
+    // whose presence id it is: when the visit started (st), browser, system,
+    // device type, screen size, language, time zone and site address. Only
+    // admins can read them.
+    match /sessions/{id} {
+      allow get, list: if isAdmin();
+      allow create, update: if id.matches('[A-Za-z0-9]{20}')
+        && request.resource.data.keys().hasOnly(['st', 's', 'b', 'os', 'd', 'sc', 'lang', 'tz', 'host'])
+        && request.resource.data.st == request.time
+        && request.resource.data.s in ['gn2', 'light']
+        && shortText(request.resource.data.b, 40) && shortText(request.resource.data.os, 40)
+        && request.resource.data.d in ['computer', 'tablet', 'phone']
+        && shortText(request.resource.data.sc, 12) && shortText(request.resource.data.lang, 20)
+        && shortText(request.resource.data.tz, 60) && shortText(request.resource.data.host, 100);
+      allow delete: if isAdmin();
+    }
+
+    // Booted sessions: admins write boots/<session id> { until, reason, ... }
+    // (with an action-log entry). That browser's heartbeats are then refused,
+    // and the site shows it a "you've been removed" screen until `until`.
+    // Anyone can read one boot by its id (the booted browser reads its own to
+    // show the reason); only admins can list them.
+    match /boots/{id} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && id.matches('[A-Za-z0-9]{20}') && loggedAs(id, 'boot')
+        && request.resource.data.keys().hasOnly(['until', 'reason', 'by', 'at', 'name', 'info'])
+        && request.resource.data.until is timestamp && request.resource.data.until > request.time
+        && shortText(request.resource.data.reason, 200) && shortText(request.resource.data.by, 40)
+        && shortText(request.resource.data.name, 40) && shortText(request.resource.data.info, 200)
+        && request.resource.data.at == request.time;
+      allow delete: if isAdmin() && loggedAs(id, 'unboot');
     }
     // "N playing now" and "Top 10 this week" (js/live.js). Every 5 minutes one
     // browser adds up the presence heartbeats and saves the counts here.
@@ -264,6 +301,11 @@ service cloud.firestore {
         && shortText(d.gameId, 12) && shortText(d.gameName, 80) && shortText(d.context, 200);
     }
 
+    // A boot that hasn't run out yet (one read per heartbeat while checking)
+    function isBooted(id) {
+      return exists(/databases/$(db)/documents/boots/$(id))
+        && get(/databases/$(db)/documents/boots/$(id)).data.until > request.time;
+    }
     function isBanned() {
       return request.auth != null && exists(/databases/$(db)/documents/bans/$(request.auth.uid));
     }
@@ -288,7 +330,7 @@ service cloud.firestore {
         && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
                         'remove_ratings', 'remove_rating', 'delete_submissions',
                         'make_trusted', 'remove_trusted', 'mark_fixed',
-                        'give_site_access', 'remove_site_access']
+                        'give_site_access', 'remove_site_access', 'boot', 'unboot']
         && shortText(d.target, 128) && shortText(d.targetName, 40)
         && shortText(d.byName, 40) && shortText(d.detail, 200);
     }
