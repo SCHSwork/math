@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Sign in with Google
+
+### Added
+- **Sign in with Google** and **Sign up with Google** buttons on the account screen. A first Google sign-in picks a GN 2.0 username; Google emails count as verified.
+- **Link Google account** (Account → Google sign-in) for people already signed in, so either way gets them into the same account. Accounts with a password can unlink it again.
+- If Google sign-in is off or blocked (network, school or browser), the button just says it couldn't open, and normal sign-in keeps working.
+
 ## November 17, 2026 — Emails on accounts and password resets
 
 ### Added
