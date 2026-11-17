@@ -10,6 +10,8 @@ on:
     branches: [main]
     paths:
       - config/ubzone-games.json
+      - config/selenite-games.json
+      - config/55gms-games.json
       - tools/build_small_covers.py
   workflow_dispatch:
 permissions:
