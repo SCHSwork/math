@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Instant boots and site modes
+
+### Changed
+- **Boots arrive in a second or two** instead of up to 2 minutes, and lifting a boot lets them back in right away. Each open page listens for its own boot over Firebase's live connection (`js/realtime.js`), which costs one read when the page opens instead of one per heartbeat.
+- **Lock, maintenance and shutdown reach everyone at once** instead of waiting up to ~5 minutes for GitHub's copy. When the owner changes the site mode, its message or the "back at" time while signed in to their account, it's also written to `site/mode`, which every open page listens to. Whichever is newer wins, this or the GitHub copy.
+- If the live connection can't start, the old ways still work (a boot check every 5 minutes; site modes from GitHub).
+
 ## November 17, 2026 — Sessions and booting (admins)
 
 ### Added
