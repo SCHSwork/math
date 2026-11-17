@@ -515,12 +515,23 @@ function currentUsername() {
 }
 // A new account whose email isn't verified yet can't use cloud features
 function accountNeedsVerify(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !user.emailVerified); }
+// Signed in with Google for the first time: needs to pick a username
+function accountNeedsUsername(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !user.displayName); }
+function hasPassword(user = cloudUser) { return !!(user && user.providerData.some(p => p.providerId === "password")); }
+function hasGoogle(user = cloudUser) { return !!(user && user.providerData.some(p => p.providerId === "google.com")); }
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 function friendlyAuthError(e) {
     const code = (e && e.code) || "";
     if (code.includes("email-already-in-use")) return "An account already uses that email.";
     if (code.includes("invalid-email")) return "That email doesn't look right.";
     if (code.includes("requires-recent-login")) return "Sign out and back in, then try again.";
+    if (code.includes("operation-not-allowed") || code.includes("unauthorized-domain")) return "Google sign-in isn't turned on for this site yet.";
+    if (code.includes("internal-error") || code.includes("web-storage-unsupported")) return "Google sign-in couldn't open here. Your network or browser may block it; your normal sign-in still works.";
+    if (code.includes("popup-blocked")) return "Your browser blocked the Google window. Allow pop-ups for this site and try again.";
+    if (code.includes("popup-closed-by-user") || code.includes("cancelled-popup-request")) return "The Google window was closed before signing in.";
+    if (code.includes("account-exists-with-different-credential")) return "An account already uses that Google email. Sign in with your email and password, then link Google from Account.";
+    if (code.includes("credential-already-in-use")) return "That Google account is already used by another GN 2.0 account.";
+    if (code.includes("provider-already-linked")) return "Google is already linked to this account.";
     if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Wrong username, email or password.";
     if (code.includes("weak-password")) return "Password needs at least 6 characters.";
     if (code.includes("too-many-requests")) return "Too many tries. Wait a bit and try again.";
@@ -647,6 +658,69 @@ async function cloudAddEmail() {
     }
 }
 
+// ── Google ───────────────────────────────────────────────────────────────────
+// "Sign in with Google": signs in to the account that's linked to that Google
+// account, or makes a new one (it then picks a username). Signed-in accounts
+// can link Google so either way gets them in. Needs Google turned on in the
+// Firebase console (Authentication → Sign-in method) and the site's address in
+// its authorized domains; school Google accounts may also be blocked by the
+// school. When it doesn't work, it just says so.
+function googleProvider() {
+    const p = new firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({ prompt: "select_account" });
+    return p;
+}
+async function cloudGoogleSignIn() {
+    const msg = document.getElementById("acct-msg");
+    const say = t => { if (msg) msg.textContent = t; };
+    if (!cloudAuth) return;
+    say("Opening Google…");
+    try {
+        await cloudAuth.signInWithPopup(googleProvider());
+        say("");
+        setTimeout(() => openAccountPanel(), 300);
+    } catch (e) {
+        console.warn("Google sign-in failed", e);
+        say(friendlyAuthError(e));
+    }
+}
+async function cloudLinkGoogle() {
+    if (!cloudUser) return;
+    try {
+        await cloudUser.linkWithPopup(googleProvider());
+        notify("Google is linked. You can sign in with Google from now on.", { type: "success" });
+        openAccountPanel();
+    } catch (e) {
+        console.warn("Linking Google failed", e);
+        notify(friendlyAuthError(e), { type: "error", duration: 9000 });
+    }
+}
+async function cloudUnlinkGoogle() {
+    if (!cloudUser || !hasPassword()) return;
+    if (!(await askConfirm("You'll sign in with your username or email and password only.", { title: "Unlink Google?", confirmText: "Unlink" }))) return;
+    try { await cloudUser.unlink("google.com"); notify("Google unlinked.", { type: "success" }); openAccountPanel(); }
+    catch (e) { notify(friendlyAuthError(e), { type: "error" }); }
+}
+// First Google sign-in: claim a username for the new account
+async function cloudPickUsername() {
+    const u = normalizeUsername(document.getElementById("acct-pick-username")?.value);
+    const msg = document.getElementById("acct-msg");
+    const say = t => { if (msg) msg.textContent = t; };
+    if (!cloudUser) return;
+    if (!/^[a-z0-9_]{3,20}$/.test(u)) return say("Username: 3–20 letters, numbers, or _");
+    say("Saving…");
+    try {
+        const ref = cloudDb.collection("usernames").doc(u);
+        if ((await ref.get()).exists) return say("That username is taken.");
+        await ref.set({ uid: cloudUser.uid, e: true });
+        await cloudUser.updateProfile({ displayName: u });
+        location.reload();
+    } catch (e) {
+        say(/permission/i.test(e.code || e.message || "") ? "That username is taken." : friendlyAuthError(e));
+    }
+}
+const GOOGLE_BUTTON = (label) => `<button class="settings-button acct-google" onclick="cloudGoogleSignIn()"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 48 48" style="vertical-align:-3px;margin-right:6px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>${label}</button>`;
+
 // Saving first can take a few seconds, so the button says so and extra clicks
 // are ignored. If the save is very slow, sign out anyway after 10 seconds
 // (progress stays on this device either way).
@@ -700,15 +774,14 @@ async function cloudChangePassword() {
 async function cloudDeleteAccount() {
     const pw = document.getElementById("acct-delete-password")?.value || "";
     if (!cloudUser) return;
-    if (!pw) { setCloudStatus("Enter your password to delete your account."); return; }
+    if (!pw && hasPassword()) { setCloudStatus("Enter your password to delete your account."); return; }
     if (!(await askConfirm(`This permanently deletes "${currentUsername()}", its cloud save, its ratings and reports, and its game submissions. It can't be undone.`, { title: "Delete account?", confirmText: "Delete account", danger: true }))) return;
     try {
         setCloudStatus("Deleting…");
         clearInterval(cloudAutosaveTimer);
         // Firebase requires a fresh sign-in before deleting an account.
-        await cloudUser.reauthenticateWithCredential(
-            firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw)
-        );
+        if (hasPassword()) await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw));
+        else await cloudUser.reauthenticateWithPopup(googleProvider());
         cloudBusy = true;
         const chunks = await saveDocRef().collection("chunks").get();
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
@@ -801,6 +874,21 @@ function openAccountPanel(mode) {
     if (!cloudAuth) {
         body.innerHTML = `<p>Accounts are still loading. Try again in a moment.</p>`;
     } else if (cloudUser) {
+        if (accountNeedsUsername()) {
+            body.innerHTML = `
+            <p style="margin-top:0;">Signed in with Google as <b>${escapeHtml(cloudUser.email || "")}</b>. Pick a username for GN 2.0:</p>
+            <label for="acct-pick-username" style="font-weight:bold;">Username</label><br>
+            <input type="text" id="acct-pick-username" maxlength="20" autocomplete="username"><br><br>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                <button class="settings-button" onclick="cloudPickUsername()">Save username</button>
+                <button class="settings-button" onclick="cloudAuth.signOut()">Cancel</button>
+            </div>
+            <p id="acct-msg" style="font-size:14px;color:#ef4444;"></p>`;
+            body.querySelector("input").addEventListener("keydown", e => { if (e.key === "Enter") cloudPickUsername(); });
+            body.contentEditable = false;
+            document.getElementById("popupOverlay").style.display = "flex";
+            return;
+        }
         if (accountNeedsVerify()) {
             body.innerHTML = `
             <p style="margin-top:0;">Almost done, <b>${escapeHtml(currentUsername())}</b>!</p>
@@ -826,6 +914,12 @@ function openAccountPanel(mode) {
             </div>
             ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
             <details class="acct-section">
+                <summary>Google sign-in${hasGoogle() ? " (linked)" : ""}</summary>
+                ${hasGoogle()
+                    ? `<p class="acct-hint">Google is linked, so you can sign in with Google.</p>${hasPassword() ? `<button class="settings-button" onclick="cloudUnlinkGoogle()">Unlink Google</button>` : ""}`
+                    : `<p class="acct-hint">Link your Google account to sign in with Google. If it doesn't work on your network, your normal sign-in still does.</p><button class="settings-button acct-google" onclick="cloudLinkGoogle()">Link Google account</button>`}
+            </details>
+            ${hasPassword() ? `<details class="acct-section">
                 <summary>Change password</summary>
                 <label for="acct-old-password">Current password</label>
                 <input type="password" id="acct-old-password" autocomplete="current-password">
@@ -836,7 +930,7 @@ function openAccountPanel(mode) {
                 <p id="acct-pw-hint" class="acct-hint">At least 6 characters.${isLegacyAccount() ? " Your account has no email yet, so there's no password reset: add an email below, or pick one you'll remember." : ""}</p>
                 <button class="settings-button" onclick="cloudChangePassword()">Change password</button>
                 <p id="acct-pw-msg" class="acct-msg" role="status"></p>
-            </details>
+            </details>` : ""}
             ${isLegacyAccount() ? `<details class="acct-section" id="acct-email-section">
                 <summary>Add an email (for password resets)</summary>
                 <p class="acct-hint">Add an email so you can reset your password if you forget it. We'll send a link to check it's yours. After you click it, you sign in with your email instead of your username; your username, saves and progress stay the same. Only the site's sign-in system keeps your email, and nobody else sees it.</p>
@@ -850,8 +944,8 @@ function openAccountPanel(mode) {
             <details class="acct-section">
                 <summary>Delete account</summary>
                 <p class="acct-hint">This permanently deletes your account, its cloud save, and its ratings and reports. Game progress saved in this browser isn't touched.</p>
-                <label for="acct-delete-password">Confirm your password</label>
-                <input type="password" id="acct-delete-password" autocomplete="current-password">
+                ${hasPassword() ? `<label for="acct-delete-password">Confirm your password</label>
+                <input type="password" id="acct-delete-password" autocomplete="current-password">` : `<p class="acct-hint">You'll confirm with Google.</p>`}
                 <button class="settings-button" style="background:#b91c1c;" onclick="cloudDeleteAccount()">Delete my account</button>
             </details>
             <p id="acct-status" style="font-size:14px;color:var(--text-muted);"></p>`;
@@ -874,6 +968,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="openAccountPanel('${create ? "signin" : "create"}')">${create ? "I have an account" : "Create an account"}</button>
             </div>
             ${create ? "" : `<p style="margin:0.6rem 0 0;font-size:14px;"><a href="#" onclick="cloudForgotPassword(); return false;">Forgot password?</a> <span style="color:var(--text-muted);">(accounts with an email)</span></p>`}
+            <div style="margin-top:0.9rem;">${GOOGLE_BUTTON(create ? "Sign up with Google" : "Sign in with Google")}</div>
             <p id="acct-msg" style="font-size:14px;color:#ef4444;"></p>`;
         body.querySelectorAll("input").forEach(inp => inp.addEventListener("keydown", e => {
             if (e.key === "Enter") cloudSignIn(create);
@@ -918,9 +1013,10 @@ async function initCloudAccounts() {
             if (typeof applyOwnerSiteMode === "function") applyOwnerSiteMode();
             if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
             clearInterval(cloudAutosaveTimer);
-            if (user && accountNeedsVerify(user)) {
-                // New account waiting on its email link: nothing syncs until then
-                setCloudStatus("Verify your email to turn on cloud saves (Account).");
+            if (user && (accountNeedsVerify(user) || accountNeedsUsername(user))) {
+                // New account waiting on its email link or a username: nothing syncs until then
+                setCloudStatus(accountNeedsUsername(user) ? "Pick a username to finish your account (Account)." : "Verify your email to turn on cloud saves (Account).");
+                if (accountNeedsUsername(user)) setTimeout(() => openAccountPanel(), 200);
             } else if (user) {
                 cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
                 cloudSyncOnSignIn();
