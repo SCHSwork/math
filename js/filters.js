@@ -73,7 +73,7 @@ function zoneGenres(zone) {
 }
 function zoneSource(zone) {
     if (typeof isPartnerZone === "function" && isPartnerZone(zone)) return "partner";
-    if (typeof isUbzoneZone === "function" && isUbzoneZone(zone)) return "ubzone";
+    if (typeof mirrorCollectionOf === "function") { const c = mirrorCollectionOf(zone); if (c) return c.key; }
     if (typeof isOriginalZone === "function" && isOriginalZone(zone)) {
         const sp = zone.special || [];
         return sp.includes("js13k") ? "js13k" : sp.includes("wasm4") ? "wasm4" : "originals";
@@ -134,7 +134,7 @@ function updateFilterCounts() {
     const srcSel = document.getElementById("sourceOptions");
     if (srcSel) {
         const count = s => visible.filter(z => zoneSource(z) === s).length;
-        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})`, wasm4: `WASM-4 retro games (${count("wasm4")})`, partner: `Partner games, may have ads (${count("partner")})`, ubzone: `UBZone games (${count("ubzone")})` };
+        const labels = { all: `All sources (${visible.length})`, library: `Main library (${count("library")})`, originals: `GN Originals (${count("originals")})`, js13k: `js13k tiny games (${count("js13k")})`, wasm4: `WASM-4 retro games (${count("wasm4")})`, partner: `Partner games, may have ads (${count("partner")})`, ubzone: `UBZone games (${count("ubzone")})`, selenite: `Selenite games (${count("selenite")})`, "55gms": `55GMS games (${count("55gms")})`, bchs: `BCHS games (${count("bchs")})`, radon: `Radon games (${count("radon")})` };
         for (const o of srcSel.options) if (labels[o.value]) o.textContent = labels[o.value];
     }
 }
