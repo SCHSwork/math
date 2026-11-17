@@ -9,7 +9,7 @@ comes from:
   - the game library's zones.json (freebuisness/assets),
   - GN Originals' games.json (SCHSwork/GN-originals),
   - this site's own lists: config/library-washed.json (washed games),
-    config/ubzone-games.json.
+    config/ubzone-games.json, config/selenite-games.json, config/55gms-games.json.
 For a library game that was washed, the later of the two dates counts (it
 only became playable here when it was washed).
 
@@ -76,18 +76,24 @@ def main():
         print("Library:", first_seen(history(tmp, "freebuisness/assets", "zones.json"), "zones", dates), "games", flush=True)
         print("GN Originals:", first_seen(history(tmp, "SCHSwork/GN-originals", "games.json"), "zones", dates), "games", flush=True)
         # (Partner catalogs aren't listed: they're thousands of outside games, often blocked)
-        for path, kind in [("config/ubzone-games.json", "ubzone")]:
+        for path, kind in [("config/ubzone-games.json", "ubzone"), ("config/selenite-games.json", "ubzone"), ("config/55gms-games.json", "ubzone"), ("config/bchs-games.json", "ubzone"), ("config/radon-games.json", "ubzone")]:
             print(f"{path}:", first_seen(history(tmp, "SCHSwork/math", path), kind, dates), "games", flush=True)
         # Washed games became playable here when they were washed
         print("Washed:", first_seen(history(tmp, "SCHSwork/math", "config/library-washed.json"), "washed", dates, prefer_later=True), "games", flush=True)
-    # Washed games not pushed yet (running by hand before a commit): today
+    # Washed and collection games not pushed yet (running by hand before a commit): today
+    import datetime
+    today = datetime.date.today().isoformat()
     try:
-        import datetime
-        today = datetime.date.today().isoformat()
         for i in json.loads((ROOT / "config/library-washed.json").read_text()).get("games", {}):
             dates.setdefault(i, today)
     except Exception:
         pass
+    for path in ("config/ubzone-games.json", "config/selenite-games.json", "config/55gms-games.json", "config/bchs-games.json", "config/radon-games.json"):
+        try:
+            for i in ids_in((ROOT / path).read_text(), "ubzone"):
+                dates.setdefault(i, today)
+        except Exception:
+            pass
     OUT.write_text(json.dumps({"dates": dict(sorted(dates.items(), key=lambda kv: int(kv[0]) if kv[0].lstrip("-").isdigit() else 0))}, separators=(",", ":")) + "\n")
     print(f"Wrote {OUT.relative_to(ROOT)}: {len(dates)} games, {OUT.stat().st_size // 1024} KB")
 

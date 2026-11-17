@@ -1,0 +1,615 @@
+{
+ "repo": "selenite-cc/selenite-old",
+ "ref": "9c743188888af0986c8c7b293dbac8f9e421a4ee",
+ "scanned": "2026-11-17",
+ "roots": {
+  "/emulatorjs/": "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/emulatorjs/"
+ },
+ "drop": [
+  "/js/all.js",
+  "/js/main.js",
+  "/controls.js",
+  "/everypage.js",
+  "/html/settings/js/index.js",
+  "/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
+ ],
+ "pins": {},
+ "probes": {
+  "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee": "robots.txt"
+ },
+ "games": [
+  {
+   "id": 400000,
+   "name": "1 on 1 Soccer",
+   "path": "1on1soccer/index.html",
+   "cover": "1on1soccer/logo.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/1on1soccer"
+   ]
+  },
+  {
+   "id": 400001,
+   "name": "2D Rocket League",
+   "path": "2drocketleague/index.html",
+   "cover": "2drocketleague/unnamed.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/2drocketleague"
+   ]
+  },
+  {
+   "id": 400002,
+   "name": "60s Burger Run",
+   "path": "60sburgerrun/index.html",
+   "cover": "60sburgerrun/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/60sburgerrun"
+   ]
+  },
+  {
+   "id": 400003,
+   "name": "Age of War",
+   "path": "ageofwar/index.html",
+   "cover": "ageofwar/warofage.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/ageofwar"
+   ]
+  },
+  {
+   "id": 400004,
+   "name": "Amazing Rope Police",
+   "path": "amazing-rope-police/index.html",
+   "cover": "amazing-rope-police/splash.jpeg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/amazing-rope-police"
+   ]
+  },
+  {
+   "id": 400005,
+   "name": "Ayuncraft 1.5.2",
+   "path": "ayun/index.html",
+   "cover": "ayun/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/ayun"
+   ]
+  },
+  {
+   "id": 400006,
+   "name": "Blood Tournament",
+   "path": "bloodtournament/index.html",
+   "cover": "bloodtournament/blood-tournament.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/bloodtournament"
+   ]
+  },
+  {
+   "id": 400007,
+   "name": "Burger and Frights",
+   "path": "burgerandfrights/index.html",
+   "cover": "burgerandfrights/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/burgerandfrights"
+   ]
+  },
+  {
+   "id": 400008,
+   "name": "Champion Island",
+   "path": "championisland/index.html",
+   "cover": "championisland/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/championisland"
+   ]
+  },
+  {
+   "id": 400010,
+   "name": "Clicker Heroes",
+   "path": "clickerheroes/index.html",
+   "cover": "clickerheroes/clicker-heroes.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/clickerheroes"
+   ]
+  },
+  {
+   "id": 400012,
+   "name": "Color Switch",
+   "path": "colorswitch/index.html",
+   "cover": "colorswitch/colorswitch.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/colorswitch"
+   ]
+  },
+  {
+   "id": 400013,
+   "name": "Commodore 64 Clicker",
+   "path": "commodoreclicker/index.html",
+   "cover": "commodoreclicker/test.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/commodoreclicker"
+   ]
+  },
+  {
+   "id": 400014,
+   "name": "Deal or No Deal",
+   "path": "deal/index.html",
+   "cover": "deal/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/deal"
+   ]
+  },
+  {
+   "id": 400015,
+   "name": "Dino",
+   "path": "dino/index.html",
+   "cover": "dino/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/dino"
+   ]
+  },
+  {
+   "id": 400017,
+   "name": "Dragon Client",
+   "path": "drag/index.html",
+   "cover": "drag/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/drag"
+   ]
+  },
+  {
+   "id": 400018,
+   "name": "Factory Balls",
+   "path": "factoryballs/index.html",
+   "cover": "factoryballs/fac.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/factoryballs"
+   ]
+  },
+  {
+   "id": 400019,
+   "name": "Factory Balls Forever",
+   "path": "factoryballsforever/index.html",
+   "cover": "factoryballsforever/fac.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/factoryballsforever"
+   ]
+  },
+  {
+   "id": 400020,
+   "name": "Funny Ball Game",
+   "path": "funnyballgame/index.html",
+   "cover": "funnyballgame/ball.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/funnyballgame"
+   ]
+  },
+  {
+   "id": 400021,
+   "name": "Game Maker Doodle",
+   "path": "gamemaker/index.html",
+   "cover": "gamemaker/images.jpeg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/gamemaker"
+   ]
+  },
+  {
+   "id": 400022,
+   "name": "Getaway Shooter",
+   "path": "getawayshooter/index.html",
+   "cover": "getawayshooter/Untitled.jpeg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/getawayshooter"
+   ]
+  },
+  {
+   "id": 400024,
+   "name": "Guilty Gear",
+   "path": "guiltygear/index.html",
+   "cover": "guiltygear/ggx.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/guiltygear"
+   ]
+  },
+  {
+   "id": 400025,
+   "name": "Gun Mayhem",
+   "path": "gunmayhem/index.html",
+   "cover": "gunmayhem/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/gunmayhem"
+   ]
+  },
+  {
+   "id": 400026,
+   "name": "Gun Mayhem 2",
+   "path": "gunmayhem2/index.html",
+   "cover": "gunmayhem2/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/gunmayhem2"
+   ]
+  },
+  {
+   "id": 400027,
+   "name": "Gun Mayhem Redux",
+   "path": "gunmayhemredux/index.html",
+   "cover": "gunmayhemredux/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/gunmayhemredux"
+   ]
+  },
+  {
+   "id": 400028,
+   "name": "Halloween 2016",
+   "path": "halloween2016/index.html",
+   "cover": "halloween2016/logo.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/halloween2016"
+   ]
+  },
+  {
+   "id": 400029,
+   "name": "Helix Jump",
+   "path": "helixjump/index.html",
+   "cover": "helixjump/gameIcon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/helixjump"
+   ]
+  },
+  {
+   "id": 400030,
+   "name": "Henry Stickmin - Breaking the Bank",
+   "path": "breakingthebank/index.html",
+   "cover": "breakingthebank/balling.avif",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/breakingthebank"
+   ]
+  },
+  {
+   "id": 400031,
+   "name": "Henry Stickmin - Escaping the Prison",
+   "path": "escapingtheprison/index.html",
+   "cover": "escapingtheprison/pwison.avif",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/escapingtheprison"
+   ]
+  },
+  {
+   "id": 400032,
+   "name": "Henry Stickmin - Fleeing the Complex",
+   "path": "fleeingthecomplex/index.html",
+   "cover": "fleeingthecomplex/flee.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/fleeingthecomplex"
+   ]
+  },
+  {
+   "id": 400035,
+   "name": "Hill Climb Racing 2",
+   "path": "hillclimbracing2/index.html",
+   "cover": "hillclimbracing2/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/hillclimbracing2"
+   ]
+  },
+  {
+   "id": 400036,
+   "name": "I Wanna Be Thy Copy",
+   "path": "iwbtc/index.html",
+   "cover": "iwbtc/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/iwbtc"
+   ]
+  },
+  {
+   "id": 400037,
+   "name": "Knife Hit",
+   "path": "knifehit/index.html",
+   "cover": "knifehit/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/knifehit"
+   ]
+  },
+  {
+   "id": 400038,
+   "name": "Lazy Jump 3D",
+   "path": "lazyjump3d/index.html",
+   "cover": "lazyjump3d/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/lazyjump3d"
+   ]
+  },
+  {
+   "id": 400040,
+   "name": "Lows Adventures 2",
+   "path": "lowsadventures2/index.html",
+   "cover": "lowsadventures2/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/lowsadventures2"
+   ]
+  },
+  {
+   "id": 400041,
+   "name": "Madalin Cars",
+   "path": "madalincars/index.html",
+   "cover": "madalincars/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/madalincars"
+   ]
+  },
+  {
+   "id": 400042,
+   "name": "Metroid: Zero Mission",
+   "path": "metroidzeromission/index.html",
+   "cover": "metroidzeromission/zero.jpeg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/metroidzeromission"
+   ]
+  },
+  {
+   "id": 400044,
+   "name": "Monkey Mart",
+   "path": "monkeymart/index.html",
+   "cover": "monkeymart/unnamed.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/monkeymart"
+   ]
+  },
+  {
+   "id": 400045,
+   "name": "Nut Simulator",
+   "path": "nutsim/index.html",
+   "cover": "nutsim/images/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/nutsim"
+   ]
+  },
+  {
+   "id": 400046,
+   "name": "Offline Paradise",
+   "path": "offlineparadise/index.html",
+   "cover": "offlineparadise/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/offlineparadise"
+   ]
+  },
+  {
+   "id": 400047,
+   "name": "osu!mania",
+   "path": "osumania/index.html",
+   "cover": "osumania/mania.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/osumania"
+   ]
+  },
+  {
+   "id": 400048,
+   "name": "Pandemic",
+   "path": "pandemic/index.html",
+   "cover": "pandemic/sddefault.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/pandemic"
+   ]
+  },
+  {
+   "id": 400049,
+   "name": "Pandemic 2",
+   "path": "pandemic2/index.html",
+   "cover": "pandemic2/pan2.webp",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/pandemic2"
+   ]
+  },
+  {
+   "id": 400050,
+   "name": "Pool",
+   "path": "pool/index.html",
+   "cover": "pool/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/pool"
+   ]
+  },
+  {
+   "id": 400051,
+   "name": "POOM",
+   "path": "poom/index.html",
+   "cover": "poom/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/poom"
+   ]
+  },
+  {
+   "id": 400052,
+   "name": "Precision Client",
+   "path": "pre/index.html",
+   "cover": "pre/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/pre"
+   ]
+  },
+  {
+   "id": 400053,
+   "name": "Resent Client",
+   "path": "online-mc/index.html",
+   "cover": "online-mc/logo.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/online-mc"
+   ]
+  },
+  {
+   "id": 400054,
+   "name": "Rise Higher",
+   "path": "risehigher/index.html",
+   "cover": "risehigher/media/graphics/promo/Icons/128x128.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/risehigher"
+   ]
+  },
+  {
+   "id": 400055,
+   "name": "Russian Car Driver",
+   "path": "russiancardriver/index.html",
+   "cover": "russiancardriver/russian-car-driver.webp",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/russiancardriver"
+   ]
+  },
+  {
+   "id": 400056,
+   "name": "Sand Game",
+   "path": "sand/index.html",
+   "cover": "sand/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/sand"
+   ]
+  },
+  {
+   "id": 400057,
+   "name": "Sandtrix",
+   "path": "sandtrix/index.html",
+   "cover": "sandtrix/assets/sprites/appicon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/sandtrix"
+   ]
+  },
+  {
+   "id": 400058,
+   "name": "Skibidi 1 v 100",
+   "path": "skibiditoilet/index.html",
+   "cover": "skibiditoilet/logo.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/skibiditoilet"
+   ]
+  },
+  {
+   "id": 400059,
+   "name": "Skibidi Toilet Attack",
+   "path": "skibiditoiletattack/index.html",
+   "cover": "skibiditoiletattack/logo.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/skibiditoiletattack"
+   ]
+  },
+  {
+   "id": 400060,
+   "name": "Soccer Skills",
+   "path": "skills/index.html",
+   "cover": "skills/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/skills"
+   ]
+  },
+  {
+   "id": 400061,
+   "name": "Solitaire",
+   "path": "solitaire/index.html",
+   "cover": "solitaire/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/solitaire"
+   ]
+  },
+  {
+   "id": 400062,
+   "name": "Spank the Monkey",
+   "path": "spankthemonkey/index.html",
+   "cover": "spankthemonkey/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/spankthemonkey"
+   ]
+  },
+  {
+   "id": 400064,
+   "name": "Super Smash Bros",
+   "path": "supersmashbros/index.html",
+   "cover": "supersmashbros/logo.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/supersmashbros"
+   ]
+  },
+  {
+   "id": 400065,
+   "name": "The Impossible Game",
+   "path": "theimpossiblegame/index.html",
+   "cover": "theimpossiblegame/image.jpg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/theimpossiblegame"
+   ]
+  },
+  {
+   "id": 400066,
+   "name": "Thirty Dollar Website",
+   "path": "thirtydollarwebsite/index.html",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/thirtydollarwebsite"
+   ]
+  },
+  {
+   "id": 400067,
+   "name": "Townscaper",
+   "path": "townscaper/index.html",
+   "cover": "townscaper/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/townscaper"
+   ]
+  },
+  {
+   "id": 400068,
+   "name": "Tron",
+   "path": "tron/index.html",
+   "cover": "tron/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/tron"
+   ]
+  },
+  {
+   "id": 400069,
+   "name": "TU-46",
+   "path": "tu46/index.html",
+   "cover": "tu46/tu-46.webp",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/tu46"
+   ]
+  },
+  {
+   "id": 400071,
+   "name": "Turbowarp",
+   "path": "turbowarp/index.html",
+   "cover": "turbowarp/icon.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/turbowarp"
+   ]
+  },
+  {
+   "id": 400072,
+   "name": "Universal Paperclips",
+   "path": "universal-paperclips/index.html",
+   "cover": "universal-paperclips/universal-paperclips.png",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/universal-paperclips"
+   ]
+  },
+  {
+   "id": 400075,
+   "name": "Windows XP",
+   "path": "xp/index.html",
+   "cover": "xp/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/xp"
+   ]
+  },
+  {
+   "id": 400076,
+   "name": "Zombocalypse",
+   "path": "zombocalypse/index.html",
+   "cover": "zombocalypse/zombocalypse-2.webp",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/zombocalypse"
+   ]
+  },
+  {
+   "id": 400077,
+   "name": "π Client",
+   "path": "pi/index.html",
+   "cover": "pi/cover.svg",
+   "sources": [
+    "selenite-cc/selenite-old@9c743188888af0986c8c7b293dbac8f9e421a4ee/pi"
+   ]
+  }
+ ]
+}
