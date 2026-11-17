@@ -2,6 +2,16 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Emails on accounts and password resets
+
+### Added
+- **New accounts need an email.** Sign-up asks for a username, an email and a password, and sends a link to verify the email. Cloud saves, ratings, reports and submissions start once it's verified (the database rules check it too). One email can only be used for one account, so a suspended player can't just make another with the same email.
+- **Forgot password?** on the sign-in screen sends a reset link to accounts that have an email.
+- **Sign in with your username or email.** Accounts with an email sign in with the email.
+- **Older accounts can add an email** (Account → Add an email) to get password resets; they're told once that they can. They keep working as before without one.
+- Usernames are now listed in `usernames/` so new accounts can't take an existing name; an admin's device fills in older accounts' names the first time it opens the Admin Panel.
+- The Privacy Policy covers emails and the username list.
+
 ## November 17, 2026 — Instant boots and site modes
 
 ### Changed

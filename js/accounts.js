@@ -506,32 +506,147 @@ async function cloudSyncOnSignIn() {
 // ── Accounts ────────────────────────────────────────────────────────────────
 function normalizeUsername(raw) { return (raw || "").trim().toLowerCase(); }
 function usernameToEmail(u) { return `${u}@${CLOUD.usernameDomain}`; }
-function currentUsername() { return cloudUser && cloudUser.email ? cloudUser.email.split("@")[0] : ""; }
+// Accounts made before emails sign in as <username>@gnmath.local. Accounts
+// with a real email keep their username in displayName (claimed in usernames/).
+function isLegacyAccount(user = cloudUser) { return !!(user && user.email && user.email.endsWith("@" + CLOUD.usernameDomain)); }
+function currentUsername() {
+    if (!cloudUser || !cloudUser.email) return "";
+    return isLegacyAccount() ? cloudUser.email.split("@")[0] : normalizeUsername(cloudUser.displayName || "");
+}
+// A new account whose email isn't verified yet can't use cloud features
+function accountNeedsVerify(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !user.emailVerified); }
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 function friendlyAuthError(e) {
     const code = (e && e.code) || "";
-    if (code.includes("email-already-in-use")) return "That username is taken.";
-    if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Wrong username or password.";
+    if (code.includes("email-already-in-use")) return "An account already uses that email.";
+    if (code.includes("invalid-email")) return "That email doesn't look right.";
+    if (code.includes("requires-recent-login")) return "Sign out and back in, then try again.";
+    if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Wrong username, email or password.";
     if (code.includes("weak-password")) return "Password needs at least 6 characters.";
     if (code.includes("too-many-requests")) return "Too many tries. Wait a bit and try again.";
     if (code.includes("network")) return "Couldn't connect. Check your internet.";
     return (e && e.message) || "Something went wrong.";
 }
 async function cloudSignIn(create) {
-    const u = normalizeUsername(document.getElementById("acct-username")?.value);
-    const p = document.getElementById("acct-password")?.value || "";
     const msg = document.getElementById("acct-msg");
     const say = t => { if (msg) msg.textContent = t; };
-    if (!/^[a-z0-9_]{3,20}$/.test(u)) return say("Username: 3–20 letters, numbers, or _");
-    if (p.length < 6) return say("Password needs at least 6 characters.");
-    if (create && p !== (document.getElementById("acct-password2")?.value || "")) return say("Passwords don't match.");
-    say(create ? "Creating account…" : "Signing in…");
+    const p = document.getElementById("acct-password")?.value || "";
+    if (create) {
+        // New accounts: username + a real email, verified before the account can be used
+        const u = normalizeUsername(document.getElementById("acct-username")?.value);
+        const email = (document.getElementById("acct-email")?.value || "").trim();
+        if (!/^[a-z0-9_]{3,20}$/.test(u)) return say("Username: 3–20 letters, numbers, or _");
+        if (!EMAIL_RE.test(email) || email.toLowerCase().endsWith("@" + CLOUD.usernameDomain)) return say("Enter a real email address.");
+        if (p.length < 6) return say("Password needs at least 6 characters.");
+        if (p !== (document.getElementById("acct-password2")?.value || "")) return say("Passwords don't match.");
+        say("Creating account…");
+        try {
+            const taken = await cloudDb.collection("usernames").doc(u).get();
+            if (taken.exists) return say("That username is taken.");
+        } catch (e) { /* checked again when it's claimed */ }
+        let user = null;
+        try {
+            user = (await cloudAuth.createUserWithEmailAndPassword(email, p)).user;
+            // Claim the username (fails if someone has it), then name the account
+            await cloudDb.collection("usernames").doc(u).set({ uid: user.uid, e: true });
+            await user.updateProfile({ displayName: u });
+            await user.sendEmailVerification();
+            if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
+            openAccountPanel();
+        } catch (e) {
+            if (user && !user.displayName) {
+                // Couldn't claim the username: undo the account so the email can be used again
+                try { await user.delete(); } catch {}
+                return say(/permission/i.test(e.code || e.message || "") ? "That username is taken." : friendlyAuthError(e));
+            }
+            say(friendlyAuthError(e));
+        }
+        return;
+    }
+    // Sign in with a username (accounts from before emails) or an email
+    const id = (document.getElementById("acct-username")?.value || "").trim();
+    if (p.length < 6) return say("Enter your password.");
+    say("Signing in…");
     try {
-        if (create) await cloudAuth.createUserWithEmailAndPassword(usernameToEmail(u), p);
-        else await cloudAuth.signInWithEmailAndPassword(usernameToEmail(u), p);
+        if (id.includes("@")) {
+            if (!EMAIL_RE.test(id)) return say("That email doesn't look right.");
+            await cloudAuth.signInWithEmailAndPassword(id, p);
+            return;
+        }
+        const u = normalizeUsername(id);
+        if (!/^[a-z0-9_]{3,20}$/.test(u)) return say("Enter your username or email.");
+        try {
+            await cloudAuth.signInWithEmailAndPassword(usernameToEmail(u), p);
+        } catch (e) {
+            // Accounts with an email sign in with the email
+            let hasEmail = false;
+            try { const d = await cloudDb.collection("usernames").doc(u).get(); hasEmail = d.exists && d.data().e === true; } catch {}
+            say(hasEmail ? "This account signs in with its email address. Use your email instead of your username." : friendlyAuthError(e));
+        }
     } catch (e) {
         say(friendlyAuthError(e));
     }
 }
+// "Forgot password?": Firebase emails a reset link (accounts with an email only)
+async function cloudForgotPassword() {
+    const msg = document.getElementById("acct-msg");
+    const say = t => { if (msg) msg.textContent = t; };
+    const email = (document.getElementById("acct-username")?.value || "").trim();
+    if (!EMAIL_RE.test(email)) { document.getElementById("acct-username")?.focus(); return say("Type your account's email in the box above, then click Forgot password again."); }
+    try {
+        await cloudAuth.sendPasswordResetEmail(email);
+    } catch (e) {
+        if (!/user-not-found|invalid-email/.test(e.code || "")) return say(friendlyAuthError(e));
+    }
+    say("");
+    notify(`If an account uses ${email}, a reset link is on its way. Check your inbox (and spam).`, { type: "success", duration: 9000 });
+}
+// New account: resend the verification email, or check whether it's verified
+async function cloudResendVerify() {
+    if (!cloudUser) return;
+    try { await cloudUser.sendEmailVerification(); notify(`Sent another link to ${cloudUser.email}.`, { type: "success" }); }
+    catch (e) { notify(friendlyAuthError(e), { type: "error" }); }
+}
+async function cloudCheckVerified() {
+    if (!cloudUser) return;
+    try {
+        await cloudUser.reload();
+        if (cloudUser.emailVerified) {
+            await cloudUser.getIdToken(true);
+            notify("Email verified. Your account is ready!", { type: "success" });
+            location.reload();
+        } else notify("Not verified yet. Click the link in the email we sent, then try again.", { type: "error" });
+    } catch (e) { notify(friendlyAuthError(e), { type: "error" }); }
+}
+// Accounts from before emails: add one (for password resets). Firebase emails
+// a link; once it's clicked, the account signs in with that email.
+async function cloudAddEmail() {
+    const email = (document.getElementById("acct-add-email")?.value || "").trim();
+    const pw = document.getElementById("acct-add-email-pw")?.value || "";
+    const msg = document.getElementById("acct-email-msg");
+    const say = t => { if (msg) msg.textContent = t; };
+    if (!cloudUser || !isLegacyAccount()) return;
+    if (!EMAIL_RE.test(email) || email.toLowerCase().endsWith("@" + CLOUD.usernameDomain)) return say("Enter a real email address.");
+    if (!pw) return say("Enter your password.");
+    const u = currentUsername();
+    say("Sending…");
+    try {
+        await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw));
+        // Keep the username once the sign-in email changes
+        const ref = cloudDb.collection("usernames").doc(u);
+        const cur = await ref.get();
+        if (cur.exists && cur.data().uid !== cloudUser.uid) return say("Something's wrong with your username. Ask an admin.");
+        await ref.set({ uid: cloudUser.uid, e: true });
+        await cloudUser.updateProfile({ displayName: u });
+        await cloudUser.verifyBeforeUpdateEmail(email);
+        try { localStorage.setItem("gnmath-email-nudge-" + cloudUser.uid, "done"); } catch {}
+        say("");
+        notify(`Check ${email} for a link. After you click it, sign in with your email instead of your username.`, { type: "success", duration: 12000 });
+    } catch (e) {
+        say(friendlyAuthError(e));
+    }
+}
+
 // Saving first can take a few seconds, so the button says so and extra clicks
 // are ignored. If the save is very slow, sign out anyway after 10 seconds
 // (progress stays on this device either way).
@@ -599,6 +714,11 @@ async function cloudDeleteAccount() {
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
         if (typeof removeMyGameStats === "function") await removeMyGameStats(cloudUser.uid);
         try { await cloudDb.collection("profiles").doc(cloudUser.uid).delete(); } catch (e) {}
+        try {
+            const nameRef = cloudDb.collection("usernames").doc(currentUsername() || "-");
+            const nd = await nameRef.get();
+            if (nd.exists && nd.data().uid === cloudUser.uid) await nameRef.delete();
+        } catch (e) {}
         try {
             const subs = await cloudDb.collection("submissions").where("uid", "==", cloudUser.uid).get();
             await Promise.all(subs.docs.map(d => d.ref.delete()));
@@ -681,8 +801,22 @@ function openAccountPanel(mode) {
     if (!cloudAuth) {
         body.innerHTML = `<p>Accounts are still loading. Try again in a moment.</p>`;
     } else if (cloudUser) {
+        if (accountNeedsVerify()) {
+            body.innerHTML = `
+            <p style="margin-top:0;">Almost done, <b>${escapeHtml(currentUsername())}</b>!</p>
+            <p>We sent a link to <b>${escapeHtml(cloudUser.email)}</b>. Click it to verify your email, then come back here. Check your spam folder if you don't see it.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;">
+                <button class="settings-button" onclick="cloudCheckVerified()">I clicked the link</button>
+                <button class="settings-button" onclick="cloudResendVerify()">Send it again</button>
+                <button class="settings-button" id="acct-signout" onclick="cloudAuth.signOut()">Sign out</button>
+            </div>
+            <p class="acct-hint">Cloud saves, ratings and reports start working once your email is verified.</p>`;
+            body.contentEditable = false;
+            document.getElementById("popupOverlay").style.display = "flex";
+            return;
+        }
         body.innerHTML = `
-            <p style="margin-top:0;">Signed in as <b>${escapeHtml(currentUsername())}</b></p>
+            <p style="margin-top:0;">Signed in as <b>${escapeHtml(currentUsername())}</b>${isLegacyAccount() ? "" : ` <span style="color:var(--text-muted);font-size:14px;">(${escapeHtml(cloudUser.email)})</span>`}</p>
             <p style="color:var(--text-muted);font-size:14px;">Game progress saves to the cloud every 2 minutes, when you close a game, and when you sign out.</p>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;">
                 <button class="settings-button" onclick="confirmUploadCloudSave()">Save now</button>
@@ -699,10 +833,20 @@ function openAccountPanel(mode) {
                 <input type="password" id="acct-new-password" autocomplete="new-password" aria-describedby="acct-pw-hint">
                 <label for="acct-new-password2">Confirm new password</label>
                 <input type="password" id="acct-new-password2" autocomplete="new-password">
-                <p id="acct-pw-hint" class="acct-hint">At least 6 characters. There's no password reset, so pick one you'll remember.</p>
+                <p id="acct-pw-hint" class="acct-hint">At least 6 characters.${isLegacyAccount() ? " Your account has no email yet, so there's no password reset: add an email below, or pick one you'll remember." : ""}</p>
                 <button class="settings-button" onclick="cloudChangePassword()">Change password</button>
                 <p id="acct-pw-msg" class="acct-msg" role="status"></p>
             </details>
+            ${isLegacyAccount() ? `<details class="acct-section" id="acct-email-section">
+                <summary>Add an email (for password resets)</summary>
+                <p class="acct-hint">Add an email so you can reset your password if you forget it. We'll send a link to check it's yours. After you click it, you sign in with your email instead of your username; your username, saves and progress stay the same. Only the site's sign-in system keeps your email, and nobody else sees it.</p>
+                <label for="acct-add-email">Email</label>
+                <input type="email" id="acct-add-email" autocomplete="email">
+                <label for="acct-add-email-pw">Your password</label>
+                <input type="password" id="acct-add-email-pw" autocomplete="current-password">
+                <button class="settings-button" onclick="cloudAddEmail()">Send link</button>
+                <p id="acct-email-msg" class="acct-msg" role="status"></p>
+            </details>` : ""}
             <details class="acct-section">
                 <summary>Delete account</summary>
                 <p class="acct-hint">This permanently deletes your account, its cloud save, and its ratings and reports. Game progress saved in this browser isn't touched.</p>
@@ -715,10 +859,12 @@ function openAccountPanel(mode) {
         const create = mode === "create";
         body.innerHTML = `
             <p style="margin-top:0;color:var(--text-muted);font-size:14px;">${create
-                ? "Pick a username. No email needed — but there's <b>no password reset</b>, so remember your password."
+                ? "Pick a username and add your email. We'll send you a link to verify it, and it lets you reset your password if you forget it. Nobody else sees your email."
                 : "Sign in to keep your game progress on any computer."}</p>
-            <label for="acct-username" style="font-weight:bold;">Username</label><br>
-            <input type="text" id="acct-username" autocomplete="username" maxlength="20"><br><br>
+            <label for="acct-username" style="font-weight:bold;">${create ? "Username" : "Username or email"}</label><br>
+            <input type="text" id="acct-username" autocomplete="username" maxlength="${create ? 20 : 120}"><br><br>
+            ${create ? `<label for="acct-email" style="font-weight:bold;">Email</label><br>
+            <input type="email" id="acct-email" autocomplete="email" maxlength="120"><br><br>` : ""}
             <label for="acct-password" style="font-weight:bold;">Password</label><br>
             <input type="password" id="acct-password" autocomplete="${create ? "new-password" : "current-password"}"><br><br>
             ${create ? `<label for="acct-password2" style="font-weight:bold;">Confirm password</label><br>
@@ -727,6 +873,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="cloudSignIn(${create})">${create ? "Create account" : "Sign in"}</button>
                 <button class="settings-button" onclick="openAccountPanel('${create ? "signin" : "create"}')">${create ? "I have an account" : "Create an account"}</button>
             </div>
+            ${create ? "" : `<p style="margin:0.6rem 0 0;font-size:14px;"><a href="#" onclick="cloudForgotPassword(); return false;">Forgot password?</a> <span style="color:var(--text-muted);">(accounts with an email)</span></p>`}
             <p id="acct-msg" style="font-size:14px;color:#ef4444;"></p>`;
         body.querySelectorAll("input").forEach(inp => inp.addEventListener("keydown", e => {
             if (e.key === "Enter") cloudSignIn(create);
@@ -771,9 +918,22 @@ async function initCloudAccounts() {
             if (typeof applyOwnerSiteMode === "function") applyOwnerSiteMode();
             if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
             clearInterval(cloudAutosaveTimer);
-            if (user) {
+            if (user && accountNeedsVerify(user)) {
+                // New account waiting on its email link: nothing syncs until then
+                setCloudStatus("Verify your email to turn on cloud saves (Account).");
+            } else if (user) {
                 cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
                 cloudSyncOnSignIn();
+                // Accounts from before emails: say once that they can add one now
+                if (isLegacyAccount(user)) {
+                    const k = "gnmath-email-nudge-" + user.uid;
+                    let seen = "";
+                    try { seen = localStorage.getItem(k) || ""; } catch {}
+                    if (!seen) {
+                        try { localStorage.setItem(k, "shown"); } catch {}
+                        setTimeout(() => notify("New: you can add an email to your account, so you can reset your password if you forget it. Open Account → Add an email.", { duration: 12000 }), 4000);
+                    }
+                }
             } else {
                 cloudStatus = "";
             }
