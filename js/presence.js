@@ -12,11 +12,11 @@
 // can read those. A signed-in account's profile notes its session id, so
 // admins can see which account a session belongs to.
 //
-// Booting: an admin can write boots/<session id> (until when, and why). The
-// database then refuses that browser's heartbeats; when this page sees that,
-// it saves the player's progress (cloud save if signed in), closes the game
-// and shows a "you've been removed" screen until the boot ends. Every tab in
-// that browser shows it.
+// Booting: an admin can write boots/<session id> (until when, and why).
+// realtime.js listens to that document, so it arrives within seconds; this
+// page then saves the player's progress (cloud save if signed in), closes the
+// game and shows a "you've been removed" screen until the boot ends or is
+// lifted. Every tab in that browser shows it.
 // Needs the presence, sessions and boots rules from config/firestore.rules.
 // ═════════════════════════════════════════════════════════════════════════════
 const PRESENCE = {
@@ -196,9 +196,28 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             `<p style="margin:0;opacity:.75">${forever ? "An admin removed this session." : `You can come back after ${esc(when)}.`} Your game progress was saved.</p></div>`;
         document.documentElement.style.overflow = "hidden";
     }
+    // Lifted (realtime.js saw the boot document go away): let them back in
+    function liftBoot() {
+        if (!booted && !bootFlag()) return;
+        try { localStorage.removeItem(PRESENCE.bootKey); } catch {}
+        if (booted) location.reload();
+    }
+    // Without the live connection, check now and then instead (one read each)
+    let bootPoll = null;
+    function bootListenFailed() {
+        if (bootPoll) return;
+        bootPoll = setInterval(() => {
+            if (document.hidden) return;
+            fetchBoot().then(b => { if (b) applyBoot(b); else liftBoot(); }).catch(() => {});
+        }, 5 * 60000);
+    }
+    window.gnBoot = { apply: b => applyBoot(b), lift: liftBoot, listenFailed: bootListenFailed };
     // Every tab in this browser: show it when another tab finds the boot
     window.addEventListener("storage", e => {
-        if (e.key === PRESENCE.bootKey && !booted) { const b = bootFlag(); if (b) applyBoot(b); }
+        if (e.key !== PRESENCE.bootKey) return;
+        const b = bootFlag();
+        if (b && !booted) applyBoot(b);
+        else if (!b && booted) location.reload();
     });
     // A boot remembered from before: show it right away, then ask the database
     // whether it still stands (an admin may have lifted it)
@@ -207,11 +226,14 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         if (!b) return;
         const show = () => { booted = true; showBootScreen(b); };
         if (document.body) show(); else document.addEventListener("DOMContentLoaded", show);
-        fetchBoot().then(now => {
-            if (now) { try { localStorage.setItem(PRESENCE.bootKey, JSON.stringify(now)); } catch {} return; }
-            try { localStorage.removeItem(PRESENCE.bootKey); } catch {}
-            location.reload();
-        }).catch(() => {});
+        // (realtime.js's live listener confirms it or lifts it; this is the backup)
+        setTimeout(() => {
+            if (!booted) return;
+            fetchBoot().then(now => {
+                if (now) { try { localStorage.setItem(PRESENCE.bootKey, JSON.stringify(now)); } catch {} return; }
+                liftBoot();
+            }).catch(() => {});
+        }, 20000);
     })();
 
     let gameNoted = "";

@@ -3891,6 +3891,9 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
     const at = Date.parse(settings.updatedAt || "");
     if (at && at <= getAppliedSettingsAt()) return;  // nothing newer than what we already have
     if (at) setAppliedSettingsAt(settings.updatedAt);
+    // A newer site mode already arrived live (realtime.js): keep it over this older copy
+    const liveModeNewer = typeof getLiveSiteModeAt === "function" && at && at < getLiveSiteModeAt();
+    if (liveModeNewer) { settings = { ...settings }; delete settings.siteMode; delete settings.siteMessage; delete settings.siteBackAt; }
 
     if (typeof settings.siteBackAt === "string") {
         localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt, isNaN(Date.parse(settings.siteBackAt)) ? "" : settings.siteBackAt);
@@ -3946,6 +3949,8 @@ function applyOwnerSettingsObject(settings, { rerender = false } = {}) {
 /** Debounced auto-sync — waits 1.5 s after the last change before pushing */
 let _autoSyncTimer = null;
 function githubAutoSync() {
+    // Site mode, message and "back at" also go out live (realtime.js), so open pages switch right away
+    if (typeof publishLiveSiteMode === "function") publishLiveSiteMode();
     if (!getGithubPat()) return;          // no token stored → skip silently
     clearTimeout(_autoSyncTimer);
     _autoSyncTimer = setTimeout(async () => {
