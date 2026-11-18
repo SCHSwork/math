@@ -3188,6 +3188,14 @@ body:has(#zoneViewer[style*="flex"]) #scrollJump { display: none; }
 .skin-prev-minimal .skin-art { background: #fafafa; }
 .skin-prev-minimal i:nth-child(1) { background: #fafafa; border-bottom: 1px solid #e3e3e3; }
 .skin-prev-minimal i:nth-child(n+2) { background: #ddd; border-radius: 4px; height: 16px; }
+/* Fresh style's options in Settings (only while Fresh is on) */
+body:not(.st-fresh) .fresh-options { display: none; }
+.fresh-options { display: flex; flex-direction: column; gap: .6rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.fresh-colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .5rem; }
+.fresh-color { display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer; font-size: 14px; }
+.fresh-color input[type="color"] { width: 2rem; height: 2rem; padding: 0; border: 0 !important; border-radius: 6px; background: none !important; cursor: pointer; flex: none; }
+.fresh-options > .settings-button { align-self: flex-start; width: auto !important; padding-left: 1.1rem; padding-right: 1.1rem; }
+.fresh-marks { display: flex; flex-wrap: wrap; gap: .4rem; }
 .skin-prev-fresh .skin-art { background: #eef2f4; }
 .skin-prev-fresh i:nth-child(1) { background: #fff; border-bottom: 1px solid #d8e0e5; }
 .skin-prev-fresh i:nth-child(2) { background: #0e7c86; border-radius: 6px; }

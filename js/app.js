@@ -5014,6 +5014,7 @@ function openSettingsPanel() {
             <div class="set-row set-col"><div class="set-text"><span class="set-label">How the whole site looks</span><small>Changes fonts, buttons, cards and the header. Scenes and your own background work with Default and Glass.</small></div>
                 <div class="skin-picks">${typeof siteSkinPickerHtml === "function" ? siteSkinPickerHtml() : ""}</div>
             </div>
+            ${typeof freshOptionsHtml === "function" ? freshOptionsHtml() : ""}
         </div>
         <div class="settings-section">
             <h4>Colors</h4>
