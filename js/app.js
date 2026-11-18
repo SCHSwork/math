@@ -2745,12 +2745,30 @@ function siteAccessBypass() {
     if (a.pass && ok && ok === a.pass.hash) return "password";
     return "";
 }
+// Spaces typed (or pasted) around the password don't count. If it doesn't
+// match, the newest owner settings are fetched and it's checked once more:
+// this page may still have the old password (GitHub's copy takes a few
+// minutes to update when the owner changes it).
 async function trySitePassword(password) {
-    const a = getSiteAccess();
-    if (!a.pass || !password) return false;
-    let h = "";
-    try { h = await hashSitePassword(password, a.pass.salt, a.pass.iter); } catch { return false; }
-    if (h !== a.pass.hash) return false;
+    const check = async () => {
+        const a = getSiteAccess();
+        if (!a.pass) return "";
+        for (const p of new Set([password, password.trim()])) {
+            if (!p) continue;
+            let h = "";
+            try { h = await hashSitePassword(p, a.pass.salt, a.pass.iter); } catch { continue; }
+            if (h === a.pass.hash) return h;
+        }
+        return "";
+    };
+    if (!password) return false;
+    let h = await check();
+    if (!h) {
+        const before = JSON.stringify(getSiteAccess().pass);
+        try { await githubSyncPull(); } catch {}
+        if (JSON.stringify(getSiteAccess().pass) !== before) h = await check();
+    }
+    if (!h) return false;
     try { localStorage.setItem(SITE_PASS_OK_KEY, h); } catch {}
     return true;
 }
@@ -3113,7 +3131,7 @@ function applyOwnerSiteMode() {
             </div>
             ${access.pass || access.allowed.length ? `<div class="site-mode-access">
                 ${access.pass ? `<form class="site-mode-pass" autocomplete="off">
-                    <span class="pw-wrap" style="flex:1;min-width:0;display:flex;"><input type="password" class="site-mode-pass-input" placeholder="Have the password?" aria-label="Password to get in" autocomplete="off" style="padding-right:2.4rem;">${gnPwToggle(false)}</span>
+                    <span class="pw-wrap" style="flex:1;min-width:0;display:flex;"><input type="password" class="site-mode-pass-input" placeholder="Have the password?" aria-label="Password to get in" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="padding-right:2.4rem;">${gnPwToggle(false)}</span>
                     <button type="submit" class="site-mode-pass-go">Enter</button>
                 </form><p class="site-mode-pass-msg" role="alert"></p>` : ""}
                 ${access.allowed.length ? (signedInAs
@@ -3132,7 +3150,7 @@ function applyOwnerSiteMode() {
     const passForm = overlay.querySelector(".site-mode-pass");
     if (passForm) passForm.onsubmit = async e => {
         e.preventDefault();
-        const input = passForm.querySelector("input"), go = passForm.querySelector("button"), msg = overlay.querySelector(".site-mode-pass-msg");
+        const input = passForm.querySelector("input"), go = passForm.querySelector(".site-mode-pass-go"), msg = overlay.querySelector(".site-mode-pass-msg");
         go.disabled = true; msg.textContent = "Checking…"; msg.classList.remove("bad");
         const ok = await trySitePassword(input.value);
         if (ok) { msg.textContent = ""; if (siteModePreview) { notify("That's the right password. (You're previewing, so the screen stays up.)", { type: "success" }); go.disabled = false; return; } applyOwnerSiteMode(); return; }
@@ -3238,7 +3256,7 @@ function renderOwnerPanel() {
         </form>
         <label style="display:block;margin:0.75rem 0 0.4rem;">Password to get in <span id="owner-access-pass-state" style="font-weight:400;font-size:13px;color:var(--text-muted);"></span></label>
         <form class="owner-inline" style="display:flex;gap:0.5rem;" onsubmit="ownerSetAccessPassword(event)">
-            <span class="pw-wrap" style="flex:1;min-width:0;"><input type="text" id="owner-access-pass" placeholder="New password" autocomplete="off" spellcheck="false"
+            <span class="pw-wrap" style="flex:1;min-width:0;"><input type="text" id="owner-access-pass" placeholder="New password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
                 style="width:100%;padding:0.55rem 2.4rem 0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">${gnPwToggle(true)}</span>
             <button class="settings-button" type="submit" style="width:auto;padding:0 1rem;">Set</button>
             <button class="settings-button" type="button" id="owner-access-pass-clear" style="width:auto;padding:0 1rem;" onclick="ownerClearAccessPassword()">Remove</button>
@@ -3467,7 +3485,7 @@ async function ownerAddAccessAccount(e) {
 async function ownerSetAccessPassword(e) {
     e.preventDefault();
     const input = document.getElementById("owner-access-pass");
-    const pw = input.value;
+    const pw = input.value.trim();
     if (pw.length < 6) { notify("Use at least 6 characters.", { type: "error" }); return; }
     const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
     const hash = await hashSitePassword(pw, salt, SITE_PASS_ITER);

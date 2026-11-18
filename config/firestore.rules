@@ -165,7 +165,11 @@ service cloud.firestore {
     match /site/mode {
       allow get: if true;
       allow create, update: if isOwner()
-        && request.resource.data.keys().hasOnly(['mode', 'msg', 'backAt', 'at'])
+        && request.resource.data.keys().hasOnly(['mode', 'msg', 'backAt', 'at', 'access'])
+        // Who can get in while it's closed: the accounts and the password's salted hash
+        && (!('access' in request.resource.data) || (request.resource.data.access is map
+            && request.resource.data.access.keys().hasOnly(['allowed', 'pass'])
+            && request.resource.data.access.allowed is list && request.resource.data.access.allowed.size() <= 300))
         && request.resource.data.mode in ['open', 'locked', 'maintenance', 'shutdown']
         && shortText(request.resource.data.msg, 400) && shortText(request.resource.data.backAt, 40)
         && request.resource.data.at == request.time;

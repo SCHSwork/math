@@ -5,7 +5,7 @@
 //  • Boots: each tab listens to boots/<its session id>. An admin's boot arrives
 //    in a second or two; a lifted boot lets them back in right away. Costs one
 //    read when the page opens, then nothing unless a boot is added or lifted.
-//  • Site mode: every tab listens to site/mode { mode, msg, backAt, at }, which
+//  • Site mode: every tab listens to site/mode { mode, msg, backAt, access, at }, which
 //    the owner's browser writes whenever the site mode, its message or its
 //    "back at" time changes (alongside the usual save to GitHub). Lock,
 //    maintenance and shutdown reach everyone at once instead of waiting for
@@ -58,6 +58,8 @@ function getLiveSiteModeAt() {
                 localStorage.setItem(OWNER_STORAGE_KEYS.siteMode, d.mode);
                 localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteMessage, String(d.msg || "").slice(0, 400));
                 localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.siteBackAt, d.backAt && !isNaN(Date.parse(d.backAt)) ? d.backAt : "");
+                // Checked again whenever it's read (getSiteAccess)
+                if (d.access && typeof d.access === "object" && typeof setSiteAccess === "function") setSiteAccess(d.access);
             } catch {}
             if (typeof applyOwnerSiteMode === "function") applyOwnerSiteMode();
         }, () => {});
@@ -82,7 +84,10 @@ function publishLiveSiteMode() {
     const data = {
         mode: getOwnerSiteMode(),
         msg: (typeof getOwnerSiteMessage === "function" ? getOwnerSiteMessage() : "").slice(0, 400),
-        backAt: (typeof getSiteBackAt === "function" ? getSiteBackAt() : "") || ""
+        backAt: (typeof getSiteBackAt === "function" ? getSiteBackAt() : "") || "",
+        // The password to get in and the accounts let in, so a new password
+        // works right away instead of after GitHub's copy updates
+        access: typeof getSiteAccess === "function" ? (a => ({ allowed: a.allowed, pass: a.pass }))(getSiteAccess()) : { allowed: [], pass: null }
     };
     const key = JSON.stringify(data);
     if (key === _liveModeLast) return;
