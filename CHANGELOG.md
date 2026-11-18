@@ -2,6 +2,15 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Owner Panel: password box and Expected back
+
+### Fixed
+- The "Password to get in" box in the Owner Panel was squeezed to almost nothing by its Set and Remove buttons, so you couldn't see what you typed. It's full width now and shows the password as you type, with an eye button to hide it. The "Username to let in" box and the Remove buttons got the same fix.
+- The password box on the lock screen has an eye button too.
+
+### Added
+- **Quick times for Expected back:** Back in 5, 10, 15, 30 or 45 min, 1, 1½, 2, 3, 4 or 6 h, 1 day, or tomorrow at 8 AM. A custom date and time still works, and a line under the box says when that is in words (like "today 12:45 AM, in 30 min") before you save.
+
 ## November 17, 2026 — Games pause when you leave the tab
 
 ### Added

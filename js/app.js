@@ -2883,6 +2883,38 @@ function siteBackAtText() {
     const left = mins < 60 ? `${mins} min` : mins < 48 * 60 ? `${Math.floor(mins / 60)} h ${mins % 60 ? (mins % 60) + " min" : ""}`.trim() : `${Math.round(mins / 1440)} days`;
     return `Expected back around ${when} (in ${left})`;
 }
+// Expected back: the quick "Back in" buttons set the box to now + that much
+// (to the nearest 5 minutes from an hour up), and the line under the
+// box reads the time back in words before it's saved.
+function setSiteBackIn(mins) {
+    let t = Date.now() + mins * 60000;
+    t = mins >= 60 ? Math.round(t / 300000) * 300000 : Math.round(t / 60000) * 60000;
+    const box = document.getElementById("owner-site-back-at");
+    if (box) box.value = toLocalInputValue(new Date(t).toISOString());
+    updateBackPreview();
+}
+function setSiteBackTomorrow() {
+    const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0);
+    const box = document.getElementById("owner-site-back-at");
+    if (box) box.value = toLocalInputValue(d.toISOString());
+    updateBackPreview();
+}
+function backPreviewText(iso) {
+    if (!iso || isNaN(Date.parse(iso))) return "No time set.";
+    const t = new Date(iso), mins = Math.round((t - Date.now()) / 60000);
+    const sameDay = t.toDateString() === new Date().toDateString();
+    const when = (sameDay ? "today " : t.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" }) + ", ") + t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (mins <= 0) return `That's ${when}, which has already passed.`;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const left = mins < 60 ? `${mins} min` : mins < 48 * 60 ? `${h} h${m ? " " + m + " min" : ""}` : `${Math.round(mins / 1440)} days`;
+    return `Back ${when} (in ${left}). Press Save to show it.`;
+}
+function updateBackPreview() {
+    const box = document.getElementById("owner-site-back-at"), out = document.getElementById("owner-back-preview");
+    if (!out) return;
+    const v = box && box.value ? new Date(box.value).toISOString() : "";
+    out.textContent = backPreviewText(v);
+}
 // The datetime-local box works in local time; store it as a real time
 function toLocalInputValue(iso) {
     if (!iso) return "";
@@ -3081,7 +3113,7 @@ function applyOwnerSiteMode() {
             </div>
             ${access.pass || access.allowed.length ? `<div class="site-mode-access">
                 ${access.pass ? `<form class="site-mode-pass" autocomplete="off">
-                    <input type="password" class="site-mode-pass-input" placeholder="Have the password?" aria-label="Password to get in" autocomplete="off">
+                    <span class="pw-wrap" style="flex:1;min-width:0;display:flex;"><input type="password" class="site-mode-pass-input" placeholder="Have the password?" aria-label="Password to get in" autocomplete="off" style="padding-right:2.4rem;">${gnPwToggle(false)}</span>
                     <button type="submit" class="site-mode-pass-go">Enter</button>
                 </form><p class="site-mode-pass-msg" role="alert"></p>` : ""}
                 ${access.allowed.length ? (signedInAs
@@ -3182,25 +3214,32 @@ function renderOwnerPanel() {
         <textarea id="owner-site-message" rows="2" maxlength="400" placeholder="e.g. Back after lunch, or: Moving to a new address, details on Discord"
             style="width:100%;padding:0.625rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;resize:vertical;margin-bottom:0.5rem;font-family:inherit;">${escapeOwnerHtml(getOwnerSiteMessage())}</textarea>
         <label style="display:block;margin:0.35rem 0 0.4rem;">Expected back (optional, shown on lock and maintenance screens)</label>
-        <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
-            <input type="datetime-local" id="owner-site-back-at" value="${toLocalInputValue(getSiteBackAt())}"
-                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;color-scheme:dark light;">
-            <button class="settings-button" type="button" style="width:auto;padding:0 0.9rem;" onclick="document.getElementById('owner-site-back-at').value=''">Clear</button>
+        <div class="back-quick" role="group" aria-label="Back in">
+            <span>Back in</span>
+            ${[[5, "5 min"], [10, "10 min"], [15, "15 min"], [30, "30 min"], [45, "45 min"], [60, "1 h"], [90, "1½ h"], [120, "2 h"], [180, "3 h"], [240, "4 h"], [360, "6 h"], [1440, "1 day"]]
+                .map(([m, l]) => `<button type="button" class="back-chip" onclick="setSiteBackIn(${m})">${l}</button>`).join("")}
+            <button type="button" class="back-chip" onclick="setSiteBackTomorrow()" title="Tomorrow at 8:00 AM">Tomorrow 8 AM</button>
         </div>
+        <div class="owner-inline" style="display:flex;gap:0.5rem;margin-bottom:0.35rem;">
+            <input type="datetime-local" id="owner-site-back-at" value="${toLocalInputValue(getSiteBackAt())}" oninput="updateBackPreview()"
+                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;color-scheme:dark light;">
+            <button class="settings-button" type="button" style="width:auto;padding:0 0.9rem;" onclick="document.getElementById('owner-site-back-at').value='';updateBackPreview()">Clear</button>
+        </div>
+        <p id="owner-back-preview" class="back-preview">${escapeOwnerHtml(backPreviewText(getSiteBackAt()))}</p>
         <button class="settings-button" type="button" onclick="saveSiteMessageFromPanel()">Save Message &amp; Time</button>
         <p style="margin:0.5rem 0 0;font-size:12px;color:var(--text-muted);">Visitors' screens check every minute and open by themselves when you switch back to Open (GitHub can take a few minutes to pass the change on).</p>
         <h4 style="margin:1.25rem 0 0.35rem;">Who can still get in</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">These accounts, and anyone with the password, get past the lock, maintenance and shutdown screens. Everyone else still sees the screen.</p>
         <div id="owner-access-list" class="owner-panel-list"></div>
-        <form id="owner-access-add" style="display:flex;gap:0.5rem;margin:0.5rem 0;" onsubmit="ownerAddAccessAccount(event)">
+        <form id="owner-access-add" class="owner-inline" style="display:flex;gap:0.5rem;margin:0.5rem 0;" onsubmit="ownerAddAccessAccount(event)">
             <input type="text" id="owner-access-username" placeholder="Username to let in" autocomplete="off" spellcheck="false"
                 style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">
             <button class="settings-button" type="submit" style="width:auto;padding:0 1rem;">Add</button>
         </form>
         <label style="display:block;margin:0.75rem 0 0.4rem;">Password to get in <span id="owner-access-pass-state" style="font-weight:400;font-size:13px;color:var(--text-muted);"></span></label>
-        <form style="display:flex;gap:0.5rem;" onsubmit="ownerSetAccessPassword(event)">
-            <input type="password" id="owner-access-pass" placeholder="New password" autocomplete="new-password"
-                style="flex:1;min-width:0;padding:0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">
+        <form class="owner-inline" style="display:flex;gap:0.5rem;" onsubmit="ownerSetAccessPassword(event)">
+            <span class="pw-wrap" style="flex:1;min-width:0;"><input type="text" id="owner-access-pass" placeholder="New password" autocomplete="off" spellcheck="false"
+                style="width:100%;padding:0.55rem 2.4rem 0.55rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;font-family:inherit;">${gnPwToggle(true)}</span>
             <button class="settings-button" type="submit" style="width:auto;padding:0 1rem;">Set</button>
             <button class="settings-button" type="button" id="owner-access-pass-clear" style="width:auto;padding:0 1rem;" onclick="ownerClearAccessPassword()">Remove</button>
         </form>

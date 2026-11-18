@@ -72,6 +72,8 @@ const GN_ICONS = {
     party: '<path d="M4 20 8.5 7.5l8 8L4 20Z"/><path d="M8.5 7.5c2.8 2.8 6.2 6.2 8 8"/><path d="M14 4.5c.5 1.5.3 2.7-.6 3.6M19.5 10c-1.5-.5-2.7-.3-3.6.6M17 3.5v1.5M20.5 7h-1.5M20 14.5l1 .5"/>',
     signal: '<path d="M5 12a10 10 0 0 1 14 0M8 15a5.5 5.5 0 0 1 8 0"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor"/>',
     newBadge: '<path d="M12 2.5l2.2 2.4 3.2-.6.6 3.2 2.9 1.5-1.5 2.9 1.5 2.9-2.9 1.5-.6 3.2-3.2-.6L12 21.5l-2.2-2.4-3.2.6-.6-3.2-2.9-1.5 1.5-2.9-1.5-2.9 2.9-1.5.6-3.2 3.2.6L12 2.5Z"/><path d="M9 12l2 2 4-4"/>',
+    eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.5 7.4C3.9 9.2 2.5 12 2.5 12S6 18.5 12 18.5c1.9 0 3.5-.6 4.9-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3.5 3.5l17 17"/>',
     cut: '<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8.2 8.5 20 17M8.2 15.5 20 7"/>'
 };
 function gnIcon(name, cls) {
@@ -88,4 +90,17 @@ function gnIconEl(name, cls) {
 const GN_EMOJI_RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{2604}\u{260E}-\u{2664}\u{2666}-\u{2701}\u{2703}-\u{2712}\u{2714}-\u{27BF}\u{2B00}-\u{2BFF}\u{23E9}-\u{23FA}\u{231A}\u{231B}\u{FE0F}\u{200D}\u{20E3}]/gu;
 function gnNoEmoji(text) {
     return String(text || "").replace(GN_EMOJI_RE, "").replace(/[ \t]{2,}/g, " ").trim();
+}
+// A show/hide button for a password box: gnPwToggle() is the button's HTML,
+// placed right after the <input> inside a .pw-wrap
+function gnPwToggle(shown) {
+    return `<button type="button" class="pw-eye" aria-label="${shown ? "Hide" : "Show"} password" title="${shown ? "Hide" : "Show"} password" aria-pressed="${shown ? "true" : "false"}" onclick="gnTogglePw(this)">${gnIcon(shown ? "eyeOff" : "eye")}</button>`;
+}
+function gnTogglePw(btn) {
+    const input = btn.parentNode && btn.parentNode.querySelector("input");
+    if (!input) return;
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.outerHTML = gnPwToggle(show);
+    input.focus();
 }
