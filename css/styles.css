@@ -3494,3 +3494,26 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 @supports (height: 100dvh) { .status-panel { max-height: calc(100dvh - 90px); } }
 .status-panel .status-list { overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
 .status-panel-head, .status-panel-foot { flex: none; }
+
+/* A closed game's save going up (bottom right; accounts.js showCloseSaveToast) */
+.close-save { position: relative; width: min(340px, calc(100vw - 32px)); pointer-events: auto;
+    display: flex; align-items: flex-start; gap: 10px; padding: 0.75rem 0.8rem; border-radius: 14px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text); box-shadow: var(--shadow-xl); font-size: 13px;
+    transform: translateY(14px); opacity: 0; transition: transform 0.25s ease, opacity 0.25s ease; }
+.close-save.show { transform: none; opacity: 1; }
+.close-save .cs-icon { flex: none; padding-top: 1px; }
+.close-save .cs-icon .gi { width: 20px; height: 20px; color: #22c55e; }
+.close-save.busy .cs-icon .gi { color: var(--primary); animation: saveChipPulse 1.2s ease-in-out infinite; }
+.close-save.warn { border-color: rgba(245, 158, 11, 0.6); }
+.close-save.warn .cs-icon .gi { color: #f59e0b; }
+.close-save .cs-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.close-save .cs-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.close-save .cs-line { color: var(--text-muted); overflow-wrap: anywhere; }
+.close-save .sd-bar { display: block; height: 6px; margin-top: 6px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.close-save .sd-bar[hidden] { display: none; }
+.close-save .sd-bar i { display: block; height: 100%; width: 0; background: var(--primary); border-radius: inherit; transition: width 0.3s; }
+.close-save .cs-act { flex: none; align-self: center; padding: 0.4rem 0.7rem; border-radius: 9px; border: 0; background: var(--primary); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.close-save .cs-act[hidden] { display: none; }
+.close-save .cs-x { flex: none; width: 26px; height: 26px; margin: -4px -4px 0 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.close-save .cs-x:hover { background: var(--surface-hover); color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .close-save { transition: opacity 0.2s; transform: none; } .close-save.busy .cs-icon .gi { animation: none; } }

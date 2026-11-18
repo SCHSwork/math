@@ -2,6 +2,14 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Saving after you close a game, More menu icons
+
+### Added
+- **The closed game's save, bottom right.** After you close a game (signed in), a box shows it saving: waiting for the game to write its save, each upload step with a progress bar, then "Drive Mad saved · 1.8 MB" (fades after a few seconds). If it didn't make it, it says why and when it tries again, with a "Try now" button. It stacks with the site's other messages, above "Play next".
+
+### Fixed
+- Eight items in a game's More menu had no icon (Favorites, Restart, Game info, Fit to screen, Open in new tab, Mark fixed, Copyright takedown, Re-download), and the Favorites home tab had none. They all have one now.
+
 ## November 18, 2026 — Save details, no more stuck "Saving…"
 
 ### Fixed
