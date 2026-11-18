@@ -345,8 +345,11 @@ async function loadGithubScriptsAndStyles(html) {
 // gn-math/assets broke Angry Birds, Slope and one more for anyone whose
 // jsDelivr works; the game check and test machines quietly used GitHub, so it
 // only showed up on players' devices.
-const JSD_REFUSED_REPOS = ["gn-math/assets", "genizy/cc3d-mobile"];
-const JSD_REFUSED_RE = new RegExp(`https?:\\/\\/(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net\\/gh\\/(?:${JSD_REFUSED_REPOS.map(r => r.replace(/[.\/]/g, "\\$&")).join("|")})[@\\/][^\\s"'\`<>()\\\\]*`, "gi");
+// jsDelivr also blocks whole GitHub accounts ("User genizy is blocked"): every
+// repo of theirs gets an error. Found with Actions → Check jsDelivr repos.
+const JSD_REFUSED_OWNERS = ["genizy", "gn-math", "tty67hlt6jf6"];
+const JSD_REFUSED_REPOS = [];
+const JSD_REFUSED_RE = new RegExp(`https?:\\/\\/(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net\\/gh\\/(?:${[...JSD_REFUSED_REPOS.map(r => r.replace(/[.\/]/g, "\\$&")), ...JSD_REFUSED_OWNERS.map(o => o.replace(/[.]/g, "\\$&") + "\\/[\\w.-]+")].join("|")})[@\\/][^\\s"'\`<>()\\\\]*`, "gi");
 async function avoidRefusedRepos(html) {
     JSD_REFUSED_RE.lastIndex = 0;
     if (!JSD_REFUSED_RE.test(html)) return html;

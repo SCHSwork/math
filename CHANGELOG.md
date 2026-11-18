@@ -2,6 +2,16 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Blocked jsDelivr accounts, save status, genres
+
+### Fixed
+- **Games from GitHub accounts jsDelivr has blocked.** jsDelivr blocks every repo of some GitHub accounts (genizy, gn-math, tty67hlt6jf6), not just big repos. Games loading files from them failed for players whose jsDelivr works. Their files now always come from GitHub. Found with the new Actions → Check jsDelivr repos.
+- **Crowd Drift City** no longer contacts unblockedgamesroblox.weebly.com: its loading-bar pictures came from there. The loading bar is plain now.
+
+### Added
+- **Save status in the game's top bar** for signed-in players: "Saving…", "Saved 3 min ago", or a yellow "Not saved yet" / "Not saving" when something's wrong (trying again, or another device saved). Hover for details; click it to open Account.
+- **Genres and descriptions for the 133 new games that had none** (the BCHS Flash games and Radon games), so they show up in genre filters and the game finder.
+
 ## November 18, 2026 — Accounts with Google linked
 
 ### Fixed
