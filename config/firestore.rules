@@ -220,7 +220,9 @@ service cloud.firestore {
     // Anyone can read them; they can only change every 2 minutes.
     match /live/now {
       allow read: if true;
-      allow create, update: if request.resource.data.keys().hasOnly(['at', 'online', 'games'])
+      // h: people online over the last day ("minute:count,…"), for the status graph
+      allow create, update: if request.resource.data.keys().hasOnly(['at', 'online', 'games', 'h'])
+        && (!('h' in request.resource.data) || (request.resource.data.h is string && request.resource.data.h.size() <= 6000))
         && request.resource.data.at == request.time
         && request.resource.data.online is int && request.resource.data.online >= 0 && request.resource.data.online <= 100000
         && request.resource.data.games is map && request.resource.data.games.size() <= 150

@@ -115,6 +115,14 @@ function renderTop10() {
     const shared = () => { try { return JSON.parse(localStorage.getItem(LIVE.sharedKey) || "null") || {}; } catch { return {}; } };
     const setShared = v => { try { localStorage.setItem(LIVE.sharedKey, JSON.stringify(v)); } catch {} };
     const intOf = v => Number(v?.integerValue ?? v?.doubleValue ?? 0) || 0;
+    // People online over the last day, for the graph in the site status panel.
+    // Kept in live/now as h: "minute:count,minute:count…" (minutes since 1970,
+    // in base 36), one entry per round, so reading it costs nothing extra.
+    const HIST_MS = 24 * 3600000;
+    const parseHist = str => String(str || "").split(",").map(x => x.split(":")).filter(x => x.length === 2)
+        .map(([m, n]) => [parseInt(m, 36) * 60000, parseInt(n, 36)]).filter(([t, n]) => t > 0 && n >= 0 && Date.now() - t < HIST_MS);
+    const packHist = list => list.map(([t, n]) => Math.floor(t / 60000).toString(36) + ":" + n.toString(36)).join(",");
+    const setHist = list => { window.gnOnlineHistory = list; if (typeof updateSiteStatus === "function") updateSiteStatus(); };
 
     async function req(url, opts) {
         const res = await fetch(url, opts);
@@ -133,7 +141,9 @@ function renderTop10() {
         const games = new Map(Object.entries(f.games?.mapValue?.fields || {}).map(([k, v]) => [k, intOf(v)]).filter(([, n]) => n > 0));
         const at = Date.parse(f.at?.timestampValue || doc.updateTime) || Date.now();
         liveNow = { online: intOf(f.online), games, at, updateTime: doc.updateTime };
-        setShared({ readAt: Date.now(), online: liveNow.online, games: [...games], at, updateTime: doc.updateTime });
+        const hist = parseHist(f.h?.stringValue);
+        setShared({ readAt: Date.now(), online: liveNow.online, games: [...games], at, updateTime: doc.updateTime, h: packHist(hist) });
+        setHist(hist);
         if (liveNow.online > 0) {
             window.gnActiveUsers = { count: Math.max(1, liveNow.online), at: Date.now(), error: null };
             if (typeof updateSiteStatus === "function") updateSiteStatus();
@@ -163,8 +173,11 @@ function renderTop10() {
         const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 150);
         const gameFields = Object.fromEntries(top.map(([id, n]) => [id, { integerValue: String(n) }]));
         const week = liveWeekId();
+        const hist = parseHist(prev?.fields?.h?.stringValue);
+        hist.push([Date.now(), docs.length]);
+        while (hist.length > 400) hist.shift();
         const writes = [{
-            update: { name: `${ROOT}/live/now`, fields: { online: { integerValue: String(docs.length) }, games: { mapValue: { fields: gameFields } } } },
+            update: { name: `${ROOT}/live/now`, fields: { online: { integerValue: String(docs.length) }, games: { mapValue: { fields: gameFields } }, h: { stringValue: packHist(hist) } } },
             updateTransforms: [{ fieldPath: "at", setToServerValue: "REQUEST_TIME" }],
             currentDocument: prev && prev.updateTime ? { updateTime: prev.updateTime } : { exists: false }
         }];
@@ -187,7 +200,8 @@ function renderTop10() {
             try { if (fbOn()) fbCount(0, 1); await commit(writes[1]); } catch (e) { console.info("Weekly count not saved:", e.message || e); }
         }
         liveNow = { online: docs.length, games: new Map(top), at: Date.now(), updateTime: null };
-        setShared({ readAt: Date.now(), online: docs.length, games: top, at: Date.now(), updateTime: null });
+        setShared({ readAt: Date.now(), online: docs.length, games: top, at: Date.now(), updateTime: null, h: packHist(hist) });
+        setHist(hist);
         window.gnActiveUsers = { count: Math.max(1, docs.length), at: Date.now(), error: null };
         if (typeof updateSiteStatus === "function") updateSiteStatus();
         // The week document changed: refresh the Top 10 soon
@@ -205,6 +219,7 @@ function renderTop10() {
             if (Date.now() - (s.readAt || 0) < readEvery) {
                 // Another tab read it recently
                 if (s.games) { liveNow = { online: s.online, games: new Map(s.games), at: s.at, updateTime: s.updateTime }; applyLiveBadges(); }
+                if (s.h && !window.gnOnlineHistory) setHist(parseHist(s.h));
             } else {
                 const doc = await getDoc("live/now");
                 if (doc) setNow(doc); else setShared({ ...s, readAt: Date.now() });
