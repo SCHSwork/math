@@ -3467,3 +3467,30 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 @keyframes saveChipPulse { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { .zone-controls button.save-chip.busy .gi { animation: none; } }
 @media (max-width: 760px) { .zone-controls button.save-chip span { display: none; } }
+
+/* Save details (the panel under "Saved 3 min ago") */
+.save-details { position: fixed; z-index: 2147483000; width: min(330px, calc(100vw - 16px)); max-height: calc(100dvh - 80px); overflow-y: auto;
+    padding: 0.85rem 0.9rem 0.8rem; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    box-shadow: var(--shadow-xl); font-size: 13px; animation: stIn 0.16s ease-out; }
+.save-details .sd-head { display: flex; align-items: center; gap: 8px; padding-right: 28px; font-size: 14.5px; }
+.save-details .sd-head .gi { width: 18px; height: 18px; color: #22c55e; }
+.save-details .sd-head.warn .gi { color: #f59e0b; }
+.save-details .sd-head.busy .gi { color: var(--primary, #6c8cff); animation: saveChipPulse 1.2s ease-in-out infinite; }
+.save-details .sd-close { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.save-details .sd-close:hover { background: var(--surface-hover); color: var(--text); }
+.save-details .sd-rows { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0.7rem 0 0.8rem; }
+.save-details dt { color: var(--text-muted); white-space: nowrap; }
+.save-details dd { margin: 0; overflow-wrap: anywhere; }
+.save-details .sd-bar { display: block; height: 8px; margin-top: 4px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.save-details .sd-bar i { display: block; height: 100%; background: var(--primary, #6c8cff); border-radius: inherit; transition: width 0.3s; }
+.save-details .sd-actions { display: flex; gap: 8px; }
+.save-details .sd-btn { flex: 1; padding: 0.5rem 0.7rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+.save-details .sd-btn.primary { background: var(--primary, #6c8cff); border-color: transparent; color: #fff; }
+.save-details .sd-btn:disabled { opacity: 0.6; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .save-details, .save-details .sd-head.busy .gi { animation: none; } }
+
+/* Site status panel: fits on short and phone screens, the list scrolls */
+.status-panel { display: flex; flex-direction: column; max-height: calc(100dvh - 90px); max-height: calc(100vh - 90px); }
+@supports (height: 100dvh) { .status-panel { max-height: calc(100dvh - 90px); } }
+.status-panel .status-list { overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
+.status-panel-head, .status-panel-foot { flex: none; }
