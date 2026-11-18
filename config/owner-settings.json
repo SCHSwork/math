@@ -34,7 +34,7 @@
   },
   "motd": {
     "text": "Make an account to save your game progress!",
-    "enabled": true
+    "enabled": false
   },
   "footerLinks": [],
   "visitorDefaults": {
@@ -82,5 +82,5 @@
     }
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-16T21:40:56.759Z"
+  "updatedAt": "2026-11-18T07:12:55.327Z"
 }
