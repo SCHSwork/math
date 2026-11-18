@@ -353,7 +353,8 @@ async function runCloudUpload(opts) {
     if (ok) cloudRetryDelay = 0;
     else if (cloudFailRetryable && cloudUser) {
         cloudRetryDelay = Math.min(cloudRetryDelay ? cloudRetryDelay * 2 : 20000, 5 * 60000);
-        cloudRetryTimer = setTimeout(() => { cloudRetryTimer = null; uploadCloudSave({ background: true }); }, cloudRetryDelay);
+        cloudRetryTimer = setTimeout(() => { cloudRetryTimer = null; cloudSaveState.retryAt = 0; uploadCloudSave({ background: true }); }, cloudRetryDelay);
+        cloudSaveState.retryAt = Date.now() + cloudRetryDelay;
     }
     return ok;
 }
@@ -364,7 +365,8 @@ async function cloudAutosaveTick() {
 }
 function startCloudAutosave() {
     clearInterval(cloudAutosaveTimer);
-    cloudAutosaveTimer = setInterval(() => { if (!document.hidden) cloudAutosaveTick(); }, CLOUD.autosaveMs);
+    cloudSaveState.nextAt = Date.now() + CLOUD.autosaveMs;
+    cloudAutosaveTimer = setInterval(() => { cloudSaveState.nextAt = Date.now() + CLOUD.autosaveMs; if (!document.hidden) cloudAutosaveTick(); }, CLOUD.autosaveMs);
 }
 let cloudHiddenSaveAt = 0;
 document.addEventListener("visibilitychange", () => {
@@ -379,6 +381,14 @@ window.addEventListener("online", () => {
         setTimeout(() => uploadCloudSave({ background: true }), 3000);
     }
 });
+// Firebase waits forever for a reply when the connection drops (school Wi-Fi),
+// which left "Saving…" stuck. Each step gives up after a while instead, and the
+// save is tried again like any other failure.
+function cloudStep(promise, ms, what) {
+    let t;
+    return Promise.race([promise, new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error(`${what} took too long (slow or no connection).`), { code: "deadline-exceeded" })), ms); })])
+        .finally(() => clearTimeout(t));
+}
 async function uploadCloudSaveNow({ force = false, background = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
@@ -389,7 +399,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         const sum = progressSummary();
         // Nothing changed since the last sync: skip the Firebase read entirely
         if (!force && hash === localStorage.getItem(CLOUD.keys.syncedHash) && localStorage.getItem(CLOUD.keys.syncedGen)) {
-            noteSaveState("ok"); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            noteSaveState("ok", { sum }); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
             return true;
         }
         if (!force && typeof fbPaused === "function" && fbPaused()) {
@@ -400,8 +410,8 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             noteSaveState("paused"); setCloudStatus("Autosave is paused because the site's daily Firebase limit is almost used up. Save from the Account menu, or it saves when you close a game.");
             return false;
         }
-        noteSaveState("saving"); setCloudStatus("Saving…");
-        const meta = await fetchCloudMeta();
+        noteSaveState("saving", { step: "Checking your account", startedAt: Date.now(), part: 0, parts: 0 }); setCloudStatus("Saving…");
+        const meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
@@ -415,9 +425,10 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         }
         if (meta && meta.hash === hash) {
             localStorage.setItem(CLOUD.keys.syncedHash, hash);
-            noteSaveState("ok"); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            noteSaveState("ok", { size: meta.size || 0, sum }); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
             return true;
         }
+        noteSaveState("saving", { step: "Packing your progress" });
         const packed = await gzipToB64(json);
         if (packed.length > CLOUD.maxChars) {
             noteSaveState("error"); setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
@@ -427,8 +438,10 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
         const chunks = saveDocRef().collection("chunks");
         for (let i = 0; i < chunkCount; i++) {
-            await chunks.doc(`${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) });
+            noteSaveState("saving", { step: `Uploading part ${i + 1} of ${chunkCount}`, part: i, parts: chunkCount, size: packed.length });
+            await cloudStep(chunks.doc(`${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) }), 60000, `Uploading part ${i + 1} of ${chunkCount}`);
         }
+        noteSaveState("saving", { step: "Finishing up", part: chunkCount, parts: chunkCount });
         // Replacing the cloud save keeps the old one for a week; expired ones are deleted
         const replacing = !!(meta && meta.gen && (force || meta.gen !== localGen));
         const now = Date.now();
@@ -437,19 +450,19 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         const drop = kept.filter((k, i) => k.until < now || i >= KEEP_REPLACED_MAX);
         kept = kept.filter(k => !drop.includes(k));
         if (meta && meta.gen && !replacing) drop.push(meta);   // an autosave over this device's own save
-        await saveDocRef().set({
+        await cloudStep(saveDocRef().set({
             gen, chunkCount, hash, sum,
             size: packed.length,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             kept
-        });
+        }), 30000, "Finishing up");
         localStorage.setItem(CLOUD.keys.syncedGen, gen);
         localStorage.setItem(CLOUD.keys.syncedHash, hash);
         for (const old of drop) {
             if (old.gen === gen || kept.some(k => k.gen === old.gen)) continue;
             for (let i = 0; i < (old.chunkCount || 0); i++) chunks.doc(`${old.gen}_${i}`).delete().catch(() => {});
         }
-        noteSaveState("ok"); setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
+        noteSaveState("ok", { size: packed.length, sum }); setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
@@ -462,7 +475,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         } else {
             // Signed out or not allowed won't fix itself; anything else gets tried again
             cloudFailRetryable = !/permission-denied|unauthenticated/.test(String(e && e.code));
-            noteSaveState(cloudFailRetryable ? "retry" : "error"); setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
+            noteSaveState(cloudFailRetryable ? "retry" : "error", { error: (e && e.message) || String(e) }); setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
         }
         return false;
     } finally {
@@ -1070,22 +1083,39 @@ async function confirmLoadEarlierCloudSave(gen) {
 // ── "Saved 2 min ago" in the game's top bar ─────────────────────────────────
 // Signed-in players see whether their game is reaching their account: saving,
 // when it last saved, or what's stopping it. Clicking it opens Account.
-let cloudSaveState = { phase: "", okAt: 0 };
-function noteSaveState(phase) {
-    cloudSaveState.phase = phase;
-    if (phase === "ok") cloudSaveState.okAt = Date.now();
+const SAVE_INFO_KEY = "gnmath-cloud-last";   // { at, size, sum } of the last save that reached the cloud
+let cloudSaveState = (() => {
+    let last = {};
+    try { last = JSON.parse(localStorage.getItem(SAVE_INFO_KEY) || "{}") || {}; } catch {}
+    return { phase: "", okAt: 0, lastAt: last.at || 0, size: last.size || 0, sum: last.sum || null, step: "", part: 0, parts: 0, startedAt: 0, stepAt: 0, error: "", retryAt: 0, nextAt: 0 };
+})();
+function noteSaveState(phase, extra = {}) {
+    const s = cloudSaveState;
+    if (phase !== "saving") { s.step = ""; s.part = 0; s.parts = 0; }
+    if (phase !== s.phase || extra.step) s.stepAt = Date.now();
+    s.phase = phase;
+    Object.assign(s, extra);
+    if (phase === "ok") {
+        s.okAt = s.lastAt = Date.now(); s.error = ""; s.retryAt = 0;
+        try { localStorage.setItem(SAVE_INFO_KEY, JSON.stringify({ at: s.lastAt, size: s.size, sum: s.sum })); } catch {}
+    }
     renderSaveChip();
 }
+const agoText = ms => { const m = Math.floor(ms / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + " min " : ""}ago` : `${Math.floor(m / 1440)} days ago`; };
+const inText = ms => { const sec = Math.max(0, Math.round(ms / 1000)); return sec < 60 ? `${sec} s` : `${Math.ceil(sec / 60)} min`; };
 function saveChipInfo() {
     const s = cloudSaveState;
-    const ago = ms => { const m = Math.floor(ms / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ago`; };
     switch (s.phase) {
-        case "saving": return { cls: "busy", text: "Saving…", tip: "Saving your progress to your account" };
-        case "ok": return { cls: "ok", text: "Saved " + ago(Date.now() - s.okAt), tip: "Your progress is saved to your account. It saves every 2 minutes and when you close the game." };
-        case "retry": return { cls: "warn", text: "Not saved yet", tip: "Couldn't reach the cloud. It's trying again by itself; your progress is safe on this device." };
-        case "conflict": return { cls: "warn", text: "Not saving", tip: "Another device saved to your account. Open Account to pick which progress to keep." };
-        case "paused": return { cls: "", text: "Saved on this device", tip: "Cloud saves are paused for today (the site's Firebase limit). Your progress is safe on this device." };
-        case "error": return { cls: "warn", text: "Not saved", tip: cloudStatus || "The cloud save didn't work. Open Account for details." };
+        case "saving": {
+            const slow = Date.now() - s.stepAt > 20000;
+            const pct = s.parts ? ` ${Math.round(s.part / s.parts * 100)}%` : "";
+            return { cls: "busy", text: (slow ? "Still saving…" : "Saving…") + pct };
+        }
+        case "ok": return { cls: "ok", text: "Saved " + agoText(Date.now() - s.okAt) };
+        case "retry": return { cls: "warn", text: s.retryAt ? `Not saved: retry in ${inText(s.retryAt - Date.now())}` : "Not saved yet" };
+        case "conflict": return { cls: "warn", text: "Not saving" };
+        case "paused": return { cls: "", text: "Saved on this device" };
+        case "error": return { cls: "warn", text: "Not saved" };
     }
     return null;
 }
@@ -1094,14 +1124,108 @@ function renderSaveChip() {
     if (!el) return;
     const info = cloudUser && !accountNeedsVerify() && !accountNeedsUsername() ? saveChipInfo() : null;
     el.hidden = !info;
-    if (!info) return;
+    if (!info) { closeSaveDetails(); return; }
     el.className = "save-chip " + info.cls;
-    el.title = info.tip;
-    el.setAttribute("aria-label", info.text + ". " + info.tip);
+    el.title = "Save details";
+    el.setAttribute("aria-label", info.text + ". Show save details");
     el.innerHTML = gnIcon(info.cls === "warn" ? "warning" : info.cls === "busy" ? "cloud" : "check") + "<span></span>";
     el.lastChild.textContent = info.text;
+    renderSaveDetails();
 }
-setInterval(() => { if (cloudSaveState.phase === "ok" && !document.hidden) renderSaveChip(); }, 30000);
+// The chip opens a small panel with where the save is at; it doesn't save
+// anything by itself ("Save now" does)
+function toggleSaveDetails(ev) {
+    if (ev) ev.stopPropagation();
+    if (document.getElementById("saveDetails")) return closeSaveDetails();
+    const chip = document.getElementById("saveChip");
+    if (!chip) return;
+    const box = document.createElement("div");
+    box.id = "saveDetails";
+    box.className = "save-details";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-label", "Save details");
+    document.body.appendChild(box);
+    chip.setAttribute("aria-expanded", "true");
+    renderSaveDetails();
+    setTimeout(() => document.addEventListener("pointerdown", saveDetailsOutside, true), 0);
+    document.addEventListener("keydown", saveDetailsKey, true);
+}
+function saveDetailsOutside(e) {
+    const box = document.getElementById("saveDetails"), chip = document.getElementById("saveChip");
+    if (box && !box.contains(e.target) && !(chip && chip.contains(e.target))) closeSaveDetails();
+}
+function saveDetailsKey(e) { if (e.key === "Escape") closeSaveDetails(); }
+function closeSaveDetails() {
+    const box = document.getElementById("saveDetails");
+    if (box) box.remove();
+    const chip = document.getElementById("saveChip");
+    if (chip) chip.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", saveDetailsOutside, true);
+    document.removeEventListener("keydown", saveDetailsKey, true);
+}
+function renderSaveDetails() {
+    const box = document.getElementById("saveDetails"), chip = document.getElementById("saveChip");
+    if (!box || !chip) return;
+    const s = cloudSaveState, now = Date.now();
+    const r = chip.getBoundingClientRect();
+    // Under the chip, lined up with its left edge, kept on screen
+    const w = box.offsetWidth || 330;
+    box.style.top = Math.round(r.bottom + 8) + "px";
+    box.style.left = Math.round(Math.min(Math.max(8, r.left), window.innerWidth - w - 8)) + "px";
+    const mb = n => n >= 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
+    const head = {
+        saving: ["busy", Date.now() - s.stepAt > 20000 ? "Still saving (slow connection)" : "Saving to your account"],
+        ok: ["ok", "Saved to your account"],
+        retry: ["warn", "Not saved yet"],
+        conflict: ["warn", "Not saving to your account"],
+        paused: ["", "Saved on this device only"],
+        error: ["warn", "Not saved"]
+    }[s.phase] || ["", "Cloud save"];
+    const rows = [];
+    if (s.phase === "saving") {
+        rows.push(["Now", s.step || "Getting ready"]);
+        if (s.parts) rows.push(["Progress", `<span class="sd-bar"><i style="width:${Math.round(s.part / s.parts * 100)}%"></i></span>`, true]);
+        if (s.startedAt) rows.push(["Started", agoText(now - s.startedAt).replace("just now", "a moment ago")]);
+    }
+    if (s.phase === "retry") {
+        if (s.error) rows.push(["What happened", escapeHtml(s.error), true]);
+        rows.push(["Next try", s.retryAt ? "in " + inText(s.retryAt - now) : "when you're back online"]);
+    }
+    if (s.phase === "conflict") rows.push(["Why", "Another device saved to your account after this one. Open Account to pick which progress to keep."]);
+    if (s.phase === "paused") rows.push(["Why", "The site used up today's cloud saves (Firebase's daily limit). They start again tomorrow."]);
+    if (s.phase === "error" && s.error) rows.push(["What happened", escapeHtml(s.error), true]);
+    rows.push(["Last cloud save", s.lastAt ? `${new Date(s.lastAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (${agoText(now - s.lastAt)})` : "not yet on this device"]);
+    if (s.size) rows.push(["Size", mb(s.size)]);
+    if (s.sum && typeof describeProgress === "function") rows.push(["What's saved", describeProgress(s.sum) + ", settings, favorites and game saves"]);
+    if (cloudAutosaveTimer && s.phase !== "conflict" && s.phase !== "paused" && s.nextAt) rows.push(["Next autosave", "in " + inText(s.nextAt - now) + " (and when you close the game)"]);
+    if (s.phase !== "conflict") rows.push(["On this device", "Your progress is always kept here too"]);
+    // Built once, then only the text changes (so the buttons keep working while it updates)
+    if (!box.querySelector(".sd-rows")) {
+        box.innerHTML = `<div class="sd-head"></div><button type="button" class="sd-close" aria-label="Close" onclick="closeSaveDetails()">×</button>
+            <dl class="sd-rows"></dl>
+            <div class="sd-actions">
+                <button type="button" class="sd-btn primary" onclick="saveNowFromDetails()"></button>
+                <button type="button" class="sd-btn" onclick="closeSaveDetails(); openAccountPanel()">Account</button>
+            </div>`;
+    }
+    const h = box.querySelector(".sd-head");
+    h.className = "sd-head " + head[0];
+    h.innerHTML = gnIcon(head[0] === "warn" ? "warning" : head[0] === "busy" ? "cloud" : "check") + `<b>${head[1]}</b>`;
+    box.querySelector(".sd-rows").innerHTML = rows.map(([k, v, html]) => `<dt>${k}</dt><dd>${html ? v : escapeHtml(v)}</dd>`).join("");
+    const go = box.querySelector(".sd-btn.primary");
+    go.disabled = s.phase === "saving";
+    go.textContent = s.phase === "saving" ? "Saving…" : s.phase === "conflict" ? "Choose which to keep" : "Save now";
+}
+function saveNowFromDetails() {
+    if (cloudSaveState.phase === "conflict") { closeSaveDetails(); openAccountPanel(); return; }
+    Promise.resolve(typeof syncOpenGameFiles === "function" ? syncOpenGameFiles() : null).catch(() => {}).then(() => uploadCloudSave());
+}
+// Keeps the times ("3 min ago", "retry in 20 s") current
+setInterval(() => {
+    if (document.hidden) return;
+    const open = !!document.getElementById("saveDetails");
+    if (open || cloudSaveState.phase !== "") renderSaveChip();
+}, 1000);
 
 // ── UI ──────────────────────────────────────────────────────────────────────
 function setCloudStatus(text) {
@@ -1297,7 +1421,7 @@ async function initCloudAccounts() {
                 document.getElementById("popupOverlay").style.display === "flex") {
                 openAccountPanel();
             }
-            if (!user) cloudSaveState = { phase: "", okAt: 0 };
+            if (!user) { Object.assign(cloudSaveState, { phase: "", okAt: 0, lastAt: 0, size: 0, sum: null, error: "", retryAt: 0 }); try { localStorage.removeItem(SAVE_INFO_KEY); } catch {} }
             renderSaveChip();
             if (wasSignedIn && !user) {
                 localStorage.removeItem(CLOUD.keys.syncedGen);

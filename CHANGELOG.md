@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Save details, no more stuck "Saving…"
+
+### Fixed
+- **"Saving…" stuck in the game bar.** When the connection dropped mid-save (school Wi-Fi), Firebase waited for an answer forever. Each step of a save now gives up after a while (30–60 s) and the save is tried again by itself, and the chip says "Still saving…" if a step is slow.
+- **Clicking the save chip started a save.** It opened the Account panel, which saved. Now it opens save details instead and only "Save now" saves.
+- **The site status panel ran off the top of the screen** on phones and short windows. It fits the screen now and its list scrolls.
+
+### Changed
+- **Save details.** Click the save chip for where your save is at: the step it's on ("Uploading part 2 of 3", with a progress bar), when it last reached the cloud, how big it is, what's saved (level, play time, settings, game saves), when the next autosave is, and what went wrong and when it tries again if it didn't work. "Save now" and "Account" buttons are there too.
+- The chip shows more: "Saving… 33%", "Not saved: retry in 38 s".
+
 ## November 18, 2026 — Sign in with your username everywhere
 
 ### Changed
