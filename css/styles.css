@@ -3527,3 +3527,6 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .find-screen .finder-chip { display: inline-flex; align-items: center; gap: 5px; }
 .find-screen-tag { padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 13px; white-space: nowrap; }
 .find-screen-tag[hidden] { display: none; }
+.scare-pics { margin-top: 1rem; }
+.scare-pics summary { cursor: pointer; font-weight: 700; }
+.scare-pics textarea { width: 100%; margin: 0.4rem 0; font-family: ui-monospace, monospace; font-size: 12px; }
