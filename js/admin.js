@@ -343,7 +343,7 @@ function findScreenButton(id, name) {
         btn.disabled = true;
         try {
             await cloudDb.collection("identify").doc(id).set({
-                c, n, until: firebase.firestore.Timestamp.fromMillis(Date.now() + IDENTIFY_MS),
+                k: "find", c, n, until: firebase.firestore.Timestamp.fromMillis(Date.now() + IDENTIFY_MS),
                 by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
             });
             const [cname, hex] = IDENTIFY_COLORS[c];
@@ -356,7 +356,24 @@ function findScreenButton(id, name) {
         } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
         btn.disabled = false;
     };
-    wrap.append(btn, tag);
+    // Jumpscare, just for fun: a face and a scream on their screen for 1.5 s
+    const boo = document.createElement("button");
+    boo.type = "button"; boo.className = "finder-chip";
+    boo.innerHTML = gnIcon("ghost") + " Jumpscare";
+    boo.title = `Jumpscare ${name} (a face and a scream for 1.5 seconds)`;
+    boo.onclick = async () => {
+        if (!(await askConfirm(`Jumpscare ${name}? A scary face fills their screen with a scream for about 1.5 seconds. It doesn't flash.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+        boo.disabled = true;
+        try {
+            await cloudDb.collection("identify").doc(id).set({
+                k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
+                by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify(`Jumpscared ${name}.`, { type: "success" });
+        } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
+        setTimeout(() => { boo.disabled = false; }, 3000);
+    };
+    wrap.append(btn, tag, boo);
     return wrap;
 }
 const BOOT_UNITS = [["m", "minutes", 60000], ["h", "hours", 3600000], ["d", "days", 86400000]];
