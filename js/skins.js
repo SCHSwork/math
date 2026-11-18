@@ -24,6 +24,7 @@ const SITE_SKINS = {
     quest:    { label: "Fantasy quest",  note: "Parchment cards in gold frames on a stone wall" },
     web99:    { label: "Web 1999",       note: "An old-school starry homepage with a rainbow logo" },
     sheet:    { label: "Spreadsheet",    note: "Looks like a work spreadsheet" },
+    fresh:    { label: "Fresh",          note: "Clean and calm: white and cool gray, teal buttons, bold headings (follows light/dark mode)" },
     minimal:  { label: "Minimalist",     note: "Clean and spacious, just covers and names (uses your color theme and light/dark mode)" },
     semiflat: { label: "Semi-Flat",      note: "Friendly flat colors and soft shadows (uses your color theme and light/dark mode)" },
     neu:      { label: "Neumorphism",    note: "Soft buttons and cards that look pressed out of the page" },

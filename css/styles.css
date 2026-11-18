@@ -3163,6 +3163,7 @@ body:has(#zoneViewer[style*="flex"]) #scrollJump { display: none; }
    ═════════════════════════════════════════════════════════════════════════ */
 @font-face { font-family: "GN HUD"; src: url("../assets/fonts/orbitron.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "GN Candy"; src: url("../assets/fonts/fredoka.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "GN Fresh"; src: url("../assets/fonts/bricolage-grotesque.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
 
 /* Previews in the style picker */
 .skin-prev-hud .skin-art { background: #050b14; }
@@ -3187,6 +3188,10 @@ body:has(#zoneViewer[style*="flex"]) #scrollJump { display: none; }
 .skin-prev-minimal .skin-art { background: #fafafa; }
 .skin-prev-minimal i:nth-child(1) { background: #fafafa; border-bottom: 1px solid #e3e3e3; }
 .skin-prev-minimal i:nth-child(n+2) { background: #ddd; border-radius: 4px; height: 16px; }
+.skin-prev-fresh .skin-art { background: #eef2f4; }
+.skin-prev-fresh i:nth-child(1) { background: #fff; border-bottom: 1px solid #d8e0e5; }
+.skin-prev-fresh i:nth-child(2) { background: #0e7c86; border-radius: 6px; }
+.skin-prev-fresh i:nth-child(n+3) { background: #c6d2d8; border-radius: 6px; }
 .skin-prev-semiflat .skin-art { background: #f3f5f9; }
 .skin-prev-semiflat i:nth-child(1) { background: #c91f45; box-shadow: 0 2px 0 #8f1630; }
 .skin-prev-semiflat i:nth-child(n+2) { background: #fff; border: 1px solid #dfe4ec; border-radius: 6px; box-shadow: 0 2px 4px rgba(20,30,50,.1); }
