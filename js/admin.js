@@ -334,8 +334,8 @@ function getScarePics() {
 function scarePicsEditor() {
     const d = document.createElement("details");
     d.className = "scare-pics";
-    d.innerHTML = `<summary>Jumpscare pictures (${getScarePics().length || "built-in faces"})</summary>
-        <p class="admin-footnote">Paste picture links (https), one per line. Each jumpscare picks one at random. Leave it empty to use the site's own faces. Kept in this browser only. Links to pictures (.png, .jpg, .gif or .webp) work best; if one doesn't load, they get a built-in face.</p>
+    d.innerHTML = `<summary>Jumpscare pictures (${getScarePics().length || "built-in"})</summary>
+        <p class="admin-footnote">Paste picture links (https), one per line. Each jumpscare picks one at random. Leave it empty to use the built-in pictures: ${typeof SCARE_BANK !== "undefined" ? SCARE_BANK.map(b => escapeHtml(b.title)).join(", ") : ""} (public-domain paintings from Wikimedia Commons). Kept in this browser only. Links to pictures (.png, .jpg, .gif or .webp) work best; if one doesn't load, they get a built-in face.</p>
         <textarea class="submit-note" rows="4" spellcheck="false" placeholder="https://example.com/scary.jpg"></textarea>
         <div class="admin-actions"><button type="button" class="finder-chip">Save pictures</button><span class="admin-id"></span></div>`;
     const ta = d.querySelector("textarea"), save = d.querySelector("button"), msg = d.querySelector(".admin-id");
@@ -345,7 +345,7 @@ function scarePicsEditor() {
         const ok = lines.filter(u => /^https:\/\/[^\s"'<>]+$/.test(u) && u.length <= 600);
         try { localStorage.setItem(SCARE_PICS_KEY, JSON.stringify(ok.slice(0, 40))); } catch {}
         msg.textContent = `Saved ${ok.length} picture${ok.length === 1 ? "" : "s"}` + (lines.length > ok.length ? ` (${lines.length - ok.length} skipped: links must start with https://)` : "") + ".";
-        d.querySelector("summary").textContent = `Jumpscare pictures (${ok.length || "built-in faces"})`;
+        d.querySelector("summary").textContent = `Jumpscare pictures (${ok.length || "built-in"})`;
     };
     return d;
 }
@@ -384,12 +384,14 @@ function findScreenButton(id, name) {
     const boo = document.createElement("button");
     boo.type = "button"; boo.className = "finder-chip";
     boo.innerHTML = gnIcon("ghost") + " Jumpscare";
-    boo.title = `Jumpscare ${name} (a face and a scream for 1.5 seconds)`;
+    boo.title = `Jumpscare ${name}: fake game crash, then a scary picture and a scream`;
     boo.onclick = async () => {
-        if (!(await askConfirm(`Jumpscare ${name}? ${getScarePics().length ? "One of your jumpscare pictures" : "A scary face"} fills their screen with a scream and two red flashes for about 2 seconds.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+        if (!(await askConfirm(`Jumpscare ${name}? Their game freezes, a fake error pops up, then ${getScarePics().length ? "one of your jumpscare pictures" : "a scary picture"} fills their screen with a scream and two red flashes. About 7 seconds; their game carries on after.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
         boo.disabled = true;
         try {
-            const pics = getScarePics(), pic = pics.length ? pics[Math.floor(Math.random() * pics.length)] : "";
+            // Your pictures if you've added some, otherwise the built-in public-domain ones
+            const own = getScarePics(), pool = own.length ? own : (typeof SCARE_BANK !== "undefined" ? SCARE_BANK.map(b => b.url) : []);
+            const pic = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
             await cloudDb.collection("identify").doc(id).set({
                 ...(pic ? { u: pic } : {}),
                 k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),

@@ -96,11 +96,11 @@ const SCARE_FACES = [SCARE_FACE,
   <path d="M40 150c30 22 130 22 160 0-8 50-44 78-80 78s-72-28-80-78Z" fill="#050000"/>
   <path d="M42 152l10 26 9-22 10 30 10-28 10 32 9-30 10 32 10-32 9 30 10-32 10 28 10-30 9 22 10-26" fill="#d8ccb0"/>
 </svg>`];
-// The sound: a low drone that creeps up in the dark, then a distorted scream
+// The sound: an error "ding" with the fake error box, then a distorted scream
 // (several rough voices sliding down, a bandpassed hiss and a thump), pushed
 // through a waveshaper and a compressor so it's as loud as it can be without
 // crackling into nothing.
-function scareSound(delayMs) {
+function scareSound(delayMs, dingMs = -1) {
     try {
         const C = window.AudioContext || window.webkitAudioContext;
         if (!C) return;
@@ -110,11 +110,16 @@ function scareSound(delayMs) {
         const comp = ctx.createDynamicsCompressor();
         comp.threshold.value = -18; comp.ratio.value = 8; comp.attack.value = 0.002; comp.release.value = 0.2;
         comp.connect(ctx.destination);
-        // Drone: two close low tones beating against each other
-        const dg = ctx.createGain();
-        dg.gain.setValueAtTime(0.0001, t0); dg.gain.exponentialRampToValueAtTime(0.22, hit - 0.05); dg.gain.setValueAtTime(0.0001, hit);
-        dg.connect(comp);
-        [55, 58.5].forEach(f => { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 220; o.connect(lp); lp.connect(dg); o.start(t0); o.stop(hit + 0.05); });
+        // An error "ding" when the fake error box shows up
+        if (dingMs >= 0) {
+            const td = t0 + dingMs / 1000;
+            [[880, 0], [660, 0.12]].forEach(([f, off]) => {
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = "sine"; o.frequency.value = f;
+                g.gain.setValueAtTime(0.0001, td + off); g.gain.exponentialRampToValueAtTime(0.18, td + off + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, td + off + 0.35);
+                o.connect(g); g.connect(ctx.destination); o.start(td + off); o.stop(td + off + 0.4);
+            });
+        }
         // Scream
         const shaper = ctx.createWaveShaper(), curve = new Float32Array(2048);
         for (let i = 0; i < curve.length; i++) { const x = i / 1024 - 1; curve[i] = Math.tanh(x * 6); }
@@ -144,78 +149,127 @@ function scareSound(delayMs) {
         setTimeout(() => ctx.close().catch(() => {}), delayMs + (len + 0.4) * 1000);
     } catch {}
 }
-// How it goes: the screen slowly goes dark with static and a drone (about a
-// second, so they lean in), a dim face is barely there in the middle… then it
-// cuts to the face filling the whole screen, warped and grainy with split
-// colors, shaking hard, two red flashes and the scream. About 3 seconds.
-const SCARE_BUILD_MS = 1100;
+// Pictures to use (Admin Panel → Sessions picks one at random, or yours):
+// public-domain paintings on Wikimedia Commons, linked rather than copied.
+// pos: which part of the picture to fill the screen with.
+const SCARE_BANK = [
+    ["Goya, Saturn Devouring His Son (1819–23)", "Francisco_de_Goya,_Saturno_devorando_a_su_hijo_(1819-1823).jpg", "50% 18%"],
+    ["Goya, Two Old Men Eating Soup (1819–23)", "Viejos_comiendo_sopa.jpg", "35% 40%"],
+    ["Fuseli, The Nightmare (1781)", "John_Henry_Fuseli_-_The_Nightmare.JPG", "38% 30%"],
+    ["Böcklin, Self-Portrait with Death Playing the Fiddle (1872)", "Arnold_Boecklin-fiedelnder_Tod.jpg", "78% 22%"]
+].map(([title, file, pos]) => ({ title, pos, url: "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=1400" }));
+function scarePos(url) { const b = SCARE_BANK.find(x => x.url === url); return b ? b.pos : "50% 35%"; }
+
+// How it goes: their game freezes (it's paused, so it really stops), then a
+// red error bar blinks at the top and a "not responding" box pops up with a
+// ding, so they lean in to read it… the screen cuts to black and silent for a
+// moment… then the picture fills the screen: warped, grainy, split colors,
+// shaking, two red flashes and the scream. After that the game carries on.
+const SCARE_FREEZE_MS = 800, SCARE_BOX_MS = 1500, SCARE_BLACK_MS = 4300, SCARE_HIT_MS = 4650;
 function gnJumpscare(pic) {
     const face = SCARE_FACES[Math.floor(Math.random() * SCARE_FACES.length)];
     const okPic = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic) ? pic : "";
     const uid = "gs" + Math.random().toString(36).slice(2, 8);
+    let gameName = "";
+    try { if (zoneViewer.style.display !== "none") gameName = (document.getElementById("zoneName").textContent || "").trim(); } catch {}
+    const appName = gameName || "This page";
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    // Start loading the picture now, during the fake crash
+    let picReady = false;
+    if (okPic) { const pre = new Image(); pre.referrerPolicy = "no-referrer"; pre.onload = () => { picReady = true; }; pre.src = okPic; }
+    // Freeze the game for real
+    let gw = null;
+    try { if (typeof zoneFrame !== "undefined" && zoneFrame && !zoneFrame.__retiring) gw = zoneFrame.contentWindow; } catch {}
+    try { if (gw && gw.__gnPause) gw.__gnPause(true); } catch {}
+    try { if (gw && gw.__gnSetMuted) gw.__gnSetMuted(true); } catch {}
     const build = doc => {
         const el = doc.createElement("div");
         el.className = "gn-scare";
         el.setAttribute("aria-hidden", "true");
-        el.style.cssText = "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;overflow:hidden;cursor:none;pointer-events:auto;";
-        // Each copy of the face gets its own gradient names (a hidden copy's
-        // gradients would otherwise blank out the others)
+        el.style.cssText = "position:fixed;inset:0;z-index:2147483647;overflow:hidden;pointer-events:auto;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;";
         let copies = 0;
         const own = svg => { const suf = "_" + uid + (copies++); return svg.replace(/id="(gns[a-z0-9]*)"/g, `id="$1${suf}"`).replace(/url\(#(gns[a-z0-9]*)\)/g, `url(#$1${suf})`); };
-        const artOf = () => okPic ? `<img alt="" referrerpolicy="no-referrer" src="${okPic.replace(/"/g, "&quot;")}" style="width:100%;height:100%;object-fit:cover;">` : own(face);
-        const art = okPic ? `<img alt="" referrerpolicy="no-referrer" src="${okPic.replace(/"/g, "&quot;")}" style="width:100%;height:100%;object-fit:cover;">` : face;
+        const artOf = () => okPic ? `<img alt="" referrerpolicy="no-referrer" src="${esc(okPic)}" style="width:100%;height:100%;object-fit:cover;object-position:${scarePos(okPic)};">` : own(face);
+        const code = "0x" + (0x887A0000 + Math.floor(Math.random() * 16)).toString(16).toUpperCase();
         el.innerHTML = `<style>
-#${uid}{position:absolute;inset:0;animation:${uid}dark ${SCARE_BUILD_MS}ms ease-in forwards;background:#000;}
-@keyframes ${uid}dark{0%{opacity:0}100%{opacity:1}}
-#${uid} .faint{position:absolute;left:50%;top:50%;width:22vmin;height:22vmin;transform:translate(-50%,-50%);opacity:0;filter:blur(1.5px) brightness(.5);animation:${uid}faint ${SCARE_BUILD_MS}ms ease-in forwards;}
-@keyframes ${uid}faint{0%,45%{opacity:0}100%{opacity:.35}}
-#${uid} .hit{position:absolute;inset:0;display:none;place-items:center;}
+#${uid}{position:absolute;inset:0;}
+#${uid} .bar{position:absolute;left:0;right:0;top:0;display:none;align-items:center;gap:12px;padding:12px 18px;background:#b00020;color:#fff;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+#${uid}.err .bar{display:flex;animation:${uid}blink .5s steps(1) infinite;}
+@keyframes ${uid}blink{0%{background:#b00020}50%{background:#5c0011}}
+#${uid} .dim{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background .4s;}
+#${uid}.box .dim{background:rgba(0,0,0,.35);}
+#${uid} .dlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);width:min(440px,90vw);display:none;background:#f3f3f3;color:#1b1b1b;border:1px solid #9a9a9a;box-shadow:0 18px 60px rgba(0,0,0,.5);border-radius:8px;overflow:hidden;cursor:default;}
+#${uid}.box .dlg{display:block;animation:${uid}pop .14s ease-out forwards;}
+@keyframes ${uid}pop{to{transform:translate(-50%,-50%) scale(1)}}
+#${uid} .dlg .tt{padding:9px 14px;font-size:12px;background:#fff;border-bottom:1px solid #ddd;color:#444;}
+#${uid} .dlg .bd{display:flex;gap:14px;padding:18px 18px 8px;font-size:14px;line-height:1.45;}
+#${uid} .dlg .ic{flex:none;width:34px;height:34px;border-radius:50%;background:#c42b1c;color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px;}
+#${uid} .dlg .bt{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px 16px;}
+#${uid} .dlg button{font:inherit;font-size:13px;padding:6px 18px;border-radius:4px;border:1px solid #8a8a8a;background:#fdfdfd;color:#111;cursor:default;}
+#${uid} .dlg button.p{background:#0067c0;border-color:#0067c0;color:#fff;}
+#${uid} .spin{display:inline-block;width:12px;height:12px;border:2px solid #999;border-top-color:transparent;border-radius:50%;animation:${uid}sp 1s linear infinite;vertical-align:-2px;margin-right:6px;}
+@keyframes ${uid}sp{to{transform:rotate(360deg)}}
+#${uid} .black{position:absolute;inset:0;background:#000;display:none;}
+#${uid}.blk .black, #${uid}.go .black{display:block;}
+#${uid}.blk .bar, #${uid}.blk .dlg, #${uid}.go .bar, #${uid}.go .dlg{display:none;}
+#${uid} .hit{position:absolute;inset:0;display:none;place-items:center;overflow:hidden;cursor:none;}
 #${uid}.go .hit{display:grid;animation:${uid}shake .09s steps(2) infinite, ${uid}zoom 1.8s cubic-bezier(.1,1.4,.3,1) forwards;}
-#${uid}.go .faint{display:none;}
 @keyframes ${uid}zoom{0%{transform:scale(1.6)}7%{transform:scale(1.02)}100%{transform:scale(1.12)}}
 @keyframes ${uid}shake{0%{translate:-14px 9px;rotate:-1.2deg}50%{translate:13px -11px;rotate:1.4deg}100%{translate:-9px -6px;rotate:-.6deg}}
 #${uid} .layer{position:absolute;inset:0;display:grid;place-items:center;}
 #${uid} .layer > *{width:100%;height:100%;}
 #${uid} .layer > svg{width:auto;height:112vh;max-width:none;}
+#${uid} .m{filter:url(#${uid}f) contrast(1.35) brightness(1.1);}
 #${uid} .r{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(8) hue-rotate(-40deg);translate:-9px 0;opacity:.55;}
 #${uid} .c{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(6) hue-rotate(140deg);translate:9px 0;opacity:.4;}
-#${uid} .m{filter:url(#${uid}f) contrast(1.3) brightness(1.15);}
-#${uid} .grain{position:absolute;inset:-50%;opacity:.28;mix-blend-mode:overlay;animation:${uid}grain .12s steps(3) infinite;}
+#${uid} .grain{position:absolute;inset:-50%;opacity:.28;mix-blend-mode:overlay;display:none;animation:${uid}grain .12s steps(3) infinite;}
+#${uid}.go .grain{display:block;}
 @keyframes ${uid}grain{0%{transform:translate(0,0)}33%{transform:translate(-5%,3%)}66%{transform:translate(4%,-4%)}100%{transform:translate(-2%,5%)}}
-#${uid} .static{position:absolute;inset:-50%;opacity:0;animation:${uid}grain .1s steps(3) infinite, ${uid}stat ${SCARE_BUILD_MS}ms linear forwards;}
-@keyframes ${uid}stat{0%{opacity:0}70%{opacity:.18}100%{opacity:.3}}
-#${uid}.go .static{display:none;}
-#${uid} .vig{position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 50%, rgba(60,0,0,.6) 85%, #000 100%);pointer-events:none;}
+#${uid} .vig{position:absolute;inset:0;display:none;background:radial-gradient(ellipse at center, transparent 50%, rgba(60,0,0,.6) 85%, #000 100%);}
+#${uid}.go .vig{display:block;}
 #${uid} .red{position:absolute;inset:0;background:#e00000;opacity:0;mix-blend-mode:multiply;}
 #${uid}.go .red{animation:${uid}red 1s linear forwards;}
 @keyframes ${uid}red{0%,12%{opacity:.9}22%,42%{opacity:0}46%,56%{opacity:.75}66%,100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){#${uid}.go .hit{animation:${uid}zoom 1.8s ease-out forwards;}}
 </style>
 <svg width="0" height="0" style="position:absolute"><defs>
  <filter id="${uid}f" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="${Math.floor(Math.random() * 99)}" result="w"><animate attributeName="baseFrequency" values="0.012;0.02;0.009;0.016" dur="0.5s" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="w" scale="14" xChannelSelector="R" yChannelSelector="G"/></filter>
  <filter id="${uid}n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.2"/></filter>
 </defs></svg>
 <div id="${uid}">
-  <svg class="static" width="200%" height="200%"><rect width="100%" height="100%" filter="url(#${uid}n)"/></svg>
-  <div class="faint">${own(face)}</div>
+  <div class="dim"></div>
+  <div class="bar"><span style="font-size:20px;line-height:1">&#9888;</span><span>Error: ${esc(appName)} stopped responding (WebGL context lost, ${code}). Unsaved progress may be lost.</span></div>
+  <div class="dlg"><div class="tt">${esc(appName)}</div>
+    <div class="bd"><div class="ic">!</div><div><b>${esc(appName)} isn't responding</b><br>You can wait for it to respond or reload it. Reloading may lose unsaved progress.<br><span style="color:#555;font-size:12.5px"><span class="spin"></span>Waiting for the game…</span></div></div>
+    <div class="bt"><button type="button">Wait</button><button type="button" class="p">Reload</button></div></div>
+  <div class="black"></div>
   <div class="hit"><div class="layer m">${artOf()}</div><div class="layer r">${artOf()}</div><div class="layer c">${artOf()}</div></div>
   <svg class="grain" width="200%" height="200%"><rect width="100%" height="100%" filter="url(#${uid}n)"/></svg>
   <div class="vig"></div><div class="red"></div>
 </div>`;
         doc.documentElement.appendChild(el);
-        // Picture didn't load: a built-in face instead
         el.querySelectorAll(".hit img").forEach(img => { img.onerror = () => { const l = img.parentNode; if (l) l.innerHTML = own(face); }; });
-        setTimeout(() => { const st = el.querySelector("#" + uid); if (st) st.classList.add("go"); }, SCARE_BUILD_MS);
-        setTimeout(() => { el.style.transition = "opacity .35s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 400); }, SCARE_BUILD_MS + 1900);
+        const st = el.querySelector("#" + uid);
+        setTimeout(() => st.classList.add("err"), SCARE_FREEZE_MS);
+        setTimeout(() => st.classList.add("box"), SCARE_BOX_MS);
+        setTimeout(() => st.classList.add("blk"), SCARE_BLACK_MS);
+        setTimeout(() => {
+            // The picture didn't load in time: a built-in face instead
+            if (okPic && !picReady) el.querySelectorAll(".hit .layer").forEach(l => { l.innerHTML = own(face); });
+            st.classList.add("go");
+        }, SCARE_HIT_MS);
+        setTimeout(() => { el.style.transition = "opacity .35s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 400); }, SCARE_HIT_MS + 1900);
         return el;
     };
-    // Their game goes quiet for the build-up
-    try { if (typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow && zoneFrame.contentWindow.__gnSetMuted) { const w = zoneFrame.contentWindow; w.__gnSetMuted(true); setTimeout(() => { try { w.__gnSetMuted(!!(window.__gnmathMuted && window.__gnmathMuted())); } catch {} }, SCARE_BUILD_MS + 2200); } } catch {}
     try {
         const fs = document.fullscreenElement || document.webkitFullscreenElement;
         if (fs && fs.tagName === "IFRAME" && fs.contentDocument) build(fs.contentDocument);
         else if (fs && fs !== document.documentElement) fs.appendChild(build(document));
         else build(document);
     } catch { build(document); }
-    scareSound(SCARE_BUILD_MS);
+    scareSound(SCARE_HIT_MS, SCARE_BOX_MS);
+    // The game carries on afterwards
+    setTimeout(() => {
+        try { if (gw && gw.__gnPause) gw.__gnPause(false); } catch {}
+        try { if (gw && gw.__gnSetMuted) gw.__gnSetMuted(!!(window.__gnmathMuted && window.__gnmathMuted())); } catch {}
+    }, SCARE_HIT_MS + 2300);
 }

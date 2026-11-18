@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Jumpscare: fake crash, real pictures
+
+### Changed
+- **The jumpscare fakes a crash first.** Their game freezes (it really stops), a red error bar starts blinking at the top ("Error: Drive Mad stopped responding (WebGL context lost…)"), then a normal-looking "Drive Mad isn't responding" box pops up with an error ding, with Wait and Reload buttons. While they're reading it, the screen cuts to black and silent for a moment, then the scare hits: the picture fills the screen, warped and shaking, with the scream and two red flashes. About 7 seconds in all; their game unfreezes after.
+- **Real pictures:** with no pictures of your own added, it uses public-domain paintings from Wikimedia Commons, picked at random: Goya's *Saturn Devouring His Son* and *Two Old Men Eating Soup*, Fuseli's *The Nightmare*, and Böcklin's *Self-Portrait with Death Playing the Fiddle*. They're linked from Commons, not copied into the repo. If a picture can't load in time (a school filter, say), a built-in face is used.
+
 ## November 18, 2026 — Scarier jumpscare
 
 ### Changed
