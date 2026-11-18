@@ -1,0 +1,33 @@
+# Shows how an account is set up, for sign-in problems (nothing is changed).
+# Actions → Check an account → Run workflow → their username.
+name: Check an account
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "The player's username"
+        required: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Write the Firebase key
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+      - name: Check
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+          USERNAME: ${{ github.event.inputs.username }}
+        run: |
+          npm i --no-save --silent firebase-admin@12
+          node tools/account_check.mjs
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
