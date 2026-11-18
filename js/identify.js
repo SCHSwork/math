@@ -96,63 +96,126 @@ const SCARE_FACES = [SCARE_FACE,
   <path d="M40 150c30 22 130 22 160 0-8 50-44 78-80 78s-72-28-80-78Z" fill="#050000"/>
   <path d="M42 152l10 26 9-22 10 30 10-28 10 32 9-30 10 32 10-32 9 30 10-32 10 28 10-30 9 22 10-26" fill="#d8ccb0"/>
 </svg>`];
-function scareSound() {
+// The sound: a low drone that creeps up in the dark, then a distorted scream
+// (several rough voices sliding down, a bandpassed hiss and a thump), pushed
+// through a waveshaper and a compressor so it's as loud as it can be without
+// crackling into nothing.
+function scareSound(delayMs) {
     try {
         const C = window.AudioContext || window.webkitAudioContext;
         if (!C) return;
         const ctx = new C();
         if (ctx.state === "suspended") ctx.resume().catch(() => {});
-        const t = ctx.currentTime, len = 1.3;
+        const t0 = ctx.currentTime, hit = t0 + delayMs / 1000, len = 1.6;
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -18; comp.ratio.value = 8; comp.attack.value = 0.002; comp.release.value = 0.2;
+        comp.connect(ctx.destination);
+        // Drone: two close low tones beating against each other
+        const dg = ctx.createGain();
+        dg.gain.setValueAtTime(0.0001, t0); dg.gain.exponentialRampToValueAtTime(0.22, hit - 0.05); dg.gain.setValueAtTime(0.0001, hit);
+        dg.connect(comp);
+        [55, 58.5].forEach(f => { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 220; o.connect(lp); lp.connect(dg); o.start(t0); o.stop(hit + 0.05); });
+        // Scream
+        const shaper = ctx.createWaveShaper(), curve = new Float32Array(2048);
+        for (let i = 0; i < curve.length; i++) { const x = i / 1024 - 1; curve[i] = Math.tanh(x * 6); }
+        shaper.curve = curve;
         const out = ctx.createGain();
-        out.gain.setValueAtTime(0.0001, t);
-        out.gain.exponentialRampToValueAtTime(0.75, t + 0.02);
-        out.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        out.connect(ctx.destination);
-        // A screech: two rough tones sliding down, plus hiss
-        const k = 0.8 + Math.random() * 0.5;   // a different scream each time
-        [[880 * k, 240 * k, "sawtooth"], [1240 * k, 380 * k, "square"], [620 * k, 150, "sawtooth"]].forEach(([a, z, type]) => {
+        out.gain.setValueAtTime(0.0001, hit); out.gain.exponentialRampToValueAtTime(1, hit + 0.015);
+        out.gain.setValueAtTime(1, hit + len * 0.55); out.gain.exponentialRampToValueAtTime(0.0001, hit + len);
+        shaper.connect(out); out.connect(comp);
+        const k = 0.8 + Math.random() * 0.5;
+        [[1100 * k, 300 * k, "sawtooth", 0.5], [1500 * k, 420 * k, "square", 0.3], [700 * k, 180, "sawtooth", 0.45], [2300 * k, 900 * k, "triangle", 0.25]].forEach(([a, z, type, v]) => {
             const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
-            o.type = type; o.frequency.setValueAtTime(a, t); o.frequency.exponentialRampToValueAtTime(z, t + len);
-            lfo.frequency.value = 38; lg.gain.value = 60; lfo.connect(lg); lg.connect(o.frequency);
-            g.gain.value = 0.35; o.connect(g); g.connect(out);
-            o.start(t); lfo.start(t); o.stop(t + len); lfo.stop(t + len);
+            o.type = type; o.frequency.setValueAtTime(a, hit); o.frequency.exponentialRampToValueAtTime(z, hit + len);
+            lfo.frequency.value = 30 + Math.random() * 25; lg.gain.value = a * 0.08; lfo.connect(lg); lg.connect(o.frequency);
+            g.gain.value = v; o.connect(g); g.connect(shaper);
+            o.start(hit); lfo.start(hit); o.stop(hit + len); lfo.stop(hit + len);
         });
         const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * len), ctx.sampleRate), d = buf.getChannelData(0);
         for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
         const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), ng = ctx.createGain();
-        n.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 2200; bp.Q.value = 0.8; ng.gain.value = 0.5;
-        n.connect(bp); bp.connect(ng); ng.connect(out); n.start(t);
-        setTimeout(() => ctx.close().catch(() => {}), (len + 0.3) * 1000);
+        n.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 2500; bp.Q.value = 0.7; ng.gain.value = 0.7;
+        n.connect(bp); bp.connect(ng); ng.connect(shaper); n.start(hit);
+        // Thump
+        const th = ctx.createOscillator(), tg = ctx.createGain();
+        th.type = "sine"; th.frequency.setValueAtTime(120, hit); th.frequency.exponentialRampToValueAtTime(35, hit + 0.35);
+        tg.gain.setValueAtTime(1, hit); tg.gain.exponentialRampToValueAtTime(0.0001, hit + 0.4);
+        th.connect(tg); tg.connect(comp); th.start(hit); th.stop(hit + 0.45);
+        setTimeout(() => ctx.close().catch(() => {}), delayMs + (len + 0.4) * 1000);
     } catch {}
 }
+// How it goes: the screen slowly goes dark with static and a drone (about a
+// second, so they lean in), a dim face is barely there in the middle… then it
+// cuts to the face filling the whole screen, warped and grainy with split
+// colors, shaking hard, two red flashes and the scream. About 3 seconds.
+const SCARE_BUILD_MS = 1100;
 function gnJumpscare(pic) {
     const face = SCARE_FACES[Math.floor(Math.random() * SCARE_FACES.length)];
     const okPic = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic) ? pic : "";
+    const uid = "gs" + Math.random().toString(36).slice(2, 8);
     const build = doc => {
         const el = doc.createElement("div");
         el.className = "gn-scare";
         el.setAttribute("aria-hidden", "true");
-        el.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#000;display:grid;place-items:center;overflow:hidden;cursor:none;";
-        // Two red flashes, 450 ms apart (under 3 a second)
-        el.innerHTML = `<style>@keyframes gnScareIn{0%{transform:scale(.25)}12%{transform:scale(1.18)}20%{transform:scale(1.05) translate(-8px,5px)}28%{transform:scale(1.1) translate(8px,-5px)}36%{transform:scale(1.07) translate(-5px,-4px)}44%,100%{transform:scale(1.1)}}` +
-            `@keyframes gnScareRed{0%,12%{opacity:.85}22%,40%{opacity:0}45%,55%{opacity:.7}65%,100%{opacity:0}}</style>` +
-            `<div class="gn-scare-art" style="width:min(96vw,96vh);height:min(96vw,96vh);animation:gnScareIn 1.4s cubic-bezier(.2,1.6,.4,1) forwards;display:grid;place-items:center;">${face}</div>` +
-            `<div style="position:absolute;inset:0;background:#d00000;mix-blend-mode:multiply;pointer-events:none;animation:gnScareRed 1s linear forwards;"></div>`;
-        if (okPic) {
-            const img = doc.createElement("img");
-            img.alt = ""; img.referrerPolicy = "no-referrer";
-            img.style.cssText = "width:100%;height:100%;object-fit:cover;";
-            img.onload = () => { const art = el.querySelector(".gn-scare-art"); if (art) { art.style.width = "100vw"; art.style.height = "100vh"; art.replaceChildren(img); } };
-            img.src = okPic;
-        }
+        el.style.cssText = "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;overflow:hidden;cursor:none;pointer-events:auto;";
+        // Each copy of the face gets its own gradient names (a hidden copy's
+        // gradients would otherwise blank out the others)
+        let copies = 0;
+        const own = svg => { const suf = "_" + uid + (copies++); return svg.replace(/id="(gns[a-z0-9]*)"/g, `id="$1${suf}"`).replace(/url\(#(gns[a-z0-9]*)\)/g, `url(#$1${suf})`); };
+        const artOf = () => okPic ? `<img alt="" referrerpolicy="no-referrer" src="${okPic.replace(/"/g, "&quot;")}" style="width:100%;height:100%;object-fit:cover;">` : own(face);
+        const art = okPic ? `<img alt="" referrerpolicy="no-referrer" src="${okPic.replace(/"/g, "&quot;")}" style="width:100%;height:100%;object-fit:cover;">` : face;
+        el.innerHTML = `<style>
+#${uid}{position:absolute;inset:0;animation:${uid}dark ${SCARE_BUILD_MS}ms ease-in forwards;background:#000;}
+@keyframes ${uid}dark{0%{opacity:0}100%{opacity:1}}
+#${uid} .faint{position:absolute;left:50%;top:50%;width:22vmin;height:22vmin;transform:translate(-50%,-50%);opacity:0;filter:blur(1.5px) brightness(.5);animation:${uid}faint ${SCARE_BUILD_MS}ms ease-in forwards;}
+@keyframes ${uid}faint{0%,45%{opacity:0}100%{opacity:.35}}
+#${uid} .hit{position:absolute;inset:0;display:none;place-items:center;}
+#${uid}.go .hit{display:grid;animation:${uid}shake .09s steps(2) infinite, ${uid}zoom 1.8s cubic-bezier(.1,1.4,.3,1) forwards;}
+#${uid}.go .faint{display:none;}
+@keyframes ${uid}zoom{0%{transform:scale(1.6)}7%{transform:scale(1.02)}100%{transform:scale(1.12)}}
+@keyframes ${uid}shake{0%{translate:-14px 9px;rotate:-1.2deg}50%{translate:13px -11px;rotate:1.4deg}100%{translate:-9px -6px;rotate:-.6deg}}
+#${uid} .layer{position:absolute;inset:0;display:grid;place-items:center;}
+#${uid} .layer > *{width:100%;height:100%;}
+#${uid} .layer > svg{width:auto;height:112vh;max-width:none;}
+#${uid} .r{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(8) hue-rotate(-40deg);translate:-9px 0;opacity:.55;}
+#${uid} .c{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(6) hue-rotate(140deg);translate:9px 0;opacity:.4;}
+#${uid} .m{filter:url(#${uid}f) contrast(1.3) brightness(1.15);}
+#${uid} .grain{position:absolute;inset:-50%;opacity:.28;mix-blend-mode:overlay;animation:${uid}grain .12s steps(3) infinite;}
+@keyframes ${uid}grain{0%{transform:translate(0,0)}33%{transform:translate(-5%,3%)}66%{transform:translate(4%,-4%)}100%{transform:translate(-2%,5%)}}
+#${uid} .static{position:absolute;inset:-50%;opacity:0;animation:${uid}grain .1s steps(3) infinite, ${uid}stat ${SCARE_BUILD_MS}ms linear forwards;}
+@keyframes ${uid}stat{0%{opacity:0}70%{opacity:.18}100%{opacity:.3}}
+#${uid}.go .static{display:none;}
+#${uid} .vig{position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 50%, rgba(60,0,0,.6) 85%, #000 100%);pointer-events:none;}
+#${uid} .red{position:absolute;inset:0;background:#e00000;opacity:0;mix-blend-mode:multiply;}
+#${uid}.go .red{animation:${uid}red 1s linear forwards;}
+@keyframes ${uid}red{0%,12%{opacity:.9}22%,42%{opacity:0}46%,56%{opacity:.75}66%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#${uid}.go .hit{animation:${uid}zoom 1.8s ease-out forwards;}}
+</style>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <filter id="${uid}f" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="${Math.floor(Math.random() * 99)}" result="w"><animate attributeName="baseFrequency" values="0.012;0.02;0.009;0.016" dur="0.5s" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="w" scale="14" xChannelSelector="R" yChannelSelector="G"/></filter>
+ <filter id="${uid}n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.2"/></filter>
+</defs></svg>
+<div id="${uid}">
+  <svg class="static" width="200%" height="200%"><rect width="100%" height="100%" filter="url(#${uid}n)"/></svg>
+  <div class="faint">${own(face)}</div>
+  <div class="hit"><div class="layer m">${artOf()}</div><div class="layer r">${artOf()}</div><div class="layer c">${artOf()}</div></div>
+  <svg class="grain" width="200%" height="200%"><rect width="100%" height="100%" filter="url(#${uid}n)"/></svg>
+  <div class="vig"></div><div class="red"></div>
+</div>`;
         doc.documentElement.appendChild(el);
-        setTimeout(() => { el.style.transition = "opacity .3s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 350); }, 1800);
+        // Picture didn't load: a built-in face instead
+        el.querySelectorAll(".hit img").forEach(img => { img.onerror = () => { const l = img.parentNode; if (l) l.innerHTML = own(face); }; });
+        setTimeout(() => { const st = el.querySelector("#" + uid); if (st) st.classList.add("go"); }, SCARE_BUILD_MS);
+        setTimeout(() => { el.style.transition = "opacity .35s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 400); }, SCARE_BUILD_MS + 1900);
+        return el;
     };
+    // Their game goes quiet for the build-up
+    try { if (typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow && zoneFrame.contentWindow.__gnSetMuted) { const w = zoneFrame.contentWindow; w.__gnSetMuted(true); setTimeout(() => { try { w.__gnSetMuted(!!(window.__gnmathMuted && window.__gnmathMuted())); } catch {} }, SCARE_BUILD_MS + 2200); } } catch {}
     try {
         const fs = document.fullscreenElement || document.webkitFullscreenElement;
         if (fs && fs.tagName === "IFRAME" && fs.contentDocument) build(fs.contentDocument);
-        else if (fs && fs !== document.documentElement) { build(document); fs.appendChild(document.querySelector(".gn-scare:last-of-type")); }
+        else if (fs && fs !== document.documentElement) fs.appendChild(build(document));
         else build(document);
     } catch { build(document); }
-    scareSound();
+    scareSound(SCARE_BUILD_MS);
 }
