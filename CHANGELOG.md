@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Scarier jumpscare
+
+### Changed
+- **The jumpscare builds up first now:** their game goes quiet, the screen slowly fades to dark static with a low drone, and a dim face is barely there in the middle… then it cuts to the face filling the whole screen, warped and grainy with split red/blue edges, shaking hard, with a thump, two red flashes and a much louder distorted scream. About 3 seconds in all. Your own jumpscare pictures get the same treatment.
+
 ## November 18, 2026 — Jumpscare
 
 ### Added
