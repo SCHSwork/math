@@ -187,6 +187,26 @@ const FRESH_COLORS = [
     ["lemon",   "Highlight",  "#f2ce3b", "#f2ce3b"]
 ];
 const FRESH_MARKS = [["tile", "Tile"], ["pad", "Controller"], ["pixel", "Invader"], ["heart", "Pixel heart"], ["star", "Star"], ["bolt", "Bolt"], ["dice", "Dice"], ["rocket", "Rocket"], ["none", "None"]];
+// The marks' shapes: [viewBox, path, pixel art?]
+const FRESH_MARK_SVG = {
+    pad: ["1.5 5.5 21 12", "M7 6h10a5 5 0 0 1 5 5v2.5a4.5 4.5 0 0 1-8.1 2.7L13 15h-2l-.9 1.2A4.5 4.5 0 0 1 2 13.5V11a5 5 0 0 1 5-5Zm0 3v1.5H5.5v2H7V14h2v-1.5h1.5v-2H9V9H7Zm9.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm-2 2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"],
+    pixel: ["0 0 11 8", "M2 0h1v1h1v1h3V1h1V0h1v1H8v1h1v1h1v3H9V4H8v2H7v1H6V6H5v1H4V6H3V4H2v2H1V3h1V2h1V1H2V0Zm1 3v1h1V3H3Zm4 0v1h1V3H7Z", true],
+    heart: ["0 0 12 10", "M1 0h3v1h1v1h2V1h1V0h3v1h1v4h-1v1h-1v1h-1v1h-1v1H7v1H5v-1H4v-1H3v-1H2V6H1V5H0V1h1V0Z", true],
+    star: ["0 0 24 24", "m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8L12 2Z"],
+    bolt: ["0 0 24 24", "M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5L13.5 2Z"],
+    dice: ["0 0 24 24", "M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm2.5 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm-3.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"],
+    rocket: ["0 0 24 24", "M12 1.5c3.4 2.4 5 6 5 10.2 0 1.1-.1 2.1-.4 3.1l2.9 3.4-3.7.9-1.3 2.4h-5l-1.3-2.4-3.7-.9 2.9-3.4c-.3-1-.4-2-.4-3.1 0-4.2 1.6-7.8 5-10.2Zm0 6.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"]
+};
+// Draws the picked mark in the accent color (an image, not a mask, so it stays sharp)
+function paintFreshMark() {
+    const b = document.body;
+    if (!b) return;
+    const def = FRESH_MARK_SVG[getFresh().mark];
+    if (!def) { b.style.removeProperty("--fr-mark-img"); return; }
+    const color = (getComputedStyle(b).getPropertyValue("--fr-teal") || "").trim() || "#0e7c86";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${def[0]}"${def[2] ? ' shape-rendering="crispEdges"' : ""}><path fill="${color}" fill-rule="evenodd" d="${def[1]}"/></svg>`;
+    b.style.setProperty("--fr-mark-img", `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+}
 function getFresh() {
     let v = {};
     try { v = JSON.parse(localStorage.getItem(FRESH_KEY) || "{}") || {}; } catch {}
@@ -217,10 +237,11 @@ function applyFresh() {
         return props.length ? `${sel} { ${props.join(" ")} }` : "";
     };
     const css = [block("light", "body.st-fresh.st-fresh:not(.dark-mode):not(#z)"), block("dark", "body.st-fresh.st-fresh.dark-mode:not(#z)")].join("\n");
-    if (!css.trim()) { if (el) el.remove(); return; }
+    if (!css.trim()) { if (el) el.remove(); paintFreshMark(); return; }
     if (!el) { el = document.createElement("style"); el.id = "fresh-custom"; }
     el.textContent = css;
     document.head.appendChild(el);   // last, so it wins over the style's own colors
+    paintFreshMark();
 }
 function setFreshColor(key, hex) {
     const v = getFresh(), m = freshMode();
@@ -254,6 +275,7 @@ if (document.body) applyFresh(); else document.addEventListener("DOMContentLoade
 // Light/dark switch: the picker shows the other mode's colors
 if (typeof MutationObserver !== "undefined") {
     const watch = () => new MutationObserver(() => {
+        paintFreshMark();
         const box = document.getElementById("fresh-options");
         if (box && !box.textContent.includes(`(${freshMode()} mode)`)) refreshFreshOptions();
     }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
