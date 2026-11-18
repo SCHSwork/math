@@ -629,6 +629,28 @@ async function cloudCheckVerified() {
         } else notify("Not verified yet. Click the link in the email we sent, then try again.", { type: "error" });
     } catch (e) { notify(friendlyAuthError(e), { type: "error" }); }
 }
+// Accounts with an email: switch to a different one. Firebase emails a link to
+// the new address; the email only changes once it's clicked (the old address
+// also gets a note with a way to undo it).
+async function cloudChangeEmail() {
+    const email = (document.getElementById("acct-new-email")?.value || "").trim();
+    const pw = document.getElementById("acct-new-email-pw")?.value || "";
+    const msg = document.getElementById("acct-chemail-msg");
+    const say = t => { if (msg) msg.textContent = t; };
+    if (!cloudUser || isLegacyAccount() || !hasPassword()) return;
+    if (!EMAIL_RE.test(email) || email.toLowerCase().endsWith("@" + CLOUD.usernameDomain)) return say("Enter a real email address.");
+    if (email.toLowerCase() === (cloudUser.email || "").toLowerCase()) return say("That's already your email.");
+    if (!pw) return say("Enter your password.");
+    say("Sending…");
+    try {
+        await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw));
+        await cloudUser.verifyBeforeUpdateEmail(email);
+        say("");
+        notify(`Check ${email} for a link. Your email changes when you click it; until then, keep signing in with ${cloudUser.email}.`, { type: "success", duration: 12000 });
+    } catch (e) {
+        say(friendlyAuthError(e));
+    }
+}
 // Accounts from before emails: add one (for password resets). Firebase emails
 // a link; once it's clicked, the account signs in with that email.
 async function cloudAddEmail() {
@@ -930,6 +952,16 @@ function openAccountPanel(mode) {
                 <p id="acct-pw-hint" class="acct-hint">At least 6 characters.${isLegacyAccount() ? " Your account has no email yet, so there's no password reset: add an email below, or pick one you'll remember." : ""}</p>
                 <button class="settings-button" onclick="cloudChangePassword()">Change password</button>
                 <p id="acct-pw-msg" class="acct-msg" role="status"></p>
+            </details>` : ""}
+            ${!isLegacyAccount() && hasPassword() ? `<details class="acct-section" id="acct-chemail-section">
+                <summary>Change email</summary>
+                <p class="acct-hint">Your email is <b>${escapeHtml(cloudUser.email || "")}</b>. We'll send a link to the new one; it changes when you click it, and you sign in with the new email after that.</p>
+                <label for="acct-new-email">New email</label>
+                <input type="email" id="acct-new-email" autocomplete="email">
+                <label for="acct-new-email-pw">Your password</label>
+                <input type="password" id="acct-new-email-pw" autocomplete="current-password">
+                <button class="settings-button" onclick="cloudChangeEmail()">Send link</button>
+                <p id="acct-chemail-msg" class="acct-msg" role="status"></p>
             </details>` : ""}
             ${isLegacyAccount() ? `<details class="acct-section" id="acct-email-section">
                 <summary>Add an email (for password resets)</summary>
