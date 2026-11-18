@@ -345,7 +345,7 @@ async function loadGithubScriptsAndStyles(html) {
 // gn-math/assets broke Angry Birds, Slope and one more for anyone whose
 // jsDelivr works; the game check and test machines quietly used GitHub, so it
 // only showed up on players' devices.
-const JSD_REFUSED_REPOS = ["gn-math/assets"];
+const JSD_REFUSED_REPOS = ["gn-math/assets", "genizy/cc3d-mobile"];
 const JSD_REFUSED_RE = new RegExp(`https?:\\/\\/(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net\\/gh\\/(?:${JSD_REFUSED_REPOS.map(r => r.replace(/[.\/]/g, "\\$&")).join("|")})[@\\/][^\\s"'\`<>()\\\\]*`, "gi");
 async function avoidRefusedRepos(html) {
     JSD_REFUSED_RE.lastIndex = 0;

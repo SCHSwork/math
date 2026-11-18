@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Crazy Cattle 3D fixed
+
+### Fixed
+- Crazy Cattle 3D wouldn't start because jsDelivr won't send any files from its repo (genizy/cc3d-mobile, about 73 MB). The game now loads its files from GitHub instead.
+
 ## November 17, 2026 — Our own icons instead of emojis
 
 ### Changed
