@@ -11,9 +11,9 @@ const SUBMIT_RELATIONS = {
     license: "It has an open-source / free license"
 };
 const SUBMIT_STATUS = {
-    pending: "⏳ Waiting for review",
-    approved: "✅ Approved, coming soon",
-    added: "🎮 Added to the site",
+    pending: "Waiting for review",
+    approved: "Approved, coming soon",
+    added: "Added to the site",
     rejected: "✖ Not added"
 };
 

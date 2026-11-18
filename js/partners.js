@@ -51,7 +51,7 @@ function toPartnerZone(p) {
             author: "Playgama developer", authorLink: "https://playgama.com/game/" + p.slug,
             url: "partner:playgama:" + p.slug,
             cover: /^[a-z_-]+\/[0-9a-f]+$/.test(p.img || "") ? `${PLAYGAMA_IMG_BASE}${p.slug}/${p.img}?width=320` : "",
-            description: p.description || "",
+            description: gnNoEmoji(p.description),
             category: (p.genres || [])[0] || "",
             special: [PARTNER_TAG, "playgama", ...(p.genres || []).map(g => String(g).toLowerCase())],
             libraryDuplicate: !!p.libraryDuplicate
@@ -66,7 +66,7 @@ function toPartnerZone(p) {
         provider: "famobi",
         url: "partner:" + p.pkg,
         cover: p.thumb && /^[\w.-]+\.(jpe?g|png|webp)$/i.test(p.thumb) ? PARTNER_THUMB_BASE + p.thumb : "",
-        description: p.description || "",
+        description: gnNoEmoji(p.description),
         category: p.category || "",
         special: [PARTNER_TAG, ...(p.category ? [String(p.category).toLowerCase()] : [])],
         thumbGuessed: !!p.thumbGuessed,

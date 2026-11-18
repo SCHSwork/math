@@ -934,7 +934,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" onclick="openEarlierCloudSaves()" title="Cloud saves that were replaced in the last 7 days">Earlier cloud saves</button>
                 <button class="settings-button" id="acct-signout" onclick="cloudSignOut()">Sign out</button>
             </div>
-            ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">🛡️ ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
+            ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">${gnIcon("shield")} ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
             <details class="acct-section">
                 <summary>Google sign-in${hasGoogle() ? " (linked)" : ""}</summary>
                 ${hasGoogle()

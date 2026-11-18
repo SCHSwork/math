@@ -857,10 +857,10 @@ function createZoneCard(file) {
         const flag = document.createElement("div");
         flag.className = "card-flag";
         if (stats.reports >= BROKEN_FLAG_THRESHOLD) {
-            flag.textContent = `⚠ ${stats.reports} broken reports`;
+            flag.innerHTML = `${gnIcon("warning")} ${stats.reports} broken reports`;
             flag.title = `${stats.reports} people reported this game as broken in the last ${BROKEN_REPORT_DAYS} days. It may not load.`;
         } else {
-            flag.textContent = "⚠ Reported broken";
+            flag.innerHTML = `${gnIcon("warning")} Reported broken`;
             flag.title = "A site moderator reported this game as broken. It may not load.";
         }
         badges.appendChild(flag);
@@ -885,12 +885,12 @@ function createZoneCard(file) {
     // Your play time + community rating
     const metaParts = [];
     const played = getPlaytime(file.id);
-    if (played >= 60) metaParts.push("⏱ " + formatPlaytime(played));
+    if (played >= 60) metaParts.push(["timer", formatPlaytime(played)]);
     const votes = stats.up + stats.down;
-    if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(`👍 ${Math.round(stats.up / votes * 100)}%`);
+    if (votes >= MIN_VOTES_TO_SHOW) metaParts.push(["thumbUp", `${Math.round(stats.up / votes * 100)}%`]);
     // Download size, for big games (game-extras.js)
     const sizeText = typeof gameSizeCardText === "function" ? gameSizeCardText(file) : "";
-    if (sizeText) metaParts.push(sizeText);
+    if (sizeText) metaParts.push(["download", sizeText]);
     if (cardCached("showPlays", getShowPlayCount)) {
         const plays = (popularityData['year']?.[file.id]) ?? 0;
         if (plays > 0) metaParts.push(`${compactNumber.format(plays)} plays`);
@@ -898,7 +898,7 @@ function createZoneCard(file) {
     if (metaParts.length) {
         const meta = document.createElement("div");
         meta.className = "card-meta";
-        metaParts.forEach(t => { const span = document.createElement("span"); span.textContent = t; meta.appendChild(span); });
+        metaParts.forEach(t => { const span = document.createElement("span"); if (Array.isArray(t)) span.append(gnIconEl(t[0]), " " + t[1]); else span.textContent = t; meta.appendChild(span); });
         zoneItem.appendChild(meta);
     }
 
@@ -2760,11 +2760,11 @@ function siteModeSyncText() {
     const sy = siteModeSync, mode = getOwnerSiteMode();
     if (sy.mode !== mode) return { icon: "", text: "" };
     switch (sy.phase) {
-        case "saving": return { icon: "⏳", cls: "wait", text: "Saving to GitHub…" };
+        case "saving": return { icon: "…", cls: "wait", text: "Saving to GitHub…" };
         case "failed": return { icon: "✗", cls: "bad", text: "Didn't save. Check your token in the Owner Panel, then pick the mode again." };
         case "saved": {
             const secs = Math.round((Date.now() - sy.savedAt) / 1000);
-            return { icon: "⏳", cls: "wait", text: `Saved at ${t(sy.savedAt)}. Waiting for visitors to get it (usually 1–5 min)… ${secs >= 60 ? Math.floor(secs / 60) + " min " : ""}${secs % 60}s` };
+            return { icon: "…", cls: "wait", text: `Saved at ${t(sy.savedAt)}. Waiting for visitors to get it (usually 1–5 min)… ${secs >= 60 ? Math.floor(secs / 60) + " min " : ""}${secs % 60}s` };
         }
         case "live": return { icon: "✓", cls: "ok", text: `Live: visitors are getting this since ${t(sy.liveAt)}. Pages already open switch within about a minute.` };
         case "slow": return { icon: "!", cls: "bad", text: "Saved, but GitHub still shows the old setting after 15 minutes. Try picking the mode again." };
@@ -3094,7 +3094,7 @@ function renderOwnerPanel() {
 
     popupBody.innerHTML = `
     <div class="settings-section">
-        <h4>☁️ GitHub Sync</h4>
+        <h4>GitHub Sync</h4>
         <p style="margin:0 0 0.75rem;color:var(--text-muted);font-size:13px;">
             Settings load from GitHub on every page load for all visitors.
             Only the owner can push changes using their token.
@@ -3112,10 +3112,10 @@ function renderOwnerPanel() {
         <h4>Website Status</h4>
         <label style="display:block;margin-bottom:0.4rem;">Site mode</label>
         <select id="owner-site-mode" class="settings-select" onchange="setOwnerSiteMode(this.value)">
-            <option value="open"     ${mode === "open"     ? "selected" : ""}>🟢 Open — everyone can access</option>
-            <option value="locked"   ${mode === "locked"   ? "selected" : ""}>🔒 Locked — show lock screen</option>
-            <option value="maintenance" ${mode === "maintenance" ? "selected" : ""}>🛠️ Maintenance — show maintenance screen</option>
-            <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>🔴 Shut down — show shutdown screen</option>
+            <option value="open"     ${mode === "open"     ? "selected" : ""}>Open — everyone can access</option>
+            <option value="locked"   ${mode === "locked"   ? "selected" : ""}>Locked — show lock screen</option>
+            <option value="maintenance" ${mode === "maintenance" ? "selected" : ""}>Maintenance — show maintenance screen</option>
+            <option value="shutdown" ${mode === "shutdown" ? "selected" : ""}>Shut down — show shutdown screen</option>
         </select>
         <p id="owner-mode-sync" class="owner-mode-sync"></p>
         <label style="display:block;margin:0.85rem 0 0.4rem;">Message on the lock / maintenance / shutdown screen (optional)</label>
@@ -3152,7 +3152,7 @@ function renderOwnerPanel() {
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">The little status light in the bottom-left corner checks the site by itself. Set a status here to tell everyone something it can't detect.</p>
         <label style="display:block;margin-bottom:0.4rem;">Status</label>
         <select id="owner-status-level" class="settings-select">
-            ${[["auto","Automatic (checks the site by itself)"],["ok","🟢 All good"],["degraded","🟡 Some problems"],["down","🔴 Major outage"],["maintenance","🔵 Maintenance"]].map(([v,l]) => `<option value="${v}" ${getStatusOverride().level === v ? "selected" : ""}>${l}</option>`).join("")}
+            ${[["auto","Automatic (checks the site by itself)"],["ok","All good"],["degraded","Some problems"],["down","Major outage"],["maintenance","Maintenance"]].map(([v,l]) => `<option value="${v}" ${getStatusOverride().level === v ? "selected" : ""}>${l}</option>`).join("")}
         </select>
         <input type="text" id="owner-status-text" maxlength="80" placeholder="Short text, e.g. Some games are slow today"
             value="${escapeOwnerHtml(getStatusOverride().text)}"
@@ -3455,7 +3455,7 @@ async function renderOwnerReports(refresh) {
         .sort((a, b) => b.recent - a.recent || b.total - a.total || b.last - a.last);
     box.innerHTML = "";
     if (!rows.length) {
-        box.innerHTML = `<p style="margin:0.25rem;color:var(--text-muted);">No broken reports. 🎉</p>`;
+        box.innerHTML = `<p style="margin:0.25rem;color:var(--text-muted);">No broken reports.</p>`;
         return;
     }
     for (const x of rows) {
@@ -3470,8 +3470,8 @@ async function renderOwnerReports(refresh) {
         detail.style.cssText = "font-size:12px;color:var(--text-muted);";
         const votes = x.st.up + x.st.down;
         detail.textContent = `${x.recent} in last ${BROKEN_REPORT_DAYS} days · ${x.total} total · last ${timeAgo(x.last)}` +
-            (votes ? ` · 👍 ${Math.round(x.st.up / votes * 100)}% of ${votes}` : "") +
-            (isFlaggedBroken(x.st) ? " · ⚠ flagged" : "");
+            (votes ? ` · ${Math.round(x.st.up / votes * 100)}% liked of ${votes}` : "") +
+            (isFlaggedBroken(x.st) ? " · flagged" : "");
         info.append(title, detail);
         row.appendChild(info);
         const disabled = isZoneDisabled(x.id);
@@ -3700,10 +3700,10 @@ const SCENE_THEMES = {
     aura: "Spirit aura", custom: "Your own picture"
 };
 // How the scene picker groups them, and which scenes are bright (dark text on light panels)
-const SCENE_GROUPS = { "🚀 Space": ["space", "starry", "andromeda", "blackhole", "saturn", "nebula"],
-    "🌦️ Sky & weather": ["clouds", "autumn", "sakura", "snow", "aurora", "storm", "ocean"],
-    "🎨 Patterns": ["confetti", "waves", "pastel", "prism", "honeycomb", "gameicons"],
-    "🎉 Fun": ["aura", "arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
+const SCENE_GROUPS = { "Space": ["space", "starry", "andromeda", "blackhole", "saturn", "nebula"],
+    "Sky & weather": ["clouds", "autumn", "sakura", "snow", "aurora", "storm", "ocean"],
+    "Patterns": ["confetti", "waves", "pastel", "prism", "honeycomb", "gameicons"],
+    "Fun": ["aura", "arcade", "synthwave", "neoncity", "coderain", "lava", "halloween"] };
 const LIGHT_SCENES = new Set(["clouds", "autumn", "pastel", "confetti", "waves"]);
 const AVAILABLE_THEMES = [...COLOR_THEMES, ...Object.keys(SCENE_THEMES)];
 function themeLabel(t) { return SCENE_THEMES[t] || (t[0].toUpperCase() + t.slice(1)); }
@@ -4343,7 +4343,7 @@ function maybeShowMotd() {
     if (last === today) return;
     localStorage.setItem(OWNER_EXTRA_STORAGE_KEYS.motdLastSeen, today);
     // show as a popup
-    document.getElementById('popupTitle').textContent = "📢 Notice";
+    document.getElementById('popupTitle').textContent = "Notice";
     const popupBody = document.getElementById('popupBody');
     popupBody.innerHTML = `<p style="white-space:pre-wrap;">${text.replace(/</g,'&lt;')}</p>
         <button class="settings-button" onclick="closePopup()">Got it</button>`;
@@ -5001,9 +5001,9 @@ function openSettingsPanel() {
     popupBody.innerHTML = `
     <input type="search" id="settings-search" class="set-search" placeholder="Search settings…" aria-label="Search settings" data-lpignore="true" data-1p-ignore data-form-type="other">
     <div class="admin-tabs set-tabs" role="tablist">
-        <button type="button" role="tab" data-tab="look">🎨 Look</button>
-        <button type="button" role="tab" data-tab="games">🎮 Games</button>
-        <button type="button" role="tab" data-tab="privacy">🛡️ Privacy</button>
+        <button type="button" role="tab" data-tab="look">${gnIcon("palette")} Look</button>
+        <button type="button" role="tab" data-tab="games">${gnIcon("game")} Games</button>
+        <button type="button" role="tab" data-tab="privacy">${gnIcon("shield")} Privacy</button>
         <button type="button" role="tab" data-tab="more">⋯ More</button>
     </div>
     <p id="settings-noresults" class="set-empty" hidden>No settings match that.</p>
@@ -5018,17 +5018,17 @@ function openSettingsPanel() {
         </div>
         <div class="settings-section">
             <h4>Colors</h4>
-            ${row("Dark mode", "", `<button class="theme-button set-mini" onclick="Promise.resolve(darkMode()).then(openSettingsPanel)">${isDark ? "🌙 On" : "☀️ Off"}</button>`)}
+            ${row("Dark mode", "", `<button class="theme-button set-mini" onclick="Promise.resolve(darkMode()).then(openSettingsPanel)">${isDark ? gnIcon("moon") + " On" : gnIcon("sun") + " Off"}</button>`)}
             <div class="set-row set-col"><div class="set-text"><span class="set-label">Theme color</span></div>
                 <div class="theme-options set-themes">
                     ${COLOR_THEMES.map(t => `<button class="theme-button" data-theme-option="${t}" onclick="setTheme('${t}')">${themeLabel(t)}</button>`).join("")}
                 </div>
             </div>
             <p class="set-note scenes-off-note">Scenes and your own background only show with the Default and Glass styles, so they're hidden for this style.</p>
-            <div class="set-row set-col needs-scenes"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds with their own colors. ☀️ scenes are bright, the rest are dark.</small></div>
+            <div class="set-row set-col needs-scenes"><div class="set-text"><span class="set-label">Scenes</span><small>Animated backgrounds with their own colors. Scenes marked with a sun are bright; the rest are dark.</small></div>
                 ${Object.entries(SCENE_GROUPS).map(([group, list]) => `<div class="scene-group">${group}</div>
                 <div class="scene-picks">
-                    ${list.map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${LIGHT_SCENES.has(t) ? "☀️ " : ""}${themeLabel(t)}</span></button>`).join("")}
+                    ${list.map(t => `<button class="theme-button scene-pick scene-prev-${t}" data-theme-option="${t}" onclick="setTheme('${t}')"><span>${LIGHT_SCENES.has(t) ? gnIcon("sun") + " " : ""}${themeLabel(t)}</span></button>`).join("")}
                 </div>`).join("")}
             </div>
             <div class="set-row set-col needs-scenes"><div class="set-text"><span class="set-label">Your own background</span><small>Paste a link to any picture or GIF (no download needed), or pick one from your device. Only you see it.</small></div>
@@ -5036,7 +5036,7 @@ function openSettingsPanel() {
                     <div class="custom-bg-preview" id="custom-bg-preview" data-theme-option="custom"></div>
                     <div class="custom-bg-controls">
                         <div class="custom-bg-line"><input id="custom-bg-url" type="url" class="set-input" placeholder="https://… link to a picture or GIF" data-lpignore="true" data-form-type="other"><button class="theme-button set-mini" type="button" onclick="setCustomBackgroundFromInput()">Use</button></div>
-                        <div class="custom-bg-line"><button class="theme-button set-mini" type="button" onclick="document.getElementById('custom-bg-file').click()">📁 From my device</button><button class="theme-button set-mini" type="button" onclick="clearCustomBackground()">Remove</button><input id="custom-bg-file" type="file" accept="image/*" hidden onchange="setCustomBackgroundFromFile(this.files[0]); this.value=''"></div>
+                        <div class="custom-bg-line"><button class="theme-button set-mini" type="button" onclick="document.getElementById('custom-bg-file').click()">${gnIcon("folder")} From my device</button><button class="theme-button set-mini" type="button" onclick="clearCustomBackground()">Remove</button><input id="custom-bg-file" type="file" accept="image/*" hidden onchange="setCustomBackgroundFromFile(this.files[0]); this.value=''"></div>
                         <label class="custom-bg-dim">Darken <input id="custom-bg-dim" type="range" min="0" max="85" step="5" value="${typeof getCustomBgDim === "function" ? getCustomBgDim() : 40}" oninput="setCustomBgDim(this.value)"></label>
                     </div>
                 </div>
@@ -5065,7 +5065,7 @@ function openSettingsPanel() {
         </div>
         <div class="settings-section">
             <h4>Your games</h4>
-            ${row("My stats", "Play time, favorites and most played", `<button class="theme-button set-mini" onclick="openStatsPanel()">📊 Open</button>`)}
+            ${row("My stats", "Play time, favorites and most played", `<button class="theme-button set-mini" onclick="openStatsPanel()">${gnIcon("chart")} Open</button>`)}
             ${row("Reload the game list", "If games are missing or look out of date", `<button class="theme-button set-mini" onclick="listZones(); notify('Reloading games…')">↻ Reload</button>`)}
         </div>
     </div>
@@ -5091,18 +5091,18 @@ function openSettingsPanel() {
         <div class="settings-section">
             <h4>Help make GN 2.0 better</h4>
             <div class="set-grid">
-                <button class="settings-button" onclick="openFeedback('bug')">⚠️ Report a problem</button>
-                <button class="settings-button" onclick="openFeedback('feature')">💡 Suggest a feature</button>
-                <button class="settings-button" onclick="openIdeasBoard()">🗳️ Ideas board</button>
-                <button class="settings-button" onclick="openSubmitGame()">🎮 Submit a game</button>
+                <button class="settings-button" onclick="openFeedback('bug')">${gnIcon("warning")} Report a problem</button>
+                <button class="settings-button" onclick="openFeedback('feature')">${gnIcon("bulb")} Suggest a feature</button>
+                <button class="settings-button" onclick="openIdeasBoard()">${gnIcon("vote")} Ideas board</button>
+                <button class="settings-button" onclick="openSubmitGame()">${gnIcon("game")} Submit a game</button>
             </div>
             ${signedIn ? "" : `<p class="set-note">These need a free account so you can see replies.</p>`}
         </div>
         <div class="settings-section">
             <h4>Your data</h4>
             <div class="set-grid">
-                <button class="settings-button set-secondary" onclick="saveData()">⬇️ Export data</button>
-                <button class="settings-button set-secondary" onclick="document.getElementById('importData').click()">⬆️ Import data</button>
+                <button class="settings-button set-secondary" onclick="saveData()">${gnIcon("download")} Export data</button>
+                <button class="settings-button set-secondary" onclick="document.getElementById('importData').click()">${gnIcon("upload")} Import data</button>
             </div>
         </div>
         <details class="settings-section set-staff" ${staff ? "open" : ""}>
@@ -5426,7 +5426,7 @@ function showExtraGameInfo(zone) {
         <b>Name</b>: ${esc(zone.name)}<br>
         <b>Game Author</b>: ${zone.author ? esc(zone.author) : `<span style="color:var(--text-muted);">Unknown</span>`}<br>
         ${zone.authorLink ? `<b>Source</b>: <a href="${esc(zone.authorLink)}" target="_blank" rel="noopener noreferrer">${esc(zone.authorLink.replace(/^https:\/\//, "").slice(0, 60))}</a><br>` : ""}
-        ${zone.description ? `<b>About</b>: ${esc(zone.description)}<br>` : ""}
+        ${zone.description ? `<b>About</b>: ${esc(gnNoEmoji(zone.description))}<br>` : ""}
         </p>
         <p style="color:var(--text-muted);font-size:13px;">Its files were checked for trackers, ads and hidden scripts before it was added, and it always loads that checked version. All credit goes to the game's creators. Own this game? <a href="#" onclick="openTakedownForm(zones.find(z => z.id === ${Number(zone.id)})); return false;">Send a takedown request</a>.</p>`;
 }

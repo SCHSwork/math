@@ -76,38 +76,38 @@ function achStats() {
 // ── Badges ──────────────────────────────────────────────────────────────────
 // [id, icon, name, what to do, stat, goal, xp]
 const ACH_BADGES = [
-    ["first", "🎮", "Press Start", "Play your first game", "tried", 1, 25],
-    ["explorer1", "🧭", "Explorer", "Try 10 different games", "tried", 10, 50],
-    ["explorer2", "🗺️", "Adventurer", "Try 50 different games", "tried", 50, 100],
-    ["explorer3", "🌍", "Globetrotter", "Try 150 different games", "tried", 150, 250],
-    ["explorer4", "🚀", "Completionist", "Try 400 different games", "tried", 400, 500],
-    ["time1", "⏱️", "Warming Up", "Play for 1 hour in total", "totalSec", 3600, 50],
-    ["time2", "🕹️", "Dedicated", "Play for 10 hours in total", "totalSec", 36000, 150],
-    ["time3", "🏃", "Marathon", "Play for 50 hours in total", "totalSec", 180000, 400],
-    ["devoted", "💜", "True Fan", "Play one game for 2 hours", "longest", 7200, 100],
-    ["fav1", "⭐", "Collector", "Favorite 5 games", "favorites", 5, 25],
-    ["fav2", "🌟", "Curator", "Favorite 25 games", "favorites", 25, 75],
-    ["critic1", "👍", "Critic", "Rate 5 games", "ratings", 5, 50],
-    ["critic2", "🎤", "Top Reviewer", "Rate 25 games", "ratings", 25, 150],
-    ["bug", "🐛", "Bug Hunter", "Report a broken game", "reports", 1, 50],
-    ["genres1", "🌈", "Genre Hopper", "Play games from 6 genres", "genres", 6, 75],
-    ["genres2", "🎨", "Well Rounded", "Play games from 12 genres", "genres", 12, 200],
-    ["streak1", "🔥", "On a Roll", "Visit 3 days in a row", "bestStreak", 3, 50],
-    ["streak2", "⚡", "Regular", "Visit 7 days in a row", "bestStreak", 7, 150],
-    ["streak3", "👑", "Unstoppable", "Visit 30 days in a row", "bestStreak", 30, 500],
-    ["days", "📆", "Loyal", "Visit on 20 different days", "days", 20, 150],
-    ["gotd1", "📅", "Daily Pick", "Play the Game of the Day", "gotd", 1, 25],
-    ["gotd2", "🗓️", "Pick of the Week", "Play the Game of the Day 7 times", "gotd", 7, 100],
-    ["fresh", "🆕", "Fresh Finds", "Play 5 games added in the last 2 weeks", "newPlays", 5, 75],
-    ["binge", "🍿", "Binge", "Try 5 new games in one day", "bestDay", 5, 50],
-    ["lucky", "🎲", "Feeling Lucky", "Use the random game button 10 times", "random", 10, 50],
-    ["night", "🦉", "Night Owl", "Play a game after 10 PM", "night", 1, 25],
-    ["early", "🌅", "Early Bird", "Play a game before 7 AM", "early", 1, 25],
-    ["weekend", "🛋️", "Weekend Warrior", "Play on 4 weekend days", "weekendDays", 4, 50],
-    ["originals", "🏠", "Homegrown", "Play 5 GN Originals", "originals", 5, 75],
-    ["jam", "🧩", "Jam Session", "Play 10 js13k jam games", "jam", 10, 75],
-    ["trickortreat", "🎃", "Trick or Treat", "Play a game on Halloween (Oct 31). Limited time!", "halloween", 1, 100],
-    ["spookyseason", "👻", "Spooky Season", "Play 5 spooky games during Halloween week. Limited time!", "spooky", 5, 150]
+    ["first", "game", "Press Start", "Play your first game", "tried", 1, 25],
+    ["explorer1", "compass", "Explorer", "Try 10 different games", "tried", 10, 50],
+    ["explorer2", "map", "Adventurer", "Try 50 different games", "tried", 50, 100],
+    ["explorer3", "globe", "Globetrotter", "Try 150 different games", "tried", 150, 250],
+    ["explorer4", "rocket", "Completionist", "Try 400 different games", "tried", 400, 500],
+    ["time1", "timer", "Warming Up", "Play for 1 hour in total", "totalSec", 3600, 50],
+    ["time2", "joystick", "Dedicated", "Play for 10 hours in total", "totalSec", 36000, 150],
+    ["time3", "run", "Marathon", "Play for 50 hours in total", "totalSec", 180000, 400],
+    ["devoted", "heart", "True Fan", "Play one game for 2 hours", "longest", 7200, 100],
+    ["fav1", "star", "Collector", "Favorite 5 games", "favorites", 5, 25],
+    ["fav2", "sparkle", "Curator", "Favorite 25 games", "favorites", 25, 75],
+    ["critic1", "thumbUp", "Critic", "Rate 5 games", "ratings", 5, 50],
+    ["critic2", "mic", "Top Reviewer", "Rate 25 games", "ratings", 25, 150],
+    ["bug", "bug", "Bug Hunter", "Report a broken game", "reports", 1, 50],
+    ["genres1", "shapes", "Genre Hopper", "Play games from 6 genres", "genres", 6, 75],
+    ["genres2", "palette", "Well Rounded", "Play games from 12 genres", "genres", 12, 200],
+    ["streak1", "flame", "On a Roll", "Visit 3 days in a row", "bestStreak", 3, 50],
+    ["streak2", "bolt", "Regular", "Visit 7 days in a row", "bestStreak", 7, 150],
+    ["streak3", "crown", "Unstoppable", "Visit 30 days in a row", "bestStreak", 30, 500],
+    ["days", "calendarCheck", "Loyal", "Visit on 20 different days", "days", 20, 150],
+    ["gotd1", "calendar", "Daily Pick", "Play the Game of the Day", "gotd", 1, 25],
+    ["gotd2", "calendarWeek", "Pick of the Week", "Play the Game of the Day 7 times", "gotd", 7, 100],
+    ["fresh", "newBadge", "Fresh Finds", "Play 5 games added in the last 2 weeks", "newPlays", 5, 75],
+    ["binge", "popcorn", "Binge", "Try 5 new games in one day", "bestDay", 5, 50],
+    ["lucky", "dice", "Feeling Lucky", "Use the random game button 10 times", "random", 10, 50],
+    ["night", "owl", "Night Owl", "Play a game after 10 PM", "night", 1, 25],
+    ["early", "sunrise", "Early Bird", "Play a game before 7 AM", "early", 1, 25],
+    ["weekend", "couch", "Weekend Warrior", "Play on 4 weekend days", "weekendDays", 4, 50],
+    ["originals", "home", "Homegrown", "Play 5 GN Originals", "originals", 5, 75],
+    ["jam", "puzzle", "Jam Session", "Play 10 js13k jam games", "jam", 10, 75],
+    ["trickortreat", "pumpkin", "Trick or Treat", "Play a game on Halloween (Oct 31). Limited time!", "halloween", 1, 100],
+    ["spookyseason", "ghost", "Spooky Season", "Play 5 spooky games during Halloween week. Limited time!", "spooky", 5, 150]
 ].map(([id, icon, name, desc, stat, goal, xp]) => ({ id, icon, name, desc, stat, goal, xp }));
 
 // Badges count when their goal is met, or when the owner gave them back (a grant)
@@ -169,7 +169,7 @@ function applyGrant(grant) {
     const now = achSummary();
     const h = (Number(grant.playSec) || 0) / 3600;
     notify(`Your progress was restored: you're level ${now.level}` + (h >= 0.1 ? `, with ${h < 10 ? h.toFixed(1) : Math.round(h)} hours of play time given back` : "") + `.` +
-        (badges.length ? `\nBadges: ${badges.map(b => b.icon + " " + b.name).join(", ")}` : "") + (grant.note ? `\n${grant.note}` : ""), { type: "success", duration: 12000 });
+        (badges.length ? `\nBadges: ${badges.map(b => b.name).join(", ")}` : "") + (grant.note ? `\n${grant.note}` : ""), { type: "success", duration: 12000 });
     try { achCheck(true); achRenderChip(); } catch {}
     return true;
 }
@@ -222,7 +222,7 @@ function achNextToast() {
     const el = document.createElement("div");
     el.className = `ach-toast ach-k-${t.kind}`;
     el.setAttribute("role", "status");
-    const icon = document.createElement("div"); icon.className = "ach-icon"; icon.textContent = t.icon;
+    const icon = document.createElement("div"); icon.className = "ach-icon"; icon.innerHTML = gnIcon(t.icon);
     const body = document.createElement("div"); body.className = "ach-body";
     const h = document.createElement("div"); h.className = "ach-title"; h.textContent = t.title;
     const p = document.createElement("div"); p.className = "ach-text"; p.textContent = t.text;
@@ -254,12 +254,12 @@ function achCheck(silent) {
     if (silent) return;
     if (first) {
         // First time on this device: one hello instead of a pile of badges
-        if (sum.level > 1 || sum.earned.length) achToast("level", "🏆", `You're level ${sum.level}: ${achTitle(sum.level)}`, `${sum.earned.length} badge${sum.earned.length === 1 ? "" : "s"} from what you've played. Tap to see them all.`);
+        if (sum.level > 1 || sum.earned.length) achToast("level", "trophy", `You're level ${sum.level}: ${achTitle(sum.level)}`, `${sum.earned.length} badge${sum.earned.length === 1 ? "" : "s"} from what you've played. Tap to see them all.`);
         return;
     }
     fresh.slice(0, 3).forEach(b => achToast("badge", b.icon, `Badge unlocked: ${b.name}`, `${b.desc} · +${b.xp} XP`));
-    if (fresh.length > 3) achToast("badge", "🏅", `+${fresh.length - 3} more badges`, "Tap to see them all");
-    if (leveled && oldLevel > 0) achToast("level", "⬆️", `Level ${sum.level}!`, sum.level >= 3 && achTitle(sum.level) !== achTitle(oldLevel) ? `You're now a ${achTitle(sum.level)}` : `${sum.need} XP to level ${sum.level + 1}`);
+    if (fresh.length > 3) achToast("badge", "medal", `+${fresh.length - 3} more badges`, "Tap to see them all");
+    if (leveled && oldLevel > 0) achToast("level", "levelUp", `Level ${sum.level}!`, sum.level >= 3 && achTitle(sum.level) !== achTitle(oldLevel) ? `You're now a ${achTitle(sum.level)}` : `${sum.need} XP to level ${sum.level + 1}`);
 }
 
 // ── Noting things as they happen ────────────────────────────────────────────
@@ -309,7 +309,7 @@ function openAchievementsPanel() {
         const pct = Math.min(100, Math.round(v / b.goal * 100));
         const when = got && a.unlocked[b.id] ? new Date(a.unlocked[b.id]).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
         return `<div class="ach-badge ${got ? "got" : ""}" title="${esc(b.desc)}">
-            <div class="ab-icon">${b.icon}</div>
+            <div class="ab-icon">${gnIcon(b.icon)}</div>
             <div class="ab-name">${esc(b.name)}</div>
             <div class="ab-desc">${esc(b.desc)}</div>
             ${got ? `<div class="ab-done">✓ ${when ? esc(when) : "Unlocked"} · +${b.xp} XP</div>` : `<div class="ab-bar"><span style="width:${pct}%"></span></div><div class="ab-prog">${esc(fmt(b, v))}</div>`}

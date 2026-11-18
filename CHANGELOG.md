@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Our own icons instead of emojis
+
+### Changed
+- Every emoji on the site is gone. Buttons, tabs, menus, badges and achievement pop-ups now use GN 2.0's own line icons (js/icons.js), which take the color of each style.
+- Status labels, filter options and messages are plain words now.
+- Emojis in game descriptions from partner sites are taken out when they load.
+
 ## November 17, 2026 — Sign in with Google
 
 ### Added

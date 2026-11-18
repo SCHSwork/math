@@ -195,19 +195,19 @@ function toggleGameMenu(ev) {
         ["↻", "Restart game", () => openZone(zone)],
         ["ⓘ", "Game info", () => showZoneInfo()],
         ...(typeof isFitOff === "function" ? [["⤢", isFitOff(zone.id) ? "Fit game to screen: off" : "Fit game to screen: on", () => { toggleFitForGame(zone.id); openZone(zone); }]] : []),
-        ...(typeof openSaveBackups === "function" && !(typeof isPartnerZone === "function" && isPartnerZone(zone)) ? [["💾", "Save backups…", () => openSaveBackups(zone)]] : []),
+        ...(typeof openSaveBackups === "function" && !(typeof isPartnerZone === "function" && isPartnerZone(zone)) ? [["save", "Save backups…", () => openSaveBackups(zone)]] : []),
         "-",
-        ...(typeof copyGameLink === "function" ? [["🔗", "Copy link to this game", () => copyGameLink(zone)]] : []),
-        ...(typeof openGameLog === "function" ? [["🔍", "What the game said", () => openGameLog()]] : []),
+        ...(typeof copyGameLink === "function" ? [["link", "Copy link to this game", () => copyGameLink(zone)]] : []),
+        ...(typeof openGameLog === "function" ? [["search", "What the game said", () => openGameLog()]] : []),
         ["↗", "Open in new tab", () => aboutBlank()],
-        ["⬇", "Download game file", () => downloadZone()],
+        ["download", "Download game file", () => downloadZone()],
         "-",
-        ["⚠", "Report broken", () => reportCurrentZone()],
+        ["warning", "Report broken", () => reportCurrentZone()],
         ...(typeof isSiteAdmin === "function" && isSiteAdmin() && typeof markGameFixed === "function" ? [["✓", "Mark fixed (clear reports)", () => markGameFixed(zone.id)]] : []),
-        ["📝", "Report a problem…", () => openFeedback("bug")],
+        ["note", "Report a problem…", () => openFeedback("bug")],
         ["©", "Copyright takedown…", () => openTakedownForm(zone)],
         ...((gameCaches()[String(zone.id)] || []).length ? [["⟳", "Re-download game files", () => redownloadCurrentGame()]] : []),
-        ["🗑", `Clear this game's data${tracked ? "" : "…"}`, () => clearCurrentGameData(), true]
+        ["trash", `Clear this game's data${tracked ? "" : "…"}`, () => clearCurrentGameData(), true]
     ];
     for (const it of items) {
         if (it === "-") { const hr = document.createElement("div"); hr.className = "gm-sep"; menu.appendChild(hr); continue; }
@@ -216,7 +216,7 @@ function toggleGameMenu(ev) {
         b.type = "button";
         b.setAttribute("role", "menuitem");
         if (danger) b.className = "gm-danger";
-        const i = document.createElement("span"); i.className = "gm-icon"; i.textContent = icon;
+        const i = document.createElement("span"); i.className = "gm-icon"; i.innerHTML = gnIcon(icon);
         const l = document.createElement("span"); l.textContent = label;
         b.append(i, l);
         b.onclick = (e) => { e.stopPropagation(); closeGameMenu(); fn(); };
