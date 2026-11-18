@@ -3530,3 +3530,29 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .scare-pics { margin-top: 1rem; }
 .scare-pics summary { cursor: pointer; font-weight: 700; }
 .scare-pics textarea { width: 100%; margin: 0.4rem 0; font-family: ui-monospace, monospace; font-size: 12px; }
+
+/* A game that really broke (game-error.js): red bar on top, "isn't responding" box */
+.gfe-bar { position: fixed; left: 0; right: 0; top: 0; z-index: 2147483000; display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 18px;
+    background: #b00020; color: #fff; font-size: 14.5px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.4); animation: gfeIn .25s ease-out; }
+.gfe-bar .gi { width: 20px; height: 20px; flex: none; }
+.gfe-bar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gfe-bar .gfe-x { flex: none; width: 30px; height: 30px; border: 0; border-radius: 8px; background: rgba(255,255,255,.15); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+@keyframes gfeIn { from { transform: translateY(-100%); } }
+.gfe-wrap { position: fixed; inset: 0; z-index: 2147482999; display: grid; place-items: center; background: rgba(0,0,0,.35); animation: gfeFade .2s ease-out; }
+@keyframes gfeFade { from { opacity: 0; } }
+.gfe-dlg { width: min(460px, 92vw); background: #f3f3f3; color: #1b1b1b; border: 1px solid #9a9a9a; border-radius: 8px; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.5);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; animation: gfePop .16s ease-out; }
+@keyframes gfePop { from { transform: scale(.96); } }
+.gfe-tt { padding: 9px 14px; font-size: 12px; background: #fff; border-bottom: 1px solid #ddd; color: #444; }
+.gfe-bd { display: flex; gap: 14px; padding: 18px 18px 6px; font-size: 14px; line-height: 1.45; }
+.gfe-ic { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #c42b1c; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px; }
+.gfe-help { margin: 4px 0 6px; color: #333; }
+.gfe-more summary { cursor: pointer; color: #0067c0; font-size: 13px; }
+.gfe-more code { display: block; margin-top: 6px; padding: 8px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow-y: auto; }
+.gfe-bt { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
+.gfe-bt button { font: inherit; font-size: 13px; padding: 6px 16px; border-radius: 4px; border: 1px solid #8a8a8a; background: #fdfdfd; color: #111; cursor: pointer; }
+.gfe-bt button:hover { background: #e9e9e9; }
+.gfe-bt .gfe-reload { background: #0067c0; border-color: #0067c0; color: #fff; }
+.gfe-bt .gfe-reload:hover { background: #0058a6; }
+.gfe-bt button:focus-visible { outline: 2px solid #0067c0; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .gfe-bar, .gfe-wrap, .gfe-dlg { animation: none; } }

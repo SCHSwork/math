@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Real "isn't responding" box for broken games
+
+### Added
+- **When a game really breaks**, a red error bar goes across the top ("Error: Drive Mad isn't responding (what the game said)") and a box asks what to do: **Reload game**, **Report it** (opens Report a problem, filled in with what happened) or **Keep waiting**. "What the game said" shows the actual error.
+- It only shows when the game actually stopped, not for the many harmless errors games log while working fine:
+  - an error and then the game stopped drawing within 3 seconds ("isn't responding")
+  - an engine game (Unity, Godot, Construct, Flash…) hit an error and its screen never started ("couldn't start")
+  - its 3D graphics were lost and didn't come back ("lost its graphics")
+  - its engine showed a fatal error message, which now shows in this box instead of the browser's plain pop-up ("crashed")
+- Once per game opened. Paused games (tab left, jumpscare) don't count. Checked on nine popular games with no false alarms.
+
 ## November 18, 2026 — Jumpscare: fake crash, real pictures
 
 ### Changed

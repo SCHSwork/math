@@ -195,7 +195,51 @@ function gameErrorHook() {
         if (typeof orig !== "function") return;
         console[k] = function () { keep(k, arguments); return orig.apply(this, arguments); };
     });
+    // ── Did the game actually break? (for the "isn't responding" box) ──────
+    // Most game errors are harmless, so the box only shows when an error is
+    // followed by the game stopping: it had been drawing frames and stopped
+    // within 3 s of the error, or it never started drawing at all. Also when
+    // the graphics are lost (and not restored), or the engine shows a fatal
+    // alert(). Paused games (tab left, jumpscare) don't count.
+    var frames = 0, lastFrame = 0, lastErr = null, fatalSent = false, startAt = Date.now();
+    try {
+        var rafOrig = window.requestAnimationFrame;
+        if (rafOrig) window.requestAnimationFrame = function (cb) {
+            return rafOrig.call(window, function (t) { frames++; lastFrame = Date.now(); return cb(t); });
+        };
+    } catch (e) {}
+    var paused = function () { try { return !!(window.__gnPaused && window.__gnPaused()) || document.hidden; } catch (e) { return false; } };
+    var fatal = function (kind, message) {
+        if (fatalSent) return;
+        fatalSent = true;
+        try { if (window.parent && window.parent !== window && window.parent.__gnmathGameFatal) window.parent.__gnmathGameFatal({ kind: kind, message: String(message || "").slice(0, 300) }); } catch (e) {}
+    };
+    var checkAfterError = function () {
+        setTimeout(function () {
+            if (fatalSent || paused() || !lastErr) return;
+            var now = Date.now();
+            if (frames > 30 && now - lastFrame > 2500 && lastFrame < lastErr.at + 3000) fatal("stopped", lastErr.message);
+        }, 3200);
+        setTimeout(function () {
+            if (fatalSent || paused() || !lastErr) return;
+            // Only for engine games whose screen never got going (a canvas still
+            // at its blank 300×150, or none): page games without a canvas
+            // (Cookie Clicker…) don't draw frames and are fine
+            var cs = Array.prototype.slice.call(document.querySelectorAll("canvas"));
+            var blank = cs.every(function (c) { return c.width <= 300 && c.height <= 150; });
+            var engine = !!(window.createUnityInstance || window.UnityLoader || window.unityFramework || window.Godot || window.Engine || window.Module || window.C3_RUNTIME || window.cr_getC2Runtime || window.RufflePlayer) ||
+                Array.prototype.some.call(document.scripts, function (sc) { return /unity|godot|loader\.js|\.wasm|c3runtime|construct|ruffle|phaser|pixi/i.test(sc.src || ""); });
+            if (frames < 3 && Date.now() - startAt > 9000 && blank && engine && !document.querySelector("video")) fatal("start", lastErr.message);
+        }, Math.max(0, 9500 - (Date.now() - startAt)));
+    };
+    document.addEventListener("webglcontextlost", function (e) {
+        var c = e.target;
+        setTimeout(function () { try { if (c && c.isConnected && (c.getContext("webgl2") || c.getContext("webgl") || {}).isContextLost && (c.getContext("webgl2") || c.getContext("webgl")).isContextLost()) fatal("graphics", "The game's graphics (WebGL) stopped working."); } catch (err) {} }, 2500);
+    }, true);
+    window.__gnFatal = fatal;
     var up = function (kind, message, stack) {
+        lastErr = { at: Date.now(), message: String(message || "") };
+        checkAfterError();
         if (sent >= 5) return;
         sent++;
         try { if (window.parent && window.parent !== window && window.parent.__gnmathGameError) window.parent.__gnmathGameError({ kind: kind, message: String(message || "").slice(0, 500), stack: String(stack || "").slice(0, 1500) }); } catch (e) {}
@@ -218,7 +262,11 @@ function gameErrorHook() {
     var origAlert = window.alert;
     window.alert = function (msg) {
         keep("alert", [msg]);
-        if (/abort\(|error|exception|failed|out of memory|cannot|could not|unable/i.test(String(msg))) up("alert", msg, "");
+        if (/abort\(|error|exception|failed|out of memory|cannot|could not|unable/i.test(String(msg))) {
+            up("alert", msg, "");
+            // The site's own box instead of the browser's plain one
+            if (window.parent && window.parent !== window && window.parent.__gnmathGameFatal && !fatalSent) { fatal("crash", msg); return; }
+        }
         return origAlert.apply(this, arguments);
     };
 }
