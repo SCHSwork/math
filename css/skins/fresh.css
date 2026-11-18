@@ -5,28 +5,32 @@
    Clean and calm: a cool mist page, white header, covers with no boxes around
    them, Bricolage Grotesque for the logo and headings, deep lagoon teal for
    anything you can press, and lemon only for "new" and text selection.
-   Follows light/dark mode with its own colors (not the color theme).
+   Follows light/dark mode with its own colors (not the color theme). Every
+   color and the mark by the logo can be changed in Settings → Site style
+   (js/skins.js sets the --fr-* colors and data-fresh-mark).
    ───────────────────────────────────────────────────────────────────────── */
 body.st-fresh:not(#z) {
-    --fr-ink: #16202a; --fr-slate: #566370; --fr-mist: #eef2f4; --fr-line: #d8e0e5;
-    --fr-teal: #0e7c86; --fr-teal-deep: #0a5f67; --fr-lemon: #f2ce3b;
-    --primary: var(--fr-teal); --primary-dark: var(--fr-teal-deep); --primary-light: #3aa3ac;
-    --text: var(--fr-ink); --text-muted: var(--fr-slate); --text-light: #66727e; --accent-text: var(--fr-teal-deep);
-    --bg: var(--fr-mist); --bg-secondary: #e4eaed; --surface: #ffffff; --surface-hover: #f5f8f9; --border: var(--fr-line); --border-light: #e4eaed;
-    --glass: #ffffff; --gradient-surface: #ffffff; --gradient-primary: var(--fr-teal);
+    --fr-ink: #16202a; --fr-slate: #566370; --fr-mist: #eef2f4; --fr-surface: #ffffff; --fr-line: #d8e0e5;
+    --fr-teal: #0e7c86; --fr-lemon: #f2ce3b;
+    --fr-on-teal: #ffffff; --fr-on-lemon: #16202a; --fr-on-ink: #eef2f4;
+    --fr-teal-deep: color-mix(in srgb, var(--fr-teal) 78%, black);
+    --primary: var(--fr-teal); --primary-dark: var(--fr-teal-deep); --primary-light: color-mix(in srgb, var(--fr-teal) 75%, white);
+    --text: var(--fr-ink); --text-muted: var(--fr-slate); --text-light: color-mix(in srgb, var(--fr-slate) 85%, var(--fr-mist)); --accent-text: var(--fr-teal-deep);
+    --bg: var(--fr-mist); --bg-secondary: color-mix(in srgb, var(--fr-mist) 93%, var(--fr-ink)); --surface: var(--fr-surface); --surface-hover: color-mix(in srgb, var(--fr-surface) 95%, var(--fr-ink)); --border: var(--fr-line); --border-light: color-mix(in srgb, var(--fr-line) 60%, var(--fr-surface));
+    --glass: var(--fr-surface); --gradient-surface: var(--fr-surface); --gradient-primary: var(--fr-teal);
     --shadow-sm: none; --shadow: 0 1px 2px rgba(22,32,42,.06); --shadow-lg: 0 10px 30px rgba(22,32,42,.12); --shadow-xl: 0 18px 50px rgba(22,32,42,.16);
     --radius: 12px; --radius-sm: 8px; --radius-lg: 14px; --radius-xl: 16px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     background: var(--fr-mist) !important; color: var(--text);
 }
 body.st-fresh.dark-mode:not(#z) {
-    --fr-ink: #e6edf1; --fr-slate: #93a3af; --fr-mist: #0f171d; --fr-line: #24323d;
-    --fr-teal: #3bc1c9; --fr-teal-deep: #7fd8de;
-    --text-light: #8796a2; --bg-secondary: #16212a; --surface: #16212a; --surface-hover: #1c2934; --border-light: #1c2934;
-    --glass: #16212a; --gradient-surface: #16212a;
+    --fr-ink: #e6edf1; --fr-slate: #93a3af; --fr-mist: #0f171d; --fr-surface: #16212a; --fr-line: #24323d;
+    --fr-teal: #3bc1c9; --fr-on-teal: #0f171d; --fr-on-ink: #0f171d;
+    --fr-teal-deep: color-mix(in srgb, var(--fr-teal) 60%, white);
+    --bg-secondary: var(--fr-surface);
     --shadow: 0 1px 2px rgba(0,0,0,.3); --shadow-lg: 0 10px 30px rgba(0,0,0,.45); --shadow-xl: 0 18px 50px rgba(0,0,0,.55);
 }
-body.st-fresh:not(#z) ::selection { background: var(--fr-lemon); color: #16202a; }
+body.st-fresh:not(#z) ::selection { background: var(--fr-lemon); color: var(--fr-on-lemon); }
 body.st-fresh:not(#z) #scene { display: none !important; }
 body.st-fresh:not(#z) .zone-item::before { display: none; }
 
@@ -36,6 +40,16 @@ body.st-fresh:not(#z) .logo { font-family: "GN Fresh", system-ui, sans-serif; fo
 /* The mark: a small teal tile with a lemon light, like a power LED */
 body.st-fresh:not(#z) .logo { display: inline-flex; align-items: center; gap: .5rem; }
 body.st-fresh:not(#z) .logo::before { content: ""; flex: none; width: 1.05em; height: 1.05em; border-radius: 30%; background: radial-gradient(circle at 70% 30%, var(--fr-lemon) 0 .16em, transparent .17em), var(--fr-teal); }
+/* Other marks (Settings → Site style → Mark): one-color shapes in the accent */
+body.st-fresh[data-fresh-mark]:not([data-fresh-mark="tile"]):not(#z) .logo::before { border-radius: 0; background: var(--fr-teal); -webkit-mask: var(--fr-mark) center / contain no-repeat; mask: var(--fr-mark) center / contain no-repeat; }
+body.st-fresh[data-fresh-mark="none"]:not(#z) .logo::before { display: none; }
+body.st-fresh[data-fresh-mark="pad"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 6h10a5 5 0 0 1 5 5v2.5a4.5 4.5 0 0 1-8.1 2.7L13 15h-2l-.9 1.2A4.5 4.5 0 0 1 2 13.5V11a5 5 0 0 1 5-5Zm0 3v1.5H5.5v2H7V14h2v-1.5h1.5v-2H9V9H7Zm9.5 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm-2 2.5a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="bolt"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5L13.5 2Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="star"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8L12 2Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="heart"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath d='M3 3h3v1h1v1h2V4h1V3h3v1h1v4h-1v1h-1v1h-1v1h-1v1H9v1H7v-1H6v-1H5v-1H4V9H3V8H2V4h1V3Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="dice"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M6 3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm2.5 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm-3.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="rocket"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 1.5c3.4 2.4 5 6 5 10.2 0 1.1-.1 2.1-.4 3.1l2.9 3.4-3.7.9-1.3 2.4h-5l-1.3-2.4-3.7-.9 2.9-3.4c-.3-1-.4-2-.4-3.1 0-4.2 1.6-7.8 5-10.2Zm0 6.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z'/%3E%3C/svg%3E"); }
+body.st-fresh[data-fresh-mark="pixel"]:not(#z) { --fr-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 8' shape-rendering='crispEdges'%3E%3Cpath d='M2 0h1v1h1v1h3V1h1V0h1v1H8v1h1v1h1v3H9V4H8v2H7v1H6V6H5v1H4V6H3V4H2v2H1V3h1V2h1V1H2V0Zm1 3v1h1V3H3Zm4 0v1h1V3H7Z'/%3E%3C/svg%3E"); }
 body.st-fresh:not(#z) :is(#searchBar, #searchBar:focus, input, select, textarea, .set-search) { background: var(--fr-mist) !important; color: var(--text) !important; border: 1px solid transparent !important; border-radius: 10px; box-shadow: none !important; caret-color: var(--fr-teal); }
 body.st-fresh:not(#z) :is(#searchBar, input, select, textarea, .set-search):focus { border-color: var(--fr-teal) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--fr-teal) 22%, transparent) !important; }
 body.st-fresh:not(#z) :is(#searchBar, input, textarea)::placeholder { color: var(--text-light); }
@@ -47,8 +61,7 @@ body.st-fresh:not(#z) .control-button .control-icon { color: inherit; }
 /* Row tabs: quiet until picked, then solid teal */
 body.st-fresh:not(#z) .ht-tab { background: var(--surface); color: var(--text-muted); border: 1px solid var(--fr-line); border-radius: 10px; font-weight: 600; box-shadow: none; }
 body.st-fresh:not(#z) .ht-tab:hover { color: var(--text); border-color: var(--fr-slate); }
-body.st-fresh:not(#z) .ht-tab[aria-selected="true"] { background: var(--fr-teal); border-color: var(--fr-teal); color: #fff; }
-body.st-fresh.dark-mode:not(#z) .ht-tab[aria-selected="true"] { color: #0f171d; }
+body.st-fresh:not(#z) .ht-tab[aria-selected="true"] { background: var(--fr-teal); border-color: var(--fr-teal); color: var(--fr-on-teal); }
 
 /* Section headings: the one bold thing on the page */
 body.st-fresh:not(#z) .section-title { font-family: "GN Fresh", system-ui, sans-serif; color: var(--text); font-weight: 750; font-size: 1.7rem; letter-spacing: -.03em; }
@@ -61,15 +74,14 @@ body.st-fresh:not(#z) .zone-item img { border-radius: 12px; outline: 3px solid t
 body.st-fresh:not(#z) .zone-item:is(:hover, :focus-within) img { outline-color: var(--fr-teal); }
 body.st-fresh:not(#z) .zone-item > button:not(.card-fav) { color: var(--text); font-weight: 600; font-size: 14.5px; text-align: left; justify-content: flex-start; align-self: stretch; width: 100%; padding: .7rem 2px .25rem; }
 body.st-fresh:not(#z) .zone-item:hover > button:not(.card-fav) { color: var(--accent-text); }
-body.st-fresh:not(#z) .card-new { background: var(--fr-lemon) !important; color: #16202a !important; font-weight: 800; border-radius: 6px; box-shadow: none; }
+body.st-fresh:not(#z) .card-new { background: var(--fr-lemon) !important; color: var(--fr-on-lemon) !important; font-weight: 800; border-radius: 6px; box-shadow: none; }
 
 /* Buttons: solid ink, teal when pointed at */
-body.st-fresh:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--fr-ink) !important; color: var(--fr-mist) !important; border: 0 !important; border-radius: 10px !important; box-shadow: none !important; font-weight: 650; }
-body.st-fresh:not(#z) :is(.settings-button, #gotd .gotd-play):hover { background: var(--fr-teal) !important; color: #fff !important; }
-body.st-fresh.dark-mode:not(#z) :is(.settings-button, #gotd .gotd-play):hover { color: #0f171d !important; }
+body.st-fresh:not(#z) :is(.settings-button, #gotd .gotd-play) { background: var(--fr-ink) !important; color: var(--fr-on-ink) !important; border: 0 !important; border-radius: 10px !important; box-shadow: none !important; font-weight: 650; }
+body.st-fresh:not(#z) :is(.settings-button, #gotd .gotd-play):hover { background: var(--fr-teal) !important; color: var(--fr-on-teal) !important; }
 body.st-fresh:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip) { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--fr-line) !important; border-radius: 10px !important; box-shadow: none !important; }
 body.st-fresh:not(#z) :is(.theme-button:not(.scene-pick), .finder-chip):hover { border-color: var(--fr-slate) !important; }
-body.st-fresh:not(#z) :is(.theme-button.active, .finder-chip.active, .finder-chip[aria-pressed="true"]) { background: var(--fr-teal) !important; border-color: var(--fr-teal) !important; color: #fff !important; }
+body.st-fresh:not(#z) :is(.theme-button.active, .finder-chip.active, .finder-chip[aria-pressed="true"]) { background: var(--fr-teal) !important; border-color: var(--fr-teal) !important; color: var(--fr-on-teal) !important; }
 body.st-fresh:not(#z) :is(button, a, summary, input, select, textarea):focus-visible { outline: 3px solid var(--fr-teal); outline-offset: 2px; }
 
 /* Panels and popups: white, one line, one soft shadow */

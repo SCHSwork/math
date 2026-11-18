@@ -173,6 +173,93 @@ function siteSkinPickerHtml() {
 }
 if (document.body) applySiteSkin(); else document.addEventListener("DOMContentLoaded", () => applySiteSkin());
 
+// ── Fresh style: every color and the mark by the logo can be changed ─────────
+// Saved on this device as { light: {...}, dark: {...}, mark }. Light and dark
+// mode keep their own colors; the picker edits whichever mode is on now.
+const FRESH_KEY = "gnmath-fresh";
+const FRESH_COLORS = [
+    ["mist",    "Page",       "#eef2f4", "#0f171d"],
+    ["surface", "Panels",     "#ffffff", "#16212a"],
+    ["ink",     "Text",       "#16202a", "#e6edf1"],
+    ["slate",   "Quiet text", "#566370", "#93a3af"],
+    ["line",    "Lines",      "#d8e0e5", "#24323d"],
+    ["teal",    "Accent",     "#0e7c86", "#3bc1c9"],
+    ["lemon",   "Highlight",  "#f2ce3b", "#f2ce3b"]
+];
+const FRESH_MARKS = [["tile", "Tile"], ["pad", "Controller"], ["pixel", "Invader"], ["heart", "Pixel heart"], ["star", "Star"], ["bolt", "Bolt"], ["dice", "Dice"], ["rocket", "Rocket"], ["none", "None"]];
+function getFresh() {
+    let v = {};
+    try { v = JSON.parse(localStorage.getItem(FRESH_KEY) || "{}") || {}; } catch {}
+    const hex = x => typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x);
+    const clean = o => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).filter(([k, x]) => FRESH_COLORS.some(c => c[0] === k) && hex(x)));
+    return { light: clean(v.light), dark: clean(v.dark), mark: FRESH_MARKS.some(m => m[0] === v.mark) ? v.mark : "tile" };
+}
+function saveFresh(v) { try { localStorage.setItem(FRESH_KEY, JSON.stringify(v)); } catch {} applyFresh(); }
+function freshMode() { return document.body && document.body.classList.contains("dark-mode") ? "dark" : "light"; }
+// Black or white, whichever reads better on a color
+function freshTextOn(hex) {
+    const n = parseInt(hex.slice(1), 16), ch = [n >> 16, (n >> 8) & 255, n & 255].map(c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); });
+    const L = .2126 * ch[0] + .7152 * ch[1] + .0722 * ch[2];
+    return (1.05 / (L + .05)) >= ((L + .05) / .05) ? "#ffffff" : "#111111";
+}
+function applyFresh() {
+    const v = getFresh();
+    if (document.body) document.body.setAttribute("data-fresh-mark", v.mark);
+    let el = document.getElementById("fresh-custom");
+    const block = (mode, sel) => {
+        const c = v[mode], i = mode === "dark" ? 3 : 2;
+        const val = k => c[k] || FRESH_COLORS.find(x => x[0] === k)[i];
+        const props = Object.entries(c).map(([k, x]) => `--fr-${k}: ${x};`);
+        // Text on the accent, the highlight and dark buttons stays readable whatever was picked
+        if (c.teal) props.push(`--fr-on-teal: ${freshTextOn(val("teal"))};`);
+        if (c.lemon) props.push(`--fr-on-lemon: ${freshTextOn(val("lemon"))};`);
+        if (c.ink || c.mist) props.push(`--fr-on-ink: ${freshTextOn(val("ink"))};`);
+        return props.length ? `${sel} { ${props.join(" ")} }` : "";
+    };
+    const css = [block("light", "body.st-fresh.st-fresh:not(.dark-mode):not(#z)"), block("dark", "body.st-fresh.st-fresh.dark-mode:not(#z)")].join("\n");
+    if (!css.trim()) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement("style"); el.id = "fresh-custom"; }
+    el.textContent = css;
+    document.head.appendChild(el);   // last, so it wins over the style's own colors
+}
+function setFreshColor(key, hex) {
+    const v = getFresh(), m = freshMode();
+    if (/^#[0-9a-f]{6}$/i.test(hex)) v[m][key] = hex.toLowerCase();
+    saveFresh(v);
+}
+function setFreshMark(mark) {
+    const v = getFresh(); v.mark = mark; saveFresh(v);
+    document.querySelectorAll("[data-fresh-mark-pick]").forEach(b => b.classList.toggle("active", b.dataset.freshMarkPick === mark));
+}
+function resetFreshColors() {
+    const v = getFresh(); v[freshMode()] = {}; saveFresh(v);
+    refreshFreshOptions();
+}
+function refreshFreshOptions() {
+    const box = document.getElementById("fresh-options");
+    if (box) box.outerHTML = freshOptionsHtml();
+}
+// Settings → Site style: shown only while Fresh is on (CSS hides it otherwise)
+function freshOptionsHtml() {
+    const v = getFresh(), m = freshMode(), i = m === "dark" ? 3 : 2;
+    return `<div id="fresh-options" class="fresh-options">
+        <div class="set-text"><span class="set-label">Fresh colors (${m} mode)</span><small>Pick any color. Light and dark mode each keep their own; switch modes to change the other one.</small></div>
+        <div class="fresh-colors">${FRESH_COLORS.map(([k, label, ...def]) => `<label class="fresh-color"><input type="color" value="${v[m][k] || def[i - 2]}" oninput="setFreshColor('${k}', this.value)"><span>${label}</span></label>`).join("")}</div>
+        <button type="button" class="settings-button set-secondary" onclick="resetFreshColors()">Reset ${m} colors</button>
+        <div class="set-text" style="margin-top:.9rem"><span class="set-label">Mark next to the logo</span></div>
+        <div class="fresh-marks">${FRESH_MARKS.map(([k, label]) => `<button type="button" class="theme-button fresh-mark-pick${k === v.mark ? " active" : ""}" data-fresh-mark-pick="${k}" onclick="setFreshMark('${k}')">${label}</button>`).join("")}</div>
+    </div>`;
+}
+if (document.body) applyFresh(); else document.addEventListener("DOMContentLoaded", applyFresh);
+// Light/dark switch: the picker shows the other mode's colors
+if (typeof MutationObserver !== "undefined") {
+    const watch = () => new MutationObserver(() => {
+        const box = document.getElementById("fresh-options");
+        if (box && !box.textContent.includes(`(${freshMode()} mode)`)) refreshFreshOptions();
+    }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    if (document.body) watch(); else document.addEventListener("DOMContentLoaded", watch);
+}
+
 // Trading cards: the holo foil and a slight tilt follow the pointer (no tilt with reduced motion)
 (function () {
     let last = null;
