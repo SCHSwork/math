@@ -13,6 +13,16 @@
 //    show their size on the card, and Show → "Quick to load" lists the small ones.
 // ═════════════════════════════════════════════════════════════════════════════
 
+// ── Keep saves from being cleared ───────────────────────────────────────────
+// Browsers may delete a site's saved data when the disk gets full (Chromebooks
+// often are). Asking for persistent storage keeps game saves out of that
+// cleanup; Chrome says yes or no by itself, without a prompt.
+try {
+    if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
+    }
+} catch {}
+
 // ── Save backups ────────────────────────────────────────────────────────────
 // Kept in their own database (gnmath-backups), which cloud saves skip so they
 // don't grow. Backups only cover the saves the site has seen the game write
@@ -180,7 +190,8 @@ async function restoreGameSave(id, data) {
 
 // A backup every time a game is closed (or another game is opened in its place)
 (function () {
-    const later = id => { if (id) setTimeout(() => backupGameSave(id, "auto"), 1500); };
+    // After the closed game has written its save (retireGameFrame in app.js)
+    const later = id => { if (id) setTimeout(() => Promise.resolve(window.gnGameFlush).then(() => backupGameSave(id, "auto")), 50); };
     const origClose = closeZone;
     closeZone = function () { const id = currentGameId; const r = origClose.apply(this, arguments); later(id); return r; };
     const origOpen = openZone;

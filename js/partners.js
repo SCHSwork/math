@@ -187,7 +187,7 @@ function makeAdBadge(extraClass) {
 function openPartnerFrame(zone) {
     const url = partnerPlayUrl(zone);
     if (!url) throw new Error("bad partner game address");
-    if (zoneFrame && zoneFrame.parentNode) zoneFrame.parentNode.removeChild(zoneFrame);
+    if (zoneFrame && zoneFrame.parentNode && !zoneFrame.__retiring) zoneFrame.parentNode.removeChild(zoneFrame);
     zoneFrame = document.createElement("iframe");
     zoneFrame.id = "zoneFrame";
     zoneFrame.dataset.partner = "1";
@@ -203,7 +203,7 @@ function openPartnerFrame(zone) {
 // The next normal game needs a plain frame again (its page is written into it)
 function resetFrameAfterPartner() {
     if (!zoneFrame || !zoneFrame.dataset || !zoneFrame.dataset.partner) return;
-    if (zoneFrame.parentNode) zoneFrame.parentNode.removeChild(zoneFrame);
+    if (zoneFrame.parentNode && !zoneFrame.__retiring) zoneFrame.parentNode.removeChild(zoneFrame);
     zoneFrame = document.createElement("iframe");
     zoneFrame.id = "zoneFrame";
     zoneViewer.appendChild(zoneFrame);

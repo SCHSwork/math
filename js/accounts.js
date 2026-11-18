@@ -317,9 +317,72 @@ async function fetchCloudMeta() {
     const snap = await saveDocRef().get();
     return snap.exists ? snap.data() : null;
 }
-async function uploadCloudSave({ force = false, background = false } = {}) {
+// ── Making autosave dependable ───────────────────────────────────────────────
+// • A save asked for while another is running isn't dropped: it runs right
+//   after (closing a game during an autosave used to skip that save).
+// • A save that fails (Wi-Fi drops, Firebase hiccups) is tried again after
+//   20 s, then 40 s, 80 s… (5 min at most), and as soon as the internet is back.
+// • Autosave asks the open game to write what it keeps in memory first (Unity).
+// • Saves when the tab is hidden too (switching tabs, closing the Chromebook).
+let cloudQueue = null, cloudRetryTimer = null, cloudRetryDelay = 0, cloudFailRetryable = false;
+let cloudConflictWarned = "";
+function uploadCloudSave(opts = {}) {
+    if (!cloudUser) return Promise.resolve(false);
+    if (cloudBusy) {
+        if (!cloudQueue) {
+            let resolve;
+            const promise = new Promise(r => { resolve = r; });
+            cloudQueue = { opts: { ...opts }, promise, resolve };
+        } else {
+            cloudQueue.opts.force = !!(cloudQueue.opts.force || opts.force);
+            cloudQueue.opts.background = !!(cloudQueue.opts.background && opts.background);
+        }
+        return cloudQueue.promise;
+    }
+    return runCloudUpload(opts);
+}
+async function runCloudUpload(opts) {
+    let ok = false;
+    try { ok = await uploadCloudSaveNow(opts); }
+    finally {
+        const q = cloudQueue;
+        cloudQueue = null;
+        if (q) runCloudUpload(q.opts).then(q.resolve, () => q.resolve(false));
+    }
+    clearTimeout(cloudRetryTimer); cloudRetryTimer = null;
+    if (ok) cloudRetryDelay = 0;
+    else if (cloudFailRetryable && cloudUser) {
+        cloudRetryDelay = Math.min(cloudRetryDelay ? cloudRetryDelay * 2 : 20000, 5 * 60000);
+        cloudRetryTimer = setTimeout(() => { cloudRetryTimer = null; uploadCloudSave({ background: true }); }, cloudRetryDelay);
+    }
+    return ok;
+}
+async function cloudAutosaveTick() {
+    if (!cloudUser) return;
+    try { if (typeof syncOpenGameFiles === "function") await syncOpenGameFiles(); } catch {}
+    return uploadCloudSave({ background: true });
+}
+function startCloudAutosave() {
+    clearInterval(cloudAutosaveTimer);
+    cloudAutosaveTimer = setInterval(() => { if (!document.hidden) cloudAutosaveTick(); }, CLOUD.autosaveMs);
+}
+let cloudHiddenSaveAt = 0;
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden || !cloudUser || !cloudAutosaveTimer) return;
+    if (Date.now() - cloudHiddenSaveAt < 20000) return;
+    cloudHiddenSaveAt = Date.now();
+    cloudAutosaveTick();
+});
+window.addEventListener("online", () => {
+    if (cloudUser && cloudAutosaveTimer && (cloudRetryTimer || cloudFailRetryable)) {
+        clearTimeout(cloudRetryTimer); cloudRetryTimer = null;
+        setTimeout(() => uploadCloudSave({ background: true }), 3000);
+    }
+});
+async function uploadCloudSaveNow({ force = false, background = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
+    cloudFailRetryable = false;
     try {
         const json = JSON.stringify(await collectCloudBundle());
         const hash = await sha256Hex(json);
@@ -343,6 +406,11 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
             setCloudStatus("Another device saved newer progress — open Account to choose which to keep.");
+            // Say so once: until a choice is made, this device's progress only stays on this device
+            if (cloudConflictWarned !== meta.gen) {
+                cloudConflictWarned = meta.gen;
+                notify("Your account was saved from another device, so this device's progress isn't being saved to the cloud. Open Account to pick which progress to keep.", { duration: 12000 });
+            }
             return false;
         }
         if (meta && meta.hash === hash) {
@@ -391,7 +459,11 @@ async function uploadCloudSave({ force = false, background = false } = {}) {
         }
         if (typeof noteFbError === "function" && noteFbError(e)) {
             setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
-        } else setCloudStatus("Cloud save failed: " + (e.message || e));
+        } else {
+            // Signed out or not allowed won't fix itself; anything else gets tried again
+            cloudFailRetryable = !/permission-denied|unauthenticated/.test(String(e && e.code));
+            setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
+        }
         return false;
     } finally {
         cloudBusy = false;
@@ -800,7 +872,8 @@ async function cloudDeleteAccount() {
     if (!(await askConfirm(`This permanently deletes "${currentUsername()}", its cloud save, its ratings and reports, and its game submissions. It can't be undone.`, { title: "Delete account?", confirmText: "Delete account", danger: true }))) return;
     try {
         setCloudStatus("Deleting…");
-        clearInterval(cloudAutosaveTimer);
+        clearInterval(cloudAutosaveTimer); cloudAutosaveTimer = null;
+        clearTimeout(cloudRetryTimer); cloudRetryTimer = null;
         // Firebase requires a fresh sign-in before deleting an account.
         if (hasPassword()) await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, pw));
         else await cloudUser.reauthenticateWithPopup(googleProvider());
@@ -827,7 +900,7 @@ async function cloudDeleteAccount() {
     } catch (e) {
         console.error("Delete account failed", e);
         setCloudStatus("Couldn't delete: " + friendlyAuthError(e));
-        if (cloudUser) cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
+        if (cloudUser) startCloudAutosave();
     } finally {
         cloudBusy = false;
     }
@@ -1044,13 +1117,14 @@ async function initCloudAccounts() {
             // An account the owner let in gets past the closed screen
             if (typeof applyOwnerSiteMode === "function") applyOwnerSiteMode();
             if (typeof syncMyProfileAndRoles === "function") syncMyProfileAndRoles(user);
-            clearInterval(cloudAutosaveTimer);
+            clearInterval(cloudAutosaveTimer); cloudAutosaveTimer = null;
+            clearTimeout(cloudRetryTimer); cloudRetryTimer = null; cloudRetryDelay = 0;
             if (user && (accountNeedsVerify(user) || accountNeedsUsername(user))) {
                 // New account waiting on its email link or a username: nothing syncs until then
                 setCloudStatus(accountNeedsUsername(user) ? "Pick a username to finish your account (Account)." : "Verify your email to turn on cloud saves (Account).");
                 if (accountNeedsUsername(user)) setTimeout(() => openAccountPanel(), 200);
             } else if (user) {
-                cloudAutosaveTimer = setInterval(() => { if (!document.hidden) uploadCloudSave({ background: true }); }, CLOUD.autosaveMs);
+                startCloudAutosave();
                 cloudSyncOnSignIn();
                 // Accounts from before emails: say once that they can add one now
                 if (isLegacyAccount(user)) {
@@ -1076,7 +1150,12 @@ async function initCloudAccounts() {
         });
         // Save when a game is closed
         const originalCloseZone = closeZone;
-        closeZone = function () { originalCloseZone.apply(this, arguments); uploadCloudSave(); };
+        // (after the game has written its last progress: retireGameFrame in app.js)
+        closeZone = function () {
+            const r = originalCloseZone.apply(this, arguments);
+            if (cloudUser) Promise.race([Promise.resolve(window.gnGameFlush), new Promise(res => setTimeout(res, 4000))]).then(() => uploadCloudSave());
+            return r;
+        };
     } catch (e) {
         console.error("Accounts failed to start", e);
         cloudStatus = "Accounts couldn't load: " + (e.message || e);
