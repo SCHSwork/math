@@ -154,9 +154,17 @@ service cloud.firestore {
         && request.resource.data.uid is string
         && (isAdmin() || (request.auth != null && request.resource.data.uid == request.auth.uid
           && (request.auth.token.email == name + '@gnmath.local' || !isLegacyAuth())));
+      // le: the sign-in email locked with the account's password, so the
+      // username can be used to sign in (js/accounts.js sealLoginEmail)
       allow update: if request.auth != null && resource.data.uid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['uid', 'e']) && request.resource.data.e is bool
-        && request.resource.data.uid == resource.data.uid;
+        && request.resource.data.keys().hasOnly(['uid', 'e', 'le']) && request.resource.data.e is bool
+        && request.resource.data.uid == resource.data.uid
+        && (!('le' in request.resource.data) || (request.resource.data.le is map
+          && request.resource.data.le.keys().hasOnly(['s', 'v', 'c', 'n'])
+          && request.resource.data.le.c is string && request.resource.data.le.c.size() <= 600
+          && request.resource.data.le.s is string && request.resource.data.le.s.size() <= 40
+          && request.resource.data.le.v is string && request.resource.data.le.v.size() <= 40
+          && request.resource.data.le.n is int));
       allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
     }
 

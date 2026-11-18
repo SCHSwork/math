@@ -621,6 +621,50 @@ async function repairUsername(user) {
     }
     return false;
 }
+// Signing in with a username, for accounts that sign in with an email: the
+// username's claim (usernames/<name>, which anyone can read) holds the sign-in
+// email locked with the account's password (PBKDF2 → AES-GCM). Only the right
+// password unlocks it, so the email isn't public, and a wrong password can't
+// tell anyone what the email is. Written whenever the account signs in with
+// its email and password, or changes its password.
+const LOGIN_SEAL_ITER = 200000;
+const b64 = bytes => btoa(String.fromCharCode(...bytes));
+const unb64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+async function loginKey(password, salt, iter) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function sealLoginEmail(email, password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await loginKey(password, salt, LOGIN_SEAL_ITER);
+    const c = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(email)));
+    return { s: b64(salt), v: b64(iv), c: b64(c), n: LOGIN_SEAL_ITER };
+}
+async function openLoginEmail(le, password) {
+    try {
+        if (!le || typeof le.c !== "string" || !(le.n >= 10000 && le.n <= 2000000)) return "";
+        const key = await loginKey(password, unb64(le.s), le.n);
+        const out = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(le.v) }, key, unb64(le.c));
+        const email = new TextDecoder().decode(out);
+        return EMAIL_RE.test(email) ? email : "";
+    } catch { return ""; }
+}
+async function sealLoginForUsername(password) {
+    try {
+        const user = cloudAuth.currentUser;
+        if (!user || isLegacyAccount(user) || !password || !(window.crypto && crypto.subtle)) return;
+        let name = currentUsernameOf(user);
+        // Right after signing in, a username replaced by Google's name may still be being put back
+        if (!name) { await new Promise(r => setTimeout(r, 4000)); name = currentUsernameOf(cloudAuth.currentUser || user); }
+        if (!name) return;
+        const ref = cloudDb.collection("usernames").doc(name);
+        const d = await ref.get();
+        if (!d.exists || d.data().uid !== user.uid) return;
+        // Already unlocks with this password to this email: nothing to write
+        if (d.data().le && await openLoginEmail(d.data().le, password) === user.email) return;
+        await ref.update({ e: true, le: await sealLoginEmail(user.email, password) });
+    } catch (e) { console.warn("Couldn't set up username sign-in", e); }
+}
 // Username → sign-in email for accounts that have signed in on this browser,
 // so the username works in the sign-in box too (kept only on this device)
 const KNOWN_LOGINS_KEY = "gnmath-known-logins";
@@ -706,6 +750,7 @@ async function cloudSignIn(create) {
         if (id.includes("@")) {
             if (!EMAIL_RE.test(id)) return say("That email doesn't look right.");
             await cloudAuth.signInWithEmailAndPassword(id, p);
+            sealLoginForUsername(p);
             return;
         }
         const u = normalizeUsername(id);
@@ -716,13 +761,19 @@ async function cloudSignIn(create) {
             // An account with an email that has signed in on this browser before
             const known = knownLoginEmail(u);
             if (known) {
-                try { await cloudAuth.signInWithEmailAndPassword(known, p); return; }
+                try { await cloudAuth.signInWithEmailAndPassword(known, p); sealLoginForUsername(p); return; }
                 catch (e2) { return say(friendlyAuthError(e2)); }
             }
-            // Accounts with an email sign in with the email
-            let hasEmail = false;
-            try { const d = await cloudDb.collection("usernames").doc(u).get(); hasEmail = d.exists && d.data().e === true; } catch {}
-            say(hasEmail ? "This account signs in with its email address (or Google). Use your email instead of your username: after that, your username works on this device too." : friendlyAuthError(e));
+            // Accounts with an email: their sign-in email, locked with their password
+            let doc = null;
+            try { const d = await cloudDb.collection("usernames").doc(u).get(); doc = d.exists ? d.data() : null; } catch {}
+            if (doc && doc.le) {
+                const email = await openLoginEmail(doc.le, p);
+                if (!email) return say("Wrong username, email or password.");
+                try { await cloudAuth.signInWithEmailAndPassword(email, p); return; }
+                catch (e3) { return say(friendlyAuthError(e3)); }
+            }
+            say(doc && doc.e === true ? "This account signs in with its email address (or Google). Sign in with your email once, and your username works everywhere after that." : friendlyAuthError(e));
         }
     } catch (e) {
         say(friendlyAuthError(e));
@@ -916,6 +967,7 @@ async function cloudChangePassword() {
         // Firebase requires a fresh sign-in before changing a password
         await cloudUser.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cloudUser.email, oldPw));
         await cloudUser.updatePassword(pw1);
+        sealLoginForUsername(pw1);
         ["acct-old-password", "acct-new-password", "acct-new-password2"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
         say("Password changed.", true);
         notify("Your password was changed. Use the new one next time you sign in.", { type: "success" });
