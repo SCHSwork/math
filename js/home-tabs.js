@@ -19,7 +19,7 @@
         { id: "featured", label: "Featured", icon: "star", panel: "featuredZonesWrapper", ok: () => shelfCount("featuredZones") > 0 },
         { id: "new", label: "New", icon: "newBadge", panel: "newGamesWrapper", ok: () => !$("newGamesWrapper").hidden, count: () => (($("newGamesSummary") || {}).querySelector?.(".section-count") || {}).textContent || "" },
         { id: "recent", label: "Recent", icon: "history", panel: "yourGames", ok: () => shelfCount("recentZones") > 0, your: "recent" },
-        { id: "favorites", label: "Favorites", icon: "♥", panel: "yourGames", ok: () => shelfCount("favoriteZones") > 0, your: "favorites", count: () => String(shelfCount("favoriteZones") || "") },
+        { id: "favorites", label: "Favorites", icon: "heart", panel: "yourGames", ok: () => shelfCount("favoriteZones") > 0, your: "favorites", count: () => String(shelfCount("favoriteZones") || "") },
         { id: "originals", label: "GN Originals", icon: "home", panel: "originalsWrapper", ok: () => !$("originalsWrapper").hidden }
     ];
     let current = null;

@@ -1091,6 +1091,7 @@ let cloudSaveState = (() => {
 })();
 function noteSaveState(phase, extra = {}) {
     const s = cloudSaveState;
+    s.seq = (s.seq || 0) + 1;
     if (phase !== "saving") { s.step = ""; s.part = 0; s.parts = 0; }
     if (phase !== s.phase || extra.step) s.stepAt = Date.now();
     s.phase = phase;
@@ -1100,6 +1101,7 @@ function noteSaveState(phase, extra = {}) {
         try { localStorage.setItem(SAVE_INFO_KEY, JSON.stringify({ at: s.lastAt, size: s.size, sum: s.sum })); } catch {}
     }
     renderSaveChip();
+    renderCloseSaveToast();
 }
 const agoText = ms => { const m = Math.floor(ms / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + " min " : ""}ago` : `${Math.floor(m / 1440)} days ago`; };
 const inText = ms => { const sec = Math.max(0, Math.round(ms / 1000)); return sec < 60 ? `${sec} s` : `${Math.ceil(sec / 60)} min`; };
@@ -1131,6 +1133,113 @@ function renderSaveChip() {
     el.innerHTML = gnIcon(info.cls === "warn" ? "warning" : info.cls === "busy" ? "cloud" : "check") + "<span></span>";
     el.lastChild.textContent = info.text;
     renderSaveDetails();
+}
+// ── After closing a game: its save, in the bottom-right corner ──────────────
+// The game bar (and its save chip) is gone once a game is closed, so this
+// shows the closed game's save going up: waiting for the game to write its
+// save, each step of the upload, then "Saved" (fades after a few seconds) or
+// what went wrong and when it tries again.
+let closeToast = null;   // { name, seq, hideTimer, done }
+function showCloseSaveToast(name) {
+    if (!cloudUser || accountNeedsVerify() || accountNeedsUsername()) return;
+    let el = document.getElementById("closeSaveToast");
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "closeSaveToast";
+        el.className = "close-save";
+        el.setAttribute("role", "status");
+        el.setAttribute("aria-live", "polite");
+        el.innerHTML = `<div class="cs-icon"></div><div class="cs-main"><b class="cs-title"></b><span class="cs-line"></span><span class="sd-bar cs-bar" hidden><i></i></span></div>
+            <button type="button" class="cs-act" hidden onclick="closeToastAction()"></button>
+            <button type="button" class="cs-x" aria-label="Hide" onclick="hideCloseSaveToast()">×</button>`;
+    }
+    // In the same corner stack as the site's other messages, so they don't overlap
+    let region = document.getElementById("toastRegion");
+    if (!region) {
+        region = document.createElement("div");
+        region.id = "toastRegion";
+        region.setAttribute("role", "status");
+        region.setAttribute("aria-live", "polite");
+        document.body.appendChild(region);
+    }
+    if (el.parentNode !== region) region.appendChild(el);
+    if (closeToast) clearTimeout(closeToast.hideTimer);
+    closeToast = { name: name || "your game", seq: cloudSaveState.seq || 0, hideTimer: null, done: false, waiting: true };
+    el.classList.remove("cs-hide");
+    requestAnimationFrame(() => el.classList.add("show"));
+    renderCloseSaveToast();
+}
+function hideCloseSaveToast() {
+    const el = document.getElementById("closeSaveToast");
+    if (closeToast) clearTimeout(closeToast.hideTimer);
+    closeToast = null;
+    if (el) { el.classList.remove("show"); setTimeout(() => { if (!closeToast) { const reg = el.parentNode; el.remove(); if (reg && reg.id === "toastRegion") reg.style.bottom = ""; } }, 400); }
+}
+function closeToastAction() {
+    const ph = cloudSaveState.phase;
+    if (ph === "conflict") { hideCloseSaveToast(); openAccountPanel(); return; }
+    if (closeToast) { closeToast.done = false; closeToast.seq = cloudSaveState.seq; clearTimeout(closeToast.hideTimer); }
+    uploadCloudSave();
+}
+function renderCloseSaveToast() {
+    const el = document.getElementById("closeSaveToast");
+    if (!el || !closeToast) return;
+    const s = cloudSaveState, t = closeToast;
+    const fresh = (s.seq || 0) > t.seq;   // something happened since the game was closed
+    let icon = "cloud", cls = "busy", title = `Saving ${t.name}`, line = "Waiting for the game to finish saving…", act = "", bar = null;
+    if (fresh) {
+        t.waiting = false;
+        const mb = n => n >= 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
+        switch (s.phase) {
+            case "saving":
+                line = (Date.now() - s.stepAt > 20000 ? "Still going (slow connection): " : "") + (s.step || "Getting ready") + "…";
+                if (s.parts) bar = s.part / s.parts;
+                break;
+            case "ok":
+                icon = "check"; cls = "ok"; title = `${t.name} saved`;
+                line = "Saved to your account" + (s.size ? ` · ${mb(s.size)}` : "") + ".";
+                break;
+            case "retry":
+                icon = "warning"; cls = "warn"; title = `${t.name} isn't saved to your account yet`;
+                line = (s.retryAt ? `Trying again in ${inText(s.retryAt - Date.now())}. ` : "It'll try again soon. ") + "Your progress is safe on this device.";
+                act = "Try now";
+                break;
+            case "conflict":
+                icon = "warning"; cls = "warn"; title = "Not saved to your account";
+                line = "Another device saved to your account. Pick which progress to keep.";
+                act = "Choose";
+                break;
+            case "paused":
+                icon = "check"; cls = ""; title = `${t.name} saved on this device`;
+                line = "Cloud saves are paused for today (the site's daily limit).";
+                break;
+            case "error":
+                icon = "warning"; cls = "warn"; title = "Couldn't save to your account";
+                line = s.error || "Something went wrong. Your progress is safe on this device.";
+                act = "Try again";
+                break;
+        }
+    }
+    el.className = "close-save show " + cls;
+    el.querySelector(".cs-icon").innerHTML = gnIcon(icon);
+    el.querySelector(".cs-title").textContent = title;
+    el.querySelector(".cs-line").textContent = line;
+    const b = el.querySelector(".cs-bar");
+    b.hidden = bar === null;
+    if (bar !== null) b.firstChild.style.width = Math.round(bar * 100) + "%";
+    const a = el.querySelector(".cs-act");
+    a.hidden = !act; a.textContent = act;
+    // The corner stack sits above the "Play next" bar while that's showing
+    const pn = document.querySelector(".play-next.show"), region = el.parentNode;
+    const r = pn && pn.getBoundingClientRect();
+    if (region && region.id === "toastRegion") region.style.bottom = r ? Math.round(window.innerHeight - r.top + 10) + "px" : "";
+    // Saved: fade out after a bit. Problems: stay longer, then get out of the way
+    const final = fresh && s.phase !== "saving";
+    if (final && !t.done) {
+        t.done = true;
+        clearTimeout(t.hideTimer);
+        t.hideTimer = setTimeout(hideCloseSaveToast, s.phase === "ok" || s.phase === "paused" ? 4500 : 15000);
+    } else if (!final && t.done) { t.done = false; clearTimeout(t.hideTimer); }
 }
 // The chip opens a small panel with where the save is at; it doesn't save
 // anything by itself ("Save now" does)
@@ -1225,6 +1334,7 @@ setInterval(() => {
     if (document.hidden) return;
     const open = !!document.getElementById("saveDetails");
     if (open || cloudSaveState.phase !== "") renderSaveChip();
+    if (closeToast) renderCloseSaveToast();
 }, 1000);
 
 // ── UI ──────────────────────────────────────────────────────────────────────
@@ -1432,7 +1542,10 @@ async function initCloudAccounts() {
         const originalCloseZone = closeZone;
         // (after the game has written its last progress: retireGameFrame in app.js)
         closeZone = function () {
+            let name = "";
+            try { if (zoneViewer.style.display !== "none") name = (document.getElementById("zoneName").textContent || "").trim(); } catch {}
             const r = originalCloseZone.apply(this, arguments);
+            if (cloudUser && name) showCloseSaveToast(name);
             if (cloudUser) Promise.race([Promise.resolve(window.gnGameFlush), new Promise(res => setTimeout(res, 4000))]).then(() => uploadCloudSave());
             return r;
         };
