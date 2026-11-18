@@ -2,7 +2,7 @@
 // Halloween week (Oct 24 – Oct 31, the visitor's own time). While it's on:
 //   • the site wears the Halloween scene (moon, bats, graveyard) for everyone
 //     who hasn't switched it off; picking any theme in Settings switches it off
-//   • a 🎃 Spooky tab on the home page lists horror and Halloween games
+//   • a Spooky tab on the home page lists horror and Halloween games
 //   • two limited-time badges (achievements.js): Trick or Treat (play on
 //     Halloween) and Spooky Season (play 5 spooky games during the week)
 // Nothing is saved to the visitor's theme; on Nov 1 everything goes back.
@@ -58,10 +58,10 @@ function isSpookyZone(z) {
         b.className = "hw-banner";
         b.setAttribute("role", "status");
         const days = Math.ceil((new Date(new Date().getFullYear(), 9, 31) - new Date(new Date().toDateString())) / 86400000);
-        const text = isHalloweenDay() ? "Happy Halloween! Play any game today for the 🎃 Trick or Treat badge." :
-            days > 0 ? `Halloween in ${days} day${days === 1 ? "" : "s"}! Check the 🎃 Spooky tab and earn the limited Halloween badges.` :
+        const text = isHalloweenDay() ? "Happy Halloween! Play any game today for the Trick or Treat badge." :
+            days > 0 ? `Halloween in ${days} day${days === 1 ? "" : "s"}! Check the Spooky tab and earn the limited Halloween badges.` :
             "Halloween week is wrapping up. Last chance for the limited Halloween badges!";
-        b.innerHTML = `<span class="hw-pumpkin" aria-hidden="true">🎃</span><span class="hw-text"></span><button type="button" class="hw-off">Turn off decorations</button><button type="button" class="hw-x" aria-label="Close">×</button>`;
+        b.innerHTML = `<span class="hw-pumpkin" aria-hidden="true">${gnIcon("pumpkin")}</span><span class="hw-text"></span><button type="button" class="hw-off">Turn off decorations</button><button type="button" class="hw-x" aria-label="Close">×</button>`;
         b.querySelector(".hw-text").textContent = text;
         b.querySelector(".hw-x").onclick = () => b.remove();
         b.querySelector(".hw-off").onclick = () => {

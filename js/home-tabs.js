@@ -14,13 +14,13 @@
     const $ = id => document.getElementById(id);
     const shelfCount = id => { const el = $(id); return el ? el.querySelectorAll(".zone-item").length : 0; };
     const TABS = [
-        { id: "spooky", label: "Spooky", icon: "🎃", panel: "spookyWrapper", ok: () => !!$("spookyWrapper") && !$("spookyWrapper").hidden },
-        { id: "top10", label: "Top 10", icon: "🔥", panel: "top10Wrapper", ok: () => !$("top10Wrapper").hidden },
-        { id: "featured", label: "Featured", icon: "⭐", panel: "featuredZonesWrapper", ok: () => shelfCount("featuredZones") > 0 },
-        { id: "new", label: "New", icon: "🆕", panel: "newGamesWrapper", ok: () => !$("newGamesWrapper").hidden, count: () => (($("newGamesSummary") || {}).querySelector?.(".section-count") || {}).textContent || "" },
-        { id: "recent", label: "Recent", icon: "🕘", panel: "yourGames", ok: () => shelfCount("recentZones") > 0, your: "recent" },
+        { id: "spooky", label: "Spooky", icon: "pumpkin", panel: "spookyWrapper", ok: () => !!$("spookyWrapper") && !$("spookyWrapper").hidden },
+        { id: "top10", label: "Top 10", icon: "flame", panel: "top10Wrapper", ok: () => !$("top10Wrapper").hidden },
+        { id: "featured", label: "Featured", icon: "star", panel: "featuredZonesWrapper", ok: () => shelfCount("featuredZones") > 0 },
+        { id: "new", label: "New", icon: "newBadge", panel: "newGamesWrapper", ok: () => !$("newGamesWrapper").hidden, count: () => (($("newGamesSummary") || {}).querySelector?.(".section-count") || {}).textContent || "" },
+        { id: "recent", label: "Recent", icon: "history", panel: "yourGames", ok: () => shelfCount("recentZones") > 0, your: "recent" },
         { id: "favorites", label: "Favorites", icon: "♥", panel: "yourGames", ok: () => shelfCount("favoriteZones") > 0, your: "favorites", count: () => String(shelfCount("favoriteZones") || "") },
-        { id: "originals", label: "GN Originals", icon: "🏠", panel: "originalsWrapper", ok: () => !$("originalsWrapper").hidden }
+        { id: "originals", label: "GN Originals", icon: "home", panel: "originalsWrapper", ok: () => !$("originalsWrapper").hidden }
     ];
     let current = null;
     try { current = localStorage.getItem(KEY); } catch {}
@@ -49,7 +49,7 @@
                     b.setAttribute("role", "tab");
                     b.setAttribute("aria-selected", t.id === current ? "true" : "false");
                     b.dataset.tab = t.id;
-                    const i = document.createElement("span"); i.className = "ht-icon"; i.textContent = t.icon; i.setAttribute("aria-hidden", "true");
+                    const i = document.createElement("span"); i.className = "ht-icon"; i.innerHTML = gnIcon(t.icon); i.setAttribute("aria-hidden", "true");
                     const l = document.createElement("span"); l.textContent = t.label;
                     b.append(i, l);
                     const n = t.count ? t.count() : "";

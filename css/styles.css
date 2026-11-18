@@ -2982,7 +2982,7 @@ body.theme-custom { --bg: #0b0b14; --primary: #a78bfa; --primary-hover: #c4b5fd;
 .custom-bg { display: flex; gap: 0.7rem; align-items: stretch; }
 .custom-bg-preview { flex: none; width: 96px; min-height: 84px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-secondary) center / cover no-repeat; cursor: pointer; position: relative; }
 .custom-bg-preview.empty { cursor: default; background-image: none; }
-.custom-bg-preview.empty::after { content: "🖼️"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; opacity: 0.5; }
+.custom-bg-preview.empty::after { content: "No picture"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; opacity: 0.5; }
 .custom-bg-preview.active { outline: 2px solid var(--primary); outline-offset: 2px; }
 .custom-bg-controls { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.4rem; }
 .custom-bg-line { display: flex; gap: 0.4rem; flex-wrap: wrap; }
@@ -3426,3 +3426,12 @@ html:has(#zoneViewer[style*="flex"]), html:has(#zoneViewer[style*="flex"]) body 
    the game. It comes back the moment the game closes. */
 body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announcement-bar) { animation: zvPageAway 0s linear 0.5s forwards; }
 @keyframes zvPageAway { to { visibility: hidden; } }
+
+/* GN 2.0's own line icons (js/icons.js), used in place of emojis */
+.gi { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -0.17em; flex-shrink: 0; overflow: visible; }
+.ach-icon .gi { width: 30px; height: 30px; }
+.ach-badge .ab-icon .gi { width: 28px; height: 28px; vertical-align: middle; }
+.ach-badge.got .ab-icon { color: var(--accent); }
+.hw-pumpkin .gi { color: #f28c28; }
+#gameMenu .gm-icon { display: inline-flex; justify-content: center; }
+.card-meta span .gi, .card-flag .gi { width: 1em; height: 1em; }

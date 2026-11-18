@@ -1,5 +1,5 @@
 // ═════════════════════════════════════════════════════════════════════════════
-// 1. Random game options: hold (or right-click) the 🎲 button to choose what
+// 1. Random game options: hold (or right-click) the dice button to choose what
 //    kind of game it picks. A normal click uses those options.
 // 2. Game finder: describe what you want ("scary game for 2 players I haven't
 //    played", "like Slope but not hard") and it suggests games, using each
@@ -45,7 +45,7 @@ function openRandomZone() {
     const s = getRandomSettings();
     const pool = randomPool(s);
     if (!pool.length) {
-        notify(randomSettingsChanged(s) ? "No games match your random game options. Hold the 🎲 button to change them." : "No games to pick from right now.");
+        notify(randomSettingsChanged(s) ? "No games match your random game options. Hold the dice button to change them." : "No games to pick from right now.");
         return;
     }
     openZone(pool[Math.floor(Math.random() * pool.length)]);
@@ -66,7 +66,7 @@ function openRandomSettings() {
     body.contentEditable = false;
     const genreOpts = GENRES.map(g => `<option value="${g.id}">${g.label}</option>`).join("");
     body.innerHTML = `
-        <p style="margin:0 0 1rem;color:var(--text-muted);font-size:14px;">Choose what kind of game 🎲 picks. These are saved on this device.</p>
+        <p style="margin:0 0 1rem;color:var(--text-muted);font-size:14px;">Choose what kind of game the dice button picks. These are saved on this device.</p>
         <div class="random-grid">
             <label class="filter-field"><span>Genre</span><select id="rnd-genre"><option value="all">Any genre</option>${genreOpts}</select></label>
             <label class="filter-field"><span>Source</span><select id="rnd-source">
@@ -75,12 +75,12 @@ function openRandomSettings() {
         </div>
         <label class="random-check"><input type="checkbox" id="rnd-unplayed"> Only games I haven't played</label>
         <label class="random-check"><input type="checkbox" id="rnd-favorites"> Only my favorites</label>
-        <label class="random-check"><input type="checkbox" id="rnd-liked"> Only well-liked games (80%+ 👍)</label>
+        <label class="random-check"><input type="checkbox" id="rnd-liked"> Only well-liked games (80%+ liked)</label>
         <label class="random-check"><input type="checkbox" id="rnd-skipBroken"> Skip games flagged broken</label>
         <label class="random-check"><input type="checkbox" id="rnd-useFilters"> Also use my Sort &amp; filter choices</label>
         <p id="rnd-count" style="margin:0.9rem 0;font-size:14px;font-weight:700;"></p>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button type="button" class="settings-button" id="rnd-go" style="flex:1;">🎲 Pick a game</button>
+            <button type="button" class="settings-button" id="rnd-go" style="flex:1;">${gnIcon("dice")} Pick a game</button>
             <button type="button" class="settings-button" id="rnd-reset" style="flex:0 0 auto;width:auto;background:var(--bg-secondary);color:var(--text);">Reset</button>
         </div>`;
     const ids = ["genre", "source"], checks = ["unplayed", "favorites", "liked", "skipBroken", "useFilters"];
@@ -109,7 +109,7 @@ function openRandomSettings() {
     document.getElementById("popupOverlay").style.display = "flex";
 }
 
-// Hold (touch or mouse) or right-click the 🎲 button for options
+// Hold (touch or mouse) or right-click the dice button for options
 function attachRandomHold(btn) {
     if (!btn || btn.dataset.holdReady) return;
     btn.dataset.holdReady = "1";
@@ -530,18 +530,18 @@ function finderSearch(text) {
         const status = document.createElement("p");
         status.id = "finder-ai-status";
         status.className = "finder-ai-status";
-        status.textContent = "✨ Asking the AI for its picks…";
+        status.textContent = "Asking the AI for its picks…";
         out.before(status);
         askAiFinder(t, wants, results).then(picks => {
             if (seq !== aiFinderSeq || !document.getElementById("finder-results")) return;
             status.remove();
             if (!picks) return;   // AI unavailable or found nothing: keep the normal results
             const ids = new Set(picks.map(p => p.z.id));
-            const merged = [...picks.map(p => ({ z: p.z, reasons: p.why ? ["✨ " + p.why] : ["✨ AI pick"] })),
+            const merged = [...picks.map(p => ({ z: p.z, reasons: p.why ? ["AI: " + p.why] : ["AI pick"] })),
                 ...results.filter(r => !ids.has(r.z.id))];
             finderState = { results: merged, shown: 0 };
             out.innerHTML = "";
-            said.textContent = "✨ AI picks for “" + (t.length > 50 ? t.slice(0, 47) + "…" : t) + "”";
+            said.textContent = "AI picks for “" + (t.length > 50 ? t.slice(0, 47) + "…" : t) + "”";
             showMoreFinder(Math.max(total, merged.length));
         });
     }
@@ -570,7 +570,7 @@ function showMoreFinder(total) {
 }
 
 function openGameFinder(prefill) {
-    document.getElementById("popupTitle").textContent = "✨ Find me a game";
+    document.getElementById("popupTitle").textContent = "Find me a game";
     const body = document.getElementById("popupBody");
     body.contentEditable = false;
     let hist = [];
@@ -586,7 +586,7 @@ function openGameFinder(prefill) {
         <p id="finder-understood" class="finder-understood" aria-live="polite"></p>
         <div id="finder-results" class="finder-results"></div>
         <p style="margin:0.75rem 0 0;color:var(--text-muted);font-size:12px;">Try genres, moods ("chill", "funny", "hard"), themes ("zombies", "space"), "like &lt;game&gt;", "with a friend", or what you don't want ("nothing scary"). <span id="finder-privacy"></span></p>
-        ${aiFinderAvailable() ? `<label class="random-check finder-ai-toggle"><input type="checkbox" id="finder-ai"> ✨ AI picks</label>` : ""}`;
+        ${aiFinderAvailable() ? `<label class="random-check finder-ai-toggle"><input type="checkbox" id="finder-ai"> AI picks</label>` : ""}`;
     const input = document.getElementById("finder-input");
     const privacy = () => document.getElementById("finder-privacy").textContent = aiFinderOn()
         ? "With AI picks on, what you type and a list of game names go to the site's AI helper. Nothing about your account or play history is sent."
@@ -626,7 +626,7 @@ function maybeSuggestFinder() {
         const main = document.querySelector("main");
         main.insertBefore(hint, main.firstChild);
     }
-    hint.textContent = `✨ Ask the game finder: “${v.length > 60 ? v.slice(0, 57) + "…" : v}”`;
+    hint.textContent = `Ask the game finder: “${v.length > 60 ? v.slice(0, 57) + "…" : v}”`;
     hint.hidden = false;
 }
 

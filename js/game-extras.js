@@ -4,7 +4,7 @@
 //    time you close the game (the last 3 that differ), and right before "Clear
 //    this game's data" or a restore. ⋯ More → Save backups lists them, and
 //    lets you back up now, restore one, or save/load a backup file.
-//  • Mute: 🔊 in the game's top bar (or Alt+M) silences the game without
+//  • Mute: the speaker button in the game's top bar (or Alt+M) silences the game without
 //    closing it. It stays on for every game until you turn it off or reload.
 //  • Copy link: ⋯ More → Copy link to this game. The link opens the site with
 //    that game already open (?play=<id>, removed from the address bar after).
@@ -231,13 +231,13 @@ async function openSaveBackups(zone = currentZone()) {
     actions.className = "backup-actions";
     const mk = (text, fn, cls = "settings-button") => { const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = text; b.onclick = fn; return b; };
     actions.append(
-        mk("💾 Back up now", async () => {
+        mk("Back up now", async () => {
             if (!trackedItemCount(gid)) { notify(`No saved progress found for "${zone.name}" yet. Play it a bit first.`); return; }
             const rec = await backupGameSave(gid, "manual");
             notify(rec ? "Backed up this game's save." : "Couldn't make a backup right now.", { type: rec ? "success" : "error" });
             openSaveBackups(zone);
         }),
-        mk("📂 Restore from a file…", () => restoreBackupFromFile(zone))
+        mk("Restore from a file…", () => restoreBackupFromFile(zone))
     );
     body.append(intro, actions);
     if (!list.length) {
@@ -265,8 +265,8 @@ async function openSaveBackups(zone = currentZone()) {
                 try { const full = await getBackup(b.k); await restoreGameSave(gid, full.data); }
                 catch (e) { notify("Couldn't restore that backup: " + (e && e.message || e), { type: "error" }); }
             }),
-            mk("⬇", () => downloadBackup(b), "settings-button backup-icon"),
-            mk("🗑", async () => {
+            mk("Download", () => downloadBackup(b), "settings-button backup-icon"),
+            mk("Delete", async () => {
                 if (!(await askConfirm("This backup will be deleted.", { title: "Delete backup?", confirmText: "Delete", danger: true }))) return;
                 await deleteBackup(b.k); openSaveBackups(zone);
             }, "settings-button backup-icon")
@@ -401,7 +401,7 @@ window.__gnmathMuted = () => gameMuted;
 function updateMuteButton() {
     const b = document.getElementById("muteButton");
     if (!b) return;
-    b.textContent = gameMuted ? "🔇" : "🔊";
+    b.innerHTML = gnIcon(gameMuted ? "volumeOff" : "volume");
     b.classList.toggle("on", gameMuted);
     b.setAttribute("aria-pressed", gameMuted ? "true" : "false");
     b.title = gameMuted ? "Sound is off. Turn it on (Alt+M)" : "Mute the game (Alt+M)";
@@ -491,7 +491,7 @@ function formatGameSize(kb) {
 // Shown on cards for big games only, so the small ones stay uncluttered
 function gameSizeCardText(zone) {
     const kb = gameSizeKb(zone);
-    return kb !== null && kb >= SHOW_SIZE_KB ? "⬇ " + formatGameSize(kb) : "";
+    return kb !== null && kb >= SHOW_SIZE_KB ? formatGameSize(kb) : "";
 }
 function isQuickGame(zone) {
     const kb = gameSizeKb(zone);
@@ -549,7 +549,7 @@ function openGameLog() {
     pre.className = "game-log";
     pre.textContent = text;
     const copy = document.createElement("button");
-    copy.className = "settings-button"; copy.type = "button"; copy.textContent = "📋 Copy";
+    copy.className = "settings-button"; copy.type = "button"; copy.textContent = "Copy";
     copy.onclick = async () => {
         let ok = false;
         try { await navigator.clipboard.writeText(text); ok = true; } catch {}

@@ -19,15 +19,15 @@ const FEEDBACK_CATEGORIES = {
 };
 const FEEDBACK_STATUS = {
     bug: {
-        open: "⏳ Waiting for a mod",
-        confirmed: "🔎 Confirmed, being worked on",
-        fixed: "✅ Fixed",
+        open: "Waiting for a mod",
+        confirmed: "Confirmed, being worked on",
+        fixed: "Fixed",
         rejected: "✖ Closed"
     },
     feature: {
-        open: "⏳ Waiting for a mod",
-        approved: "👍 Approved, on the ideas list",
-        done: "🎉 Added to the site",
+        open: "Waiting for a mod",
+        approved: "Approved, on the ideas list",
+        done: "Added to the site",
         rejected: "✖ Not planned"
     }
 };
@@ -89,9 +89,9 @@ function openFeedback(type = "bug", { zone = null } = {}) {
     const field = (label, html, hint) => `<label class="submit-field"><span>${label}</span>${html}${hint ? `<small>${hint}</small>` : ""}</label>`;
     body.innerHTML = `
         <div class="admin-tabs fb-switch" role="tablist">
-            <button type="button" role="tab" data-type="bug" aria-selected="${isBug}">⚠️ Report a problem</button>
-            <button type="button" role="tab" data-type="feature" aria-selected="${!isBug}">💡 Suggest a feature</button>
-            <button type="button" role="tab" data-type="ideas" aria-selected="false">🗳️ Ideas board</button>
+            <button type="button" role="tab" data-type="bug" aria-selected="${isBug}">${gnIcon("warning")} Report a problem</button>
+            <button type="button" role="tab" data-type="feature" aria-selected="${!isBug}">${gnIcon("bulb")} Suggest a feature</button>
+            <button type="button" role="tab" data-type="ideas" aria-selected="false">${gnIcon("vote")} Ideas board</button>
         </div>
         <p style="margin:0 0 1rem;color:var(--text-muted);font-size:14px;">${isBug
             ? "Tell the mods what went wrong. They can see your report and reply to it here."
@@ -194,7 +194,7 @@ async function renderMyFeedback() {
             row.className = "submit-row";
             const left = document.createElement("div");
             const b = document.createElement("b");
-            b.textContent = (f.type === "feature" ? "💡 " : "⚠️ ") + f.title;
+            b.replaceChildren(gnIconEl(f.type === "feature" ? "bulb" : "warning"), " " + f.title);
             const meta = document.createElement("small");
             meta.textContent = `${FEEDBACK_STATUS[f.type]?.[f.status] || f.status}${feedbackDate(f) ? " · " + feedbackDate(f) : ""}`;
             left.append(b, meta);
@@ -237,9 +237,9 @@ async function openIdeasBoard() {
     body.contentEditable = false;
     body.innerHTML = `
         <div class="admin-tabs fb-switch" role="tablist">
-            <button type="button" role="tab" data-type="bug" aria-selected="false">⚠️ Report a problem</button>
-            <button type="button" role="tab" data-type="feature" aria-selected="false">💡 Suggest a feature</button>
-            <button type="button" role="tab" data-type="ideas" aria-selected="true">🗳️ Ideas board</button>
+            <button type="button" role="tab" data-type="bug" aria-selected="false">${gnIcon("warning")} Report a problem</button>
+            <button type="button" role="tab" data-type="feature" aria-selected="false">${gnIcon("bulb")} Suggest a feature</button>
+            <button type="button" role="tab" data-type="ideas" aria-selected="true">${gnIcon("vote")} Ideas board</button>
         </div>
         <p style="margin:0 0 0.75rem;color:var(--text-muted);font-size:14px;">Ideas the mods approved. Vote for the ones you want most; the most-wanted ones get looked at first.</p>
         <div id="fb-ideas" class="fb-ideas"><p style="color:var(--text-muted);font-size:13px;">Loading ideas…</p></div>`;
@@ -280,7 +280,7 @@ async function openIdeasBoard() {
         const t = document.createElement("b");
         t.textContent = f.title;
         const meta = document.createElement("small");
-        meta.textContent = `${f.status === "done" ? "🎉 Added to the site" : "Suggested"} by ${f.username || "someone"}${feedbackDate(f) ? " · " + feedbackDate(f) : ""}`;
+        meta.textContent = `${f.status === "done" ? "Added to the site" : "Suggested"} by ${f.username || "someone"}${feedbackDate(f) ? " · " + feedbackDate(f) : ""}`;
         text.append(t);
         if (f.details) { const p = document.createElement("p"); p.textContent = f.details; text.appendChild(p); }
         if (f.note) { const n = document.createElement("small"); n.className = "fb-mod-note"; n.textContent = "Mod: " + f.note; text.appendChild(n); }
@@ -354,7 +354,7 @@ function drawModFeedback() {
         row.dataset.status = f.status;
         const head = document.createElement("div");
         const b = document.createElement("b");
-        b.textContent = (isBug ? "⚠️ " : "💡 ") + f.title;
+        b.replaceChildren(gnIconEl(isBug ? "warning" : "bulb"), " " + f.title);
         head.appendChild(b);
         const info = document.createElement("small");
         const bits = [isBug ? (FEEDBACK_CATEGORIES[f.category] || f.category) : "Feature idea"];

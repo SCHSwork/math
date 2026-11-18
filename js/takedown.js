@@ -16,9 +16,9 @@ const TAKEDOWN = {
     email: "gn.math.business@gmail.com"
 };
 const TAKEDOWN_STATUS = {
-    open: "⏳ Waiting for review",
-    info: "✉️ Asked for more info",
-    removed: "🚫 Game removed",
+    open: "Waiting for review",
+    info: "Asked for more info",
+    removed: "Game removed",
     rejected: "✖ Rejected",
     restored: "↩ Game restored"
 };
@@ -226,7 +226,7 @@ function drawModTakedowns() {
         const row = el("div", "submit-review fb-review");
         row.dataset.status = t.status;
         const z = t.gameId && typeof zones !== "undefined" ? zones.find(x => String(x.id) === String(t.gameId)) : null;
-        const head = el("div"); head.appendChild(el("b", "", "©️ " + (t.gameName || "?") + (t.gameId ? ` (#${t.gameId})` : " (no exact match)")));
+        const head = el("div"); head.appendChild(el("b", "", "" + (t.gameName || "?") + (t.gameId ? ` (#${t.gameId})` : " (no exact match)")));
         const d = takedownTime(t);
         row.append(head, el("small", "", `from ${t.name}${t.org ? " · " + t.org : ""}${d ? " on " + d.toLocaleDateString() : ""}`));
         const mail = el("small", "");

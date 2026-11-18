@@ -251,7 +251,7 @@ async function renderGameCheck(force) {
             <b class="gc-ok">${okN.toLocaleString()} working</b> · <b class="gc-bad">${broken.length} not starting</b> · ${slow.length} couldn't tell.
             <button type="button" class="finder-chip" id="gc-refresh">Refresh</button></p>
         <p class="admin-footnote">Every night about 250 games are opened in a real browser, plus every game that failed last time, so each game is checked about once a week. "Not starting" means no game appeared within 45 seconds (checked twice). "Couldn't tell" means the game was still loading, or the test server couldn't download its files. Some "not starting" games still work for players (they need a click or a login), so open one before turning it off.</p>
-        ${broken.length ? `<h4 class="gc-h">Not starting (${broken.length})</h4>${broken.sort((a, b) => off(a) - off(b) || String(a.z.name).localeCompare(b.z.name)).map(row).join("")}` : `<p>No broken games found. 🎉</p>`}
+        ${broken.length ? `<h4 class="gc-h">Not starting (${broken.length})</h4>${broken.sort((a, b) => off(a) - off(b) || String(a.z.name).localeCompare(b.z.name)).map(row).join("")}` : `<p>No broken games found.</p>`}
         ${slow.length ? `<details class="gc-slow"><summary>Couldn't tell (${slow.length})</summary>${slow.map(row).join("")}</details>` : ""}
         ${fixedList.length ? `<details class="gc-slow"><summary>Marked fixed (${fixedList.length})</summary><p class="admin-footnote">These come back if a later nightly check finds them failing again.</p>${fixedList.map(row).join("")}</details>` : ""}`;
     box.querySelector("#gc-refresh").onclick = () => renderGameCheck(true);
@@ -588,7 +588,7 @@ async function renderErrorLog(force) {
         const total = rows.reduce((n, e) => n + (e.count || 0), 0);
         document.getElementById("err-summary").textContent = rows.length
             ? `${rows.length} kind${rows.length === 1 ? "" : "s"} of error · ${total.toLocaleString()} time${total === 1 ? "" : "s"} in all`
-            : (errorLogFilter === "open" && !q ? "No open errors. 🎉" : "Nothing matches.");
+            : (errorLogFilter === "open" && !q ? "No open errors." : "Nothing matches.");
         const list = document.getElementById("err-list");
         list.innerHTML = "";
         for (const e of rows) {
@@ -600,7 +600,7 @@ async function renderErrorLog(force) {
             sum.append(b, src);
             if (e.status === "resolved") { const r = document.createElement("span"); r.className = "admin-badge trusted"; r.textContent = "Resolved"; sum.appendChild(r); }
             const meta = document.createElement("small");
-            meta.textContent = [e.gameName ? "🎮 " + e.gameName : "", `${(e.count || 0).toLocaleString()}×`, "last " + when(e.lastAt), "first " + when(e.firstAt)].filter(Boolean).join(" · ");
+            meta.textContent = [e.gameName ? "Game: " + e.gameName : "", `${(e.count || 0).toLocaleString()}×`, "last " + when(e.lastAt), "first " + when(e.firstAt)].filter(Boolean).join(" · ");
             sum.appendChild(meta);
             row.appendChild(sum);
             const body = document.createElement("div");
@@ -936,20 +936,20 @@ function renderAdminActivity(box, p) {
         list.appendChild(row);
     };
     const byName = arr => [...arr].sort((a, b) => adminGameName(a.gameId).name.localeCompare(adminGameName(b.gameId).name));
-    let list = section("👍 Liked", st.likes.length, st.likes.length > 0 && st.likes.length <= 12);
+    let list = section("Liked", st.likes.length, st.likes.length > 0 && st.likes.length <= 12);
     if (!st.likes.length) empty(list, "No likes."); else byName(st.likes).forEach(i => gameItem(list, i, "like"));
-    list = section("👎 Disliked", st.dislikes.length, st.dislikes.length > 0 && st.dislikes.length <= 12);
+    list = section("Disliked", st.dislikes.length, st.dislikes.length > 0 && st.dislikes.length <= 12);
     if (!st.dislikes.length) empty(list, "No dislikes."); else byName(st.dislikes).forEach(i => gameItem(list, i, "dislike"));
-    list = section("⚠ Reported as broken", st.broken.length, st.broken.length > 0);
+    list = section("Reported as broken", st.broken.length, st.broken.length > 0);
     if (!st.broken.length) empty(list, "No broken-game reports."); else [...st.broken].sort((a, b) => timeOf(b.at) - timeOf(a.at)).forEach(i => gameItem(list, i, "broken"));
-    list = section("📝 Reports & ideas sent", fb.length, fb.length > 0);
+    list = section("Reports & ideas sent", fb.length, fb.length > 0);
     if (!fb.length) empty(list, "Nothing sent.");
     else [...fb].sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt)).forEach(f => {
         const row = document.createElement("div");
         row.className = "admin-act-item admin-act-fb";
         const t = document.createElement("span");
         const status = (typeof FEEDBACK_STATUS !== "undefined" && FEEDBACK_STATUS[f.type]?.[f.status]) || f.status;
-        t.textContent = `${f.type === "feature" ? "💡" : "⚠️"} ${f.title}${f.gameName ? " · " + f.gameName : ""} · ${status}${f.createdAt ? " · " + fmtDate(f.createdAt) : ""}`;
+        t.textContent = `${f.type === "feature" ? "Idea:" : "Problem:"} ${f.title}${f.gameName ? " · " + f.gameName : ""} · ${status}${f.createdAt ? " · " + fmtDate(f.createdAt) : ""}`;
         t.title = f.details || "";
         row.appendChild(t);
         const view = document.createElement("button");

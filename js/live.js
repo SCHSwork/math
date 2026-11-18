@@ -1,5 +1,5 @@
 // ═════════════════════════════════════════════════════════════════════════════
-// "🔥 N playing now" on game cards, and the "Top 10 this week" row.
+// "N playing now" on game cards, and the "Top 10 this week" row.
 //
 // Each browser's online heartbeat (presence.js) also says which game is open
 // (g: the game id, nothing else). Every 5 minutes ONE browser, whichever

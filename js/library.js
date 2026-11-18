@@ -122,7 +122,7 @@ function renderGameOfTheDay() {
     const votes = st.up + st.down;
     const meta = [];
     if (z.author) meta.push("By " + z.author);
-    if (votes >= MIN_VOTES_TO_SHOW) meta.push(`👍 ${Math.round(st.up / votes * 100)}%`);
+    if (votes >= MIN_VOTES_TO_SHOW) meta.push(`${Math.round(st.up / votes * 100)}% liked`);
     const mine = getPlaytime(z.id);
     meta.push(mine >= 60 ? `You've played ${formatPlaytime(mine)}` : "New to you");
     const date = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" });
