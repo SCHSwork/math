@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Lock screen password fixed
+
+### Fixed
+- The right password on the lock screen could be called wrong for a few minutes after the owner set or changed it, because the page still had the old one (GitHub's copy takes up to ~5 minutes to update). The password and the accounts let in now go out instantly with the site mode, and a password that doesn't match makes the page fetch the newest settings and check once more.
+- Spaces before or after the password are ignored, and phones no longer capitalize the first letter.
+
 ## November 18, 2026 — Owner Panel: password box and Expected back
 
 ### Fixed
