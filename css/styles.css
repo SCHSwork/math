@@ -3517,3 +3517,8 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .close-save .cs-x { flex: none; width: 26px; height: 26px; margin: -4px -4px 0 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; }
 .close-save .cs-x:hover { background: var(--surface-hover); color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .close-save { transition: opacity 0.2s; transform: none; } .close-save.busy .cs-icon .gi { animation: none; } }
+
+/* Admin Panel → Sessions: custom boot time (a number and minutes / hours / days) */
+.boot-custom { display: inline-flex; gap: 6px; align-items: center; }
+.boot-custom[hidden] { display: none; }
+.boot-custom .boot-amount { width: 5.5em; min-width: 0; flex: none; }

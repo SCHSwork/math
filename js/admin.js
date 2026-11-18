@@ -323,7 +323,9 @@ async function renderVisitors() {
 // been removed" screen until the boot runs out or is lifted. A boot follows
 // the browser, not the person: another browser, or clearing site data, gets
 // a new session. Costs about two reads per session listed.
-const BOOT_TIMES = [["10m", "10 minutes", 10 * 60000], ["1h", "1 hour", 3600000], ["1d", "1 day", 86400000], ["7d", "1 week", 7 * 86400000], ["forever", "Until I lift it", 50 * 365 * 86400000]];
+const BOOT_TIMES = [["5m", "5 minutes", 5 * 60000], ["10m", "10 minutes", 10 * 60000], ["30m", "30 minutes", 30 * 60000], ["1h", "1 hour", 3600000],
+    ["1d", "1 day", 86400000], ["7d", "1 week", 7 * 86400000], ["forever", "Until I lift it", 50 * 365 * 86400000], ["custom", "Custom time…", 0]];
+const BOOT_UNITS = [["m", "minutes", 60000], ["h", "hours", 3600000], ["d", "days", 86400000]];
 async function renderSessions() {
     const box = document.getElementById("admin-sessions");
     if (!box) return;
@@ -399,11 +401,29 @@ async function renderSessions() {
             const time = document.createElement("select");
             time.setAttribute("aria-label", "How long");
             BOOT_TIMES.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; time.appendChild(o); });
-            time.value = "1h";
+            time.value = "5m";
+            // Custom: a number and minutes / hours / days, shown when "Custom time…" is picked
+            const custom = document.createElement("span");
+            custom.className = "boot-custom"; custom.hidden = true;
+            const amount = document.createElement("input");
+            amount.type = "number"; amount.min = "1"; amount.max = "999"; amount.step = "1"; amount.value = "15"; amount.className = "submit-note boot-amount";
+            amount.setAttribute("aria-label", "How many");
+            const unit = document.createElement("select");
+            unit.setAttribute("aria-label", "Minutes, hours or days");
+            BOOT_UNITS.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; unit.appendChild(o); });
+            custom.append(amount, unit);
+            time.onchange = () => { custom.hidden = time.value !== "custom"; if (!custom.hidden) amount.focus(); };
             const go = document.createElement("button");
             go.type = "button"; go.className = "finder-chip danger"; go.textContent = "Boot";
             go.onclick = async () => {
-                const [, tl, dur] = BOOT_TIMES.find(x => x[0] === time.value);
+                let [, tl, dur] = BOOT_TIMES.find(x => x[0] === time.value);
+                if (time.value === "custom") {
+                    const n = Math.floor(Number(amount.value));
+                    const [, ul, ums] = BOOT_UNITS.find(x => x[0] === unit.value);
+                    if (!(n >= 1 && n <= 999)) { notify("Enter how long: a number from 1 to 999.", { type: "error" }); amount.focus(); return; }
+                    dur = n * ums;
+                    tl = `${n} ${n === 1 ? ul.replace(/s$/, "") : ul}`;
+                }
                 const why = reason.value.trim().slice(0, 200);
                 if (!(await askConfirm(`${name} will be removed from the site ${time.value === "forever" ? "until you lift it" : "for " + tl}. Their progress is saved first.${why ? " Reason shown to them: " + why : ""}`, { title: "Boot this session?", confirmText: "Boot", danger: true }))) return;
                 go.disabled = true;
@@ -414,11 +434,11 @@ async function renderSessions() {
                         name: String(name).slice(0, 40), info: String(info || "").slice(0, 200)
                     };
                     await loggedWrite("boot", id, name, `${tl}${why ? " · " + why : ""}`, w => w.set(cloudDb.collection("boots").doc(id), data));
-                    notify(`${name} is booted. It takes effect within about 2 minutes.`, { type: "success" });
+                    notify(`${name} is booted ${time.value === "forever" ? "until you lift it" : "for " + tl}. It takes effect right away.`, { type: "success" });
                     renderSessions();
                 } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); go.disabled = false; }
             };
-            box2.append(reason, time, go);
+            box2.append(reason, time, custom, go);
         }
         row.appendChild(box2);
     };
