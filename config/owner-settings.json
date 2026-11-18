@@ -1,5 +1,5 @@
 {
-  "siteMode": "open",
+  "siteMode": "locked",
   "disabledZones": [
     "653",
     "300013",
@@ -82,5 +82,5 @@
     }
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-18T07:18:09.702Z"
+  "updatedAt": "2026-11-18T19:07:06.017Z"
 }
