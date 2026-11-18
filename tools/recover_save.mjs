@@ -37,7 +37,11 @@ const db = admin.firestore();
 
 let user;
 try { user = await admin.auth().getUserByEmail(`${username}@gnmath.local`); }
-catch (e) { console.log(`No account called "${username}".`); process.exit(1); }
+catch (e) {
+    // Accounts with a real email: the username is claimed in usernames/
+    try { const d = await db.collection("usernames").doc(username).get(); if (d.exists) user = await admin.auth().getUser(d.data().uid); } catch {}
+    if (!user) { console.log(`No account called "${username}".`); process.exit(1); }
+}
 const uid = user.uid;
 console.log(`Account "${username}" (created ${user.metadata.creationTime}, last signed in ${user.metadata.lastSignInTime})`);
 

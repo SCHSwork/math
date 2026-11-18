@@ -2,6 +2,16 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Accounts with Google linked
+
+### Fixed
+- Linking Google replaced the account's username with the Google name (like "Lincoln Paxton"). The site then treated the account as having no username, so its profile stopped updating: it showed as offline in the Admin Panel. The username is now kept when linking, and accounts this already happened to get theirs back the next time they open the site.
+- Accounts with an email can sign in with their username again on a device where they've signed in before (the username is matched to the email on that device only). Elsewhere, they sign in with their email or Google.
+
+### Added
+- **Check an account** (Actions): shows how an account signs in, whether its email is verified, its username claim and when its profile last updated, for sorting out sign-in problems. Emails are partly hidden in the log.
+- Recover a cloud save now finds accounts that sign in with an email too.
+
 ## November 18, 2026 — Lock screen password fixed
 
 ### Fixed

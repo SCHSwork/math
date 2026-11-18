@@ -583,12 +583,64 @@ function usernameToEmail(u) { return `${u}@${CLOUD.usernameDomain}`; }
 function isLegacyAccount(user = cloudUser) { return !!(user && user.email && user.email.endsWith("@" + CLOUD.usernameDomain)); }
 function currentUsername() {
     if (!cloudUser || !cloudUser.email) return "";
-    return isLegacyAccount() ? cloudUser.email.split("@")[0] : normalizeUsername(cloudUser.displayName || "");
+    if (isLegacyAccount()) return cloudUser.email.split("@")[0];
+    const n = normalizeUsername(cloudUser.displayName || "");
+    return USERNAME_RE.test(n) ? n : "";
+}
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+// The account's username is kept in its display name. Linking Google (and
+// sometimes signing in with it) replaces that with the Google name ("Lincoln
+// Paxton"), which made the site treat the account as having no username: its
+// profile stopped updating and it showed as offline. This puts it back, from
+// this browser's memory of the account or its profile, checked against the
+// username claim (usernames/<name>).
+const USERNAME_MEMO = uid => "gnmath-username-" + uid;
+function rememberUsername(user = cloudUser) {
+    try { const u = user && currentUsernameOf(user); if (u) localStorage.setItem(USERNAME_MEMO(user.uid), u); } catch {}
+}
+function currentUsernameOf(user) {
+    if (!user || !user.email) return "";
+    if (isLegacyAccount(user)) return user.email.split("@")[0];
+    const n = normalizeUsername(user.displayName || "");
+    return USERNAME_RE.test(n) ? n : "";
+}
+async function repairUsername(user) {
+    if (!user || isLegacyAccount(user) || currentUsernameOf(user)) return false;
+    const tries = [];
+    try { const m = localStorage.getItem(USERNAME_MEMO(user.uid)); if (m) tries.push(m); } catch {}
+    try { const p = await cloudDb.collection("profiles").doc(user.uid).get(); if (p.exists && p.data().username) tries.push(p.data().username); } catch {}
+    for (const name of [...new Set(tries.map(normalizeUsername))]) {
+        if (!USERNAME_RE.test(name)) continue;
+        try {
+            const d = await cloudDb.collection("usernames").doc(name).get();
+            if (d.exists && d.data().uid === user.uid) {
+                await user.updateProfile({ displayName: name });
+                return true;
+            }
+        } catch (e) { console.warn("Couldn't check username", name, e); }
+    }
+    return false;
+}
+// Username → sign-in email for accounts that have signed in on this browser,
+// so the username works in the sign-in box too (kept only on this device)
+const KNOWN_LOGINS_KEY = "gnmath-known-logins";
+function knownLoginEmail(username) {
+    try { return (JSON.parse(localStorage.getItem(KNOWN_LOGINS_KEY) || "{}") || {})[username] || ""; } catch { return ""; }
+}
+function rememberLogin(user = cloudUser) {
+    try {
+        const u = currentUsernameOf(user);
+        if (!u || !user.email || isLegacyAccount(user)) return;
+        const m = JSON.parse(localStorage.getItem(KNOWN_LOGINS_KEY) || "{}") || {};
+        if (m[u] === user.email) return;
+        m[u] = user.email;
+        localStorage.setItem(KNOWN_LOGINS_KEY, JSON.stringify(m));
+    } catch {}
 }
 // A new account whose email isn't verified yet can't use cloud features
 function accountNeedsVerify(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !user.emailVerified); }
 // Signed in with Google for the first time: needs to pick a username
-function accountNeedsUsername(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !user.displayName); }
+function accountNeedsUsername(user = cloudUser) { return !!(user && !isLegacyAccount(user) && !currentUsernameOf(user)); }
 function hasPassword(user = cloudUser) { return !!(user && user.providerData.some(p => p.providerId === "password")); }
 function hasGoogle(user = cloudUser) { return !!(user && user.providerData.some(p => p.providerId === "google.com")); }
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -661,10 +713,16 @@ async function cloudSignIn(create) {
         try {
             await cloudAuth.signInWithEmailAndPassword(usernameToEmail(u), p);
         } catch (e) {
+            // An account with an email that has signed in on this browser before
+            const known = knownLoginEmail(u);
+            if (known) {
+                try { await cloudAuth.signInWithEmailAndPassword(known, p); return; }
+                catch (e2) { return say(friendlyAuthError(e2)); }
+            }
             // Accounts with an email sign in with the email
             let hasEmail = false;
             try { const d = await cloudDb.collection("usernames").doc(u).get(); hasEmail = d.exists && d.data().e === true; } catch {}
-            say(hasEmail ? "This account signs in with its email address. Use your email instead of your username." : friendlyAuthError(e));
+            say(hasEmail ? "This account signs in with its email address (or Google). Use your email instead of your username: after that, your username works on this device too." : friendlyAuthError(e));
         }
     } catch (e) {
         say(friendlyAuthError(e));
@@ -781,7 +839,10 @@ async function cloudGoogleSignIn() {
 async function cloudLinkGoogle() {
     if (!cloudUser) return;
     try {
+        const keep = currentUsername();
         await cloudUser.linkWithPopup(googleProvider());
+        // Linking gives the account the Google name; keep the username
+        if (keep && normalizeUsername(cloudUser.displayName || "") !== keep) await cloudUser.updateProfile({ displayName: keep });
         notify("Google is linked. You can sign in with Google from now on.", { type: "success" });
         openAccountPanel();
     } catch (e) {
@@ -1110,7 +1171,12 @@ async function initCloudAccounts() {
         cloudAuth = firebase.auth();
         cloudDb = firebase.firestore();
         countFirestoreUse();
-        cloudAuth.onAuthStateChanged(user => {
+        cloudAuth.onAuthStateChanged(async user => {
+            // Put back a username that Google's name replaced (before anything uses it)
+            if (user && !isLegacyAccount(user) && !currentUsernameOf(user)) {
+                try { if (await repairUsername(user)) { try { await user.reload(); } catch {} user = cloudAuth.currentUser || user; } } catch {}
+            }
+            if (user) { rememberUsername(user); rememberLogin(user); }
             const wasSignedIn = !!cloudUser;
             cloudUser = user;
             updateAccountButton();
