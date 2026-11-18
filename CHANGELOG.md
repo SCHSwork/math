@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Boot times
+
+### Changed
+- **Booting starts at 5 minutes now** instead of 1 hour. The choices are 5, 10 or 30 minutes, 1 hour, 1 day, 1 week, until you lift it, or **Custom time…**: any number (1–999) of minutes, hours or days.
+- The message after booting says how long, and that it takes effect right away.
+
 ## November 18, 2026 — Saving after you close a game, More menu icons
 
 ### Added
