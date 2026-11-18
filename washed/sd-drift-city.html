@@ -56,7 +56,7 @@ function UnityProgress(gameInstance, progress) {
     gameInstance.logo.style.display = gameInstance.progress.style.display = "none";
 }
 </script>
-    <script src="UnityLoader.js"></script>
+    <script src="UnityLoader.js" crossorigin="anonymous"></script>
     <script>
         var gameInstance = UnityLoader.instantiate("gameContainer", "webgl build.json", {onProgress: UnityProgress});
     </script>
