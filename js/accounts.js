@@ -389,23 +389,23 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         const sum = progressSummary();
         // Nothing changed since the last sync: skip the Firebase read entirely
         if (!force && hash === localStorage.getItem(CLOUD.keys.syncedHash) && localStorage.getItem(CLOUD.keys.syncedGen)) {
-            setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            noteSaveState("ok"); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
             return true;
         }
         if (!force && typeof fbPaused === "function" && fbPaused()) {
-            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+            noteSaveState("paused"); setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
             return false;
         }
         if (background && typeof fbBackgroundPaused === "function" && fbBackgroundPaused()) {
-            setCloudStatus("Autosave is paused because the site's daily Firebase limit is almost used up. Save from the Account menu, or it saves when you close a game.");
+            noteSaveState("paused"); setCloudStatus("Autosave is paused because the site's daily Firebase limit is almost used up. Save from the Account menu, or it saves when you close a game.");
             return false;
         }
-        setCloudStatus("Saving…");
+        noteSaveState("saving"); setCloudStatus("Saving…");
         const meta = await fetchCloudMeta();
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
-            setCloudStatus("Another device saved newer progress — open Account to choose which to keep.");
+            noteSaveState("conflict"); setCloudStatus("Another device saved newer progress — open Account to choose which to keep.");
             // Say so once: until a choice is made, this device's progress only stays on this device
             if (cloudConflictWarned !== meta.gen) {
                 cloudConflictWarned = meta.gen;
@@ -415,12 +415,12 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         }
         if (meta && meta.hash === hash) {
             localStorage.setItem(CLOUD.keys.syncedHash, hash);
-            setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
+            noteSaveState("ok"); setCloudStatus("Up to date — " + new Date().toLocaleTimeString());
             return true;
         }
         const packed = await gzipToB64(json);
         if (packed.length > CLOUD.maxChars) {
-            setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
+            noteSaveState("error"); setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
             return false;
         }
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -449,7 +449,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             if (old.gen === gen || kept.some(k => k.gen === old.gen)) continue;
             for (let i = 0; i < (old.chunkCount || 0); i++) chunks.doc(`${old.gen}_${i}`).delete().catch(() => {});
         }
-        setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
+        noteSaveState("ok"); setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
@@ -458,11 +458,11 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             reportError("cloud-save", (e && e.message) || String(e), { stack: e && e.stack, detail: e && e.code });
         }
         if (typeof noteFbError === "function" && noteFbError(e)) {
-            setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
+            noteSaveState("paused"); setCloudStatus("Cloud saves are paused: the site reached its daily Firebase limit. Your progress is safe on this device.");
         } else {
             // Signed out or not allowed won't fix itself; anything else gets tried again
             cloudFailRetryable = !/permission-denied|unauthenticated/.test(String(e && e.code));
-            setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
+            noteSaveState(cloudFailRetryable ? "retry" : "error"); setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
         }
         return false;
     } finally {
@@ -563,15 +563,15 @@ async function cloudSyncOnSignIn() {
                 (deviceLess ? " This device has LESS progress, so you'd lose some." : "") +
                 " The replaced cloud save is kept for 7 days: Account → Earlier cloud saves brings it back.",
                 { title: deviceLess ? "Replace your better cloud save?" : "Replace your cloud save?", confirmText: "Replace it", danger: true }))) {
-                setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
+                noteSaveState("conflict"); setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
                 return;
             }
             await uploadCloudSave({ force: true });
         }
-        else setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
+        else noteSaveState("conflict"); setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
     } catch (e) {
         console.error(e);
-        setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
+        noteSaveState("retry"); setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
     }
 }
 
@@ -1015,6 +1015,42 @@ async function confirmLoadEarlierCloudSave(gen) {
     downloadCloudSave({ previous: gen });
 }
 
+// ── "Saved 2 min ago" in the game's top bar ─────────────────────────────────
+// Signed-in players see whether their game is reaching their account: saving,
+// when it last saved, or what's stopping it. Clicking it opens Account.
+let cloudSaveState = { phase: "", okAt: 0 };
+function noteSaveState(phase) {
+    cloudSaveState.phase = phase;
+    if (phase === "ok") cloudSaveState.okAt = Date.now();
+    renderSaveChip();
+}
+function saveChipInfo() {
+    const s = cloudSaveState;
+    const ago = ms => { const m = Math.floor(ms / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)} h ago`; };
+    switch (s.phase) {
+        case "saving": return { cls: "busy", text: "Saving…", tip: "Saving your progress to your account" };
+        case "ok": return { cls: "ok", text: "Saved " + ago(Date.now() - s.okAt), tip: "Your progress is saved to your account. It saves every 2 minutes and when you close the game." };
+        case "retry": return { cls: "warn", text: "Not saved yet", tip: "Couldn't reach the cloud. It's trying again by itself; your progress is safe on this device." };
+        case "conflict": return { cls: "warn", text: "Not saving", tip: "Another device saved to your account. Open Account to pick which progress to keep." };
+        case "paused": return { cls: "", text: "Saved on this device", tip: "Cloud saves are paused for today (the site's Firebase limit). Your progress is safe on this device." };
+        case "error": return { cls: "warn", text: "Not saved", tip: cloudStatus || "The cloud save didn't work. Open Account for details." };
+    }
+    return null;
+}
+function renderSaveChip() {
+    const el = document.getElementById("saveChip");
+    if (!el) return;
+    const info = cloudUser && !accountNeedsVerify() && !accountNeedsUsername() ? saveChipInfo() : null;
+    el.hidden = !info;
+    if (!info) return;
+    el.className = "save-chip " + info.cls;
+    el.title = info.tip;
+    el.setAttribute("aria-label", info.text + ". " + info.tip);
+    el.innerHTML = gnIcon(info.cls === "warn" ? "warning" : info.cls === "busy" ? "cloud" : "check") + "<span></span>";
+    el.lastChild.textContent = info.text;
+}
+setInterval(() => { if (cloudSaveState.phase === "ok" && !document.hidden) renderSaveChip(); }, 30000);
+
 // ── UI ──────────────────────────────────────────────────────────────────────
 function setCloudStatus(text) {
     cloudStatus = text;
@@ -1209,6 +1245,8 @@ async function initCloudAccounts() {
                 document.getElementById("popupOverlay").style.display === "flex") {
                 openAccountPanel();
             }
+            if (!user) cloudSaveState = { phase: "", okAt: 0 };
+            renderSaveChip();
             if (wasSignedIn && !user) {
                 localStorage.removeItem(CLOUD.keys.syncedGen);
                 localStorage.removeItem(CLOUD.keys.syncedHash);

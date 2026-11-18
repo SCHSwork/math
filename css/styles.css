@@ -3457,3 +3457,13 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .owner-inline > .settings-button, .owner-panel-list .settings-button { min-width: 0; width: auto; flex: 0 0 auto; margin: 0; padding: 0.55rem 1rem; font-size: 14px; }
 .owner-inline > input, .owner-inline > .pw-wrap { flex: 1 1 8rem; min-width: 7rem; }
 .owner-inline { align-items: center; }
+
+/* "Saved 2 min ago" in the game's top bar (accounts.js renderSaveChip) */
+.zone-controls button.save-chip { display: inline-flex; align-items: center; gap: 6px; background: transparent; border-color: transparent; font-weight: 600; font-size: 13px; opacity: 0.85; padding-left: 0.6rem; padding-right: 0.6rem; }
+.zone-controls button.save-chip[hidden] { display: none; }
+.zone-controls button.save-chip:hover { opacity: 1; }
+.zone-controls button.save-chip.warn { background: rgba(255, 196, 0, 0.18); border-color: rgba(255, 196, 0, 0.55); opacity: 1; }
+.zone-controls button.save-chip.busy .gi { animation: saveChipPulse 1.2s ease-in-out infinite; }
+@keyframes saveChipPulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .zone-controls button.save-chip.busy .gi { animation: none; } }
+@media (max-width: 760px) { .zone-controls button.save-chip span { display: none; } }
