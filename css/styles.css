@@ -3435,3 +3435,25 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .hw-pumpkin .gi { color: #f28c28; }
 #gameMenu .gm-icon { display: inline-flex; justify-content: center; }
 .card-meta span .gi, .card-flag .gi { width: 1em; height: 1em; }
+
+/* Password boxes with a show/hide button */
+.pw-wrap { position: relative; display: inline-block; }
+.pw-wrap > input { width: 100%; }
+.pw-eye { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: grid; place-items: center;
+    border: 0; border-radius: 8px; background: transparent; color: var(--text-muted, #999); cursor: pointer; font-size: 17px; padding: 0; }
+.pw-eye:hover { color: var(--text); background: var(--surface-hover, rgba(127,127,127,.15)); }
+.pw-eye:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Owner Panel: quick "Back in" times for Expected back */
+.back-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 0.5rem; }
+.back-quick > span { font-size: 13px; color: var(--text-muted); margin-right: 2px; }
+.back-chip { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.2; }
+.back-chip:hover { border-color: var(--accent); color: var(--accent); }
+.back-chip:active { transform: translateY(1px); }
+.back-preview { margin: 0 0 0.6rem; font-size: 13px; color: var(--text-muted); }
+/* Owner Panel rows with a box and buttons: the buttons keep to their text, so
+   the box has room (their 200 px minimum squeezed the password box to nothing) */
+.owner-inline > .settings-button, .owner-panel-list .settings-button { min-width: 0; width: auto; flex: 0 0 auto; margin: 0; padding: 0.55rem 1rem; font-size: 14px; }
+.owner-inline > input, .owner-inline > .pw-wrap { flex: 1 1 8rem; min-width: 7rem; }
+.owner-inline { align-items: center; }
