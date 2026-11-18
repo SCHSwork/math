@@ -40,6 +40,19 @@ function getLiveSiteModeAt() {
                 else window.gnBoot.lift();
             }, () => { window.gnBoot.listenFailed && window.gnBoot.listenFailed(); });
         }
+        // ── Find screen (identify.js) ────────────────────────────────────────
+        if (/^[A-Za-z0-9]{20}$/.test(sid) && typeof gnShowIdentify === "function") {
+            let shownAt = 0;
+            cloudDb.collection("identify").doc(sid).onSnapshot(snap => {
+                count(1);
+                const d = snap.exists ? snap.data() || {} : null;
+                const at = d ? ms(d.at) : 0, until = d ? ms(d.until) : 0;
+                if (!d || until <= Date.now()) { gnHideIdentify(); return; }
+                if (at && at <= shownAt) return;
+                shownAt = at || Date.now();
+                gnShowIdentify({ c: String(d.c || ""), n: Number(d.n), until });
+            }, () => {});
+        }
 
         // ── Site mode ────────────────────────────────────────────────────────
         cloudDb.collection("site").doc("mode").onSnapshot(snap => {

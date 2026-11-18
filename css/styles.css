@@ -3522,3 +3522,8 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .boot-custom { display: inline-flex; gap: 6px; align-items: center; }
 .boot-custom[hidden] { display: none; }
 .boot-custom .boot-amount { width: 5.5em; min-width: 0; flex: none; }
+/* Admin Panel → Sessions: Find screen */
+.find-screen { display: inline-flex; align-items: center; gap: 6px; }
+.find-screen .finder-chip { display: inline-flex; align-items: center; gap: 5px; }
+.find-screen-tag { padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 13px; white-space: nowrap; }
+.find-screen-tag[hidden] { display: none; }
