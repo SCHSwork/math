@@ -5,7 +5,10 @@ All the changes to GN 2.0, newest first.
 ## November 18, 2026 — Jumpscare
 
 ### Added
-- **Jumpscare** (Admin Panel → Sessions, next to Find screen), just for fun: a creepy face of the site's own lunges at that session's screen with a scream for about 1.5 seconds, then it's gone. It shows over games too, even in fullscreen. It asks you to confirm first, doesn't flash (safe for people sensitive to flashing lights), and keeps the scream at a sensible volume.
+- **Jumpscare** (Admin Panel → Sessions, next to Find screen), just for fun: a scary face lunges at that session's screen with a loud scream and two red flashes for about 2 seconds, then it's gone. It shows over games too, even in fullscreen, and asks you to confirm first.
+  - Three faces of the site's own, picked at random, and a different scream each time.
+  - **Jumpscare pictures**: paste your own picture links (one per line) under the session list, and each jumpscare picks one of them at random instead. Kept in your browser only. A link that doesn't load falls back to a built-in face.
+  - The flashes are slower than 3 a second, the safe limit for people sensitive to flashing lights.
 
 ## November 18, 2026 — Find screen
 

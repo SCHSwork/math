@@ -59,8 +59,10 @@ function gnShowIdentify({ c, n, until }) {
 // ── Jumpscare (just for fun; Admin Panel → Sessions) ────────────────────────
 // A face of our own (drawn here, no characters from anything) lunges at the
 // screen with a scream made on the spot by the browser, for about 1.5 s.
-// No flashing (it's safe for people sensitive to flashing lights), and the
-// sound is kept to a sensible volume.
+// It flashes red twice at the start, slowly enough to stay under the safe
+// limit for people sensitive to flashing lights (no more than 3 a second).
+// pic: a picture link the admin added (Admin Panel → Sessions → Jumpscare
+// pictures); one of the built-in faces if it's empty or doesn't load.
 const SCARE_FACE = `<svg viewBox="0 0 200 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
   <defs><radialGradient id="gnsk" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#d9d3c2"/><stop offset=".55" stop-color="#8a8370"/><stop offset="1" stop-color="#141210"/></radialGradient>
   <radialGradient id="gnse" cx="50%" cy="55%" r="55%"><stop offset="0" stop-color="#000"/><stop offset=".8" stop-color="#000"/><stop offset="1" stop-color="#2b0a06"/></radialGradient>
@@ -75,6 +77,25 @@ const SCARE_FACE = `<svg viewBox="0 0 200 260" width="100%" height="100%" preser
   <path d="M56 236l6-22 6 18 6-24 6 22 6-26 6 24 6-24 6 22 6-24 6 18 6-20 6 22 4-14c-8 14-24 24-38 24s-30-10-36-16Z" fill="#cfc7ae"/>
   <path d="M78 30l8 18-6 14 10 12M136 40l-6 16 8 10-4 14M24 150l14 6 4 14" fill="none" stroke="#2a251c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
 </svg>`;
+// Two more of our own, so it isn't the same one every time
+const SCARE_FACES = [SCARE_FACE,
+`<svg viewBox="0 0 200 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <defs><radialGradient id="gnsk2" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#b9c2b4"/><stop offset=".6" stop-color="#5d6658"/><stop offset="1" stop-color="#0d0f0c"/></radialGradient></defs>
+  <path d="M100 2C58 2 34 40 34 92c0 40 8 76 22 108 12 28 28 58 44 58s32-30 44-58c14-32 22-68 22-108C166 40 142 2 100 2Z" fill="url(#gnsk2)"/>
+  <ellipse cx="70" cy="104" rx="20" ry="30" fill="#000"/><ellipse cx="130" cy="104" rx="20" ry="30" fill="#000"/>
+  <path d="M60 140c-2 14 0 30 6 40M140 140c2 14 0 30-6 40" stroke="#000" stroke-width="4" fill="none" opacity=".6"/>
+  <ellipse cx="100" cy="206" rx="26" ry="44" fill="#000"/>
+  <path d="M84 176c6-4 26-4 32 0M80 236c10 6 30 6 40 0" stroke="#3a0000" stroke-width="3" fill="none"/>
+  <path d="M70 136l-4 26M130 136l4 26" stroke="#5a0000" stroke-width="3" stroke-linecap="round"/>
+</svg>`,
+`<svg viewBox="0 0 240 240" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+  <defs><radialGradient id="gnsk3" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#3a1a12"/><stop offset="1" stop-color="#000"/></radialGradient>
+  <radialGradient id="gnse3" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff7b0"/><stop offset=".4" stop-color="#ffb000"/><stop offset="1" stop-color="#ff3000" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="120" cy="120" r="112" fill="url(#gnsk3)"/>
+  ${[[78, 86, 15], [162, 86, 15], [104, 64, 9], [136, 64, 9], [120, 98, 11], [56, 112, 8], [184, 112, 8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r * 1.8}" fill="url(#gnse3)"/><circle cx="${x}" cy="${y}" r="${r * .35}" fill="#000"/>`).join("")}
+  <path d="M40 150c30 22 130 22 160 0-8 50-44 78-80 78s-72-28-80-78Z" fill="#050000"/>
+  <path d="M42 152l10 26 9-22 10 30 10-28 10 32 9-30 10 32 10-32 9 30 10-32 10 28 10-30 9 22 10-26" fill="#d8ccb0"/>
+</svg>`];
 function scareSound() {
     try {
         const C = window.AudioContext || window.webkitAudioContext;
@@ -84,11 +105,12 @@ function scareSound() {
         const t = ctx.currentTime, len = 1.3;
         const out = ctx.createGain();
         out.gain.setValueAtTime(0.0001, t);
-        out.gain.exponentialRampToValueAtTime(0.4, t + 0.03);
+        out.gain.exponentialRampToValueAtTime(0.75, t + 0.02);
         out.gain.exponentialRampToValueAtTime(0.0001, t + len);
         out.connect(ctx.destination);
         // A screech: two rough tones sliding down, plus hiss
-        [[880, 260, "sawtooth"], [1240, 410, "square"]].forEach(([a, z, type]) => {
+        const k = 0.8 + Math.random() * 0.5;   // a different scream each time
+        [[880 * k, 240 * k, "sawtooth"], [1240 * k, 380 * k, "square"], [620 * k, 150, "sawtooth"]].forEach(([a, z, type]) => {
             const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
             o.type = type; o.frequency.setValueAtTime(a, t); o.frequency.exponentialRampToValueAtTime(z, t + len);
             lfo.frequency.value = 38; lg.gain.value = 60; lfo.connect(lg); lg.connect(o.frequency);
@@ -103,16 +125,28 @@ function scareSound() {
         setTimeout(() => ctx.close().catch(() => {}), (len + 0.3) * 1000);
     } catch {}
 }
-function gnJumpscare() {
+function gnJumpscare(pic) {
+    const face = SCARE_FACES[Math.floor(Math.random() * SCARE_FACES.length)];
+    const okPic = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic) ? pic : "";
     const build = doc => {
         const el = doc.createElement("div");
         el.className = "gn-scare";
         el.setAttribute("aria-hidden", "true");
         el.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#000;display:grid;place-items:center;overflow:hidden;cursor:none;";
-        el.innerHTML = `<style>@keyframes gnScareIn{0%{transform:scale(.25)}12%{transform:scale(1.18)}20%{transform:scale(1.05) translate(-6px,4px)}28%{transform:scale(1.1) translate(6px,-4px)}36%{transform:scale(1.07) translate(-4px,-3px)}44%,100%{transform:scale(1.1)}}</style>` +
-            `<div style="width:min(92vw,92vh);height:min(92vw,92vh);animation:gnScareIn 1.4s cubic-bezier(.2,1.6,.4,1) forwards;">${SCARE_FACE}</div>`;
+        // Two red flashes, 450 ms apart (under 3 a second)
+        el.innerHTML = `<style>@keyframes gnScareIn{0%{transform:scale(.25)}12%{transform:scale(1.18)}20%{transform:scale(1.05) translate(-8px,5px)}28%{transform:scale(1.1) translate(8px,-5px)}36%{transform:scale(1.07) translate(-5px,-4px)}44%,100%{transform:scale(1.1)}}` +
+            `@keyframes gnScareRed{0%,12%{opacity:.85}22%,40%{opacity:0}45%,55%{opacity:.7}65%,100%{opacity:0}}</style>` +
+            `<div class="gn-scare-art" style="width:min(96vw,96vh);height:min(96vw,96vh);animation:gnScareIn 1.4s cubic-bezier(.2,1.6,.4,1) forwards;display:grid;place-items:center;">${face}</div>` +
+            `<div style="position:absolute;inset:0;background:#d00000;mix-blend-mode:multiply;pointer-events:none;animation:gnScareRed 1s linear forwards;"></div>`;
+        if (okPic) {
+            const img = doc.createElement("img");
+            img.alt = ""; img.referrerPolicy = "no-referrer";
+            img.style.cssText = "width:100%;height:100%;object-fit:cover;";
+            img.onload = () => { const art = el.querySelector(".gn-scare-art"); if (art) { art.style.width = "100vw"; art.style.height = "100vh"; art.replaceChildren(img); } };
+            img.src = okPic;
+        }
         doc.documentElement.appendChild(el);
-        setTimeout(() => { el.style.transition = "opacity .25s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 1500);
+        setTimeout(() => { el.style.transition = "opacity .3s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 350); }, 1800);
     };
     try {
         const fs = document.fullscreenElement || document.webkitFullscreenElement;

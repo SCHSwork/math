@@ -325,6 +325,30 @@ async function renderVisitors() {
 // a new session. Costs about two reads per session listed.
 const BOOT_TIMES = [["5m", "5 minutes", 5 * 60000], ["10m", "10 minutes", 10 * 60000], ["30m", "30 minutes", 30 * 60000], ["1h", "1 hour", 3600000],
     ["1d", "1 day", 86400000], ["7d", "1 week", 7 * 86400000], ["forever", "Until I lift it", 50 * 365 * 86400000], ["custom", "Custom time…", 0]];
+// Jumpscare pictures: links the admin adds (kept in this browser). Each
+// jumpscare picks one at random; with none, it uses the built-in faces.
+const SCARE_PICS_KEY = "gnmath-scare-pics";
+function getScarePics() {
+    try { return (JSON.parse(localStorage.getItem(SCARE_PICS_KEY) || "[]") || []).filter(u => /^https:\/\/[^\s"'<>]+$/.test(u) && u.length <= 600).slice(0, 40); } catch { return []; }
+}
+function scarePicsEditor() {
+    const d = document.createElement("details");
+    d.className = "scare-pics";
+    d.innerHTML = `<summary>Jumpscare pictures (${getScarePics().length || "built-in faces"})</summary>
+        <p class="admin-footnote">Paste picture links (https), one per line. Each jumpscare picks one at random. Leave it empty to use the site's own faces. Kept in this browser only. Links to pictures (.png, .jpg, .gif or .webp) work best; if one doesn't load, they get a built-in face.</p>
+        <textarea class="submit-note" rows="4" spellcheck="false" placeholder="https://example.com/scary.jpg"></textarea>
+        <div class="admin-actions"><button type="button" class="finder-chip">Save pictures</button><span class="admin-id"></span></div>`;
+    const ta = d.querySelector("textarea"), save = d.querySelector("button"), msg = d.querySelector(".admin-id");
+    ta.value = getScarePics().join("\n");
+    save.onclick = () => {
+        const lines = ta.value.split(/\s+/).map(x => x.trim()).filter(Boolean);
+        const ok = lines.filter(u => /^https:\/\/[^\s"'<>]+$/.test(u) && u.length <= 600);
+        try { localStorage.setItem(SCARE_PICS_KEY, JSON.stringify(ok.slice(0, 40))); } catch {}
+        msg.textContent = `Saved ${ok.length} picture${ok.length === 1 ? "" : "s"}` + (lines.length > ok.length ? ` (${lines.length - ok.length} skipped: links must start with https://)` : "") + ".";
+        d.querySelector("summary").textContent = `Jumpscare pictures (${ok.length || "built-in faces"})`;
+    };
+    return d;
+}
 // Find screen (identify.js): lights up one session's screen with a color and
 // number for 30 seconds; the same color and number show here
 function findScreenButton(id, name) {
@@ -362,10 +386,12 @@ function findScreenButton(id, name) {
     boo.innerHTML = gnIcon("ghost") + " Jumpscare";
     boo.title = `Jumpscare ${name} (a face and a scream for 1.5 seconds)`;
     boo.onclick = async () => {
-        if (!(await askConfirm(`Jumpscare ${name}? A scary face fills their screen with a scream for about 1.5 seconds. It doesn't flash.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+        if (!(await askConfirm(`Jumpscare ${name}? ${getScarePics().length ? "One of your jumpscare pictures" : "A scary face"} fills their screen with a scream and two red flashes for about 2 seconds.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
         boo.disabled = true;
         try {
+            const pics = getScarePics(), pic = pics.length ? pics[Math.floor(Math.random() * pics.length)] : "";
             await cloudDb.collection("identify").doc(id).set({
+                ...(pic ? { u: pic } : {}),
                 k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
                 by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -417,6 +443,7 @@ async function renderSessions() {
         ${bootMap.size ? `<h3 class="admin-subhead">Booted</h3><div id="sessions-booted" class="admin-list"></div>` : ""}
         <p class="admin-footnote">A session is one browser with the site open. Without an account it shows as a guest session. Booting saves their progress, closes their game and shows them a "you've been removed" screen until it runs out; it takes effect right away. <b>Find screen</b> lights up that session's screen for 30 seconds with a color and number (shown here too), so you can spot which computer it is. It follows the browser, so another browser or clearing site data gets a new session. Boots are saved in the Log.</p>`;
     document.getElementById("sessions-refresh").onclick = () => renderSessions();
+    box.appendChild(scarePicsEditor());
     const list = document.getElementById("sessions-list");
 
     const bootControls = (row, id, name, info) => {
