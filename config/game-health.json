@@ -57,14 +57,14 @@
   },
   "11": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:21:20.154Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:15:29.895Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/",
     "HTTP 404 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
     "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
-    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/images/3f8e3b577ebcb0720aa183ffa614f39f-CHAR_Stick"
+    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/",
+    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/images/fcd3dbdb6348beb40a3122f7eeae8cbd-CHAR_Panda"
    ],
    "since": "2026-11-10"
   },
@@ -735,8 +735,8 @@
   },
   "164": {
    "s": "ok",
-   "at": "2026-11-11",
-   "t": "2026-11-11T18:59:00.137Z"
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:14:18.994Z"
   },
   "165": {
    "s": "ok",
@@ -835,10 +835,11 @@
   },
   "185": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:21:34.956Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:15:41.124Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
+    "Script error: Unexpected token '.'",
     "HTTP 404 https://cdn.jsdelivr.net/gh/blazerida/fnaf@2bb119488b921da59a24521a2458a0a8272d9fd8/sl/undefined/pages/home.html"
    ],
    "since": "2026-11-11"
@@ -885,8 +886,8 @@
   },
   "195": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:22:39.325Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:16:48.463Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-11"
   },
@@ -937,8 +938,8 @@
   },
   "205": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:22:53.552Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:16:59.828Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-11"
   },
@@ -1199,8 +1200,8 @@
   },
   "258": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:23:57.444Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:07.996Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-11"
   },
@@ -1246,8 +1247,8 @@
   },
   "267": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:24:12.651Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:19.935Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-11"
   },
@@ -1487,17 +1488,9 @@
    "t": "2026-11-11T19:22:15.400Z"
   },
   "316": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:26:13.506Z",
-   "why": "Script error: Module \"payments\" is not supported.",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/images/loading_image_bird.png",
-    "Script error: Module \"payments\" is not supported.",
-    "HTTP 404 http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds/appcache.nocache.manifest",
-    "HTTP 404 http://chrome.angrybirds.com/AppCacheUninstaller.jsp?path=/angrybirds111/appcache.nocache.manifest"
-   ],
-   "since": "2026-11-11"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:22.598Z"
   },
   "317": {
    "s": "ok",
@@ -1675,15 +1668,9 @@
    "t": "2026-11-15T18:34:50.511Z"
   },
   "353": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:35:55.435Z",
-   "why": "Script error: failed to fetch worker script",
-   "errors": [
-    "HTTP 404 https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/blumgi-rocket/https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/blumgi-r",
-    "Script error: failed to fetch worker script"
-   ],
-   "since": "2026-11-15"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:37.222Z"
   },
   "354": {
    "s": "ok",
@@ -1866,11 +1853,9 @@
    "t": "2026-11-15T18:39:30.091Z"
   },
   "390": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:40:37.343Z",
-   "why": "Blank page",
-   "since": "2026-11-15"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:28.523Z"
   },
   "391": {
    "s": "ok",
@@ -1948,11 +1933,9 @@
    "t": "2026-11-15T18:41:33.994Z"
   },
   "406": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:42:37.604Z",
-   "why": "Blank page",
-   "since": "2026-11-15"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:33.450Z"
   },
   "407": {
    "s": "ok",
@@ -1960,11 +1943,9 @@
    "t": "2026-11-15T18:41:37.406Z"
   },
   "408": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:42:50.969Z",
-   "why": "Blank page",
-   "since": "2026-11-15"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:36.869Z"
   },
   "409": {
    "s": "ok",
@@ -2038,8 +2019,8 @@
   },
   "426": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:45:18.981Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:19:55.634Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-15"
   },
@@ -2144,11 +2125,9 @@
    "t": "2026-11-15T18:47:41.038Z"
   },
   "447": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:48:34.000Z",
-   "why": "Test error: page.waitForTimeout: Target page, context or browser has been closed",
-   "since": "2026-11-15"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:18:52.842Z"
   },
   "448": {
    "s": "ok",
@@ -2159,6 +2138,18 @@
    "s": "ok",
    "at": "2026-11-15",
    "t": "2026-11-15T18:48:14.134Z"
+  },
+  "450": {
+   "s": "broken",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:24:13.401Z",
+   "why": "Test error: page.waitForTimeout: Target page, context or browser has been closed",
+   "since": "2026-11-18"
+  },
+  "451": {
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:23:32.373Z"
   },
   "527": {
    "s": "ok",
@@ -3117,8 +3108,8 @@
   },
   "779": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:26:42.546Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:20:12.294Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-06"
   },
@@ -6079,8 +6070,8 @@
   },
   "100540": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:27:32.176Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:21:13.443Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Script error: exit is not defined"
@@ -6894,8 +6885,8 @@
   },
   "100719": {
    "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:27:52.411Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:21:22.754Z",
    "why": "Blank page",
    "since": "2026-11-09"
   },
@@ -7241,8 +7232,8 @@
   },
   "100793": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:28:55.146Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:22:35.520Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-09"
   },
@@ -8476,6 +8467,11 @@
    "at": "2026-11-10",
    "t": "2026-11-10T18:49:06.661Z"
   },
+  "700003": {
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:14:09.701Z"
+  },
   "990001": {
    "s": "ok",
    "at": "2026-11-10",
@@ -8667,16 +8663,9 @@
    "t": "2026-11-10T18:54:35.432Z"
   },
   "990140": {
-   "s": "broken",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:29:14.443Z",
-   "why": "Script error: UnityProgress is not defined",
-   "errors": [
-    "Script error: UnityProgress is not defined",
-    "HTTP 404 https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/drift-city/scr.js%22",
-    "Failed https://cdn.jsdelivr.net/gh/Avioso/strongdog@f85f28d947e1bb06696246f47ba446d02d56a33d/html/drift-city/scr.js%22"
-   ],
-   "since": "2026-11-10"
+   "s": "ok",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:21:43.486Z"
   },
   "990141": {
    "s": "ok",
@@ -8845,8 +8834,8 @@
   },
   "990183": {
    "s": "slow",
-   "at": "2026-11-15",
-   "t": "2026-11-15T18:30:33.748Z",
+   "at": "2026-11-18",
+   "t": "2026-11-18T18:23:20.543Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-10"
   },
@@ -8911,12 +8900,12 @@
    "t": "2026-11-10T19:04:00.334Z"
   }
  },
- "next": 423,
- "updated": "2026-11-15T18:48:34.000Z",
- "total": 1904,
+ "next": 425,
+ "updated": "2026-11-18T18:24:13.402Z",
+ "total": 2325,
  "counts": {
-  "ok": 1750,
+  "ok": 1759,
   "slow": 11,
-  "broken": 8
+  "broken": 2
  }
 }
