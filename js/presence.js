@@ -171,12 +171,14 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         try { localStorage.setItem(PRESENCE.bootKey, JSON.stringify(b)); } catch {}
         // Save their progress first: games save into this browser, and a
         // signed-in player's cloud save gets one last upload
+        // The game is closed first, so its last progress is in what's uploaded
+        try { if (typeof closeZone === "function") closeZone(); } catch {}
+        try { await Promise.race([Promise.resolve(window.gnGameFlush), new Promise(r => setTimeout(r, 4000))]); } catch {}
         try {
             if (typeof cloudUser !== "undefined" && cloudUser && typeof uploadCloudSave === "function") {
                 await Promise.race([uploadCloudSave({ background: true }), new Promise(r => setTimeout(r, 8000))]);
             }
         } catch {}
-        try { if (typeof closeZone === "function") closeZone(); } catch {}
         showBootScreen(b);
     }
     function showBootScreen(b) {

@@ -2,6 +2,18 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — More dependable autosave
+
+### Changed
+- **Closing a game lets it save first.** The game is muted and hidden, told to save the way it would if the tab were closing, and only removed once its save is written (3 seconds at most). Games that save on exit, and Unity games that keep saves in memory, used to lose their last few minutes. The same happens when you open another game without closing the first.
+- **Cloud saves wait for that**, so what gets uploaded when you close a game includes its last progress. Save backups wait for it too.
+- **No more skipped saves.** A cloud save asked for while another one is running now runs right after it, instead of being dropped.
+- **Failed cloud saves are tried again**: after 20 s, then 40 s, 80 s… (up to 5 minutes apart), and as soon as the internet comes back.
+- **Saves when you leave the tab** (switching tabs, closing the Chromebook), and autosave asks the open game to write its in-memory save first.
+- If another device saved to your account, a message now says this device's progress isn't going to the cloud until you choose which to keep.
+- The site asks the browser to keep its data permanently, so game saves aren't cleared when the disk fills up.
+- When you're booted, the game is closed and saved before the last cloud upload, not after.
+
 ## November 17, 2026 — Crazy Cattle 3D fixed
 
 ### Fixed

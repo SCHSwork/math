@@ -2300,8 +2300,41 @@ function startGameScrollTidy() {
 addEventListener("resize", () => { if (gameScrollTimer) setTimeout(tidyGameScrollbars, 150); });
 
 let zoneOpenToken = 0;
+// A closed game isn't thrown away at once: it's muted and hidden, told to save
+// (the way it would if the tab were closing), and removed once its save is
+// written (3 s at most). Games that save on exit, and Unity games that keep
+// saves in memory until they sync, used to lose the last few minutes.
+// gnGameFlush is the newest closed game's save finishing; the cloud save and
+// the save backups wait for it.
+window.gnGameFlush = Promise.resolve();
+function retireGameFrame(frame) {
+    if (!frame || frame.__retiring) return;
+    // Partner games are on their own sites: nothing here can ask them to save
+    if (frame.dataset && frame.dataset.partner) { if (frame.parentNode) frame.parentNode.removeChild(frame); return; }
+    frame.__retiring = true;
+    frame.removeAttribute("id");
+    let win = null;
+    try { win = frame.contentWindow; } catch {}
+    try { if (win && win.__gnSetMuted) win.__gnSetMuted(true); } catch {}
+    try { win && win.document.querySelectorAll("audio,video").forEach(m => { try { m.pause(); } catch {} }); } catch {}
+    // Out of sight at the size it had, so the game doesn't see a resize
+    try {
+        const r = frame.getBoundingClientRect();
+        if (r.width && r.height) { frame.style.width = r.width + "px"; frame.style.height = r.height + "px"; }
+    } catch {}
+    frame.style.position = "fixed";
+    frame.style.left = "-20000px";
+    frame.style.top = "0";
+    frame.style.visibility = "hidden";
+    frame.style.pointerEvents = "none";
+    frame.setAttribute("aria-hidden", "true");
+    frame.tabIndex = -1;
+    const remove = () => { try { if (frame.parentNode) frame.parentNode.removeChild(frame); } catch {} };
+    window.gnGameFlush = flushGameWindow(win, 3000).then(remove, remove);
+}
 function replaceZoneFrame() {
-    if (zoneFrame && zoneFrame.parentNode) zoneFrame.parentNode.removeChild(zoneFrame);
+    // Another game was open: let it save first, like closing it
+    if (zoneFrame && zoneFrame.parentNode && !zoneFrame.__retiring) retireGameFrame(zoneFrame);
     zoneFrame = document.createElement("iframe");
     zoneFrame.id = "zoneFrame";
     // Let the game play sound and use fullscreen/controllers like a normal page
@@ -2335,7 +2368,7 @@ function closeZone() {
     clearInterval(gameScrollTimer); gameScrollTimer = null;
     zoneViewer.hidden = false;
     zoneViewer.style.display = "none";
-    if (zoneFrame && zoneFrame.parentNode === zoneViewer) zoneViewer.removeChild(zoneFrame);
+    if (zoneFrame && zoneFrame.parentNode === zoneViewer) retireGameFrame(zoneFrame);
     clearZoneIdFromUrl();
     // Catch up on a redraw that was held back while the game was open
     if (refreshWaitingForGame) scheduleFullRefresh();
@@ -2911,9 +2944,35 @@ async function recheckSiteMode(manual) {
 // then close it and upload the save to the player's account.
 let kickSaving = null;
 function flushGameFrame(timeoutMs = 3000) {
+    let win = null;
+    try { win = (typeof zoneFrame !== "undefined" && zoneFrame && !zoneFrame.__retiring && zoneFrame.contentWindow) || null; } catch {}
+    return flushGameWindow(win, timeoutMs);
+}
+// Emscripten file systems in a game page (Unity keeps its saves in one)
+function gameFileSystems(win) {
+    try {
+        const list = [win.FS, win.Module && win.Module.FS, win.unityInstance && win.unityInstance.Module && win.unityInstance.Module.FS, win.gameInstance && win.gameInstance.Module && win.gameInstance.Module.FS];
+        return [...new Set(list.filter(f => f && typeof f.syncfs === "function"))];
+    } catch { return []; }
+}
+// While a game keeps running: writes what it keeps in memory to the browser
+// database, without the leave-the-page events (those can pause a game)
+function syncOpenGameFiles(timeoutMs = 2000) {
+    let win = null;
+    try { win = (typeof zoneFrame !== "undefined" && zoneFrame && !zoneFrame.__retiring && zoneFrame.contentWindow) || null; } catch {}
+    const fsList = win ? gameFileSystems(win) : [];
+    if (!fsList.length) return Promise.resolve();
     return new Promise(resolve => {
-        let win = null;
-        try { win = (typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow) || null; } catch {}
+        let pending = fsList.length;
+        const t = setTimeout(resolve, timeoutMs);
+        for (const fs of fsList) {
+            try { fs.syncfs(false, () => { if (--pending <= 0) { clearTimeout(t); setTimeout(resolve, 200); } }); }
+            catch { if (--pending <= 0) { clearTimeout(t); resolve(); } }
+        }
+    });
+}
+function flushGameWindow(win, timeoutMs = 3000) {
+    return new Promise(resolve => {
         if (!win) return resolve();
         let pending = 0, done = false;
         const finish = () => { if (!done) { done = true; resolve(); } };
@@ -2924,8 +2983,7 @@ function flushGameFrame(timeoutMs = 3000) {
             }
             try { win.document.dispatchEvent(new Event("visibilitychange")); } catch {}
             // Unity and other Emscripten games keep saves in memory until they sync them
-            const fsList = [win.FS, win.Module && win.Module.FS, win.unityInstance && win.unityInstance.Module && win.unityInstance.Module.FS, win.gameInstance && win.gameInstance.Module && win.gameInstance.Module.FS];
-            for (const fs of new Set(fsList.filter(f => f && typeof f.syncfs === "function"))) {
+            for (const fs of gameFileSystems(win)) {
                 pending++;
                 try { fs.syncfs(false, () => { if (--pending <= 0) setTimeout(finish, 300); }); } catch { pending--; }
             }
@@ -2944,6 +3002,7 @@ function saveGameBeforeKick(overlay) {
         await flushGameFrame();
         try { if (zoneViewer.style.display === "flex") closeZone(); } catch {}
         if (!signedIn) { setLine("✓ Your game was saved on this device. This page opens by itself when the site is back.", "saved"); return true; }
+        try { await Promise.race([Promise.resolve(window.gnGameFlush), new Promise(r => setTimeout(r, 4000))]); } catch {}
         // closeZone already started an upload; wait for it, then make sure the latest is up
         const until = Date.now() + 20000;
         while (typeof cloudBusy !== "undefined" && cloudBusy && Date.now() < until) await new Promise(r => setTimeout(r, 250));
