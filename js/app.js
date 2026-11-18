@@ -2364,6 +2364,7 @@ function aboutBlank() {
 }
 
 function closeZone() {
+    if (typeof closeGameFatal === "function") closeGameFatal();
     zoneOpenToken++;
     stopPlaytime();
     if (typeof closeGameMenu === "function") closeGameMenu();
