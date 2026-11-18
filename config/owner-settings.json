@@ -75,12 +75,8 @@
         "name": "death"
       }
     ],
-    "pass": {
-      "salt": "7d14048b7f36002a2bda618ac86ba3f3",
-      "hash": "42a81d54163401ab0f56b778f09eab84ee6bcf0b9a7a342dfb33865da1cacde5",
-      "iter": 150000
-    }
+    "pass": null
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-18T07:17:28.760Z"
+  "updatedAt": "2026-11-18T07:17:40.937Z"
 }
