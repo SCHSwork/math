@@ -203,7 +203,9 @@ service cloud.firestore {
     match /identify/{id} {
       allow get: if true;
       allow create, update: if isAdmin() && id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at'])
+        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k'])
+        // k: 'find' (light up the screen) or 'scare' (jumpscare, just for fun)
+        && (!('k' in request.resource.data) || request.resource.data.k in ['find', 'scare'])
         && request.resource.data.c in ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink']
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 99
         && request.resource.data.until is timestamp && request.resource.data.until > request.time
