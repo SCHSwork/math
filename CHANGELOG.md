@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Sign in with your username everywhere
+
+### Changed
+- Accounts that sign in with an email can use their username on any device now, not just ones they've signed in on. The username's record holds the account's sign-in email locked with its password, so only the right password unlocks it and emails stay private. It's set up the next time the account signs in with its email and password (or changes its password).
+
 ## November 18, 2026 — Blocked jsDelivr accounts, save status, genres
 
 ### Fixed
