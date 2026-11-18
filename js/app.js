@@ -2102,6 +2102,7 @@ function cleanGameHtml(html) {
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
         `<script>(${gameStorageHook.toString()})();<\/script>` +
         (typeof gameMuteHook === "function" ? `<script>(${gameMuteHook.toString()})();<\/script>` : "") +
+        (typeof gamePauseHook === "function" ? `<script>(${gamePauseHook.toString()})();<\/script>` : "") +
         `<script>(${gameAudioUnlockHook.toString()})();<\/script>` +
         (Object.keys(pagePins).length ? `<script>(${pinLinksHook.toString()})(${JSON.stringify(pagePins)});<\/script>` : "") +
         (/UnityLoader/.test(html) ? `<script>(${unityMobileHook.toString()})();<\/script>` : "") +
@@ -5124,6 +5125,7 @@ function openSettingsPanel() {
         </div>
         <div class="settings-section">
             <h4>Your games</h4>
+            ${typeof getAutoPauseEnabled === "function" ? row("Pause when you leave the tab", "The game waits for you, then a 3-second countdown when you're back", toggle(getAutoPauseEnabled(), "setAutoPauseEnabled(this.checked)")) : ""}
             ${row("My stats", "Play time, favorites and most played", `<button class="theme-button set-mini" onclick="openStatsPanel()">${gnIcon("chart")} Open</button>`)}
             ${row("Reload the game list", "If games are missing or look out of date", `<button class="theme-button set-mini" onclick="listZones(); notify('Reloading games…')">↻ Reload</button>`)}
         </div>

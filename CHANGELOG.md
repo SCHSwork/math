@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 17, 2026 — Games pause when you leave the tab
+
+### Added
+- **Pause when you leave the tab.** Switch tabs, windows or close the Chromebook and the game stops: its animation, clock, sound and videos. When you come back, a 3-second countdown plays over the game (in fullscreen too), then it carries on. Leaving again during the countdown keeps it paused. Turn it off in Settings → Games → Your games.
+- Partner games (html5games.com, Playgama) play from their own sites, so they can't be paused this way.
+
 ## November 17, 2026 — More dependable autosave
 
 ### Changed
