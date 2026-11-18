@@ -216,6 +216,8 @@ function updateSiteStatus() {
         li.querySelector("b").textContent = `${online.toLocaleString()} ${online === 1 ? "person" : "people"} online now`;
         li.querySelector("div span").textContent = "On GN 2.0 in the last 5 minutes" + (mins >= 1 ? ` · counted ${mins} min ago` : "");
         list.appendChild(li);
+        const g = onlineGraph(window.gnOnlineHistory || []);
+        if (g) list.appendChild(g);
     }
     if (s.override.level !== "auto" || s.override.text.trim()) {
         const li = document.createElement("li");
@@ -243,3 +245,57 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) upda
 setInterval(() => { if (!document.hidden) updateSiteStatus(); }, 4000);
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", updateSiteStatus);
 else updateSiteStatus();
+
+
+// ── People online over the last 24 hours (in the status panel) ─────────────
+// From live/now's history (live.js): the most people counted in each
+// 15-minute slot. A slot with no count means nobody had the site open.
+const ONLINE_SLOT_MS = 15 * 60000, ONLINE_SLOTS = 96;
+function onlineGraph(hist) {
+    if (!hist.length) return null;
+    const now = Date.now(), start = now - ONLINE_SLOTS * ONLINE_SLOT_MS;
+    const slots = new Array(ONLINE_SLOTS).fill(0);
+    for (const [t, n] of hist) {
+        const i = Math.floor((t - start) / ONLINE_SLOT_MS);
+        if (i >= 0 && i < ONLINE_SLOTS) slots[i] = Math.max(slots[i], n);
+    }
+    const peak = Math.max(...slots), peakAt = slots.indexOf(peak);
+    const W = 300, H = 76, top = 6, bottom = 18, plotH = H - top - bottom;
+    const max = Math.max(4, Math.ceil(peak * 1.15));
+    const x = i => (i + 0.5) / ONLINE_SLOTS * W, y = n => top + plotH - n / max * plotH;
+    const pts = slots.map((n, i) => `${x(i).toFixed(1)},${y(n).toFixed(1)}`);
+    const line = "M" + pts.join("L"), area = `${line}L${x(ONLINE_SLOTS - 1).toFixed(1)},${top + plotH}L${x(0).toFixed(1)},${top + plotH}Z`;
+    const time = t => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const li = document.createElement("li");
+    li.className = "status-graph";
+    li.innerHTML = `<div class="sg-head"><b>Last 24 hours</b><span>Peak ${peak.toLocaleString()} at ${time(start + peakAt * ONLINE_SLOT_MS)}</span></div>
+        <div class="sg-plot">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="People online over the last 24 hours, peak ${peak} at ${time(start + peakAt * ONLINE_SLOT_MS)}">
+            <line x1="0" x2="${W}" y1="${top + plotH}" y2="${top + plotH}" class="sg-base"/>
+            <line x1="0" x2="${W}" y1="${y(peak).toFixed(1)}" y2="${y(peak).toFixed(1)}" class="sg-grid"/>
+            <path d="${area}" class="sg-area"/><path d="${line}" class="sg-line" vector-effect="non-scaling-stroke"/>
+            <line class="sg-cross" y1="${top}" y2="${top + plotH}" x1="-10" x2="-10" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <span class="sg-dot" hidden></span><span class="sg-tip" hidden></span>
+          <div class="sg-axis"><span>24 h ago</span><span>12 h ago</span><span>Now</span></div>
+        </div>`;
+    // Hover / touch: which slot, how many
+    const plot = li.querySelector(".sg-plot"), cross = li.querySelector(".sg-cross"), tip = li.querySelector(".sg-tip"), dot = li.querySelector(".sg-dot");
+    const show = ev => {
+        const r = plot.getBoundingClientRect(), px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+        const i = Math.min(ONLINE_SLOTS - 1, Math.max(0, Math.floor(px / r.width * ONLINE_SLOTS)));
+        const n = slots[i], t0 = start + i * ONLINE_SLOT_MS;
+        cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+        const svgH = r.height - 16;   // the axis labels sit under the plot
+        dot.hidden = tip.hidden = false;
+        dot.style.left = (x(i) / W * r.width) + "px"; dot.style.top = (y(n) / H * svgH) + "px";
+        tip.textContent = `${time(t0)}–${time(t0 + ONLINE_SLOT_MS)} · ${n ? n.toLocaleString() + " online" : "nobody online"}`;
+        const tw = tip.offsetWidth;
+        tip.style.left = Math.min(Math.max(0, x(i) / W * r.width - tw / 2), r.width - tw) + "px";
+    };
+    const hide = () => { dot.hidden = tip.hidden = true; cross.setAttribute("x1", -10); cross.setAttribute("x2", -10); };
+    plot.addEventListener("pointermove", show);
+    plot.addEventListener("pointerdown", show);
+    plot.addEventListener("pointerleave", hide);
+    return li;
+}

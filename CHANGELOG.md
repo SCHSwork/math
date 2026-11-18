@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — People online graph
+
+### Added
+- **The site status panel shows a graph of people online over the last 24 hours**, under "N people online now": the most people on GN 2.0 in each 15 minutes, with the peak and when it was. Hover (or touch) the graph to see the count for any time. It's kept in the same live count everyone already reads every 5 minutes, so it costs no extra Firebase reads.
+
 ## November 18, 2026 — Real "isn't responding" box for broken games
 
 ### Added
