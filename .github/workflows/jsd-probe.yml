@@ -1,0 +1,22 @@
+# Which game repos jsDelivr won't serve (Actions → Check jsDelivr repos).
+name: Check jsDelivr repos
+on:
+  workflow_dispatch:
+    inputs:
+      repos:
+        description: "owner/repo list, space separated"
+        required: true
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/jsd_probe.mjs
+        env:
+          REPOS: ${{ github.event.inputs.repos }}
+          GITHUB_TOKEN: ${{ github.token }}
