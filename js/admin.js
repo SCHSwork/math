@@ -325,6 +325,40 @@ async function renderVisitors() {
 // a new session. Costs about two reads per session listed.
 const BOOT_TIMES = [["5m", "5 minutes", 5 * 60000], ["10m", "10 minutes", 10 * 60000], ["30m", "30 minutes", 30 * 60000], ["1h", "1 hour", 3600000],
     ["1d", "1 day", 86400000], ["7d", "1 week", 7 * 86400000], ["forever", "Until I lift it", 50 * 365 * 86400000], ["custom", "Custom time…", 0]];
+// Find screen (identify.js): lights up one session's screen with a color and
+// number for 30 seconds; the same color and number show here
+function findScreenButton(id, name) {
+    const wrap = document.createElement("span");
+    wrap.className = "find-screen";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "finder-chip";
+    btn.innerHTML = gnIcon("eye") + " Find screen";
+    btn.title = `Light up ${name}'s screen for 30 seconds so you can see which computer it is`;
+    const tag = document.createElement("span");
+    tag.className = "find-screen-tag"; tag.hidden = true;
+    let timer = null;
+    btn.onclick = async () => {
+        const keys = Object.keys(IDENTIFY_COLORS);
+        const c = keys[Math.floor(Math.random() * keys.length)], n = 10 + Math.floor(Math.random() * 90);
+        btn.disabled = true;
+        try {
+            await cloudDb.collection("identify").doc(id).set({
+                c, n, until: firebase.firestore.Timestamp.fromMillis(Date.now() + IDENTIFY_MS),
+                by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            const [cname, hex] = IDENTIFY_COLORS[c];
+            tag.hidden = false;
+            tag.style.background = hex;
+            tag.style.color = c === "yellow" || c === "cyan" ? "#111" : "#fff";
+            tag.textContent = `Look for: ${cname} ${n}`;
+            clearTimeout(timer);
+            timer = setTimeout(() => { tag.hidden = true; }, IDENTIFY_MS);
+        } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
+        btn.disabled = false;
+    };
+    wrap.append(btn, tag);
+    return wrap;
+}
 const BOOT_UNITS = [["m", "minutes", 60000], ["h", "hours", 3600000], ["d", "days", 86400000]];
 async function renderSessions() {
     const box = document.getElementById("admin-sessions");
@@ -364,7 +398,7 @@ async function renderSessions() {
         <p class="admin-summary">${live.length} session${live.length === 1 ? "" : "s"} open in the last 10 minutes · ${bootMap.size} booted</p>
         <div id="sessions-list" class="admin-list"></div>
         ${bootMap.size ? `<h3 class="admin-subhead">Booted</h3><div id="sessions-booted" class="admin-list"></div>` : ""}
-        <p class="admin-footnote">A session is one browser with the site open. Without an account it shows as a guest session. Booting saves their progress, closes their game and shows them a "you've been removed" screen until it runs out; it takes effect within about 2 minutes (their next check-in). It follows the browser, so another browser or clearing site data gets a new session. Boots are saved in the Log.</p>`;
+        <p class="admin-footnote">A session is one browser with the site open. Without an account it shows as a guest session. Booting saves their progress, closes their game and shows them a "you've been removed" screen until it runs out; it takes effect right away. <b>Find screen</b> lights up that session's screen for 30 seconds with a color and number (shown here too), so you can spot which computer it is. It follows the browser, so another browser or clearing site data gets a new session. Boots are saved in the Log.</p>`;
     document.getElementById("sessions-refresh").onclick = () => renderSessions();
     const list = document.getElementById("sessions-list");
 
@@ -440,6 +474,7 @@ async function renderSessions() {
             };
             box2.append(reason, time, custom, go);
         }
+        if (!b && live.some(p => p.id === id)) box2.prepend(findScreenButton(id, name));
         row.appendChild(box2);
     };
 

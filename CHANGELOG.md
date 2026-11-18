@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Find screen
+
+### Added
+- **Find screen** (Admin Panel → Sessions): lights up a session's screen for 30 seconds with a glowing colored border and a big number ("Purple screen 47"), and the same color and number show next to the session, so you can walk around and spot which computer it is. It shows over games too, even in fullscreen, and the game keeps working underneath. The player sees "A mod is finding this computer. Nothing's wrong."
+
 ## November 18, 2026 — Boot times
 
 ### Changed
