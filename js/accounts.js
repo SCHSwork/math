@@ -29,7 +29,8 @@ const CLOUD = {
     sdkVersion: "10.12.2",
     usernameDomain: "gnmath.local",          // usernames become fake emails: name@gnmath.local
     autosaveMs: 2 * 60 * 1000,               // autosave every 2 minutes while signed in
-    chunkChars: 900000,                      // Firestore docs max out at ~1 MB
+    chunkChars: 500000,                      // Firestore docs max out at ~1 MB; smaller parts get through slow connections
+    blobMin: 64 * 1024,                      // game data entries bigger than this are stored once, by content (see splitBlobs)
     maxChars: 18000000,                      // ~18 MB compressed cap per save
     keys: {
         syncedGen: "gnmath-cloud-synced-gen",
@@ -78,6 +79,142 @@ async function packCloudBundle(bundle) {
     }
     const left = [...by.values()].map(b => ({ name: b.name, files: b.files, mb: Math.max(0.1, Math.round(b.bytes / 1e5) / 10) }));
     return { packed, left };
+}
+
+// ── Big game data, stored once ──────────────────────────────────────────────
+// A save used to be one big package, sent again whole every time anything
+// changed: a Cookie Clicker autosave re-sent 12 MB of other games' downloaded
+// files every 2 minutes, which stalled on slow connections. Now every game
+// data entry bigger than blobMin is stored on its own, named by its contents
+// (saves/<uid>/blobs/<id>_<part>), and the package only points at it
+// ({ __ref: id, n: parts }). An entry that's already in the cloud is never
+// sent again, and a save that's cut off carries on where it stopped next time,
+// since the parts it already sent are remembered (blobsDone).
+// Packages with pointers are v: 2, so an older copy of the site refuses them
+// instead of writing pointers into a game's files.
+const blobPackCache = new Map();   // id -> packed text, while it waits to be sent
+function blobsDoneKey() { return "gnmath-cloud-blobs-" + (cloudUser ? cloudUser.uid : ""); }
+function blobsDone() { try { return new Set(JSON.parse(localStorage.getItem(blobsDoneKey()) || "[]")); } catch { return new Set(); } }
+function markBlobPartDone(name) {
+    try {
+        const list = [...blobsDone()].filter(x => x !== name);
+        list.push(name);
+        localStorage.setItem(blobsDoneKey(), JSON.stringify(list.slice(-3000)));
+    } catch {}
+}
+function blobsOf(save) { return Array.isArray(save && save.blobs) ? save.blobs.filter(b => b && b.id) : []; }
+async function splitBlobs(bundle) {
+    const blobs = new Map();
+    const indexedDB = [];
+    for (const db of bundle.indexedDB || []) {
+        const stores = [];
+        for (const st of db.stores) {
+            const entries = [];
+            for (const e of st.entries) {
+                const j = JSON.stringify(e);
+                if (j.length < CLOUD.blobMin) { entries.push(e); continue; }
+                const id = (await sha256Hex(j)).slice(0, 32);
+                let b = blobs.get(id);
+                if (!b) {
+                    let packed = blobPackCache.get(id);
+                    if (!packed) { packed = await gzipToB64(j); blobPackCache.set(id, packed); }
+                    b = { id, n: Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars)), size: packed.length, db: db.name };
+                    blobs.set(id, b);
+                }
+                entries.push({ __ref: b.id, n: b.n });
+            }
+            stores.push({ ...st, entries });
+        }
+        indexedDB.push({ ...db, stores });
+    }
+    return { main: { ...bundle, v: 2, indexedDB }, blobs: [...blobs.values()] };
+}
+// Splits off the big entries and leaves out the biggest if the whole save is
+// over the cloud's limit (they stay on this device)
+async function prepareCloudSave(bundle) {
+    const { main, blobs } = await splitBlobs(bundle);
+    const { packed, left } = await packCloudBundle(main);
+    let total = packed.length + blobs.reduce((n, b) => n + b.size, 0);
+    const out = new Set(), by = new Map();
+    for (const b of blobs.slice().sort((x, y) => y.size - x.size)) {
+        if (total <= CLOUD.maxChars) break;
+        out.add(b.id); total -= b.size;
+        const cur = by.get(b.db) || { name: b.db, files: 0, bytes: 0 };
+        cur.files++; cur.bytes += b.size; by.set(b.db, cur);
+    }
+    if (!out.size) return { packed, left, blobs, total };
+    // Pack again without the left-out pointers
+    main.indexedDB.forEach(db => db.stores.forEach(st => { st.entries = st.entries.filter(e => !(e && e.__ref && out.has(e.__ref))); }));
+    const again = await packCloudBundle(main);
+    const more = [...by.values()].map(b => ({ name: b.name, files: b.files, mb: Math.max(0.1, Math.round(b.bytes / 1e5) / 10) }));
+    return { packed: again.packed, left: [...again.left, ...more], blobs: blobs.filter(b => !out.has(b.id)), total };
+}
+// Sends the big entries the cloud doesn't have yet. have: ids already in a
+// save there. onPart(done, todo) for the progress bar.
+async function uploadBlobs(blobs, have, onPart) {
+    const done = blobsDone();
+    const ref = saveDocRef().collection("blobs");
+    const parts = [], check = [];
+    for (const b of blobs) {
+        if (have.has(b.id)) continue;
+        for (let j = 0; j < b.n; j++) (done.has(`${b.id}_${j}`) ? check : parts).push([b, j]);
+    }
+    // Parts sent before (a save that was cut off) but not in any save yet:
+    // make sure they're still there, since another device may have cleaned them up
+    for (let i = 0; i < check.length; i += 20) {
+        const snaps = await cloudStep(Promise.all(check.slice(i, i + 20).map(([b, j]) => ref.doc(`${b.id}_${j}`).get())), 60000, "Checking game data");
+        snaps.forEach((snap, k) => { if (!snap.exists) parts.push(check[i + k]); });
+    }
+    for (let i = 0; i < parts.length; i++) {
+        const [b, j] = parts[i];
+        if (onPart) onPart(i, parts.length);
+        let packed = blobPackCache.get(b.id);
+        if (!packed) throw new Error("game data changed while saving, try again");
+        const name = `${b.id}_${j}`;
+        await cloudStep(ref.doc(name).set({ d: packed.slice(j * CLOUD.chunkChars, (j + 1) * CLOUD.chunkChars) }), 60000, `Uploading game data (part ${i + 1} of ${parts.length})`);
+        markBlobPartDone(name);
+    }
+    return parts.length;
+}
+// Big entries no save points at anymore
+function dropBlobs(dropped, keep) {
+    const keepIds = new Set(keep.flatMap(s => blobsOf(s).map(b => b.id)));
+    const ref = saveDocRef().collection("blobs");
+    const gone = new Set();
+    for (const b of dropped.flatMap(blobsOf)) {
+        if (keepIds.has(b.id) || gone.has(b.id)) continue;
+        gone.add(b.id);
+        for (let j = 0; j < (b.n || 1); j++) ref.doc(`${b.id}_${j}`).delete().catch(() => {});
+    }
+    if (gone.size) {
+        try { localStorage.setItem(blobsDoneKey(), JSON.stringify([...blobsDone()].filter(x => !gone.has(x.replace(/_\d+$/, ""))))); } catch {}
+    }
+}
+// Puts the big entries back into a downloaded v2 package
+async function joinBlobs(bundle) {
+    if (!bundle || bundle.v !== 2) return bundle;
+    const want = new Map();
+    for (const db of bundle.indexedDB || []) for (const st of db.stores) for (const e of st.entries) if (e && e.__ref) want.set(e.__ref, e.n || 1);
+    const ref = saveDocRef().collection("blobs");
+    const got = new Map();
+    const ids = [...want.keys()];
+    for (let i = 0; i < ids.length; i += 4) {
+        await Promise.all(ids.slice(i, i + 4).map(async id => {
+            const n = want.get(id);
+            const parts = await cloudStep(Promise.all(Array.from({ length: n }, (_, j) => ref.doc(`${id}_${j}`).get())), 90000, "Downloading game data");
+            if (parts.some(p => !p.exists)) throw new Error("cloud save is missing some game data, try again");
+            const packed = parts.map(p => p.data().d).join("");
+            got.set(id, JSON.parse(await b64ToText(packed)));
+            blobPackCache.set(id, packed);
+        }));
+    }
+    const done = blobsDone();
+    for (const [id, n] of want) for (let j = 0; j < n; j++) done.add(`${id}_${j}`);
+    try { localStorage.setItem(blobsDoneKey(), JSON.stringify([...done].slice(-3000))); } catch {}
+    return {
+        ...bundle, v: 1,
+        indexedDB: bundle.indexedDB.map(db => ({ ...db, stores: db.stores.map(st => ({ ...st, entries: st.entries.map(e => e && e.__ref ? got.get(e.__ref) : e) })) }))
+    };
 }
 
 // ── Value encoding (IndexedDB can hold binary data that JSON can't) ──────────
@@ -483,32 +620,38 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             return true;
         }
         noteSaveState("saving", { step: "Packing your progress" });
-        const { packed, left } = await packCloudBundle(JSON.parse(json));
+        const { packed, left, blobs, total } = await prepareCloudSave(JSON.parse(json));
         if (packed.length > CLOUD.maxChars) {
             noteSaveState("error", { error: `The save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB, the limit is ${(CLOUD.maxChars / 1e6).toFixed(0)} MB) even without game data. Your progress is safe on this device.` });
             setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
             return false;
         }
         cloudSaveState.left = left;
+        // Game data the cloud already has (in this save or one kept from before) isn't sent again
+        const have = new Set([meta, ...keptSaves(meta)].flatMap(blobsOf).map(b => b.id));
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
         const chunks = saveDocRef().collection("chunks");
+        const blobParts = await uploadBlobs(blobs, have, (i, n) => {
+            noteSaveState("saving", { step: `Uploading game data (part ${i + 1} of ${n})`, part: i, parts: n + chunkCount, size: total });
+        });
         for (let i = 0; i < chunkCount; i++) {
-            noteSaveState("saving", { step: `Uploading part ${i + 1} of ${chunkCount}`, part: i, parts: chunkCount, size: packed.length });
+            noteSaveState("saving", { step: `Uploading part ${i + 1} of ${chunkCount}`, part: blobParts + i, parts: blobParts + chunkCount, size: total });
             await cloudStep(chunks.doc(`${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) }), 60000, `Uploading part ${i + 1} of ${chunkCount}`);
         }
-        noteSaveState("saving", { step: "Finishing up", part: chunkCount, parts: chunkCount });
+        noteSaveState("saving", { step: "Finishing up", part: 1, parts: 1 });
         // Replacing the cloud save keeps the old one for a week; expired ones are deleted
         const replacing = !!(meta && meta.gen && (force || meta.gen !== localGen));
         const now = Date.now();
         let kept = keptSaves(meta);
-        if (replacing) kept.unshift({ gen: meta.gen, chunkCount: meta.chunkCount || 0, sum: meta.sum || null, at: meta.updatedAt && meta.updatedAt.toMillis ? meta.updatedAt.toMillis() : now, until: now + KEEP_REPLACED_MS });
+        if (replacing) kept.unshift({ gen: meta.gen, chunkCount: meta.chunkCount || 0, sum: meta.sum || null, at: meta.updatedAt && meta.updatedAt.toMillis ? meta.updatedAt.toMillis() : now, until: now + KEEP_REPLACED_MS, ...(blobsOf(meta).length ? { blobs: blobsOf(meta) } : {}) });
         const drop = kept.filter((k, i) => k.until < now || i >= KEEP_REPLACED_MAX);
         kept = kept.filter(k => !drop.includes(k));
         if (meta && meta.gen && !replacing) drop.push(meta);   // an autosave over this device's own save
+        const blobList = blobs.map(b => ({ id: b.id, n: b.n }));
         await cloudStep(saveDocRef().set({
-            gen, chunkCount, hash, sum,
-            size: packed.length,
+            gen, chunkCount, hash, sum, blobs: blobList,
+            size: total,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             kept
         }), 30000, "Finishing up");
@@ -518,7 +661,8 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             if (old.gen === gen || kept.some(k => k.gen === old.gen)) continue;
             for (let i = 0; i < (old.chunkCount || 0); i++) chunks.doc(`${old.gen}_${i}`).delete().catch(() => {});
         }
-        noteSaveState("ok", { size: packed.length, sum, left });
+        dropBlobs(drop, [{ blobs: blobList }, ...kept]);
+        noteSaveState("ok", { size: total, sum, left });
         setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString() + (left.length ? `. Left out (too big, kept on this device): ${left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ")}` : ""));
         return true;
     } catch (e) {
@@ -550,15 +694,18 @@ async function keepDeviceCopyNow() {
     const sum = progressSummary();
     if ((sum.level || 0) <= 1 && (sum.playSec || 0) < 600) return;
     try {
-        const { packed } = await packCloudBundle(await collectCloudBundle());
+        const { packed, blobs } = await prepareCloudSave(await collectCloudBundle());
         if (packed.length > CLOUD.maxChars) return;
+        let meta = await fetchCloudMeta();
+        if (!meta) return;
+        await uploadBlobs(blobs, new Set([meta, ...keptSaves(meta)].flatMap(blobsOf).map(b => b.id)));
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + "d";
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
         const chunks = saveDocRef().collection("chunks");
         for (let i = 0; i < chunkCount; i++) await chunks.doc(`${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) });
-        const meta = await fetchCloudMeta();
+        meta = await fetchCloudMeta();
         if (!meta) return;
-        const kept = [{ gen, chunkCount, sum, at: Date.now(), until: Date.now() + KEEP_REPLACED_MS, device: true }, ...keptSaves(meta)].slice(0, KEEP_REPLACED_MAX);
+        const kept = [{ gen, chunkCount, sum, at: Date.now(), until: Date.now() + KEEP_REPLACED_MS, device: true, blobs: blobs.map(b => ({ id: b.id, n: b.n })) }, ...keptSaves(meta)].slice(0, KEEP_REPLACED_MAX);
         await saveDocRef().set({ kept }, { merge: true });
     } catch (e) { console.warn("Couldn't keep a copy of this device's progress", e); }
 }
@@ -581,8 +728,9 @@ async function downloadCloudSave({ previous = "" } = {}) {
         ), 90000, "Downloading your cloud save");
         if (parts.some(p => !p.exists)) throw new Error("cloud save is incomplete, try again");
         const json = await b64ToText(parts.map(p => p.data().d).join(""));
+        const bundle = await joinBlobs(JSON.parse(json));
         if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
-        await applyCloudBundle(JSON.parse(json));
+        await applyCloudBundle(bundle);
         if (previous) {
             // Going back: the next save from this device becomes the cloud save again
             localStorage.removeItem(CLOUD.keys.syncedHash);
@@ -1086,6 +1234,8 @@ async function cloudDeleteAccount() {
         cloudBusy = true;
         const chunks = await saveDocRef().collection("chunks").get();
         await Promise.all(chunks.docs.map(d => d.ref.delete()));
+        const blobDocs = await saveDocRef().collection("blobs").get().catch(() => ({ docs: [] }));
+        await Promise.all(blobDocs.docs.map(d => d.ref.delete()));
         if (typeof removeMyGameStats === "function") await removeMyGameStats(cloudUser.uid);
         try { await cloudDb.collection("profiles").doc(cloudUser.uid).delete(); } catch (e) {}
         try {
