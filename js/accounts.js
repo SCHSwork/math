@@ -47,7 +47,37 @@ function isCloudExcludedStorageKey(key) {
 function isCloudExcludedDb(name) {
     // Firebase's own login/cache databases, Unity's download cache (game files, not progress),
     // and the site's own save backups (game-extras.js), which would only make cloud saves bigger
-    return /^firebase|^firestore\//i.test(name) || name === "UnityCache" || name === "gnmath-backups";
+    // Also emulators' downloaded cores, ROMs and BIOS files (EmulatorJS keeps saves in its own "states" database, which stays)
+    return /^firebase|^firestore\//i.test(name) || name === "UnityCache" || name === "gnmath-backups" || /^EmulatorJS-(core|cores|roms|bios)$/i.test(name);
+}
+// A save bigger than the cloud can hold used to not save at all. Now the
+// biggest pieces of game data are left out (they stay on this device) until
+// the rest fits: single entries, biggest first, so a game's huge downloaded
+// files go before anyone's small save files (Unity games all share one
+// "/idbfs" database, so leaving out whole databases would lose every Unity save).
+async function packCloudBundle(bundle) {
+    let json = JSON.stringify(bundle), packed = await gzipToB64(json);
+    if (packed.length <= CLOUD.maxChars) return { packed, left: [] };
+    const ratio = packed.length / json.length;
+    const all = [];
+    bundle.indexedDB.forEach((db, di) => db.stores.forEach((st, si) => st.entries.forEach((e, ei) => all.push({ di, si, ei, n: JSON.stringify(e).length }))));
+    all.sort((a, b) => b.n - a.n);
+    const drop = new Set(), key = x => `${x.di}/${x.si}/${x.ei}`;
+    let raw = json.length, k = 0;
+    for (let tries = 0; tries < 6 && packed.length > CLOUD.maxChars && k < all.length; tries++) {
+        do { raw -= all[k].n; drop.add(key(all[k])); k++; } while (k < all.length && raw * ratio > CLOUD.maxChars * 0.85);
+        const slim = { ...bundle, indexedDB: bundle.indexedDB.map((db, di) => ({ ...db, stores: db.stores.map((st, si) => ({ ...st, entries: st.entries.filter((e, ei) => !drop.has(`${di}/${si}/${ei}`)) })) })) };
+        json = JSON.stringify(slim);
+        packed = await gzipToB64(json);
+    }
+    // What was left out, by database
+    const by = new Map();
+    for (const x of all.slice(0, k)) {
+        const name = bundle.indexedDB[x.di].name, cur = by.get(name) || { name, files: 0, bytes: 0 };
+        cur.files++; cur.bytes += x.n * ratio; by.set(name, cur);
+    }
+    const left = [...by.values()].map(b => ({ name: b.name, files: b.files, mb: Math.max(0.1, Math.round(b.bytes / 1e5) / 10) }));
+    return { packed, left };
 }
 
 // ── Value encoding (IndexedDB can hold binary data that JSON can't) ──────────
@@ -429,11 +459,13 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             return true;
         }
         noteSaveState("saving", { step: "Packing your progress" });
-        const packed = await gzipToB64(json);
+        const { packed, left } = await packCloudBundle(JSON.parse(json));
         if (packed.length > CLOUD.maxChars) {
-            noteSaveState("error"); setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
+            noteSaveState("error", { error: `The save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB, the limit is ${(CLOUD.maxChars / 1e6).toFixed(0)} MB) even without game data. Your progress is safe on this device.` });
+            setCloudStatus(`Save is too big for the cloud (${(packed.length / 1e6).toFixed(1)} MB).`);
             return false;
         }
+        cloudSaveState.left = left;
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
         const chunks = saveDocRef().collection("chunks");
@@ -462,7 +494,8 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
             if (old.gen === gen || kept.some(k => k.gen === old.gen)) continue;
             for (let i = 0; i < (old.chunkCount || 0); i++) chunks.doc(`${old.gen}_${i}`).delete().catch(() => {});
         }
-        noteSaveState("ok", { size: packed.length, sum }); setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString());
+        noteSaveState("ok", { size: packed.length, sum, left });
+        setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString() + (left.length ? `. Left out (too big, kept on this device): ${left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ")}` : ""));
         return true;
     } catch (e) {
         console.error("Cloud save failed", e);
@@ -489,7 +522,7 @@ async function keepDeviceCopy() {
     const sum = progressSummary();
     if ((sum.level || 0) <= 1 && (sum.playSec || 0) < 600) return;
     try {
-        const packed = await gzipToB64(JSON.stringify(await collectCloudBundle()));
+        const { packed } = await packCloudBundle(await collectCloudBundle());
         if (packed.length > CLOUD.maxChars) return;
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + "d";
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
@@ -1305,6 +1338,7 @@ function renderSaveDetails() {
     if (s.phase === "error" && s.error) rows.push(["What happened", escapeHtml(s.error), true]);
     rows.push(["Last cloud save", s.lastAt ? `${new Date(s.lastAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (${agoText(now - s.lastAt)})` : "not yet on this device"]);
     if (s.size) rows.push(["Size", mb(s.size)]);
+    if (s.left && s.left.length) rows.push(["Too big for the cloud", s.left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ") + ". They stay on this device; the rest is in the cloud. These are usually a game's downloaded files, not saves."]);
     if (s.sum && typeof describeProgress === "function") rows.push(["What's saved", describeProgress(s.sum) + ", settings, favorites and game saves"]);
     if (cloudAutosaveTimer && s.phase !== "conflict" && s.phase !== "paused" && s.nextAt) rows.push(["Next autosave", "in " + inText(s.nextAt - now) + " (and when you close the game)"]);
     if (s.phase !== "conflict") rows.push(["On this device", "Your progress is always kept here too"]);

@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Saves too big for the cloud
+
+### Fixed
+- **"Save is too big for the cloud (40.1 MB)" stopped the save completely.** Now the biggest pieces of game data are left out, biggest first, until the rest fits (18 MB), and everything else saves as normal. Those are almost always a game's downloaded files, not save files, and they stay on this device. Save details and Account say what was left out ("2 items from /idbfs (31 MB)").
+- It goes item by item rather than by whole database: Unity games all keep their saves in one shared database, so dropping it whole would have lost every Unity save.
+- Emulator games' downloaded cores, ROMs and BIOS files aren't put in cloud saves anymore (their save states still are).
+
 ## November 18, 2026 — Scarier jumpscare sound
 
 ### Changed
