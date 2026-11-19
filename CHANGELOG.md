@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — A scarier jumpscare
+
+### Changed
+- **The jumpscare no longer just shakes.** After the fake crash and the black screen, a dim face appears far away in the dark, flickering and slowly coming closer, with a low drone and a heartbeat that speeds up. Then a beat of dead silence, and it lunges into the screen in a tenth of a second and stays there frozen, too close, twitching like a broken film. Cut to black, then one last inverted flash with a shriek.
+
 ## November 18, 2026 — Games on computers without a graphics driver
 
 ### Fixed
