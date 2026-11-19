@@ -230,7 +230,9 @@ service cloud.firestore {
       allow get: if true;
       allow create, update: if (isAdmin() || usedPerk(request.resource.data.get('k', 'find')))
         && id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k', 'u'])
+        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k', 'u', 'm'])
+        // m: jumpscare style, 'buildup' (fake crash first) or 'instant'
+        && (!('m' in request.resource.data) || request.resource.data.m in ['buildup', 'instant'])
         // u: a jumpscare picture's link (https, picked by the admin)
         && (!('u' in request.resource.data) || (request.resource.data.u is string && request.resource.data.u.size() <= 600 && request.resource.data.u.matches('https://[^ ]+')))
         // k: 'find' (light up the screen) or 'scare' (jumpscare, just for fun)

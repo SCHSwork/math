@@ -330,6 +330,21 @@ const BOOT_TIMES = [["5m", "5 minutes", 5 * 60000], ["10m", "10 minutes", 10 * 6
 // Jumpscare pictures: links the admin adds (kept in this browser). Each
 // jumpscare picks one at random; with none, it uses the built-in faces.
 const SCARE_PICS_KEY = "gnmath-scare-pics";
+// Jumpscare style, kept in this browser: "buildup" (fake crash, then the
+// face) or "instant" (the face right away)
+const SCARE_STYLE_KEY = "gnmath-scare-style";
+function getScareStyle() { try { return localStorage.getItem(SCARE_STYLE_KEY) === "instant" ? "instant" : "buildup"; } catch { return "buildup"; } }
+function scareStylePicker() {
+    const wrap = document.createElement("label");
+    wrap.className = "scare-style";
+    wrap.innerHTML = `${gnIcon("ghost")} Jumpscare style <select aria-label="Jumpscare style">
+        <option value="buildup">Build-up: fake crash first (about 7 s)</option>
+        <option value="instant">Instant: the face right away</option></select>`;
+    const sel = wrap.querySelector("select");
+    sel.value = getScareStyle();
+    sel.onchange = () => { try { localStorage.setItem(SCARE_STYLE_KEY, sel.value); } catch {} };
+    return wrap;
+}
 function getScarePics() {
     try { return (JSON.parse(localStorage.getItem(SCARE_PICS_KEY) || "[]") || []).filter(u => /^https:\/\/[^\s"'<>]+$/.test(u) && u.length <= 600).slice(0, 40); } catch { return []; }
 }
@@ -388,7 +403,9 @@ function findScreenButton(id, name) {
     boo.innerHTML = gnIcon("ghost") + " Jumpscare";
     boo.title = `Jumpscare ${name}: fake game crash, then a scary picture and a scream`;
     boo.onclick = async () => {
-        if (!(await askConfirm(`Jumpscare ${name}? Their game freezes, a fake error pops up, then ${getScarePics().length ? "one of your jumpscare pictures" : "a scary picture"} fills their screen with a scream and two red flashes. About 7 seconds; their game carries on after.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+        if (!(await askConfirm(getScareStyle() === "instant"
+            ? `Jumpscare ${name}? ${getScarePics().length ? "One of your jumpscare pictures" : "A scary picture"} fills their screen right away with a scream and two red flashes. About 2 seconds; their game carries on after.`
+            : `Jumpscare ${name}? Their game freezes, a fake error pops up, then ${getScarePics().length ? "one of your jumpscare pictures" : "a scary picture"} fills their screen with a scream and two red flashes. About 7 seconds; their game carries on after.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
         boo.disabled = true;
         try {
             // Your pictures if you've added some, otherwise the built-in public-domain ones
@@ -396,7 +413,7 @@ function findScreenButton(id, name) {
             const pic = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
             await cloudDb.collection("identify").doc(id).set({
                 ...(pic ? { u: pic } : {}),
-                k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
+                m: getScareStyle(), k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
                 by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
             });
             notify(`Jumpscared ${name}.`, { type: "success" });
@@ -447,6 +464,7 @@ async function renderSessions() {
         ${bootMap.size ? `<h3 class="admin-subhead">Booted</h3><div id="sessions-booted" class="admin-list"></div>` : ""}
         <p class="admin-footnote">A session is one browser with the site open. Without an account it shows as a guest session. Booting saves their progress, closes their game and shows them a "you've been removed" screen until it runs out; it takes effect right away. <b>Find screen</b> lights up that session's screen for 30 seconds with a color and number (shown here too), so you can spot which computer it is. It follows the browser, so another browser or clearing site data gets a new session. Boots are saved in the Log.</p>`;
     document.getElementById("sessions-refresh").onclick = () => renderSessions();
+    box.appendChild(scareStylePicker());
     box.appendChild(scarePicsEditor());
     const list = document.getElementById("sessions-list");
 
@@ -1080,6 +1098,7 @@ async function openAbilitiesPanel() {
         <div id="perk-list" class="admin-list"></div>
         <p class="admin-footnote">Each ability works once, then waits until its timer runs out. Everything you do here is seen by the site owner.</p>`;
     document.getElementById("perk-refresh").onclick = () => renderPerkSessions();
+    if ("scare" in perks) document.querySelector("#popupBody .admin-toolbar").appendChild(scareStylePicker());
     const status = document.getElementById("perk-status");
     const tick = () => {
         if (!document.body.contains(status)) { clearInterval(perksTicker); perksTicker = null; return; }
@@ -1164,12 +1183,12 @@ async function renderPerkSessions() {
             setTimeout(() => { tag.hidden = true; }, IDENTIFY_MS);
         });
         if ("scare" in perks) mk("scare", "Jumpscare", "ghost", async () => {
-            if (!(await askConfirm(`Jumpscare ${name}? Their game freezes, a fake error pops up, then a scary picture fills their screen with a scream. About 7 seconds; their game carries on after. You can do it again in ${cooldownText(perks.scare)}.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+            if (!(await askConfirm(`Jumpscare ${name}? ${getScareStyle() === "instant" ? "A scary picture fills their screen right away with a scream. About 2 seconds" : "Their game freezes, a fake error pops up, then a scary picture fills their screen with a scream. About 7 seconds"}; their game carries on after. You can do it again in ${cooldownText(perks.scare)}.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
             const pool = typeof SCARE_BANK !== "undefined" ? SCARE_BANK.map(x => x.url) : [];
             const pic = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
             await usePerk("scare", b => b.set(cloudDb.collection("identify").doc(p.id), {
                 ...(pic ? { u: pic } : {}),
-                k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
+                m: getScareStyle(), k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
                 by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
             }));
             notify(`Jumpscared ${name}.`, { type: "success" });

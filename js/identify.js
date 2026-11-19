@@ -214,10 +214,14 @@ function scarePos(url) { const b = SCARE_BANK.find(x => x.url === url); return b
 // with one red flash and the scream.
 // Cut to black, and when they think it's over, it flashes once more,
 // inverted. After that the game carries on.
+// mode "instant" skips all of that: the face is just there, right away
+// (a moment later if it's a picture link, so it has a chance to load).
 const SCARE_FREEZE_MS = 800, SCARE_BOX_MS = 1500;
 // The hit comes at a random moment while they're reading the box (no warning)
-function gnJumpscare(pic) {
-    const SCARE_HIT_MS = SCARE_BOX_MS + 1400 + Math.floor(Math.random() * 2600),
+function gnJumpscare(pic, mode) {
+    const instant = mode === "instant";
+    const okPic0 = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic);
+    const SCARE_HIT_MS = instant ? (okPic0 ? 350 : 0) : SCARE_BOX_MS + 1400 + Math.floor(Math.random() * 2600),
         SCARE_CUT_MS = SCARE_HIT_MS + 1700, SCARE_SUB_MS = SCARE_CUT_MS + 550, SCARE_END_MS = SCARE_SUB_MS + 350;
     const face = SCARE_FACES[Math.floor(Math.random() * SCARE_FACES.length)];
     const okPic = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic) ? pic : "";
@@ -307,8 +311,10 @@ function gnJumpscare(pic) {
         doc.documentElement.appendChild(el);
         el.querySelectorAll(".hit img").forEach(img => { img.onerror = () => { const l = img.parentNode; if (l) l.innerHTML = own(face); }; });
         const st = el.querySelector("#" + uid);
-        setTimeout(() => st.classList.add("err"), SCARE_FREEZE_MS);
-        setTimeout(() => st.classList.add("box"), SCARE_BOX_MS);
+        if (!instant) {
+            setTimeout(() => st.classList.add("err"), SCARE_FREEZE_MS);
+            setTimeout(() => st.classList.add("box"), SCARE_BOX_MS);
+        }
         setTimeout(() => {
             // The picture didn't load in time: a built-in face instead
             if (okPic && !picReady) el.querySelectorAll(".hit .layer").forEach(l => { l.innerHTML = own(face); });
@@ -326,7 +332,7 @@ function gnJumpscare(pic) {
         else if (fs && fs !== document.documentElement) fs.appendChild(build(document));
         else build(document);
     } catch { build(document); }
-    scareSound(SCARE_HIT_MS, SCARE_BOX_MS, SCARE_SUB_MS);
+    scareSound(SCARE_HIT_MS, instant ? -1 : SCARE_BOX_MS, SCARE_SUB_MS);
     // The game carries on afterwards
     setTimeout(() => {
         try { if (gw && gw.__gnPause) gw.__gnPause(false); } catch {}

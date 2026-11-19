@@ -50,7 +50,7 @@ function getLiveSiteModeAt() {
                 if (!d || until <= Date.now()) { gnHideIdentify(); return; }
                 if (at && at <= shownAt) return;
                 shownAt = at || Date.now();
-                if (d.k === "scare") { if (typeof gnJumpscare === "function") gnJumpscare(typeof d.u === "string" ? d.u : ""); return; }
+                if (d.k === "scare") { if (typeof gnJumpscare === "function") gnJumpscare(typeof d.u === "string" ? d.u : "", d.m === "instant" ? "instant" : "buildup"); return; }
                 gnShowIdentify({ c: String(d.c || ""), n: Number(d.n), until });
             }, () => {});
         }
