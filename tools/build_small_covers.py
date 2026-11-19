@@ -5,10 +5,11 @@ Many covers are huge for the box they're shown in (the median library cover
 is about 200 KB, almost 100 are over 1 MB and one is 12 MB, for a card about
 250 px wide). This makes a copy of each one that is only made smaller:
 
-  * scaled down with Lanczos resampling so the longest side is at most 640 px
-    (never enlarged, never cropped, no filters, colors and transparency kept)
-  * saved as WebP: lossy only when it can't be told apart from the scaled
-    picture (PSNR of 40 dB or more), otherwise lossless
+  * scaled down with Lanczos resampling so the longest side is at most 400 px
+    (never enlarged, never cropped, no filters, colors and transparency kept;
+    cards are about 250 px wide, so that's still sharp)
+  * saved as normal-quality WebP (quality 82), about a tenth the size of the
+    old 640 px near-lossless copies
   * animated covers are left alone, and a copy is only used when it's at least
     15% smaller than the original
 
@@ -21,15 +22,18 @@ Covers on a branch (the library's covers are on main) can change, so each run
 checks every cover's ETag and redoes the ones that changed. Runs daily from
 .github/workflows/small-covers.yml, or by hand:  python3 tools/build_small_covers.py
 """
-import concurrent.futures, hashlib, io, json, math, os, pathlib, re, ssl, sys, time, urllib.request
+import concurrent.futures, hashlib, io, json, os, pathlib, re, ssl, sys, time, urllib.request
 
-from PIL import Image, ImageChops, ImageOps, ImageStat
+from PIL import Image, ImageOps
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "covers-small"
 MANIFEST = ROOT / "config" / "small-covers.json"
 STATE = ROOT / "tools" / "small-covers-state.json"
-MAX_SIDE = 640
+MAX_SIDE = 400
+QUALITY = 82
+# Changing how copies are made: bump this and every copy is made again
+RECIPE = f"{MAX_SIDE}q{QUALITY}"
 MIN_SAVING = 0.15          # use a copy only if it's at least this much smaller
 ORIGINALS_MIN_BYTES = 60_000  # GN Originals covers are mostly tiny already
 RAW = "https://raw.githubusercontent.com"
@@ -109,12 +113,6 @@ def cover_keys():
 
 
 # ── Making one copy ─────────────────────────────────────────────────────────
-def psnr(a, b):
-    st = ImageStat.Stat(ImageChops.difference(a, b))
-    mse = sum(v * v for v in st.rms) / len(st.rms)
-    return 99.0 if mse == 0 else 10 * math.log10(255 * 255 / mse)
-
-
 def shrink(data):
     """The smaller copy as WebP bytes, or None if there's no point."""
     im = Image.open(io.BytesIO(data))
@@ -126,18 +124,9 @@ def shrink(data):
     im = im.convert(mode)
     im.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)   # keeps the shape; never enlarges
     extra = {"icc_profile": icc} if icc else {}
-    best = None
-    for q in (90, 95):
-        out = io.BytesIO()
-        im.save(out, "WEBP", quality=q, method=6, **extra)
-        back = Image.open(io.BytesIO(out.getvalue())).convert(mode)
-        if psnr(im.convert("RGB"), back.convert("RGB")) >= 40:
-            best = out.getvalue()
-            break
-    if best is None:
-        out = io.BytesIO()
-        im.save(out, "WEBP", lossless=True, quality=100, method=6, **extra)
-        best = out.getvalue()
+    out = io.BytesIO()
+    im.save(out, "WEBP", quality=QUALITY, method=6, **extra)
+    best = out.getvalue()
     return best if len(best) <= len(data) * (1 - MIN_SAVING) else None
 
 
@@ -155,13 +144,13 @@ def main():
             size = int(h.get("Content-Length") or 0)
             old = state.get(key)
             out_ok = old and (old.get("out") is None or (OUT_DIR / f"{old['out']}.webp").exists())
-            if old and old.get("etag") == etag and out_ok:
+            if old and old.get("etag") == etag and out_ok and old.get("r") == RECIPE:
                 return key, old, "same"
             if size and size < keys[key]:
-                return key, {"etag": etag, "in": size, "out": None}, "small"
+                return key, {"etag": etag, "in": size, "out": None, "r": RECIPE}, "small"
             _, data = get(raw_url(key))
             small = shrink(data)
-            entry = {"etag": etag, "in": len(data), "out": None}
+            entry = {"etag": etag, "in": len(data), "out": None, "r": RECIPE}
             if small:
                 name = key_hash(key)
                 (OUT_DIR / f"{name}.webp").write_bytes(small)

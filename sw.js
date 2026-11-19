@@ -1,13 +1,17 @@
 // GN 2.0 service worker
-// - The site page and its own files (css/, js/, icons): network first so updates show
-//   right away, saved copy when offline.
+// - The site page, and its own files without a version: network first so
+//   updates show right away, saved copy when offline.
+// - The site's own files with a version (?v=…, stamped by tools/stamp_versions.py):
+//   that exact URL never changes, so the saved copy is used without asking the
+//   network. A new version is a new URL, so updates still show right away.
 // - Game cover images (the site's small copies and the originals): served from a
-//   local cache for faster repeat visits.
+//   local cache for faster repeat visits. The small copies are versioned too, so
+//   they're never fetched again once saved.
 // - Everything else (games, accounts, saves) is not touched.
 const VERSION = "gn2-v2";
 const PAGE_CACHE = `${VERSION}-page`;
 const COVER_CACHE = `${VERSION}-covers`;
-const MAX_COVERS = 600;
+const MAX_COVERS = 2000;
 const COVER_HOSTS = ["cdn.jsdelivr.net", "raw.githubusercontent.com", "rawcdn.githack.com"];
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -57,6 +61,33 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // The site's own versioned files: saved copy first. Older versions of the
+  // same file are dropped when a new one is saved.
+  if (url.origin === self.location.origin && url.searchParams.has("v") && /\.(css|js|png|json|webp)$/.test(url.pathname) &&
+      !url.pathname.endsWith("/sw.js") && !isCover(url)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(PAGE_CACHE);
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      try {
+        const fresh = await fetch(req);
+        if (fresh.ok) {
+          await cache.put(req, fresh.clone());
+          for (const k of await cache.keys()) {
+            const u = new URL(k.url);
+            if (u.pathname === url.pathname && u.search !== url.search) cache.delete(k);
+          }
+        }
+        return fresh;
+      } catch (err) {
+        const old = await cache.match(req, { ignoreSearch: true });
+        if (old) return old;
+        throw err;
+      }
+    })());
+    return;
+  }
+
   // The site's own files (styles, scripts, icons, manifest)
   if (url.origin === self.location.origin && /\.(css|js|png|json)$/.test(url.pathname) && !url.pathname.endsWith("/sw.js")) {
     event.respondWith((async () => {
@@ -78,6 +109,8 @@ self.addEventListener("fetch", event => {
     event.respondWith((async () => {
       const cache = await caches.open(COVER_CACHE);
       const cached = await cache.match(req);
+      // A small copy's URL has its version in it, so a saved one never needs checking
+      if (cached && url.origin === self.location.origin && url.searchParams.has("v")) return cached;
       const network = fetch(req).then(res => {
         // Only keep readable (CORS) responses; opaque ones waste storage
         if (res.ok && (res.type === "cors" || res.type === "basic")) {

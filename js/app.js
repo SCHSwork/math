@@ -443,7 +443,7 @@ function gameMirrorHook(MAP, T, DOWN) {
 window.gnMirrorFailed = function (name) { if (MIRRORS[name]) markMirror(name, false); };
 // Small copies of the covers (covers-small/, made by tools/build_small_covers.py).
 // Many covers are far bigger than the card they're shown on (some are over
-// 10 MB); the copy is the same picture, only scaled down to fit (640 px at
+// 10 MB); the copy is the same picture, only scaled down to fit (400 px at
 // most). It comes from the site itself, so it also shows on networks that
 // block GitHub and jsDelivr. The original stays as the fallback.
 let smallCovers = null;

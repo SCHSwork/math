@@ -356,6 +356,7 @@ async function fetchCloudMeta() {
 // • Saves when the tab is hidden too (switching tabs, closing the Chromebook).
 let cloudQueue = null, cloudRetryTimer = null, cloudRetryDelay = 0, cloudFailRetryable = false;
 let cloudConflictWarned = "";
+let cloudConflictNoted = "";
 function uploadCloudSave(opts = {}) {
     if (!cloudUser) return Promise.resolve(false);
     if (cloudBusy) {
@@ -459,10 +460,19 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
             noteSaveState("conflict"); setCloudStatus("Another device saved newer progress — open Account to choose which to keep.");
-            // Say so once: until a choice is made, this device's progress only stays on this device
+            // Sort it out the same way as on sign-in (cloudSyncOnSignIn): load the
+            // cloud save without asking unless this device has more progress. Not
+            // in the middle of a game, since loading reloads the page: closing the
+            // game saves again and lands back here.
             if (cloudConflictWarned !== meta.gen) {
-                cloudConflictWarned = meta.gen;
-                notify("Your account was saved from another device, so this device's progress isn't being saved to the cloud. Open Account to pick which progress to keep.", { duration: 12000 });
+                const inGame = typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex";
+                if (!inGame) {
+                    cloudConflictWarned = meta.gen;
+                    setTimeout(cloudSyncOnSignIn, 0);   // after cloudBusy is cleared below
+                } else if (cloudConflictNoted !== meta.gen) {
+                    cloudConflictNoted = meta.gen;
+                    notify("Your account was saved from another device. When you close this game, the site switches to that progress (or asks, if this device has more).", { duration: 12000 });
+                }
             }
             return false;
         }

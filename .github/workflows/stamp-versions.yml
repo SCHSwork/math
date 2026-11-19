@@ -1,0 +1,33 @@
+# Keeps the ?v=… versions in index.html in step with css/ and js/.
+# The service worker (sw.js) keeps each versioned file for good, so a file that
+# changes without a new version would stay old for players. This runs
+# tools/stamp_versions.py after every push that touches css/ or js/, in case
+# it was forgotten.
+name: Stamp asset versions
+on:
+  push:
+    branches: [main]
+    paths:
+      - "css/**"
+      - "js/**"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: stamp-versions
+  cancel-in-progress: false
+jobs:
+  stamp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stamp versions
+        run: python3 tools/stamp_versions.py
+      - name: Save if anything changed
+        run: |
+          git add index.html
+          if git diff --cached --quiet; then echo "Already stamped"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: stamp asset versions"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
