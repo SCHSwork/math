@@ -17,16 +17,19 @@
 //     submissions, and can look at the account list without changing anything.
 //   • Trusted reporter: listed in config/owner-settings.json (needs the owner's
 //     GitHub token on this browser to change).
+//   • Abilities: a document perks/<uid> the owner sets. Lets someone use a few
+//     admin abilities (Jumpscare, Find screen, Boot for up to 15 min), each
+//     with its own cooldown, without being an admin (Abilities panel).
 //   • Suspended: a document bans/<uid>. A suspended account can still play and
 //     keep its cloud save, but can't rate, report or submit games.
 // Every account keeps a small profile (profiles/<uid>: username, joined, last
 // seen) so admins can find it. Passwords and cloud saves are never visible.
 // ═════════════════════════════════════════════════════════════════════════════
-let siteAdminState = { uid: null, admin: false, owner: false, mod: false, banned: null };
+let siteAdminState = { uid: null, admin: false, owner: false, mod: false, banned: null, perks: null, perkUse: {} };
 
 // Profile + role check, run whenever someone signs in
 async function syncMyProfileAndRoles(user) {
-    siteAdminState = { uid: user ? user.uid : null, admin: false, owner: false, mod: false, banned: null };
+    siteAdminState = { uid: user ? user.uid : null, admin: false, owner: false, mod: false, banned: null, perks: null, perkUse: {} };
     if (!user || !cloudDb) return;
     await profileBeat(true);
     try {
@@ -41,6 +44,7 @@ async function syncMyProfileAndRoles(user) {
         const m = await cloudDb.collection("mods").doc(user.uid).get();
         siteAdminState.mod = !!(m && m.exists);
     } catch (e) {}
+    await loadMyPerks(user);
     try {
         const b = await cloudDb.collection("bans").doc(user.uid).get();
         if (b && b.exists) {
@@ -120,6 +124,24 @@ function isSiteAdmin() { return !!(siteAdminState.admin && cloudUser && siteAdmi
 function isSiteOwner() { return !!(siteAdminState.owner && isSiteAdmin()); }
 // Admins, or mods who aren't suspended
 function isSiteMod() { return isSiteAdmin() || !!(siteAdminState.mod && !siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
+// Abilities the owner gave this account ({ scare: 30, find: 5, boot: 60 },
+// minutes between uses), or null
+function myPerks() {
+    return cloudUser && siteAdminState.uid === cloudUser.uid && !siteAdminState.banned && siteAdminState.perks && Object.keys(siteAdminState.perks).length ? siteAdminState.perks : null;
+}
+async function loadMyPerks(user = cloudUser) {
+    if (!user || !cloudDb) return;
+    try {
+        const [p, u] = await Promise.all([
+            cloudDb.collection("perks").doc(user.uid).get(),
+            cloudDb.collection("perkUse").doc(user.uid).get().catch(() => null)
+        ]);
+        siteAdminState.perks = p && p.exists ? ((p.data() || {}).a || null) : null;
+        const use = {};
+        if (u && u.exists) for (const [k, v] of Object.entries(u.data() || {})) use[k] = v && v.toMillis ? v.toMillis() : 0;
+        siteAdminState.perkUse = use;
+    } catch (e) {}
+}
 function isSuspended() { return !!(siteAdminState.banned && cloudUser && siteAdminState.uid === cloudUser.uid); }
 function refreshAccountButtonAdmin() {
     if (cloudUser && siteAdminState.uid === cloudUser.uid && typeof getSiteOwnerUid === "function" && cloudUser.uid === getSiteOwnerUid()) {
@@ -127,7 +149,7 @@ function refreshAccountButtonAdmin() {
         siteAdminState.admin = true;
     }
     const btn = document.getElementById("accountButton");
-    if (btn) btn.classList.toggle("is-admin", isSiteMod());
+    if (btn) btn.classList.toggle("is-admin", isSiteMod() || !!myPerks());
 }
 
 function fmtDate(v) {
@@ -186,6 +208,12 @@ function loadAdminPanel() {
     return adminPanelLoad;
 }
 // Replaced by the real one when js/admin.js loads
+function openAbilitiesPanel(...args) {
+    const stub = openAbilitiesPanel;
+    return loadAdminPanel()
+        .then(() => { if (window.openAbilitiesPanel !== stub) return window.openAbilitiesPanel(...args); })
+        .catch(e => notify("Couldn't open Abilities. Check your connection and try again.", { type: "error" }));
+}
 function openAdminPanel(...args) {
     const stub = openAdminPanel;
     return loadAdminPanel()

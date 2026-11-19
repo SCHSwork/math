@@ -74,11 +74,11 @@ service cloud.firestore {
     // rules above check that (loggedAs), so those changes can't skip the log.
     match /auditLog/{id} {
       allow read: if isAdmin();
-      allow create: if isStaff() && validLog(request.resource.data);
+      allow create: if (isStaff() || hasPerks()) && validLog(request.resource.data);
     }
     match /auditLast/{uid} {
       allow read: if isAdmin();
-      allow create, update: if isStaff()
+      allow create, update: if (isStaff() || hasPerks())
         && request.resource.data.keys().hasOnly(['action', 'by', 'at', 'logId'])
         && request.resource.data.by == request.auth.uid
         && request.resource.data.at == request.time
@@ -93,7 +93,7 @@ service cloud.firestore {
     // Profile: username, joined, last seen, plus level, XP, badges, minutes
     // played, games tried and the game open now (shown in the Admin Panel)
     match /profiles/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isStaff());
+      allow read: if request.auth != null && (request.auth.uid == uid || isStaff() || hasPerks());
       allow create, update: if verifiedOk() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['username', 'createdAt', 'lastSeen', 'level', 'xp', 'badges', 'played', 'tried', 'playing', 'sid'])
         && ownsUsername(request.resource.data.username)
@@ -183,6 +183,29 @@ service cloud.firestore {
         && request.resource.data.at == request.time;
     }
 
+    // Abilities: the owner gives someone a few admin abilities without making
+    // them an admin, each with its own cooldown in minutes:
+    //   perks/<uid> { name, a: { scare: 30, find: 5, boot: 60 }, by, at }
+    // scare = Jumpscare, find = Find screen, boot = Boot a session (15 min max).
+    match /perks/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isOwner() && loggedAs(uid, 'set_perks')
+        && request.resource.data.keys().hasOnly(['name', 'a', 'by', 'at'])
+        && shortText(request.resource.data.name, 40) && shortText(request.resource.data.by, 40)
+        && request.resource.data.at == request.time
+        && validPerks(request.resource.data.a);
+      allow delete: if isOwner() && loggedAs(uid, 'remove_perks');
+    }
+    // When each ability was last used: perkUse/<uid> { scare: time, ... }.
+    // Using an ability means setting its time to now in the same write, which
+    // is only allowed once its cooldown has run out (usedPerk() checks it).
+    match /perkUse/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create, update: if request.auth != null && request.auth.uid == uid && hasPerks()
+        && request.resource.data.keys().hasOnly(['scare', 'find', 'boot'])
+        && perkUseOk(resource == null ? request.resource.data.keys() : request.resource.data.diff(resource.data).affectedKeys());
+    }
+
     // Booted sessions: admins write boots/<session id> { until, reason, ... }
     // (with an action-log entry). Each open page listens to its own (js/
     // realtime.js) and shows a "you've been removed" screen until `until`.
@@ -190,7 +213,10 @@ service cloud.firestore {
     match /boots/{id} {
       allow get: if true;
       allow list: if isAdmin();
-      allow create, update: if isAdmin() && id.matches('[A-Za-z0-9]{20}') && loggedAs(id, 'boot')
+      allow create, update: if (isAdmin() || (usedPerk('boot')
+            && (resource == null || resource.data.until < request.time)
+            && request.resource.data.until < request.time + duration.value(16, 'm')))
+        && id.matches('[A-Za-z0-9]{20}') && loggedAs(id, 'boot')
         && request.resource.data.keys().hasOnly(['until', 'reason', 'by', 'at', 'name', 'info'])
         && request.resource.data.until is timestamp && request.resource.data.until > request.time
         && shortText(request.resource.data.reason, 200) && shortText(request.resource.data.by, 40)
@@ -202,7 +228,8 @@ service cloud.firestore {
     // with a color and number for 30 seconds, to tell computers apart.
     match /identify/{id} {
       allow get: if true;
-      allow create, update: if isAdmin() && id.matches('[A-Za-z0-9]{20}')
+      allow create, update: if (isAdmin() || usedPerk(request.resource.data.get('k', 'find')))
+        && id.matches('[A-Za-z0-9]{20}')
         && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k', 'u'])
         // u: a jumpscare picture's link (https, picked by the admin)
         && (!('u' in request.resource.data) || (request.resource.data.u is string && request.resource.data.u.size() <= 600 && request.resource.data.u.matches('https://[^ ]+')))
@@ -391,6 +418,35 @@ service cloud.firestore {
       return isAdmin() || (request.auth != null && !isBanned()
         && exists(/databases/$(db)/documents/mods/$(request.auth.uid)));
     }
+    // Abilities (perks/ above)
+    function perksDoc() { return /databases/$(db)/documents/perks/$(request.auth.uid); }
+    function hasPerks() {
+      return request.auth != null && verifiedOk() && !isBanned() && exists(perksDoc());
+    }
+    function perkCooldownOk(v) { return v is int && v >= 0 && v <= 10080; }
+    function validPerks(a) {
+      return a is map && a.size() >= 1 && a.keys().hasOnly(['scare', 'find', 'boot'])
+        && (!('scare' in a) || perkCooldownOk(a.scare))
+        && (!('find' in a) || perkCooldownOk(a.find))
+        && (!('boot' in a) || perkCooldownOk(a.boot));
+    }
+    // One ability at a time, set to now, only if it's theirs and cooled down
+    function perkUseOk(changed) {
+      return changed.size() == 1
+        && (perkUsedNow(changed, 'scare') || perkUsedNow(changed, 'find') || perkUsedNow(changed, 'boot'));
+    }
+    function perkUsedNow(changed, ab) {
+      return changed.hasAny([ab]) && perkReady(ab) && request.resource.data[ab] == request.time;
+    }
+    function perkReady(ab) {
+      let a = get(perksDoc()).data.a;
+      return ab in a && (resource == null || !(ab in resource.data)
+        || request.time > resource.data[ab] + duration.value(a[ab], 'm'));
+    }
+    // This write uses ability ab: its time in perkUse/ is set in the same batch
+    function usedPerk(ab) {
+      return hasPerks() && getAfter(/databases/$(db)/documents/perkUse/$(request.auth.uid)).data.get(ab, null) == request.time;
+    }
     function shortText(v, max) { return v is string && v.size() <= max; }
     function validLog(d) {
       return d.keys().hasOnly(['action', 'target', 'targetName', 'by', 'byName', 'at', 'detail'])
@@ -398,7 +454,8 @@ service cloud.firestore {
         && d.action in ['suspend', 'unsuspend', 'make_mod', 'remove_mod', 'make_admin', 'remove_admin',
                         'remove_ratings', 'remove_rating', 'delete_submissions',
                         'make_trusted', 'remove_trusted', 'mark_fixed',
-                        'give_site_access', 'remove_site_access', 'boot', 'unboot']
+                        'give_site_access', 'remove_site_access', 'boot', 'unboot',
+                        'set_perks', 'remove_perks']
         && shortText(d.target, 128) && shortText(d.targetName, 40)
         && shortText(d.byName, 40) && shortText(d.detail, 200);
     }

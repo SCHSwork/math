@@ -24,14 +24,15 @@ async function backfillUsernames() {
     } catch (e) { console.warn("Couldn't save usernames", e); }
 }
 async function loadAdminData() {
-    const [profiles, admins, mods, bans, subs, stats, feedback] = await Promise.all([
+    const [profiles, admins, mods, bans, subs, stats, feedback, perks] = await Promise.all([
         cloudDb.collection("profiles").get(),
         cloudDb.collection("admins").get(),
         cloudDb.collection("mods").get().catch(() => ({ docs: [] })),
         cloudDb.collection("bans").get(),
         cloudDb.collection("submissions").get().catch(() => ({ docs: [] })),
         cloudDb.collection("gameStats").get().catch(() => ({ docs: [] })),
-        cloudDb.collection("feedback").get().catch(() => ({ docs: [] }))
+        cloudDb.collection("feedback").get().catch(() => ({ docs: [] })),
+        cloudDb.collection("perks").get().catch(() => ({ docs: [] }))
     ]);
     // Per account: which games they liked / disliked and reported as broken
     const statMap = new Map();
@@ -54,6 +55,7 @@ async function loadAdminData() {
         admins: new Map(admins.docs.map(d => [d.id, d.data() || {}])),
         mods: new Map(mods.docs.map(d => [d.id, d.data() || {}])),
         bans: new Map(bans.docs.map(d => [d.id, d.data() || {}])),
+        perks: new Map(perks.docs.map(d => [d.id, d.data() || {}])),
         subs: subMap,
         stats: statMap,
         feedback: fbMap
@@ -597,7 +599,8 @@ const ACTION_LABELS = {
     remove_rating: "removed a rating from", delete_submissions: "deleted the submissions of",
     make_trusted: "made a trusted reporter:", remove_trusted: "removed trusted reporter from", mark_fixed: "marked a game fixed:",
     give_site_access: "let in while the site is closed:", remove_site_access: "removed closed-site access from",
-    boot: "booted", unboot: "lifted the boot on"
+    boot: "booted", unboot: "lifted the boot on",
+    set_perks: "set the abilities of", remove_perks: "removed the abilities of"
 };
 let actionLogCache = null, actionLogFilter = "";
 async function renderActionLog() {
@@ -756,6 +759,7 @@ function adminRoleBadges(p) {
     if (p.uid === getSiteOwnerUid()) out.push(["Owner", "admin"]);
     else if (adminData.admins.has(p.uid)) out.push(["Admin", "admin"]);
     if (adminData.mods.has(p.uid)) out.push(["Mod", "mod"]);
+    if (adminData.perks && adminData.perks.has(p.uid)) out.push(["Abilities", "mod"]);
     if (typeof isTrustedReporter === "function" && isTrustedReporter(p.uid)) out.push(["Trusted reporter", "trusted"]);
     if (adminData.bans.has(p.uid)) out.push(["Suspended", "banned"]);
     if (cloudUser && p.uid === cloudUser.uid) out.push(["You", "you"]);
@@ -965,12 +969,234 @@ function adminRow(p) {
         r.textContent = "Suspended: " + adminData.bans.get(p.uid).reason;
         box.appendChild(r);
     }
+    if (isSiteOwner() && !isAdm && !isOwn) box.appendChild(perksEditor(p));
     const idLine = document.createElement("small");
     idLine.className = "admin-id";
     idLine.textContent = "Account ID: " + p.uid;
     box.appendChild(idLine);
     row.appendChild(box);
     return row;
+}
+
+// ── Abilities ───────────────────────────────────────────────────────────────
+// The owner can give someone a few admin abilities without making them an
+// admin, each usable once per cooldown (perks/<uid>; config/firestore.rules
+// checks the cooldown, so it can't be skipped). They use them from Account →
+// Abilities.
+const PERKS = [
+    ["scare", "Jumpscare", "ghost", 30, "A fake game crash, then a scary picture and a scream on someone's screen"],
+    ["find", "Find screen", "eye", 5, "Lights up someone's screen with a color and number for 30 seconds"],
+    ["boot", "Boot", "ban", 60, "Removes someone from the site for up to 15 minutes"]
+];
+const PERK_BOOT_TIMES = [[1, "1 minute"], [5, "5 minutes"], [10, "10 minutes"], [15, "15 minutes"]];
+const cooldownText = m => m === 0 ? "no wait" : m < 60 ? `${m} min` : m % 1440 === 0 ? `${m / 1440} day${m === 1440 ? "" : "s"}` : m % 60 === 0 ? `${m / 60} h` : `${Math.floor(m / 60)} h ${m % 60} min`;
+function perksEditor(p) {
+    const cur = (adminData.perks.get(p.uid) || {}).a || {};
+    const d = document.createElement("details");
+    d.className = "perks-editor";
+    d.innerHTML = `<summary>${gnIcon("bolt")} Abilities${Object.keys(cur).length ? ": " + PERKS.filter(x => x[0] in cur).map(x => `${x[1]} (every ${cooldownText(cur[x[0]])})`).join(", ") : ""}</summary>
+        <p class="admin-footnote">Give ${escapeHtmlText(p.username || "them")} some admin abilities without making them an admin. Each one can be used once per wait time. They use them from Account → Abilities. They can't use them on you.</p>
+        ${PERKS.map(([k, label, icon, def, what]) => `<label class="perk-line">
+            <input type="checkbox" data-perk="${k}" ${k in cur ? "checked" : ""}>
+            <span>${gnIcon(icon)} <b>${label}</b> <small>${escapeHtmlText(what)}</small></span>
+            <span class="perk-cd">once every <input type="number" min="0" max="10080" step="1" data-cd="${k}" value="${k in cur ? cur[k] : def}" aria-label="${label}: minutes between uses"> min</span>
+        </label>`).join("")}
+        <div class="admin-actions"></div>`;
+    const acts = d.querySelector(".admin-actions");
+    const save = document.createElement("button");
+    save.type = "button"; save.className = "finder-chip"; save.textContent = "Save abilities";
+    save.onclick = async () => {
+        const a = {};
+        for (const [k, label] of PERKS) {
+            if (!d.querySelector(`[data-perk="${k}"]`).checked) continue;
+            const m = Math.floor(Number(d.querySelector(`[data-cd="${k}"]`).value));
+            if (!(m >= 0 && m <= 10080)) { notify(`${label}: enter minutes from 0 to 10080 (a week).`, { type: "error" }); return; }
+            a[k] = m;
+        }
+        const name = String(p.username || "");
+        save.disabled = true;
+        try {
+            if (!Object.keys(a).length) {
+                if (!adminData.perks.has(p.uid)) { save.disabled = false; return; }
+                await loggedWrite("remove_perks", p.uid, name, "", b => b.delete(cloudDb.collection("perks").doc(p.uid)));
+                adminData.perks.delete(p.uid);
+                notify(`${name} has no abilities now.`, { type: "success" });
+            } else {
+                const detail = PERKS.filter(x => x[0] in a).map(x => `${x[1]} every ${cooldownText(a[x[0]])}`).join(", ");
+                const data = { name: name.slice(0, 40), a, by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp() };
+                await loggedWrite("set_perks", p.uid, name, detail, b => b.set(cloudDb.collection("perks").doc(p.uid), data));
+                adminData.perks.set(p.uid, data);
+                notify(`${name} can now use: ${detail}.`, { type: "success" });
+            }
+            renderAdminList();
+        } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); save.disabled = false; }
+    };
+    acts.appendChild(save);
+    if (Object.keys(cur).length) {
+        const off = document.createElement("button");
+        off.type = "button"; off.className = "finder-chip danger"; off.textContent = "Remove all";
+        off.onclick = () => { d.querySelectorAll("[data-perk]").forEach(c => { c.checked = false; }); save.click(); };
+        acts.appendChild(off);
+    }
+    return d;
+}
+
+// The Abilities panel, for someone the owner gave abilities to
+let perksTicker = null;
+function perkReadyAt(k) {
+    const cd = (myPerks() || {})[k];
+    const last = siteAdminState.perkUse[k] || 0;
+    return cd == null ? Infinity : last + cd * 60000;
+}
+// One write that uses ability k: its time in perkUse/ plus the action itself
+async function usePerk(k, apply, log) {
+    const mark = b => b.set(cloudDb.collection("perkUse").doc(cloudUser.uid), { [k]: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    try {
+        if (log) await loggedWrite(log[0], log[1], log[2], log[3], b => { mark(b); apply(b); });
+        else { const b = cloudDb.batch(); mark(b); apply(b); await b.commit(); }
+    } catch (e) {
+        if (/permission/i.test(String(e && (e.code || e.message)))) {
+            await loadMyPerks();
+            throw new Error(myPerks() && k in myPerks() ? "it isn't ready yet. Wait for the timer." : "you don't have that ability anymore.");
+        }
+        throw e;
+    }
+    siteAdminState.perkUse[k] = Date.now();
+}
+async function openAbilitiesPanel() {
+    if (!cloudUser) { notify("Sign in first."); openAccountPanel(); return; }
+    document.getElementById("popupTitle").textContent = "Abilities";
+    const body = document.getElementById("popupBody");
+    body.contentEditable = false;
+    document.getElementById("popupOverlay").style.display = "flex";
+    body.innerHTML = `<p class="admin-summary">Loading…</p>`;
+    await loadMyPerks();
+    const perks = myPerks();
+    if (!perks) { body.innerHTML = `<p>This account doesn't have any abilities. The site owner gives them out.</p>`; return; }
+    body.innerHTML = `
+        <div class="perk-status" id="perk-status"></div>
+        <div class="admin-toolbar"><button type="button" class="finder-chip" id="perk-refresh">Refresh</button></div>
+        <p class="admin-summary" id="perk-summary">Loading who's online…</p>
+        <div id="perk-list" class="admin-list"></div>
+        <p class="admin-footnote">Each ability works once, then waits until its timer runs out. Everything you do here is seen by the site owner.</p>`;
+    document.getElementById("perk-refresh").onclick = () => renderPerkSessions();
+    const status = document.getElementById("perk-status");
+    const tick = () => {
+        if (!document.body.contains(status)) { clearInterval(perksTicker); perksTicker = null; return; }
+        const now = Date.now();
+        status.innerHTML = PERKS.filter(x => x[0] in perks).map(([k, label, icon]) => {
+            const at = perkReadyAt(k);
+            return `<span class="perk-pill ${at <= now ? "ready" : ""}">${gnIcon(icon)} ${label}: ${at <= now ? "ready" : "ready in " + inText(at - now)}</span>`;
+        }).join("");
+        document.querySelectorAll("[data-perk-btn]").forEach(b => {
+            const ready = perkReadyAt(b.dataset.perkBtn) <= now;
+            if (!b.dataset.busy) b.disabled = !ready;
+            b.title = ready ? "" : "Ready in " + inText(perkReadyAt(b.dataset.perkBtn) - now);
+        });
+    };
+    clearInterval(perksTicker);
+    perksTicker = setInterval(tick, 1000);
+    tick();
+    renderPerkSessions();
+}
+async function renderPerkSessions() {
+    const list = document.getElementById("perk-list"), summary = document.getElementById("perk-summary");
+    if (!list) return;
+    const perks = myPerks() || {};
+    let live = [], bySid = new Map();
+    try {
+        const pres = await cloudDb.collection("presence").where("t", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 10 * 60000)).get();
+        live = pres.docs.map(d => ({ id: d.id, ...(d.data() || {}) })).filter(p => p.s !== "light");
+        for (let i = 0; i < live.length; i += 30) {
+            const snap = await cloudDb.collection("profiles").where("sid", "in", live.slice(i, i + 30).map(x => x.id)).get();
+            snap.docs.forEach(d => bySid.set((d.data() || {}).sid, { uid: d.id, ...(d.data() || {}) }));
+        }
+        if (typeof fbCount === "function") fbCount(live.length + bySid.size + 1, 0);
+    } catch (e) {
+        summary.textContent = "Couldn't load who's online: " + (e.message || e);
+        return;
+    }
+    const mine = typeof window.gnSessionId === "function" ? window.gnSessionId() : "";
+    const owner = typeof getSiteOwnerUid === "function" ? getSiteOwnerUid() : "";
+    // Not yourself, and never the owner
+    live = live.filter(p => p.id !== mine && !(bySid.get(p.id) && bySid.get(p.id).uid === owner))
+        .sort((a, b) => (b.t?.toMillis?.() || 0) - (a.t?.toMillis?.() || 0));
+    summary.textContent = live.length ? `${live.length} other ${live.length === 1 ? "person" : "people"} on the site right now` : "Nobody else is on the site right now.";
+    list.innerHTML = "";
+    for (const p of live) {
+        const acct = bySid.get(p.id);
+        const name = acct ? acct.username : `Guest ${p.id.slice(0, 6)}`;
+        const game = p.g && typeof zoneById === "function" ? zoneById(p.g) : null;
+        const row = document.createElement("div");
+        row.className = "admin-row";
+        const head = document.createElement("div");
+        head.innerHTML = `<span class="admin-presence on">${escapeHtmlText(game ? "Playing " + game.name : "Browsing")}</span> <b>${escapeHtmlText(name)}</b>`;
+        row.appendChild(head);
+        const acts = document.createElement("div");
+        acts.className = "admin-actions";
+        const mk = (k, label, icon, fn) => {
+            const b = document.createElement("button");
+            b.type = "button"; b.className = "finder-chip" + (k === "boot" ? " danger" : "");
+            b.dataset.perkBtn = k;
+            b.innerHTML = gnIcon(icon) + " " + label;
+            b.disabled = perkReadyAt(k) > Date.now();
+            b.onclick = async () => {
+                b.dataset.busy = "1"; b.disabled = true;
+                try { await fn(); } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
+                delete b.dataset.busy;
+                b.disabled = perkReadyAt(k) > Date.now();
+            };
+            acts.appendChild(b);
+            return b;
+        };
+        const tag = document.createElement("span");
+        tag.className = "find-screen-tag"; tag.hidden = true;
+        if ("find" in perks) mk("find", "Find screen", "eye", async () => {
+            const keys = Object.keys(IDENTIFY_COLORS);
+            const c = keys[Math.floor(Math.random() * keys.length)], n = 10 + Math.floor(Math.random() * 90);
+            await usePerk("find", b => b.set(cloudDb.collection("identify").doc(p.id), {
+                k: "find", c, n, until: firebase.firestore.Timestamp.fromMillis(Date.now() + IDENTIFY_MS),
+                by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
+            }));
+            const [cname, hex] = IDENTIFY_COLORS[c];
+            Object.assign(tag.style, { background: hex, color: c === "yellow" || c === "cyan" ? "#111" : "#fff" });
+            tag.textContent = `Look for: ${cname} ${n}`; tag.hidden = false;
+            setTimeout(() => { tag.hidden = true; }, IDENTIFY_MS);
+        });
+        if ("scare" in perks) mk("scare", "Jumpscare", "ghost", async () => {
+            if (!(await askConfirm(`Jumpscare ${name}? Their game freezes, a fake error pops up, then a scary picture fills their screen with a scream. About 7 seconds; their game carries on after. You can do it again in ${cooldownText(perks.scare)}.`, { title: "Jumpscare?", confirmText: "Do it" }))) return;
+            const pool = typeof SCARE_BANK !== "undefined" ? SCARE_BANK.map(x => x.url) : [];
+            const pic = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "";
+            await usePerk("scare", b => b.set(cloudDb.collection("identify").doc(p.id), {
+                ...(pic ? { u: pic } : {}),
+                k: "scare", c: "red", n: 1, until: firebase.firestore.Timestamp.fromMillis(Date.now() + 15000),
+                by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
+            }));
+            notify(`Jumpscared ${name}.`, { type: "success" });
+        });
+        let time = null;
+        if ("boot" in perks) {
+            time = document.createElement("select");
+            time.setAttribute("aria-label", "How long");
+            PERK_BOOT_TIMES.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; time.appendChild(o); });
+            time.value = "5";
+            mk("boot", "Boot", "ban", async () => {
+                const mins = Number(time.value), tl = PERK_BOOT_TIMES.find(x => x[0] === mins)[1];
+                if (!(await askConfirm(`${name} will be removed from the site for ${tl}. Their progress is saved first. You can boot someone again in ${cooldownText(perks.boot)}.`, { title: "Boot?", confirmText: "Boot", danger: true }))) return;
+                const data = {
+                    until: firebase.firestore.Timestamp.fromMillis(Date.now() + mins * 60000), reason: "",
+                    by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp(),
+                    name: String(name).slice(0, 40), info: ""
+                };
+                await usePerk("boot", b => b.set(cloudDb.collection("boots").doc(p.id), data), ["boot", p.id, name, tl + " (ability)"]);
+                notify(`${name} is booted for ${tl}.`, { type: "success" });
+            });
+            acts.appendChild(time);
+        }
+        acts.appendChild(tag);
+        row.appendChild(acts);
+        list.appendChild(row);
+    }
 }
 
 // ── One account's activity: likes, dislikes, broken reports, reports & ideas ─

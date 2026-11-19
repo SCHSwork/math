@@ -1472,6 +1472,7 @@ function openAccountPanel(mode) {
                 <button class="settings-button" id="acct-signout" onclick="cloudSignOut()">Sign out</button>
             </div>
             ${typeof isSiteMod === "function" && isSiteMod() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAdminPanel()">${gnIcon("shield")} ${isSiteAdmin() ? "Admin" : "Mod"} Panel</button>` : ""}
+            ${typeof myPerks === "function" && myPerks() ? `<button class="settings-button" style="margin-bottom:1rem;" onclick="openAbilitiesPanel()">${gnIcon("bolt")} Abilities</button>` : ""}
             <details class="acct-section">
                 <summary>Google sign-in${hasGoogle() ? " (linked)" : ""}</summary>
                 ${hasGoogle()
