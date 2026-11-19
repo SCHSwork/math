@@ -456,6 +456,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         }
         noteSaveState("saving", { step: "Checking your account", startedAt: Date.now(), part: 0, parts: 0 }); setCloudStatus("Saving…");
         const meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
+        clearTimeout(cloudSyncRetryTimer); cloudSyncRetryDelay = 0;
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
@@ -541,7 +542,11 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
 // Before a cloud save replaces this device's progress, keep a copy of this
 // device's in the cloud for a week too (if it has real progress), so it can
 // be brought back from Earlier cloud saves.
-async function keepDeviceCopy() {
+// Best effort: gives up after 45 s so a slow connection can't hold up loading
+function keepDeviceCopy() {
+    return cloudStep(keepDeviceCopyNow(), 45000, "Keeping a copy of this device's progress").catch(e => console.warn(e));
+}
+async function keepDeviceCopyNow() {
     const sum = progressSummary();
     if ((sum.level || 0) <= 1 && (sum.playSec || 0) < 600) return;
     try {
@@ -563,7 +568,7 @@ async function downloadCloudSave({ previous = "" } = {}) {
     try {
         setCloudStatus("Loading cloud save…");
         await keepDeviceCopy();
-        let meta = await fetchCloudMeta();
+        let meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
         if (!meta) { setCloudStatus("No cloud save yet."); return false; }
         if (previous) {
             const k = keptSaves(meta).find(x => x.gen === previous);
@@ -571,9 +576,9 @@ async function downloadCloudSave({ previous = "" } = {}) {
             meta = k;
         }
         const chunks = saveDocRef().collection("chunks");
-        const parts = await Promise.all(
+        const parts = await cloudStep(Promise.all(
             Array.from({ length: meta.chunkCount }, (_, i) => chunks.doc(`${meta.gen}_${i}`).get())
-        );
+        ), 90000, "Downloading your cloud save");
         if (parts.some(p => !p.exists)) throw new Error("cloud save is incomplete, try again");
         const json = await b64ToText(parts.map(p => p.data().d).join(""));
         if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
@@ -601,7 +606,8 @@ async function downloadCloudSave({ previous = "" } = {}) {
 // Runs right after sign-in (or on page load when already signed in)
 async function cloudSyncOnSignIn() {
     try {
-        const meta = await fetchCloudMeta();
+        const meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
+        clearTimeout(cloudSyncRetryTimer); cloudSyncRetryDelay = 0;
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         // Progress the owner gave back to this account (tools/recover_save.mjs)
         if (meta && meta.grant && typeof applyGrant === "function") { try { applyGrant(meta.grant); } catch (e) { console.warn(e); } }
@@ -619,7 +625,10 @@ async function cloudSyncOnSignIn() {
         // Load the cloud save without asking, unless this device clearly has more
         // progress. This device's progress is kept for a week first (keepDeviceCopy),
         // so it can still be brought back from Account → Earlier cloud saves.
-        if (!cloudLess) { await downloadCloudSave(); return; }
+        if (!cloudLess) {
+            if (!(await downloadCloudSave())) cloudSyncRetry(new Error("Couldn't load your cloud save (slow or no connection)."));
+            return;
+        }
         const choice = await askChoice(
             `Your account has progress saved on ${when}` + (cloud ? ` (${describeProgress(cloud)})` : "") +
             `, and this device has its own (${describeProgress(here)}). Which do you want to keep? The other one is replaced.` +
@@ -630,7 +639,7 @@ async function cloudSyncOnSignIn() {
                     { value: "cloud", label: "Load my cloud save", primary: true }
                 ]
             });
-        if (choice === "cloud") await downloadCloudSave();
+        if (choice === "cloud") { if (!(await downloadCloudSave())) cloudSyncRetry(new Error("Couldn't load your cloud save (slow or no connection).")); }
         else if (choice === "device") {
             if (!(await askConfirm(`Your cloud save` + (cloud ? ` (${describeProgress(cloud)})` : "") + ` will be replaced with this device's progress (${describeProgress(here)}).` +
                 (deviceLess ? " This device has LESS progress, so you'd lose some." : "") +
@@ -644,8 +653,19 @@ async function cloudSyncOnSignIn() {
         else { noteSaveState("conflict"); setCloudStatus("Not synced yet. Open Account to choose which progress to keep."); }
     } catch (e) {
         console.error(e);
-        noteSaveState("retry"); setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
+        cloudSyncRetry(e);
     }
+}
+// Checking the account on sign-in failed (slow or no connection): try again
+// in 30 s, then less often, instead of waiting for the next page load
+let cloudSyncRetryTimer = null, cloudSyncRetryDelay = 0;
+function cloudSyncRetry(e) {
+    clearTimeout(cloudSyncRetryTimer);
+    if (!cloudUser) return;
+    cloudSyncRetryDelay = Math.min(cloudSyncRetryDelay ? cloudSyncRetryDelay * 2 : 30000, 5 * 60000);
+    noteSaveState("retry", { error: cloudErrorText(e), retryAt: Date.now() + cloudSyncRetryDelay });
+    setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
+    cloudSyncRetryTimer = setTimeout(() => { cloudSyncRetryTimer = null; cloudSaveState.retryAt = 0; if (cloudUser) cloudSyncOnSignIn(); }, cloudSyncRetryDelay);
 }
 
 // ── Accounts ────────────────────────────────────────────────────────────────
@@ -1358,7 +1378,7 @@ function renderSaveDetails() {
     }
     if (s.phase === "retry") {
         if (s.error) rows.push(["What happened", escapeHtml(s.error), true]);
-        rows.push(["Next try", s.retryAt ? "in " + inText(s.retryAt - now) : "when you're back online"]);
+        rows.push(["Next try", s.retryAt ? "in " + inText(s.retryAt - now) : cloudBusy ? "now (waiting on the cloud)" : navigator.onLine === false ? "when you're back online" : "soon"]);
     }
     if (s.phase === "conflict") rows.push(["Why", "Another device saved to your account after this one. Open Account to pick which progress to keep."]);
     if (s.phase === "paused") rows.push(["Why", "The site used up today's cloud saves (Firebase's daily limit). They start again tomorrow."]);
