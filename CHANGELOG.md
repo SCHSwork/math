@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — GameDistribution games: no more ad SDK
+
+### Fixed
+- **GameDistribution games (Dan The Man and others) were running GD's real ad SDK**, which reported every play to GameDistribution, GameMonkey and Azerion's trackers and could show ads. Their copies load the SDK from jsDelivr, which got past the ad-host list. The SDK's loader is now blocked whatever address it uses, and a stand-in answers the game the way the SDK would: ready right away, and every ad "finishes" at once (rewarded ads count as watched).
+- Added gamemonkey.org, azerioncircle.com and headerlift.com to the blocked ad and tracker sites.
+
 ## November 18, 2026 — Saves too big for the cloud
 
 ### Fixed
