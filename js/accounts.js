@@ -414,6 +414,19 @@ window.addEventListener("online", () => {
 // Firebase waits forever for a reply when the connection drops (school Wi-Fi),
 // which left "Saving…" stuck. Each step gives up after a while instead, and the
 // save is tried again like any other failure.
+// What went wrong, in words: Firebase's own message, or what its code means
+function cloudErrorText(e) {
+    const code = String((e && e.code) || "").replace(/^firestore\//, "");
+    const msg = String((e && e.message) || (e && typeof e !== "object" ? e : "") || "").trim();
+    const known = {
+        "permission-denied": "Your account isn't allowed to save right now. Signing out and back in usually fixes it.",
+        "unauthenticated": "You're signed out of the cloud. Sign in again to save.",
+        "unavailable": "Couldn't reach the cloud (no connection).",
+        "deadline-exceeded": "The cloud took too long to answer (slow or no connection)."
+    };
+    const said = known[code] || msg || "Something went wrong.";
+    return code && !said.includes(code) ? `${said} (${code})` : said;
+}
 function cloudStep(promise, ms, what) {
     let t;
     return Promise.race([promise, new Promise((_, rej) => { t = setTimeout(() => rej(Object.assign(new Error(`${what} took too long (slow or no connection).`), { code: "deadline-exceeded" })), ms); })])
@@ -508,7 +521,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         } else {
             // Signed out or not allowed won't fix itself; anything else gets tried again
             cloudFailRetryable = !/permission-denied|unauthenticated/.test(String(e && e.code));
-            noteSaveState(cloudFailRetryable ? "retry" : "error", { error: (e && e.message) || String(e) }); setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
+            noteSaveState(cloudFailRetryable ? "retry" : "error", { error: cloudErrorText(e) }); setCloudStatus("Cloud save failed: " + (e.message || e) + (cloudFailRetryable ? " Trying again soon; your progress is safe on this device." : ""));
         }
         return false;
     } finally {
@@ -1335,7 +1348,7 @@ function renderSaveDetails() {
     }
     if (s.phase === "conflict") rows.push(["Why", "Another device saved to your account after this one. Open Account to pick which progress to keep."]);
     if (s.phase === "paused") rows.push(["Why", "The site used up today's cloud saves (Firebase's daily limit). They start again tomorrow."]);
-    if (s.phase === "error" && s.error) rows.push(["What happened", escapeHtml(s.error), true]);
+    if (s.phase === "error") rows.push(["What happened", escapeHtml(s.error || "The cloud turned the save down without saying why. Your progress is safe on this device."), true]);
     rows.push(["Last cloud save", s.lastAt ? `${new Date(s.lastAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (${agoText(now - s.lastAt)})` : "not yet on this device"]);
     if (s.size) rows.push(["Size", mb(s.size)]);
     if (s.left && s.left.length) rows.push(["Too big for the cloud", s.left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ") + ". They stay on this device; the rest is in the cloud. These are usually a game's downloaded files, not saves."]);
