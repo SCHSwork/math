@@ -58,9 +58,9 @@ function gnShowIdentify({ c, n, until }) {
 
 // ── Jumpscare (just for fun; Admin Panel → Sessions) ────────────────────────
 // A face of our own (drawn here, no characters from anything) lunges at the
-// screen with a scream made on the spot by the browser, for about 1.5 s.
-// It flashes red twice at the start, slowly enough to stay under the safe
-// limit for people sensitive to flashing lights (no more than 3 a second).
+// screen with a scream made on the spot by the browser. It flashes red once
+// and inverted once, well under the safe limit for people sensitive to
+// flashing lights (no more than 3 a second).
 // pic: a picture link the admin added (Admin Panel → Sessions → Jumpscare
 // pictures); one of the built-in faces if it's empty or doesn't load.
 const SCARE_FACE = `<svg viewBox="0 0 200 260" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -98,14 +98,17 @@ const SCARE_FACES = [SCARE_FACE,
 </svg>`];
 // The sound, all made by the browser on the spot (no recordings):
 //  • the error "ding" when the fake error box shows up
-//  • in the black moment just before the hit, a rising whoosh (a breath in)
+//  • in the dark, while the face comes closer: a low, uneasy drone and a
+//    heartbeat that speeds up, then dead silence for a third of a second
+//  • a rising whoosh just before the hit (a breath in)
 //  • the hit: a deep boom, a horror-movie "stinger" (a clashing chord of
 //    rough tones), and a scream — a voice-like tone shaped by the formants of
 //    an "AAAH" (800 / 1150 / 2900 Hz), jumping up in pitch with a wild
 //    vibrato, two of them slightly out of tune, plus a metallic shriek on top
 //  • all of it pushed through distortion and a limiter, so it's as loud as
 //    the speakers go without turning to mush. About 2 seconds.
-function scareSound(delayMs, dingMs = -1) {
+//  • a short shriek with the last inverted flash
+function scareSound(delayMs, dingMs = -1, creepMs = -1, subMs = -1) {
     try {
         const C = window.AudioContext || window.webkitAudioContext;
         if (!C) return;
@@ -130,6 +133,43 @@ function scareSound(delayMs, dingMs = -1) {
                 o.type = "sine"; o.frequency.value = f; env(g, td + off, 0.16, 0.02, 0.35);
                 o.connect(g); g.connect(ctx.destination); o.start(td + off); o.stop(td + off + 0.4);
             });
+        }
+        // The dark: drone (two low tones rubbing, plus a rumble) and a heartbeat
+        if (creepMs >= 0) {
+            const c0 = t0 + creepMs / 1000, c1 = hit - 0.36;
+            if (c1 > c0 + 0.3) {
+                const dg = ctx.createGain();
+                dg.gain.setValueAtTime(0.0001, c0); dg.gain.exponentialRampToValueAtTime(0.5, c1 - 0.05); dg.gain.setValueAtTime(0.0001, c1);
+                dg.connect(master);
+                [[55, "sawtooth"], [58.3, "sawtooth"], [110.6, "triangle"]].forEach(([f, type]) => {
+                    const o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+                    o.type = type; o.frequency.setValueAtTime(f, c0); o.frequency.linearRampToValueAtTime(f * 1.06, c1);
+                    lp.type = "lowpass"; lp.frequency.setValueAtTime(180, c0); lp.frequency.linearRampToValueAtTime(700, c1);
+                    g.gain.value = 0.3; o.connect(lp); lp.connect(g); g.connect(dg); o.start(c0); o.stop(c1 + 0.01);
+                });
+                const n = ctx.createBufferSource(), nl = ctx.createBiquadFilter(), ngn = ctx.createGain();
+                n.buffer = noiseBuf(c1 - c0 + 0.1); nl.type = "lowpass"; nl.frequency.value = 120; ngn.gain.value = 0.9;
+                n.connect(nl); nl.connect(ngn); ngn.connect(dg); n.start(c0); n.stop(c1 + 0.01);
+                // Heartbeat: "lub-dub", closer together as it comes
+                let t = c0 + 0.15, gap = 0.95;
+                while (t < c1 - 0.25) {
+                    [[0, 1], [0.17, 0.7]].forEach(([off, amp]) => {
+                        const at = t + off;
+                        if (at > c1 - 0.05) return;
+                        const o = ctx.createOscillator(), g = ctx.createGain();
+                        o.type = "sine"; o.frequency.setValueAtTime(70, at); o.frequency.exponentialRampToValueAtTime(38, at + 0.14);
+                        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(amp, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.18);
+                        o.connect(g); g.connect(master); o.start(at); o.stop(at + 0.2);
+                    });
+                    t += gap; gap = Math.max(0.36, gap * 0.82);
+                }
+            }
+        }
+        // Last flash: a short, harsh shriek
+        if (subMs >= 0) {
+            const ts = t0 + subMs / 1000, d = shaper(6), g = ctx.createGain();
+            env(g, ts, 0.7, 0.08, 0.3); d.connect(g); g.connect(master);
+            [1870, 1990, 2650].forEach(f => { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(f, ts); o.frequency.exponentialRampToValueAtTime(f * 0.7, ts + 0.3); o.connect(d); o.start(ts); o.stop(ts + 0.32); });
         }
         // Rising whoosh in the black moment (a breath in), cut dead at the hit
         {
@@ -193,7 +233,7 @@ function scareSound(delayMs, dingMs = -1) {
             env(sg, hit, 0.18, 0.4, 1.4); sh.connect(sg); sg.connect(master);
             [sh, mod].forEach(n => { n.start(hit); n.stop(hit + len); });
         }
-        setTimeout(() => ctx.close().catch(() => {}), delayMs + (len + 0.5) * 1000);
+        setTimeout(() => ctx.close().catch(() => {}), Math.max(delayMs + (len + 0.5) * 1000, subMs + 800));
     } catch (e) { console.warn("Jumpscare sound failed", e); }
 }
 // Pictures to use (Admin Panel → Sessions picks one at random, or yours):
@@ -209,10 +249,15 @@ function scarePos(url) { const b = SCARE_BANK.find(x => x.url === url); return b
 
 // How it goes: their game freezes (it's paused, so it really stops), then a
 // red error bar blinks at the top and a "not responding" box pops up with a
-// ding, so they lean in to read it… the screen cuts to black and silent for a
-// moment… then the picture fills the screen: warped, grainy, split colors,
-// shaking, two red flashes and the scream. After that the game carries on.
-const SCARE_FREEZE_MS = 800, SCARE_BOX_MS = 1500, SCARE_BLACK_MS = 4300, SCARE_HIT_MS = 4650;
+// ding, so they lean in to read it… the screen cuts to black. In the dark a
+// dim face is far away, flickering, slowly coming closer, with a low drone and
+// a heartbeat that speeds up… dead silence for a beat… then it lunges right
+// into the screen in a tenth of a second, too close, and stays there frozen
+// (it only twitches, like a broken film), with one red flash and the scream.
+// Cut to black, and when they think it's over, it flashes once more,
+// inverted. After that the game carries on.
+const SCARE_FREEZE_MS = 800, SCARE_BOX_MS = 1500, SCARE_BLACK_MS = 4300, SCARE_CREEP_MS = 4900, SCARE_HIT_MS = 7000,
+    SCARE_CUT_MS = 8700, SCARE_SUB_MS = 9250, SCARE_END_MS = 9600;
 function gnJumpscare(pic) {
     const face = SCARE_FACES[Math.floor(Math.random() * SCARE_FACES.length)];
     const okPic = typeof pic === "string" && /^https:\/\/[^\s"'<>]+$/.test(pic) ? pic : "";
@@ -257,18 +302,27 @@ function gnJumpscare(pic) {
 #${uid} .spin{display:inline-block;width:12px;height:12px;border:2px solid #999;border-top-color:transparent;border-radius:50%;animation:${uid}sp 1s linear infinite;vertical-align:-2px;margin-right:6px;}
 @keyframes ${uid}sp{to{transform:rotate(360deg)}}
 #${uid} .black{position:absolute;inset:0;background:#000;display:none;}
-#${uid}.blk .black, #${uid}.go .black{display:block;}
+#${uid}.blk .black, #${uid}.go .black, #${uid}.cut .black{display:block;}
 #${uid}.blk .bar, #${uid}.blk .dlg, #${uid}.go .bar, #${uid}.go .dlg{display:none;}
 #${uid} .hit{position:absolute;inset:0;display:none;place-items:center;overflow:hidden;cursor:none;}
-#${uid}.go .hit{display:grid;animation:${uid}shake .09s steps(2) infinite, ${uid}zoom 1.8s cubic-bezier(.1,1.4,.3,1) forwards;}
-@keyframes ${uid}zoom{0%{transform:scale(1.6)}7%{transform:scale(1.02)}100%{transform:scale(1.12)}}
-@keyframes ${uid}shake{0%{translate:-14px 9px;rotate:-1.2deg}50%{translate:13px -11px;rotate:1.4deg}100%{translate:-9px -6px;rotate:-.6deg}}
+#${uid}.creep .hit, #${uid}.go .hit, #${uid}.sub .hit{display:grid;}
+#${uid} .mv{position:absolute;inset:0;display:grid;place-items:center;transform:scale(.14);}
+#${uid}.creep .mv{animation:${uid}creep ${(SCARE_HIT_MS - SCARE_CREEP_MS) / 1000}s cubic-bezier(.3,0,.9,.6) forwards, ${uid}dimf 1.3s steps(1) infinite;}
+@keyframes ${uid}creep{from{transform:scale(.12)}to{transform:scale(.34)}}
+#${uid}.creep .mv{filter:brightness(.6) contrast(1.4) saturate(.6) blur(.6px);}
+@keyframes ${uid}dimf{0%{opacity:.85}9%{opacity:.15}13%{opacity:.9}41%{opacity:.6}44%{opacity:0}47%{opacity:.9}78%{opacity:.75}}
+#${uid}.go .mv{opacity:1;filter:contrast(1.35) brightness(1.08) saturate(.85);animation:${uid}lunge .11s cubic-bezier(.75,0,1,1) forwards, ${uid}twitch 1.1s steps(1) .3s infinite;}
+@keyframes ${uid}lunge{from{transform:scale(.34)}to{transform:scale(1.32)}}
+@keyframes ${uid}twitch{0%{transform:scale(1.32)}27%{transform:scale(1.36) translate(6px,-4px) rotate(.6deg)}29%{transform:scale(1.32)}58%{transform:scale(1.33) translate(-5px,3px) rotate(-.5deg)}60%{transform:scale(1.32)}86%{transform:scale(1.4) translate(0,6px)}88%{transform:scale(1.32)}}
+#${uid}.sub .mv{opacity:1;animation:none;transform:scale(1.45);filter:invert(1) contrast(1.8) brightness(1.1);}
 #${uid} .layer{position:absolute;inset:0;display:grid;place-items:center;}
 #${uid} .layer > *{width:100%;height:100%;}
 #${uid} .layer > svg{width:auto;height:112vh;max-width:none;}
-#${uid} .m{filter:url(#${uid}f) contrast(1.35) brightness(1.1);}
-#${uid} .r{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(8) hue-rotate(-40deg);translate:-9px 0;opacity:.55;}
-#${uid} .c{mix-blend-mode:screen;filter:url(#${uid}f) sepia(1) saturate(6) hue-rotate(140deg);translate:9px 0;opacity:.4;}
+#${uid} .r, #${uid} .c{mix-blend-mode:screen;opacity:0;}
+#${uid} .r{filter:sepia(1) saturate(8) hue-rotate(-40deg);--dx:-26px;}
+#${uid} .c{filter:sepia(1) saturate(6) hue-rotate(140deg);--dx:26px;}
+#${uid}.go .r, #${uid}.go .c{animation:${uid}spl .35s ease-out forwards;}
+@keyframes ${uid}spl{0%{opacity:.75;translate:var(--dx) 0}100%{opacity:.12;translate:calc(var(--dx) / 6) 0}}
 #${uid} .grain{position:absolute;inset:-50%;opacity:.28;mix-blend-mode:overlay;display:none;animation:${uid}grain .12s steps(3) infinite;}
 #${uid}.go .grain{display:block;}
 @keyframes ${uid}grain{0%{transform:translate(0,0)}33%{transform:translate(-5%,3%)}66%{transform:translate(4%,-4%)}100%{transform:translate(-2%,5%)}}
@@ -276,7 +330,8 @@ function gnJumpscare(pic) {
 #${uid}.go .vig{display:block;}
 #${uid} .red{position:absolute;inset:0;background:#e00000;opacity:0;mix-blend-mode:multiply;}
 #${uid}.go .red{animation:${uid}red 1s linear forwards;}
-@keyframes ${uid}red{0%,12%{opacity:.9}22%,42%{opacity:0}46%,56%{opacity:.75}66%,100%{opacity:0}}
+@keyframes ${uid}red{0%,9%{opacity:.85}24%,100%{opacity:0}}
+#${uid}.cut .grain, #${uid}.cut .vig, #${uid}.cut .red{display:none;}
 </style>
 <svg width="0" height="0" style="position:absolute"><defs>
  <filter id="${uid}f" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="${Math.floor(Math.random() * 99)}" result="w"><animate attributeName="baseFrequency" values="0.012;0.02;0.009;0.016" dur="0.5s" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="w" scale="14" xChannelSelector="R" yChannelSelector="G"/></filter>
@@ -289,7 +344,7 @@ function gnJumpscare(pic) {
     <div class="bd"><div class="ic">!</div><div><b>${esc(appName)} isn't responding</b><br>You can wait for it to respond or reload it. Reloading may lose unsaved progress.<br><span style="color:#555;font-size:12.5px"><span class="spin"></span>Waiting for the game…</span></div></div>
     <div class="bt"><button type="button">Wait</button><button type="button" class="p">Reload</button></div></div>
   <div class="black"></div>
-  <div class="hit"><div class="layer m">${artOf()}</div><div class="layer r">${artOf()}</div><div class="layer c">${artOf()}</div></div>
+  <div class="hit"><div class="mv"><div class="layer m">${artOf()}</div><div class="layer r">${artOf()}</div><div class="layer c">${artOf()}</div></div></div>
   <svg class="grain" width="200%" height="200%"><rect width="100%" height="100%" filter="url(#${uid}n)"/></svg>
   <div class="vig"></div><div class="red"></div>
 </div>`;
@@ -302,9 +357,13 @@ function gnJumpscare(pic) {
         setTimeout(() => {
             // The picture didn't load in time: a built-in face instead
             if (okPic && !picReady) el.querySelectorAll(".hit .layer").forEach(l => { l.innerHTML = own(face); });
-            st.classList.add("go");
-        }, SCARE_HIT_MS);
-        setTimeout(() => { el.style.transition = "opacity .35s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 400); }, SCARE_HIT_MS + 1900);
+            st.classList.add("creep");
+        }, SCARE_CREEP_MS);
+        setTimeout(() => { st.classList.remove("creep"); st.classList.add("go"); }, SCARE_HIT_MS);
+        setTimeout(() => { st.classList.remove("go"); st.classList.add("cut"); }, SCARE_CUT_MS);
+        setTimeout(() => { st.classList.remove("cut"); st.classList.add("sub"); }, SCARE_SUB_MS);
+        setTimeout(() => { st.classList.remove("sub"); st.classList.add("cut"); }, SCARE_SUB_MS + 90);
+        setTimeout(() => { el.style.transition = "opacity .3s"; el.style.opacity = "0"; setTimeout(() => el.remove(), 350); }, SCARE_END_MS);
         return el;
     };
     try {
@@ -313,10 +372,10 @@ function gnJumpscare(pic) {
         else if (fs && fs !== document.documentElement) fs.appendChild(build(document));
         else build(document);
     } catch { build(document); }
-    scareSound(SCARE_HIT_MS, SCARE_BOX_MS);
+    scareSound(SCARE_HIT_MS, SCARE_BOX_MS, SCARE_CREEP_MS, SCARE_SUB_MS);
     // The game carries on afterwards
     setTimeout(() => {
         try { if (gw && gw.__gnPause) gw.__gnPause(false); } catch {}
         try { if (gw && gw.__gnSetMuted) gw.__gnSetMuted(!!(window.__gnmathMuted && window.__gnmathMuted())); } catch {}
-    }, SCARE_HIT_MS + 2300);
+    }, SCARE_END_MS + 300);
 }
