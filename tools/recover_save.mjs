@@ -135,10 +135,14 @@ if (restore) {
     // Same fingerprint the site uses, so it recognizes the save
     const hash = (await import("crypto")).createHash("sha256").update(JSON.stringify(bundle)).digest("hex");
     const cur = now.meta;
+    // Big game data the save points at (saves/<uid>/blobs/, see splitBlobs in js/accounts.js)
+    const refs = new Map();
+    for (const d of bundle.indexedDB || []) for (const st of d.stores || []) for (const e of st.entries || []) if (e && e.__ref) refs.set(e.__ref, e.n || 1);
+    const blobs = [...refs].map(([id, n]) => ({ id, n }));
     await metaRef.set({
-        gen: restore, chunkCount: n, hash, size: packed.length,
+        gen: restore, chunkCount: n, hash, size: packed.length, blobs,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        kept: [...(cur && cur.gen ? [{ gen: cur.gen, chunkCount: cur.chunkCount || 0, sum: cur.sum || null, at: cur.updatedAt ? cur.updatedAt.toMillis() : Date.now(), until: Date.now() + 7 * 86400000 }] : []), ...((cur && cur.kept) || []).filter(k => k.gen !== restore)].slice(0, 6)
+        kept: [...(cur && cur.gen ? [{ gen: cur.gen, chunkCount: cur.chunkCount || 0, sum: cur.sum || null, at: cur.updatedAt ? cur.updatedAt.toMillis() : Date.now(), until: Date.now() + 7 * 86400000, ...(cur.blobs ? { blobs: cur.blobs } : {}) }] : []), ...((cur && cur.kept) || []).filter(k => k.gen !== restore)].slice(0, 6)
     });
     console.log(`\nRestored: ${restore} is ${username}'s cloud save again (${summarize(bundle)}).`);
     console.log("The save it replaced is kept for 7 days (Account → Earlier cloud saves).");
