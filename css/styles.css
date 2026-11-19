@@ -3494,6 +3494,17 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .find-screen .finder-chip { display: inline-flex; align-items: center; gap: 5px; }
 .find-screen-tag { padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 13px; white-space: nowrap; }
 .find-screen-tag[hidden] { display: none; }
+.perks-editor { flex-basis: 100%; margin: 0.25rem 0; }
+.perks-editor > summary { cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.perks-editor svg, .perk-pill svg { width: 16px; height: 16px; flex: none; }
+.perk-line { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.perk-line small { display: block; color: var(--text-muted); font-size: 12px; }
+.perk-line svg { width: 16px; height: 16px; vertical-align: -3px; }
+.perk-cd { white-space: nowrap; font-size: 13px; }
+.perk-cd input { width: 5.5em; padding: 3px 6px; }
+.perk-status { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.75rem; }
+.perk-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+.perk-pill.ready { background: rgba(34, 197, 94, 0.18); color: #4ade80; }
 .scare-pics { margin-top: 1rem; }
 .scare-pics summary { cursor: pointer; font-weight: 700; }
 .scare-pics textarea { width: 100%; margin: 0.4rem 0; font-family: ui-monospace, monospace; font-size: 12px; }
