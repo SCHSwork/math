@@ -96,58 +96,105 @@ const SCARE_FACES = [SCARE_FACE,
   <path d="M40 150c30 22 130 22 160 0-8 50-44 78-80 78s-72-28-80-78Z" fill="#050000"/>
   <path d="M42 152l10 26 9-22 10 30 10-28 10 32 9-30 10 32 10-32 9 30 10-32 10 28 10-30 9 22 10-26" fill="#d8ccb0"/>
 </svg>`];
-// The sound: an error "ding" with the fake error box, then a distorted scream
-// (several rough voices sliding down, a bandpassed hiss and a thump), pushed
-// through a waveshaper and a compressor so it's as loud as it can be without
-// crackling into nothing.
+// The sound, all made by the browser on the spot (no recordings):
+//  • the error "ding" when the fake error box shows up
+//  • in the black moment just before the hit, a rising whoosh (a breath in)
+//  • the hit: a deep boom, a horror-movie "stinger" (a clashing chord of
+//    rough tones), and a scream — a voice-like tone shaped by the formants of
+//    an "AAAH" (800 / 1150 / 2900 Hz), jumping up in pitch with a wild
+//    vibrato, two of them slightly out of tune, plus a metallic shriek on top
+//  • all of it pushed through distortion and a limiter, so it's as loud as
+//    the speakers go without turning to mush. About 2 seconds.
 function scareSound(delayMs, dingMs = -1) {
     try {
         const C = window.AudioContext || window.webkitAudioContext;
         if (!C) return;
         const ctx = new C();
         if (ctx.state === "suspended") ctx.resume().catch(() => {});
-        const t0 = ctx.currentTime, hit = t0 + delayMs / 1000, len = 1.6;
-        const comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -18; comp.ratio.value = 8; comp.attack.value = 0.002; comp.release.value = 0.2;
-        comp.connect(ctx.destination);
-        // An error "ding" when the fake error box shows up
+        const t0 = ctx.currentTime, hit = t0 + delayMs / 1000, len = 2.1;
+        const limiter = ctx.createDynamicsCompressor();
+        limiter.threshold.value = -10; limiter.knee.value = 4; limiter.ratio.value = 20; limiter.attack.value = 0.001; limiter.release.value = 0.15;
+        const master = ctx.createGain(); master.gain.value = 1.4;
+        master.connect(limiter); limiter.connect(ctx.destination);
+        const env = (g, at, peak, hold, end) => {
+            g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + 0.012);
+            g.gain.setValueAtTime(peak, at + hold); g.gain.exponentialRampToValueAtTime(0.0001, at + end);
+        };
+        const noiseBuf = secs => { const b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * secs), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
+        const shaper = amt => { const s = ctx.createWaveShaper(), c = new Float32Array(4096); for (let i = 0; i < c.length; i++) { const x = i / 2048 - 1; c[i] = Math.tanh(x * amt); } s.curve = c; s.oversample = "4x"; return s; };
+        // Error ding
         if (dingMs >= 0) {
             const td = t0 + dingMs / 1000;
             [[880, 0], [660, 0.12]].forEach(([f, off]) => {
                 const o = ctx.createOscillator(), g = ctx.createGain();
-                o.type = "sine"; o.frequency.value = f;
-                g.gain.setValueAtTime(0.0001, td + off); g.gain.exponentialRampToValueAtTime(0.18, td + off + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, td + off + 0.35);
+                o.type = "sine"; o.frequency.value = f; env(g, td + off, 0.16, 0.02, 0.35);
                 o.connect(g); g.connect(ctx.destination); o.start(td + off); o.stop(td + off + 0.4);
             });
         }
-        // Scream
-        const shaper = ctx.createWaveShaper(), curve = new Float32Array(2048);
-        for (let i = 0; i < curve.length; i++) { const x = i / 1024 - 1; curve[i] = Math.tanh(x * 6); }
-        shaper.curve = curve;
-        const out = ctx.createGain();
-        out.gain.setValueAtTime(0.0001, hit); out.gain.exponentialRampToValueAtTime(1, hit + 0.015);
-        out.gain.setValueAtTime(1, hit + len * 0.55); out.gain.exponentialRampToValueAtTime(0.0001, hit + len);
-        shaper.connect(out); out.connect(comp);
-        const k = 0.8 + Math.random() * 0.5;
-        [[1100 * k, 300 * k, "sawtooth", 0.5], [1500 * k, 420 * k, "square", 0.3], [700 * k, 180, "sawtooth", 0.45], [2300 * k, 900 * k, "triangle", 0.25]].forEach(([a, z, type, v]) => {
-            const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
-            o.type = type; o.frequency.setValueAtTime(a, hit); o.frequency.exponentialRampToValueAtTime(z, hit + len);
-            lfo.frequency.value = 30 + Math.random() * 25; lg.gain.value = a * 0.08; lfo.connect(lg); lg.connect(o.frequency);
-            g.gain.value = v; o.connect(g); g.connect(shaper);
-            o.start(hit); lfo.start(hit); o.stop(hit + len); lfo.stop(hit + len);
-        });
-        const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * len), ctx.sampleRate), d = buf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-        const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), ng = ctx.createGain();
-        n.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 2500; bp.Q.value = 0.7; ng.gain.value = 0.7;
-        n.connect(bp); bp.connect(ng); ng.connect(shaper); n.start(hit);
-        // Thump
-        const th = ctx.createOscillator(), tg = ctx.createGain();
-        th.type = "sine"; th.frequency.setValueAtTime(120, hit); th.frequency.exponentialRampToValueAtTime(35, hit + 0.35);
-        tg.gain.setValueAtTime(1, hit); tg.gain.exponentialRampToValueAtTime(0.0001, hit + 0.4);
-        th.connect(tg); tg.connect(comp); th.start(hit); th.stop(hit + 0.45);
-        setTimeout(() => ctx.close().catch(() => {}), delayMs + (len + 0.4) * 1000);
-    } catch {}
+        // Rising whoosh in the black moment (a breath in), cut dead at the hit
+        {
+            const n = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain(), w0 = Math.max(t0, hit - 0.33);
+            n.buffer = noiseBuf(0.4); bp.type = "bandpass"; bp.Q.value = 1.2;
+            bp.frequency.setValueAtTime(300, w0); bp.frequency.exponentialRampToValueAtTime(3500, hit);
+            g.gain.setValueAtTime(0.0001, w0); g.gain.exponentialRampToValueAtTime(0.35, hit - 0.01); g.gain.setValueAtTime(0.0001, hit);
+            n.connect(bp); bp.connect(g); g.connect(master); n.start(w0); n.stop(hit + 0.01);
+        }
+        // Boom
+        {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = "sine"; o.frequency.setValueAtTime(95, hit); o.frequency.exponentialRampToValueAtTime(28, hit + 0.9);
+            env(g, hit, 1.2, 0.05, 1.1); o.connect(g); g.connect(master); o.start(hit); o.stop(hit + 1.2);
+            const n = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), ng = ctx.createGain();
+            n.buffer = noiseBuf(0.5); lp.type = "lowpass"; lp.frequency.value = 400; env(ng, hit, 0.9, 0.02, 0.45);
+            n.connect(lp); lp.connect(ng); ng.connect(master); n.start(hit);
+        }
+        // Stinger: a clashing chord (half-steps rubbing) with fast tremolo
+        {
+            const dist = shaper(3), bus = ctx.createGain(), bp = ctx.createBiquadFilter();
+            bp.type = "bandpass"; bp.frequency.value = 1400; bp.Q.value = 0.5;
+            env(bus, hit, 0.35, 0.5, 1.9); dist.connect(bp); bp.connect(bus); bus.connect(master);
+            const trem = ctx.createOscillator(), tg = ctx.createGain(); trem.frequency.value = 13; tg.gain.value = 0.4; trem.connect(tg); tg.connect(bus.gain); trem.start(hit); trem.stop(hit + len);
+            [277.2, 293.7, 392, 415.3, 554.4, 587.3].forEach((f, i) => {
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = i % 2 ? "square" : "sawtooth"; o.frequency.setValueAtTime(f, hit); o.frequency.linearRampToValueAtTime(f * 0.94, hit + len);
+                g.gain.value = 0.16; o.connect(g); g.connect(dist); o.start(hit); o.stop(hit + len);
+            });
+        }
+        // Scream: rough voice through "AAAH" formants, pitch jumping up with wild vibrato
+        {
+            const formants = [[800, 6, 1], [1150, 7, 0.7], [2900, 9, 0.45], [3400, 10, 0.3]];
+            const voiceBus = ctx.createGain(), dist = shaper(5);
+            env(voiceBus, hit + 0.02, 1, len * 0.55, len);
+            voiceBus.connect(dist); dist.connect(master);
+            const k = 0.85 + Math.random() * 0.35;   // a different voice each time
+            [0, 7].forEach(cents => {
+                const src = ctx.createOscillator(); src.type = "sawtooth";
+                const f = (x) => x * k * Math.pow(2, cents / 1200);
+                src.frequency.setValueAtTime(f(320), hit); src.frequency.exponentialRampToValueAtTime(f(980), hit + 0.12);
+                src.frequency.exponentialRampToValueAtTime(f(820), hit + 0.9); src.frequency.exponentialRampToValueAtTime(f(520), hit + len);
+                const vib = ctx.createOscillator(), vg = ctx.createGain(); vib.frequency.value = 7.5 + Math.random() * 2; vg.gain.value = f(60); vib.connect(vg); vg.connect(src.frequency);
+                const jit = ctx.createBufferSource(), jg = ctx.createGain(), jl = ctx.createBiquadFilter();   // a ragged, unsteady throat
+                jit.buffer = noiseBuf(len); jl.type = "lowpass"; jl.frequency.value = 40; jg.gain.value = f(120); jit.connect(jl); jl.connect(jg); jg.connect(src.frequency);
+                formants.forEach(([ff, q, amp]) => {
+                    const bp = ctx.createBiquadFilter(), g = ctx.createGain();
+                    bp.type = "bandpass"; bp.frequency.value = ff * (0.95 + Math.random() * 0.1); bp.Q.value = q; g.gain.value = amp * 2.2;
+                    src.connect(bp); bp.connect(g); g.connect(voiceBus);
+                });
+                // breath in the scream
+                const br = ctx.createBufferSource(), bb = ctx.createBiquadFilter(), bg = ctx.createGain();
+                br.buffer = noiseBuf(len); bb.type = "bandpass"; bb.frequency.value = 1800; bb.Q.value = 0.8; bg.gain.value = 0.35;
+                br.connect(bb); bb.connect(bg); bg.connect(voiceBus);
+                [src, vib, jit, br].forEach(n => { n.start(hit); n.stop(hit + len); });
+            });
+            // Metallic shriek on top
+            const sh = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), sg = ctx.createGain();
+            sh.type = "sine"; sh.frequency.setValueAtTime(3100 * k, hit); sh.frequency.exponentialRampToValueAtTime(2300 * k, hit + len);
+            mod.frequency.value = 437; mg.gain.value = 1800; mod.connect(mg); mg.connect(sh.frequency);
+            env(sg, hit, 0.18, 0.4, 1.4); sh.connect(sg); sg.connect(master);
+            [sh, mod].forEach(n => { n.start(hit); n.stop(hit + len); });
+        }
+        setTimeout(() => ctx.close().catch(() => {}), delayMs + (len + 0.5) * 1000);
+    } catch (e) { console.warn("Jumpscare sound failed", e); }
 }
 // Pictures to use (Admin Panel → Sessions picks one at random, or yours):
 // public-domain paintings on Wikimedia Commons, linked rather than copied.
