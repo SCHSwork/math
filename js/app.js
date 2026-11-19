@@ -2029,6 +2029,33 @@ function construct3Hook() {
             get: function () { return RI; }, set: function (C) { RI = typeof C === "function" ? wrap(C) : C; } });
     } catch (e) {}
 }
+// Some engines' pages (Defold: Dan The Man) pin <body> in place with no size of
+// its own and let the game hang out of it. Real graphics chips draw that fine,
+// but when the browser draws 3D in software (no graphics driver: "Microsoft
+// Basic Render Driver", many Chromebooks, blocked or old graphics chips) it
+// clips the game to that empty box and the screen stays white. Give any such
+// pinned box around a game canvas the whole window; it looks the same either way.
+function softwareDrawHook() {
+    function fix() {
+        try {
+            var list = document.getElementsByTagName("canvas");
+            for (var i = 0; i < list.length; i++) {
+                var c = list[i];
+                if (c.offsetWidth < 100 || c.offsetHeight < 100) continue;
+                for (var el = c.parentElement; el && el !== document.documentElement; el = el.parentElement) {
+                    if (getComputedStyle(el).position !== "fixed") continue;
+                    var r = el.getBoundingClientRect();
+                    if (r.width >= 2 && r.height >= 2) continue;
+                    el.style.top = el.style.left = el.style.right = el.style.bottom = "0";
+                }
+            }
+        } catch (e) {}
+    }
+    document.addEventListener("DOMContentLoaded", fix);
+    window.addEventListener("load", fix);
+    window.addEventListener("resize", fix);
+    [1000, 3000, 8000, 20000].forEach(function (t) { setTimeout(fix, t); });
+}
 function cleanGameHtml(html) {
     if (typeof html !== "string") return html;
     if (isKnownBadGame(html)) { const e = new Error("This game file contains a known malicious script"); e.blocked = true; throw e; }
@@ -2125,6 +2152,7 @@ function cleanGameHtml(html) {
         (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
         `<script>(${crossOriginWorkerHook.toString()})();<\/script>` +
+        `<script>(${softwareDrawHook.toString()})();<\/script>` +
         `<script>(${gameStorageHook.toString()})();<\/script>` +
         (typeof gameMuteHook === "function" ? `<script>(${gameMuteHook.toString()})();<\/script>` : "") +
         (typeof gamePauseHook === "function" ? `<script>(${gamePauseHook.toString()})();<\/script>` : "") +
