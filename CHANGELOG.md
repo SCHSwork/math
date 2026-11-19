@@ -5,6 +5,7 @@ All the changes to GN 2.0, newest first.
 ## November 18, 2026 — Games on computers without a graphics driver
 
 ### Fixed
+- **The save panel could say "Not saved" with no reason.** It now always says what went wrong, in plain words, with Firebase's error code.
 - **Dan The Man (and other Defold games) showed only a white screen on computers that draw 3D in software** (no graphics driver, "Microsoft Basic Render Driver", many school Chromebooks). The game was running the whole time; its page pins `<body>` in place with no size, and software drawing cut the game off to that empty box. The site now gives any such box around a game the whole window, which looks the same on every computer.
 
 ## November 18, 2026 — GameDistribution games: no more ad SDK
