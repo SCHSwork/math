@@ -1166,7 +1166,7 @@ function filterZones() { applyFilters(); }
 // a fake "Download" ad pushing a browser-hijacker extension, plus an anti-adblock
 // trap that wipes the page if its ad box is removed. We strip the loader before
 // the game runs (so the trap never starts) and block known ad hosts as a backup.
-const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com|mc\\.yandex\\.ru|yandex\\.ru|yandex\\.net|igroutka\\.ru|id\\.net|playtomic\\.com|stats\\.unity3d\\.com|cloud\\.unity3d\\.com|unblockedgamesroblox\\.weebly\\.com|gamemonetize\\.com|gamedistribution\\.com|cpmstar\\.com|adinplay\\.com|api\\.adinplay\\.com|imasdk\\.googleapis\\.com|poki\\.io|poki-gdn\\.com|crazygames\\.com|improvedigital\\.com|prebid\\.org|clarity\\.ms|hotjar\\.com|statcounter\\.com|histats\\.com|cloudflareinsights\\.com|a\\.poki\\.com|poki-cdn\\.com|amazon-adsystem\\.com|gameanalytics\\.com|ad4game\\.com|getclicky\\.com|arc\\.io|mochibot\\.com|mochiads\\.com|cpmstar\\.com|ngads\\.com)$";
+const AD_HOST_PATTERN = "(^|\\.)(googletagmanager\\.com|google-analytics\\.com|analytics\\.google\\.com|r9x\\.in|googlesyndication\\.com|doubleclick\\.net|adnxs\\.com|adsterra\\.com|highperformanceformat\\.com|effectivegatecpm\\.com|profitableratecpm\\.com|propellerads\\.com|popads\\.net|a-ads\\.com|mc\\.yandex\\.ru|yandex\\.ru|yandex\\.net|igroutka\\.ru|id\\.net|playtomic\\.com|stats\\.unity3d\\.com|cloud\\.unity3d\\.com|unblockedgamesroblox\\.weebly\\.com|gamemonetize\\.com|gamedistribution\\.com|cpmstar\\.com|adinplay\\.com|api\\.adinplay\\.com|imasdk\\.googleapis\\.com|poki\\.io|poki-gdn\\.com|crazygames\\.com|improvedigital\\.com|prebid\\.org|clarity\\.ms|hotjar\\.com|statcounter\\.com|histats\\.com|cloudflareinsights\\.com|a\\.poki\\.com|poki-cdn\\.com|amazon-adsystem\\.com|gameanalytics\\.com|ad4game\\.com|getclicky\\.com|arc\\.io|mochibot\\.com|mochiads\\.com|cpmstar\\.com|ngads\\.com|gamemonkey\\.org|azerioncircle\\.com|improvedigital\\.com|headerlift\\.com)$";
 
 function isObfuscatedAdScript(code) {
     if (/r9x\.in/i.test(code)) return true;
@@ -1953,6 +1953,27 @@ function crossOriginWorkerHook() {
 // so games that call them stopped at a black screen. This stand-in has every
 // call succeed at once: ad breaks end right away and rewarded ads give the reward.
 // A game's own stand-in or the real SDK, if it loads, replaces it.
+// GameDistribution games load GD's ad SDK (often from a copy on jsDelivr, which
+// gets past the ad-host list) and then wait for its events. Its loader is
+// blocked in the guard above (script id "gamedistribution-jssdk"), and this
+// answers like the SDK would: ready at once, and every "ad" finishes straight
+// away (paused → started again; rewarded ads count as watched).
+function gdSdkStub() {
+    var emit = function (name) { try { var o = window.GD_OPTIONS; if (o && typeof o.onEvent === "function") o.onEvent({ name: name, message: "", status: "success" }); } catch (e) {} };
+    var sdk = {
+        AdType: { Rewarded: "rewarded", Interstitial: "interstitial", Display: "display", Midroll: "midroll" },
+        showAd: function (type) {
+            emit("SDK_GAME_PAUSE");
+            return new Promise(function (res) { setTimeout(function () { if (type === "rewarded") emit("SDK_REWARDED_WATCH_COMPLETE"); emit("SDK_GAME_START"); res(); }, 60); });
+        },
+        preloadAd: function () { return Promise.resolve(); },
+        cancelAd: function () { return Promise.resolve(); },
+        showBanner: function () {}, openConsole: function () {}
+    };
+    try { Object.defineProperty(window, "gdsdk", { configurable: true, get: function () { return sdk; }, set: function () {} }); } catch (e) { window.gdsdk = sdk; }
+    var ready = function () { emit("SDK_READY"); emit("SDK_GAME_START"); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(ready, 0); }); else setTimeout(ready, 0);
+}
 function portalSdkStub() {
     var make = function () {
         var fn = function () {
@@ -2081,7 +2102,7 @@ function cleanGameHtml(html) {
     const guard = `<script>window.dataLayer=[];window.gtag=function(){};window.ga=function(){};window._gaq=window._gaq||[];(function(){var bad=new RegExp(${JSON.stringify(AD_HOST_PATTERN)},"i");` +
         `function blocked(u){try{return bad.test(new URL(u,location.href).hostname)}catch(e){return false}}` +
         `[window.HTMLScriptElement,window.HTMLIFrameElement].forEach(function(C){if(!C)return;var d=Object.getOwnPropertyDescriptor(C.prototype,"src");` +
-        `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v))return;d.set.call(this,v)}})});` +
+        `if(!d||!d.set)return;Object.defineProperty(C.prototype,"src",{configurable:true,enumerable:d.enumerable,get:d.get,set:function(v){if(blocked(v)||this.id==="gamedistribution-jssdk")return;d.set.call(this,v)}})});` +
         `var sa=Element.prototype.setAttribute;Element.prototype.setAttribute=function(n,v){if(/^src$/i.test(n)&&(this instanceof HTMLScriptElement||this instanceof HTMLIFrameElement)&&blocked(v))return;return sa.apply(this,arguments)};` +
         `try{var of=window.fetch;if(of)window.fetch=function(u){try{if(blocked(typeof u==="string"?u:u&&u.url))return Promise.resolve(new Response("",{status:204}))}catch(e){}return of.apply(this,arguments)};` +
         `var xo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){if(blocked(u)){arguments[1]="data:,";}return xo.apply(this,arguments)};` +
@@ -2099,6 +2120,7 @@ function cleanGameHtml(html) {
         (typeof gameErrorHook === "function" ? `<script>(${gameErrorHook.toString()})();<\/script>` : "") +
         (typeof gameFitHook === "function" ? `<script>(${gameFitHook.toString()})();<\/script>` : "") +
         (/RuntimeInterface|c3runtime|supportcheck\.js/.test(html) ? `<script>(${construct3Hook.toString()})();<\/script>` : "") +
+        (/GD_OPTIONS|gamedistribution-jssdk/.test(html) ? `<script>(${gdSdkStub.toString()})();<\/script>` : "") +
         (/PokiSDK|poki-sdk|CrazyGames|gdsdk/.test(html) ? `<script>(${portalSdkStub.toString()})();<\/script>` : "") +
         (/YaGames/.test(html) ? `<script>(${yandexSdkStub.toString()})();<\/script>` : "") +
         (/adBreak|adConfig|adsbygoogle/.test(html) ? `<script>(${h5AdsStub.toString()})();<\/script>` : "") +
