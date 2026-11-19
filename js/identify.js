@@ -209,7 +209,7 @@ function scarePos(url) { const b = SCARE_BANK.find(x => x.url === url); return b
 // red error bar blinks at the top and a "not responding" box pops up with a
 // ding, so they lean in to read it… and somewhere in the middle of reading,
 // with no warning at all (no black screen, no sound first, a different moment
-// every time), a face lunges right into the screen in a tenth of a second,
+// every time), a face is suddenly right there, filling the screen (no zoom, it just appears),
 // too close, and stays there frozen (it only twitches, like a broken film),
 // with one red flash and the scream.
 // Cut to black, and when they think it's over, it flashes once more,
@@ -267,8 +267,8 @@ function gnJumpscare(pic) {
 #${uid} .hit{position:absolute;inset:0;display:none;place-items:center;overflow:hidden;cursor:none;}
 #${uid}.go .hit, #${uid}.sub .hit{display:grid;}
 #${uid} .mv{position:absolute;inset:0;display:grid;place-items:center;transform:scale(.14);}
-#${uid}.go .mv{opacity:1;filter:contrast(1.35) brightness(1.08) saturate(.85);animation:${uid}lunge .11s cubic-bezier(.75,0,1,1) forwards, ${uid}twitch 1.1s steps(1) .3s infinite;}
-@keyframes ${uid}lunge{from{transform:scale(.25)}to{transform:scale(1.32)}}
+#${uid}.go .mv{opacity:1;filter:contrast(1.35) brightness(1.08) saturate(.85);transform:scale(1.32);animation:${uid}lunge .1s steps(1) forwards, ${uid}twitch 1.1s steps(1) .3s infinite;}
+@keyframes ${uid}lunge{0%{transform:scale(1.5)}50%{transform:scale(1.32)}}
 @keyframes ${uid}twitch{0%{transform:scale(1.32)}27%{transform:scale(1.36) translate(6px,-4px) rotate(.6deg)}29%{transform:scale(1.32)}58%{transform:scale(1.33) translate(-5px,3px) rotate(-.5deg)}60%{transform:scale(1.32)}86%{transform:scale(1.4) translate(0,6px)}88%{transform:scale(1.32)}}
 #${uid}.sub .mv{opacity:1;animation:none;transform:scale(1.45);filter:invert(1) contrast(1.8) brightness(1.1);}
 #${uid} .layer{position:absolute;inset:0;display:grid;place-items:center;}
@@ -277,8 +277,8 @@ function gnJumpscare(pic) {
 #${uid} .r, #${uid} .c{mix-blend-mode:screen;opacity:0;}
 #${uid} .r{filter:sepia(1) saturate(8) hue-rotate(-40deg);--dx:-26px;}
 #${uid} .c{filter:sepia(1) saturate(6) hue-rotate(140deg);--dx:26px;}
-#${uid}.go .r, #${uid}.go .c{animation:${uid}spl .35s ease-out forwards;}
-@keyframes ${uid}spl{0%{opacity:.75;translate:var(--dx) 0}100%{opacity:.12;translate:calc(var(--dx) / 6) 0}}
+#${uid}.go .r, #${uid}.go .c{animation:${uid}spl .35s steps(1) forwards;}
+@keyframes ${uid}spl{0%,30%{opacity:.75;translate:var(--dx) 0}31%,100%{opacity:.12;translate:calc(var(--dx) / 6) 0}}
 #${uid} .grain{position:absolute;inset:-50%;opacity:.28;mix-blend-mode:overlay;display:none;animation:${uid}grain .12s steps(3) infinite;}
 #${uid}.go .grain{display:block;}
 @keyframes ${uid}grain{0%{transform:translate(0,0)}33%{transform:translate(-5%,3%)}66%{transform:translate(4%,-4%)}100%{transform:translate(-2%,5%)}}

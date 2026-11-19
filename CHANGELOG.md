@@ -5,7 +5,7 @@ All the changes to GN 2.0, newest first.
 ## November 18, 2026 — A scarier jumpscare
 
 ### Changed
-- **The jumpscare comes with no warning now.** No shaking, no black screen and no sound before it: while they're reading the fake "isn't responding" box, at a different moment every time, a face lunges into the screen in a tenth of a second and stays there frozen, too close, twitching like a broken film. Cut to black, then one last inverted flash with a shriek.
+- **The jumpscare comes with no warning now.** No shaking, no black screen and no sound before it: while they're reading the fake "isn't responding" box, at a different moment every time, a face is suddenly right there, filling the screen (no zoom in, it just appears), and stays there frozen, too close, twitching like a broken film. Cut to black, then one last inverted flash with a shriek.
 - The fake error no longer names a game called "zone" when no game is open.
 
 ## November 18, 2026 — Games on computers without a graphics driver
