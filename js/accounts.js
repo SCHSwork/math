@@ -606,6 +606,10 @@ async function cloudSyncOnSignIn() {
         const when = meta.updatedAt && meta.updatedAt.toDate ? meta.updatedAt.toDate().toLocaleString() : "earlier";
         const here = progressSummary(), cloud = meta.sum || null;
         const deviceLess = progressIsLess(here, cloud), cloudLess = progressIsLess(cloud, here);
+        // Load the cloud save without asking, unless this device clearly has more
+        // progress. This device's progress is kept for a week first (keepDeviceCopy),
+        // so it can still be brought back from Account → Earlier cloud saves.
+        if (!cloudLess) { await downloadCloudSave(); return; }
         const choice = await askChoice(
             `Your account has progress saved on ${when}` + (cloud ? ` (${describeProgress(cloud)})` : "") +
             `, and this device has its own (${describeProgress(here)}). Which do you want to keep? The other one is replaced.` +
@@ -627,7 +631,7 @@ async function cloudSyncOnSignIn() {
             }
             await uploadCloudSave({ force: true });
         }
-        else noteSaveState("conflict"); setCloudStatus("Not synced yet. Open Account to choose which progress to keep.");
+        else { noteSaveState("conflict"); setCloudStatus("Not synced yet. Open Account to choose which progress to keep."); }
     } catch (e) {
         console.error(e);
         noteSaveState("retry"); setCloudStatus("Couldn't reach the cloud: " + (e.message || e));
