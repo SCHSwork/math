@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 18, 2026 — Scarier jumpscare sound
+
+### Changed
+- **New jumpscare sound** (still made by the browser, no recordings): a breath-in whoosh in the black moment, then on the hit a deep boom, a clashing horror-movie stinger chord, and a scream that sounds like a voice ("AAAH" vowel shapes, pitch jumping up with a wild, ragged vibrato, two voices slightly out of tune) with a metallic shriek on top, distorted and limited to be as loud as the speakers go. A little different every time. About 2 seconds.
+
 ## November 18, 2026 — People online graph
 
 ### Added
