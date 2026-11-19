@@ -147,6 +147,10 @@ function ensureStatusPill() {
                 </button>
             </div>
             <ul class="status-list"></ul>
+            <a class="status-full-link" href="https://schswork.github.io/Homework-/" target="_blank" rel="noopener">
+                <span>Full status page</span><small>Every service, check history and benchmarks</small>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+            </a>
             <div class="status-panel-foot">
                 <span class="status-checked"></span>
                 <button type="button" class="status-hide status-report">Report a problem</button>
