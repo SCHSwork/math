@@ -169,6 +169,7 @@ async function liveSaveNow(reason) {
         liveState.savedAt = liveState.okAt = Date.now();
         try { localStorage.setItem(LIVE_SAVE.hashKey, hash); } catch {}
         setCloudStatus("Live Save — saved " + new Date().toLocaleTimeString());
+        if (typeof renderSaveChip === "function") renderSaveChip();
         return true;
     } catch (e) {
         // Try again next time, reading everything
@@ -181,6 +182,8 @@ async function liveSaveNow(reason) {
     }
 }
 setInterval(() => { if (!document.hidden) liveSaveNow("tick"); }, LIVE_SAVE.everyMs);
+// Keep the game bar's "Live saved 12s ago" ticking
+setInterval(() => { if (!document.hidden && typeof renderSaveChip === "function" && liveSaveActive()) renderSaveChip(); }, 5000);
 // Signing in: what the server already has doesn't need sending again
 window.addEventListener("load", () => setTimeout(() => {
     try { liveState.hash = localStorage.getItem(LIVE_SAVE.hashKey) || ""; } catch {}

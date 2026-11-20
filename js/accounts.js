@@ -1486,6 +1486,12 @@ const agoText = ms => { const m = Math.floor(ms / 60000); return m < 1 ? "just n
 const inText = ms => { const sec = Math.max(0, Math.round(ms / 1000)); return sec < 60 ? `${sec} s` : `${Math.ceil(sec / 60)} min`; };
 function saveChipInfo() {
     const s = cloudSaveState;
+    // Live Save working (live-save.js): a rocket and "Live saved 12s ago",
+    // unless a full save is going up or something needs attention
+    if (!["saving", "retry", "error", "conflict"].includes(s.phase) && typeof liveSaveActive === "function" && liveSaveActive()) {
+        const at = liveState.savedAt, sec = Math.round((Date.now() - at) / 1000);
+        return { cls: "ok live", icon: "rocket", text: at && sec < 300 ? "Live saved " + (sec < 10 ? "just now" : sec < 60 ? `${sec}s ago` : `${Math.floor(sec / 60)} min ago`) : "Live Save on" };
+    }
     switch (s.phase) {
         case "saving": {
             const slow = Date.now() - s.stepAt > 20000;
@@ -1509,7 +1515,7 @@ function renderSaveChip() {
     el.className = "save-chip " + info.cls;
     el.title = "Save details";
     el.setAttribute("aria-label", info.text + ". Show save details");
-    el.innerHTML = gnIcon(info.cls === "warn" ? "warning" : info.cls === "busy" ? "cloud" : "check") + "<span></span>";
+    el.innerHTML = gnIcon(info.icon || (info.cls === "warn" ? "warning" : info.cls === "busy" ? "cloud" : "check")) + "<span></span>";
     el.lastChild.textContent = info.text;
     renderSaveDetails();
 }
