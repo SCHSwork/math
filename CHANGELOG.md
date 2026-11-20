@@ -2,6 +2,14 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — A copy of the site on the GN 2.0 Server
+
+### Added
+- **GN 2.0 now also runs at data.learnresearch.org**, served by the GN 2.0 Server, in case the main address is taken down or blocked. It checks for changes every 5 minutes and downloads the newest version of the site whenever there's one.
+
+### Changed
+- The Live Save rocket in the game bar is bigger.
+
 ## November 19, 2026 — Live Save
 
 ### Added
