@@ -218,11 +218,33 @@ async function uidBytes(uid) {
     if (!usage.has(uid)) usage.set(uid, (await walk(path.join(SAVES_DIR, uid))).reduce((n, x) => n + x.size, 0));
     return usage.get(uid);
 }
+// Firebase sign-in tokens say when they were issued. A VM's clock drifts, and
+// one even a minute behind would see fresh tokens as "issued in the future"
+// and turn them down, so if Firebase's own check fails, the token is checked
+// again against Google's keys allowing 5 minutes of clock difference.
+let joseLib = null;
+const joseLoad = () => joseLib || (joseLib = import("jose").then(j => ({ j, keys: j.createRemoteJWKSet(new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")) })).catch(() => null));
+let authError = null;   // the last reason a sign-in was turned down (for /api/status)
+async function verifyToken(token) {
+    try { return await admin.auth().verifyIdToken(token); }
+    catch (e) {
+        const L = await joseLoad();
+        if (L) {
+            try {
+                const { payload } = await L.j.jwtVerify(token, L.keys, { issuer: `https://securetoken.google.com/${PROJECT_ID}`, audience: PROJECT_ID, clockTolerance: 300 });
+                if (payload.sub) return { uid: payload.sub };
+            } catch (e2) { authError = { at: Date.now(), msg: String(e2.message || e2).slice(0, 200) }; return null; }
+        }
+        authError = { at: Date.now(), msg: String(e.message || e).slice(0, 200) };
+        return null;
+    }
+}
 async function authed(req, uid) {
     const m = /^Bearer (.+)$/.exec(req.get("authorization") || "");
     if (!m) return 401;
-    try { const t = await admin.auth().verifyIdToken(m[1]); return t.uid === uid ? 0 : 403; }
-    catch { return 401; }
+    const t = await verifyToken(m[1]);
+    if (!t) return 401;
+    return t.uid === uid ? 0 : 403;
 }
 // ── Live Save: the newest progress while someone plays (js/live-save.js) ────
 // One file per player, replaced every time: saves/<uid>/live.json
@@ -771,6 +793,7 @@ app.get("/api/status", async (req, res) => {
         online: live.online, onlineHere: [...presence.values()].filter(p => p.t > Date.now() - ONLINE_MS).length, onlineFirestore: fsSessions.filter(p => p.t > Date.now() - ONLINE_MS).length,
         gamesFlagged: gameHealth().flagged.length,
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
+        authError,
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
         system: { load: os.loadavg()[0], cpus: os.cpus().length, memUsed: os.totalmem() - os.freemem(), memTotal: os.totalmem(), rss: process.memoryUsage().rss, hostUptime: os.uptime(), disk, node: process.version },
         thisMinute: { req: minute.req, saves: minute.saves, gh: minute.gh, plays: minute.plays }, lastMinute: last,
