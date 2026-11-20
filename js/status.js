@@ -14,7 +14,7 @@ const STATUS_HEADLINES = {
     degraded: "Running with some issues",
     down: "Major outage"
 };
-const MIRROR_NAMES = { jsdelivr: "jsDelivr", github: "GitHub", githack: "githack", fastly: "jsDelivr (Fastly)", gcore: "jsDelivr (G-Core)", testingcf: "jsDelivr (Cloudflare)", home: "Home server" };
+const MIRROR_NAMES = { jsdelivr: "jsDelivr", github: "GitHub", githack: "githack", fastly: "jsDelivr (Fastly)", gcore: "jsDelivr (G-Core)", testingcf: "jsDelivr (Cloudflare)", home: "GN 2.0 Server" };
 
 function getShowSiteStatus() { try { return localStorage.getItem(SHOW_STATUS_KEY) !== "false"; } catch { return true; } }
 function setShowSiteStatus(on) {
@@ -95,7 +95,7 @@ function collectStatusChecks() {
         checks.push({ name: "Database use", ...fbPaceSummary() });
     }
 
-    if (typeof homeServerCheck === "function") checks.push({ name: "Home server", ...homeServerCheck() });
+    if (typeof homeServerCheck === "function") checks.push({ name: "GN 2.0 Server", ...homeServerCheck() });
 
     checks.push({ name: "Game protection", level: "ok", detail: typeof ubzoneState !== "undefined" && ubzoneState !== "failed"
         ? "Library and the UBZone, Selenite and 55GMS games locked to their checked, clean versions"

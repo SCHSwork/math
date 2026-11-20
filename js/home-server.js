@@ -17,7 +17,7 @@ async function checkHomeServer() {
         const res = await fetch(HOME_SERVER + "/health?t=" + Date.now(), { signal: ctrl.signal, cache: "no-store" }).finally(() => clearTimeout(t));
         const j = res.ok ? await res.json() : null;
         homeServerState = j && j.ok
-            ? { level: "ok", detail: "Online (backup game source and site copy)" }
+            ? { level: "ok", detail: "Online (cloud saves, play counts and backup game source)" }
             : { level: "info", detail: "Not answering right now. The site works fine without it." };
     } catch {
         homeServerState = { level: "info", detail: "Can't reach it from this network. The site works fine without it." };
