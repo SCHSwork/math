@@ -32,7 +32,7 @@ const liveState = { hash: "", savedAt: 0, okAt: 0, busy: false, have: new Set(),
 function liveSaveStatusText() {
     if (typeof cloudUser === "undefined" || !cloudUser) return "";
     if (liveSlowDevice()) return "Off on this computer for today: saving made the page stutter, so it saves every 2 minutes instead";
-    if (typeof homeSavesDownUntil !== "undefined" && Date.now() < homeSavesDownUntil) return "Waiting: the GN 2.0 Server can't be reached right now";
+    if (typeof homeSavesDownUntil !== "undefined" && Date.now() < homeSavesDownUntil) return "Waiting: the GN 2.0 Server can't be used right now" + (typeof homeSaveRefused !== "undefined" && homeSaveRefused ? ` (${homeSaveRefused})` : "") + ". Trying again in " + Math.max(1, Math.ceil((homeSavesDownUntil - Date.now()) / 60000)) + " min";
     if (liveState.why) return liveState.why;
     if (liveState.savedAt) return "On · last saved " + new Date(liveState.savedAt).toLocaleTimeString();
     if (liveState.okAt) return "On · nothing new to save yet";

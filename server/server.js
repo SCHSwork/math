@@ -32,7 +32,7 @@ const SAVES_DIR = DATA("saves");
 const STATE_DIR = DATA("state");
 const BACKUP_DIR = DATA("backups");
 const CACHE_MAX_BYTES = 40 * 1024 ** 3;
-const SAVE_QUOTA = 60 * 1024 * 1024;
+const SAVE_QUOTA = 400 * 1024 * 1024;   // per player: their save, the earlier ones kept for a week, and Live Save
 const BRANCH_TTL_MS = 10 * 60 * 1000;
 const SYNC_EVERY_MS = 30 * 60 * 1000;
 for (const d of [CACHE_DIR, SAVES_DIR, STATE_DIR, BACKUP_DIR, DATA("public")]) fs.mkdirSync(d, { recursive: true });
@@ -212,6 +212,7 @@ setInterval(() => {
 // ── Cloud saves ─────────────────────────────────────────────────────────────
 const UID_RE = /^[A-Za-z0-9]{1,128}$/, NAME_RE = /^[A-Za-z0-9_-]{1,120}$/, KINDS = new Set(["chunks", "blobs"]);
 const usage = new Map();                           // uid -> bytes
+const refused = {};                                // uid -> last refused write (for /api/status)
 const dirtyUids = new Set(readJson(path.join(STATE_DIR, "dirty.json"), []));
 const saveDirtyUids = () => writeJson(path.join(STATE_DIR, "dirty.json"), [...dirtyUids]).catch(() => {});
 async function uidBytes(uid) {
@@ -310,7 +311,7 @@ app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req
             if (!body) return res.sendStatus(400);
             const old = await exists(file);
             const now = await uidBytes(uid) - (old ? old.size : 0) + Buffer.byteLength(body);
-            if (now > SAVE_QUOTA) return res.sendStatus(413);
+            if (now > SAVE_QUOTA) { refused[uid] = { at: Date.now(), why: "full", bytes: now }; return res.sendStatus(413); }
             await writeAtomic(file, body);
             usage.set(uid, now);
             dirtyUids.add(uid); saveDirtyUids();
@@ -794,6 +795,8 @@ app.get("/api/status", async (req, res) => {
         gamesFlagged: gameHealth().flagged.length,
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         authError,
+        refusedSaves: Object.entries(refused).filter(([, r]) => Date.now() - r.at < 3600000).map(([u, r]) => ({ who: u.slice(0, 5), ...r })),
+        biggestPlayers: [...usage].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([u, b]) => ({ who: u.slice(0, 5), mb: Math.round(b / 1e5) / 10 })),
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
         system: { load: os.loadavg()[0], cpus: os.cpus().length, memUsed: os.totalmem() - os.freemem(), memTotal: os.totalmem(), rss: process.memoryUsage().rss, hostUptime: os.uptime(), disk, node: process.version },
         thisMinute: { req: minute.req, saves: minute.saves, gh: minute.gh, plays: minute.plays }, lastMinute: last,

@@ -522,7 +522,8 @@ function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 const HOME_SAVES_RETRY_MS = 5 * 60 * 1000;
 const HOME_SLOW_MS = 8000;   // a save part taking longer than this from the server: ask Firebase too
 let homeSavesDownUntil = 0;
-function homeSavesDown() { homeSavesDownUntil = Date.now() + HOME_SAVES_RETRY_MS; }
+let homeSaveRefused = "";   // why the server last turned a save piece down (save details)
+function homeSavesDown(why) { homeSavesDownUntil = Date.now() + HOME_SAVES_RETRY_MS; if (why) homeSaveRefused = why; }
 async function homeSaveFetch(path, opts = {}) {
     if (typeof HOME_SERVER === "undefined" || !cloudUser || Date.now() < homeSavesDownUntil) throw new Error("home server not in use");
     const token = await cloudUser.getIdToken();
@@ -531,10 +532,10 @@ async function homeSaveFetch(path, opts = {}) {
         const res = await fetch(`${HOME_SERVER}/api/saves/${encodeURIComponent(cloudUser.uid)}/${path}`, {
             ...opts, cache: "no-store", signal: ctrl.signal, headers: { ...(opts.headers || {}), Authorization: "Bearer " + token }
         });
-        if (res.status >= 500) { homeSavesDown(); throw new Error("home server error " + res.status); }
+        if (res.status >= 500) { homeSavesDown(`the server had an error (${res.status})`); throw new Error("home server error " + res.status); }
         return res;
     } catch (e) {
-        if (e.name === "AbortError" || e instanceof TypeError) homeSavesDown();
+        if (e.name === "AbortError" || e instanceof TypeError) homeSavesDown(e.name === "AbortError" ? "it took over 45 seconds to answer" : "the connection failed");
         throw e;
     } finally { clearTimeout(t); }
 }
@@ -574,7 +575,9 @@ function savePart(kind, name) {
             try {
                 const res = await homeSaveFetch(path, { method: "PUT", body: v.d, headers: { "Content-Type": "text/plain" } });
                 serverOk = res.ok;
-                if (!res.ok) homeSavesDown();   // not set up for saves (yet), or refused
+                // Not signed in there / not set up: stop trying for a while.
+                // Anything else (e.g. full): just this piece goes to Firebase.
+                if (!res.ok) { homeSaveRefused = `the server said ${res.status}`; if ([401, 403, 404, 405].includes(res.status)) homeSavesDown(); }
             } catch {}
             if (!serverOk) { await fb().set(v); return true; }   // then Firebase has to work
             if (!copy) return false;
