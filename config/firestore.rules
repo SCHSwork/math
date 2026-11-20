@@ -168,6 +168,20 @@ service cloud.firestore {
       allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
     }
 
+    // Planned maintenance for the GN 2.0 Server (Owner Panel). Anyone can read
+    // it: the status pages show "Down for maintenance" instead of "down".
+    match /siteStatus/maintenance {
+      allow read: if true;
+      allow create, update: if isOwner()
+        && request.resource.data.keys().hasOnly(['start', 'until', 'note', 'at'])
+        && request.resource.data.start is timestamp && request.resource.data.until is timestamp
+        && request.resource.data.until > request.resource.data.start
+        && request.resource.data.until < request.time + duration.value(30, 'd')
+        && request.resource.data.note is string && request.resource.data.note.size() <= 200
+        && request.resource.data.at == request.time;
+      allow delete: if isOwner();
+    }
+
     // Settings only the GN 2.0 Server reads (with its admin key, which skips
     // these rules). The owner writes the Cloudflare R2 keys for the off-PC save
     // backup from the Owner Panel; nobody can read them back.
