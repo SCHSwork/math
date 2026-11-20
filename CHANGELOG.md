@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 20, 2026 — Save Rewind
+
+### Added
+- **Save Rewind.** While Live Save is on, the GN 2.0 Server keeps a copy of your progress from every hour of the last 2 days. If a game breaks or wipes its own save, open Account → Earlier cloud saves and go back to an hour before it happened. Your progress from right before you go back is kept for 7 days too, so you can change your mind.
+
 ## November 19, 2026 — Bigger Live Save rocket
 
 ### Changed

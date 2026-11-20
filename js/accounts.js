@@ -1448,8 +1448,64 @@ async function openEarlierCloudSaves() {
         (list.length ? `<ul class="backup-list">${list.map(k => `<li><div class="backup-info"><b>${k.device ? "This device's progress from" : "Saved"} ${escapeHtml(day(k.at))}</b><span>${escapeHtml(describeProgress(k.sum))} · kept until ${escapeHtml(day(k.until))}</span></div>
             <div class="backup-buttons"><button class="settings-button" type="button" onclick="confirmLoadEarlierCloudSave('${escapeHtml(k.gen)}')">Go back to this</button></div></li>`).join("")}</ul>`
             : `<p class="backup-empty">No earlier cloud saves from the last 7 days.</p>`) +
+        `<h3 style="margin:1.25rem 0 .25rem;font-size:16px;">Save Rewind</h3>
+        <p style="margin-top:0;color:var(--text-muted);font-size:14px;">While Live Save is on, your progress from every hour of the last 2 days is kept too. If a game breaks or wipes its save, go back to an hour before it happened.</p>
+        <div id="rewindList"><p class="backup-empty">Loading…</p></div>` +
         `<button class="settings-button" type="button" style="margin-top:1rem;background:var(--surface-hover);" onclick="openAccountPanel()">Back</button>`;
     document.getElementById("popupOverlay").style.display = "flex";
+    loadRewindList();
+}
+// ── Save Rewind (hourly snapshots of Live Save, kept 48 h on the GN 2.0 Server) ─
+async function loadRewindList() {
+    const el = document.getElementById("rewindList");
+    if (!el) return;
+    let list = null;
+    try {
+        homeSavesDownUntil = 0;   // worth asking even if a save part was turned down a moment ago
+        const res = await homeSaveFetch("rewind");
+        if (res.ok) list = await res.json();
+    } catch {}
+    if (!document.getElementById("rewindList")) return;
+    if (!list) { el.innerHTML = `<p class="backup-empty">Your hourly saves are on the GN 2.0 Server, which can't be reached right now. Try again later.</p>`; return; }
+    if (!list.length) { el.innerHTML = `<p class="backup-empty">No hourly saves yet. They start once Live Save has been on for a while.</p>`; return; }
+    const when = ms => {
+        const d = new Date(ms), today = new Date().toDateString() === d.toDateString();
+        const y = new Date(Date.now() - 86400000).toDateString() === d.toDateString();
+        return (today ? "Today" : y ? "Yesterday" : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })) + " " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    };
+    el.innerHTML = `<ul class="backup-list">${list.map(x => `<li><div class="backup-info"><b>${escapeHtml(when(x.at))}</b><span>${escapeHtml(x.sum ? describeProgress(x.sum) : "")}</span></div>
+        <div class="backup-buttons"><button class="settings-button" type="button" onclick="confirmRewind(${Number(x.at)})">Go back to this</button></div></li>`).join("")}</ul>`;
+}
+async function confirmRewind(at) {
+    const t = new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    if (!(await askConfirm(`Your progress goes back to how it was at ${t}. Your progress right now is kept for 7 days in Earlier cloud saves, so you can change your mind.`,
+        { title: "Go back to this save?", confirmText: "Go back" }))) return;
+    rewindTo(at);
+}
+async function rewindTo(at) {
+    if (!cloudUser || cloudBusy) return;
+    cloudBusy = true;
+    try {
+        setCloudStatus("Going back to your save from " + new Date(at).toLocaleTimeString() + "…");
+        await keepDeviceCopy();
+        const res = await cloudStep(homeSaveFetch("rewind/" + Number(at)), 90000, "Downloading that save");
+        if (!res.ok) throw new Error(res.status === 404 ? "that hourly save isn't there anymore" : "the server said " + res.status);
+        const snap = await res.json();
+        const bundle = await joinBlobs(JSON.parse(await b64ToText(snap.main)));
+        if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
+        await applyCloudBundle(bundle);
+        // The next save from this device becomes the cloud save (the one it replaces is kept a week)
+        localStorage.removeItem(CLOUD.keys.syncedHash);
+        localStorage.setItem(CLOUD.keys.pendingUndo, "1");
+        try { localStorage.removeItem("gnmath-live-hash"); } catch {}
+        window.removeEventListener("beforeunload", gnmathBeforeUnloadHandler);
+        location.reload();
+    } catch (e) {
+        setCloudStatus("Couldn't go back: " + (e.message || e));
+        notify("Couldn't go back to that save: " + (e.message || e), { type: "error" });
+    } finally {
+        cloudBusy = false;
+    }
 }
 async function confirmLoadEarlierCloudSave(gen) {
     let meta = null;

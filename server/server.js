@@ -216,7 +216,9 @@ const refused = {};                                // uid -> last refused write 
 const dirtyUids = new Set(readJson(path.join(STATE_DIR, "dirty.json"), []));
 const saveDirtyUids = () => writeJson(path.join(STATE_DIR, "dirty.json"), [...dirtyUids]).catch(() => {});
 async function uidBytes(uid) {
-    if (!usage.has(uid)) usage.set(uid, (await walk(path.join(SAVES_DIR, uid))).reduce((n, x) => n + x.size, 0));
+    // Save Rewind's snapshots don't count toward the limit (they're trimmed by age)
+    const rw = path.sep + "rewind" + path.sep;
+    if (!usage.has(uid)) usage.set(uid, (await walk(path.join(SAVES_DIR, uid))).filter(x => !x.f.includes(rw)).reduce((n, x) => n + x.size, 0));
     return usage.get(uid);
 }
 // Firebase sign-in tokens say when they were issued. A VM's clock drifts, and
@@ -253,6 +255,50 @@ async function authed(req, uid) {
 // points at is stored as normal blobs parts. promoteLive() below turns it into
 // a normal cloud save in Firebase when the player goes offline.
 const pendingLive = new Set();
+
+// ── Save Rewind: an hourly snapshot of each player's Live Save, kept 48 hours ─
+// saves/<uid>/rewind/<time>.json (same shape as live.json) plus index.json
+// [{ at, sum, size }]. Players pick one in Account → Earlier cloud saves to go
+// back to it (when a game breaks or wipes its own save). The game data the
+// snapshots point at is kept here even after newer saves stop using it.
+const REWIND_EVERY_MS = 60 * 60000, REWIND_KEEP_MS = 48 * 3600000;
+const rewindBlobCache = new Map();   // uid -> Set of blob part names snapshots need
+async function rewindIndex(uid) { return readJson(path.join(SAVES_DIR, uid, "rewind", "index.json"), []); }
+async function rewindSnapshot(uid, live, body) {
+    const dir = path.join(SAVES_DIR, uid, "rewind");
+    let index = (await rewindIndex(uid)).filter(x => Date.now() - x.at < REWIND_KEEP_MS);
+    for (const f of await fsp.readdir(dir).catch(() => [])) {
+        const at = Number(f.replace(/\.json$/, ""));
+        if (/^\d+\.json$/.test(f) && !index.some(x => x.at === at)) await fsp.unlink(path.join(dir, f)).catch(() => {});
+    }
+    const last = index.length ? index[index.length - 1].at : 0;
+    if (live.at - last >= REWIND_EVERY_MS) {
+        await writeAtomic(path.join(dir, live.at + ".json"), body);
+        index.push({ at: live.at, sum: live.sum || null, size: live.size || 0, blobs: (live.blobs || []).map(b => [b.id, b.n]) });
+    }
+    await writeAtomic(path.join(dir, "index.json"), JSON.stringify(index));
+    rewindBlobCache.delete(uid);
+}
+async function rewindBlobs(uid) {
+    if (!rewindBlobCache.has(uid)) {
+        const need = new Set();
+        for (const x of await rewindIndex(uid)) for (const [id, n] of x.blobs || []) for (let j = 0; j < (n || 1); j++) need.add(`${id}_${j}`);
+        rewindBlobCache.set(uid, need);
+    }
+    return rewindBlobCache.get(uid);
+}
+app.get(/^\/api\/saves\/([A-Za-z0-9]{1,128})\/rewind(?:\/(\d{10,16}))?$/, async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+        const uid = req.params[0], at = req.params[1];
+        const bad = await authed(req, uid);
+        if (bad) return res.sendStatus(bad);
+        if (!at) return res.json((await rewindIndex(uid)).filter(x => Date.now() - x.at < REWIND_KEEP_MS).map(({ at, sum, size }) => ({ at, sum, size })).reverse());
+        const file = path.join(SAVES_DIR, uid, "rewind", at + ".json");
+        if (!(await exists(file))) return res.sendStatus(404);
+        res.type("application/json").send(await fsp.readFile(file, "utf8"));
+    } catch (e) { log("rewind error", e.message); res.sendStatus(500); }
+});
 app.all(/^\/api\/saves\/([A-Za-z0-9]{1,128})\/live$/, express.text({ type: "*/*", limit: "30mb" }), async (req, res) => {
     res.set("Cache-Control", "no-store");
     try {
@@ -274,6 +320,7 @@ app.all(/^\/api\/saves\/([A-Za-z0-9]{1,128})\/live$/, express.text({ type: "*/*"
         if (now > SAVE_QUOTA) return res.sendStatus(413);
         await writeAtomic(file, body);
         usage.set(uid, now);
+        rewindSnapshot(uid, live, body).catch(e => log("rewind snapshot", e.message));
         pendingLive.add(uid);
         dirtyUids.add(uid); saveDirtyUids();
         liveSavesToday++;
@@ -328,6 +375,8 @@ app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req
         if (req.method === "DELETE") {
             const old = await exists(file);
             if (!old) return res.sendStatus(404);
+            // Still needed by a Save Rewind snapshot: keep it here (Firebase's copy can go)
+            if (kind === "blobs" && (await rewindBlobs(uid)).has(name)) return res.sendStatus(200);
             await fsp.unlink(file);
             usage.set(uid, Math.max(0, (await uidBytes(uid)) - old.size));
             return res.sendStatus(200);
@@ -635,6 +684,7 @@ async function syncUid(uid, counts) {
     }
     // Parts here that no save points at anymore (and are a day old)
     const wanted = new Set(need.map(([k, n]) => k + "/" + n));
+    for (const n of await rewindBlobs(uid)) wanted.add("blobs/" + n);   // Save Rewind needs these
     for (const kind of KINDS) {
         for (const e of await fsp.readdir(path.join(SAVES_DIR, uid, kind)).catch(() => [])) {
             if (wanted.has(kind + "/" + e) || e.endsWith(".tmp")) continue;
