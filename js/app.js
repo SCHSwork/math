@@ -3302,6 +3302,51 @@ async function ownerOffsiteStatus() {
     if (o.lastOk) { el.style.color = "var(--success, #22c55e)"; el.textContent = `Working. Last copied ${when(o.lastOk)} (${Math.round(o.bytes / 1e6)} MB, ${o.kept || 1} kept in R2).`; return; }
     el.textContent = o.configured ? "Keys saved. The first copy goes up within 10 minutes." : "Not set up yet: backups only exist on your PC.";
 }
+// ── GN 2.0 Server maintenance (Firestore siteStatus/maintenance) ────────────
+async function ownerMaintStatus() {
+    const el = document.getElementById("owner-maint-status");
+    if (!el || typeof cloudDb === "undefined" || !cloudDb) { if (el) el.textContent = "Sign in to see or set maintenance."; return; }
+    try {
+        const d = await cloudDb.collection("siteStatus").doc("maintenance").get();
+        if (!document.getElementById("owner-maint-status")) return;
+        const m = d.exists ? d.data() : null, now = Date.now();
+        const start = m && m.start ? m.start.toMillis() : 0, until = m && m.until ? m.until.toMillis() : 0;
+        const t = ms => new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+        el.style.color = "";
+        if (!m || until < now) el.textContent = "No maintenance planned.";
+        else if (start > now) el.textContent = `Scheduled: ${t(start)} until ${t(until)}.`;
+        else { el.style.color = "var(--warning, #f59e0b)"; el.textContent = `On now, until ${t(until)} (${Math.max(1, Math.ceil((until - now) / 60000))} min left).`; }
+    } catch (e) { el.textContent = "Couldn't check: " + (e.message || e); }
+}
+async function ownerSetMaint() {
+    if (typeof cloudDb === "undefined" || !cloudDb || !cloudUser) return notify("Sign in to your account first.", { type: "error" });
+    const mins = Math.round(Number(document.getElementById("owner-maint-mins").value));
+    if (!(mins >= 1 && mins <= 1440)) return notify("Pick between 1 and 1,440 minutes.", { type: "error" });
+    let start = Date.now();
+    if (document.getElementById("owner-maint-when").value === "later") {
+        start = new Date(document.getElementById("owner-maint-at").value).getTime();
+        if (!isFinite(start)) return notify("Pick when the maintenance starts.", { type: "error" });
+        if (start < Date.now()) start = Date.now();
+    }
+    const TS = firebase.firestore.Timestamp;
+    try {
+        await cloudDb.collection("siteStatus").doc("maintenance").set({
+            start: TS.fromMillis(start), until: TS.fromMillis(start + mins * 60000),
+            note: (document.getElementById("owner-maint-note").value || "").trim().slice(0, 200),
+            at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        notify(start <= Date.now() + 60000 ? `Maintenance is on for ${mins} min. The status pages show it within a minute.` : "Maintenance scheduled.", { type: "success" });
+        ownerMaintStatus();
+    } catch (e) { notify("Couldn't set maintenance: " + (e.message || e), { type: "error" }); }
+}
+async function ownerEndMaint() {
+    if (typeof cloudDb === "undefined" || !cloudDb || !cloudUser) return notify("Sign in to your account first.", { type: "error" });
+    try {
+        await cloudDb.collection("siteStatus").doc("maintenance").delete();
+        notify("Maintenance ended.", { type: "success" });
+        ownerMaintStatus();
+    } catch (e) { notify("Couldn't end maintenance: " + (e.message || e), { type: "error" }); }
+}
 async function ownerSaveOffsite() {
     const v = id => (document.getElementById(id)?.value || "").trim();
     const data = { accountId: v("owner-r2-account").toLowerCase(), bucket: v("owner-r2-bucket").toLowerCase(), accessKeyId: v("owner-r2-key"), secretAccessKey: v("owner-r2-secret") };
@@ -3504,6 +3549,24 @@ function renderOwnerPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>GN 2.0 Server Maintenance</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Planning to restart or work on the server? While maintenance is on, the status pages show it in amber as "Down for maintenance, back in about X min" instead of down, and it doesn't count as an outage.</p>
+        <p id="owner-maint-status" style="margin:0 0 0.75rem;font-size:13px;">Checking…</p>
+        <label style="font-size:13px;display:block;margin-bottom:0.25rem;">Starts</label>
+        <select id="owner-maint-when" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;" onchange="document.getElementById('owner-maint-at').style.display = this.value === 'later' ? '' : 'none'">
+            <option value="now">Now</option><option value="later">Later…</option>
+        </select>
+        <input id="owner-maint-at" type="datetime-local" style="display:none;width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <label style="font-size:13px;display:block;margin-bottom:0.25rem;">How long (minutes)</label>
+        <input id="owner-maint-mins" type="number" min="1" max="1440" value="15" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <input id="owner-maint-note" maxlength="200" placeholder="Note for players (optional), e.g. Restarting for an update" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="settings-button" type="button" style="min-width:0;flex:1;" onclick="ownerSetMaint()">Start / schedule</button>
+            <button class="settings-button" type="button" style="min-width:0;flex:1;background:var(--surface-hover);" onclick="ownerEndMaint()">End maintenance</button>
+        </div>
+    </div>
+
+    <div class="settings-section">
         <h4>Off-PC Save Backup</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">The GN 2.0 Server makes a backup of every save each night. With a Cloudflare R2 bucket set up, that backup is also copied off your PC (the newest 7 are kept), so a dead drive doesn't lose anyone's progress. The keys go straight to the server: nobody can read them back from here, not even you.</p>
         <p id="owner-offsite-status" style="margin:0 0 0.75rem;font-size:13px;">Checking…</p>
@@ -3528,6 +3591,7 @@ function renderOwnerPanel() {
     `;
 
     ownerOffsiteStatus();
+    ownerMaintStatus();
     const ownerGameList = document.getElementById("owner-game-list");
     const disabledIds = getDisabledZoneIds();
     zones.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(zone => {
