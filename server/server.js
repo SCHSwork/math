@@ -99,7 +99,7 @@ app.use((req, res, next) => {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, HEAD, PUT, POST, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Authorization, Content-Type, Range",
-        "Access-Control-Expose-Headers": "Content-Length, Content-Range",
+        "Access-Control-Expose-Headers": "Content-Length, Content-Range, CF-Cache-Status",
         "Access-Control-Max-Age": "86400"
     });
     if (req.method === "OPTIONS") return res.sendStatus(204);

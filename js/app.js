@@ -144,9 +144,20 @@ function suspectMirror(name) {
     if (!name || Date.now() - (mirrorProbeAt[name] || 0) < 60000) return;
     probeMirror(name);
 }
+// Once Cloudflare caches the GN 2.0 Server's game files (home-server.js checks),
+// it's fast for everyone and can't overload the PC, so it moves up to second
+// place, right after jsDelivr: its address is new, so school filters that
+// block jsDelivr often don't block it yet.
+function promoteHomeMirror() {
+    if (GH_MIRROR_ORDER[1] === "home") return;
+    GH_MIRROR_ORDER.splice(GH_MIRROR_ORDER.indexOf("home"), 1);
+    GH_MIRROR_ORDER.splice(1, 0, "home");
+}
 function mirrorUrls(owner, repo, ref, path) {
-    // The three main sources first, then the jsDelivr backups; working ones first
+    // The three main sources first, then the jsDelivr backups; working ones first.
+    // The GN 2.0 Server goes second once Cloudflare caches it (promoteHomeMirror).
     const order = [...PRIMARY_MIRRORS, ...BACKUP_MIRRORS];
+    if (window.gnHomeCached) { order.splice(order.indexOf("home"), 1); order.splice(1, 0, "home"); }
     order.sort((a, b) => mirrorDown.has(a) - mirrorDown.has(b));
     return order.map(k => MIRRORS[k](owner, repo, ref, path));
 }
@@ -552,6 +563,7 @@ function showSourceNotice(text) {
 
 let zones = [];
 let popularityData = {};
+const popularitySource = {};   // period -> "gn2" (GN 2.0 Server) or "jsdelivr"
 const featuredContainer = document.getElementById('featuredZones');
 function toTitleCase(str) {
   return str.replace(
@@ -723,7 +735,26 @@ function loadCachedPopularity() {
     } catch {}
     return false;
 }
+// Play counts: GN 2.0's own, counted by the GN 2.0 Server (one count per
+// person per game per half hour), once it has enough for that period.
+// Until then (it started counting in November 2026), or if it can't be
+// reached, jsDelivr's numbers, which count every site using the game library.
+const OWN_PLAYS_MIN = { day: 100, week: 300, month: 1000, year: 3000 };
+async function fetchOwnPopularity(duration) {
+    if (typeof HOME_SERVER === "undefined" || (window.gnHomeDownUntil || 0) > Date.now()) return null;
+    try {
+        const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 8000);
+        const res = await fetch(`${HOME_SERVER}/api/plays?period=${duration}`, { signal: ctrl.signal }).finally(() => clearTimeout(timer));
+        if (!res.ok) return null;
+        const map = await res.json();
+        const total = Object.values(map).reduce((a, b) => a + (Number(b) || 0), 0);
+        return total >= (OWN_PLAYS_MIN[duration] || 300) ? map : null;
+    } catch { return null; }
+}
 async function fetchPopularity(duration) {
+    const own = await fetchOwnPopularity(duration);
+    if (own) { popularityData[duration] = own; popularitySource[duration] = "gn2"; return true; }
+    popularitySource[duration] = "jsdelivr";
     const map = {};
     const url = p => `https://data.jsdelivr.com/v1/stats/packages/gh/freebuisness/html@main/files?period=${duration}&limit=100&page=${p}`;
     let page = 1, done = false, ok = false;
