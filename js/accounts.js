@@ -1490,7 +1490,7 @@ function saveChipInfo() {
     // unless a full save is going up or something needs attention
     if (!["saving", "retry", "error", "conflict"].includes(s.phase) && typeof liveSaveActive === "function" && liveSaveActive()) {
         const at = liveState.savedAt, sec = Math.round((Date.now() - at) / 1000);
-        return { cls: "ok live", icon: "rocket", text: at && sec < 300 ? "Live saved " + (sec < 10 ? "just now" : sec < 60 ? `${sec}s ago` : `${Math.floor(sec / 60)} min ago`) : "Live Save on" };
+        return { cls: "ok live" + (at && sec < 4 ? " fresh" : ""), icon: "liveSave", text: at && sec < 300 ? "Live saved " + (sec < 10 ? "just now" : sec < 60 ? `${sec}s ago` : `${Math.floor(sec / 60)} min ago`) : "Live Save on" };
     }
     switch (s.phase) {
         case "saving": {
