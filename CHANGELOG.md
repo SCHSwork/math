@@ -8,7 +8,7 @@ All the changes to GN 2.0, newest first.
 - **Cloud saves go to the GN 2.0 Server, with a copy in Firebase every 30 minutes.** Autosaves in between only go to the server, which keeps Firebase's usage low.
 - **If the GN 2.0 Server is down,** saves go to Firebase instead. If your newest save is only on the server, the Firebase copy loads instead (at most about 30 minutes older), and the site tells you. Your newest save is kept in Account → Earlier cloud saves for a week, so you can switch back once the server is up.
 - **If Firebase is down or out of its daily limit,** the server still has every save.
-- Loading reads from the GN 2.0 Server first, and only uses Firebase if the server can't be reached.
+- Loading reads from the GN 2.0 Server first. If the server is down, or takes more than 8 seconds, Firebase is used too and whichever answers first wins.
 
 ## Changed
 - **Every cloud save is now stored on both the GN 2.0 Server and Firebase.** If either one is down, saves still save and still load from the other. A save only fails if both are down at once.
