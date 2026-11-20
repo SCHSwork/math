@@ -7,6 +7,10 @@
 //   GET  /health                         alive check
 //   GET  /api/status                     uptime, cache, saves, sync
 //   GET  /gh/:owner/:repo@:ref/:path     backup game-file source (cached copy of GitHub, plus a full copy of the library)
+//   POST /api/reach                      which game sources worked for a browser today (counts only)
+//   GET  /api/reach                      those counts, last 30 days
+//   POST /api/errors                     error reports from browsers (added up, written to Firestore every 10 min)
+//   GET  /api/errors                     errors per day and per game, last 7 days
 //   GET  /api/mirror                     the full library copy: how far along, and repos that couldn't be copied
 //   POST /api/play                       count a play  {id, v}
 //   GET  /api/plays?period=day|week|month|year
@@ -23,6 +27,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
 const os = require("os");
+const zlib = require("zlib");
 
 const ROOT = __dirname;
 const DATA = p => path.join(ROOT, p);
@@ -140,8 +145,15 @@ app.use("/gh", async (req, res) => {
     const sha = /^[0-9a-f]{40}$/.test(ref);
     const local = path.join(CACHE_DIR, owner, repo, ref.replace(/\//g, "__"), file);
     if (!local.startsWith(CACHE_DIR + path.sep)) return res.sendStatus(400);
-    const send = f => {
+    const send = async f => {
         const type = TYPES[path.extname(f).toLowerCase()];
+        const z = await compressedFor(req, f, await exists(f)).catch(() => null);
+        res.set("Vary", "Accept-Encoding");
+        if (z) {
+            fsp.utimes(z.file, new Date(), new Date()).catch(() => {});
+            res.set({ "Content-Encoding": z.enc, "Content-Type": type || express.static.mime.lookup(f) });
+            return res.sendFile(z.file, { headers: { "Cache-Control": sha ? "public, max-age=31536000, immutable" : "public, max-age=600" }, acceptRanges: false, dotfiles: "allow" });
+        }
         res.sendFile(f, {
             headers: { "Cache-Control": sha ? "public, max-age=31536000, immutable" : "public, max-age=600", ...(type ? { "Content-Type": type } : {}) },
             dotfiles: "allow"
@@ -199,7 +211,8 @@ async function trimCache() {
 //   mirror/<owner>/<repo>/<ref>/...   (owner and repo in lower case)
 const MIRROR_DIR = DATA("mirror");
 const MIRROR_FILE = path.join(STATE_DIR, "mirror.json");
-const MIRROR_MIN_FREE = 30 * 1024 ** 3;          // stop copying with less disk free than this
+const MIRROR_MIN_FREE = 30 * 1024 ** 3;
+const MIRROR_HARD_FREE = 20 * 1024 ** 3;         // a repo that pushes free space below this is removed again          // stop copying with less disk free than this
 const MIRROR_REPO_TIMEOUT = 45 * 60000;
 const MIRROR_BRANCH_EVERY = 24 * 3600000;
 const MIRROR_MAX_REPOS = 600;
@@ -254,6 +267,8 @@ async function mirrorRepo(owner, repo, ref) {
     if (info.ok && Date.now() - info.at < MIRROR_BRANCH_EVERY) return false;       // branch checked today
     if (info.gone && Date.now() - info.at < 7 * 86400000) return false;            // repo was missing, try again in a week
     if (!info.ok && info.tries >= 3 && Date.now() - info.at < 86400000) return false;
+    if (info.tooBig && Date.now() - info.at < 7 * 86400000) return false;       // try again in a week (maybe there's room by then)
+    if (info.tamper && !tamperOk.has(mkey(owner, repo, info.tamper.sha)) && Date.now() - info.tamper.at < 86400000) return false;   // held by the tamper alarm
     const dest = mirrorPath(owner, repo, ref), tmp = dest + ".new";
     await fsp.rm(tmp, { recursive: true, force: true });
     await fsp.mkdir(tmp, { recursive: true });
@@ -271,13 +286,25 @@ async function mirrorRepo(owner, repo, ref) {
         }
         await git("checkout", "-q", "FETCH_HEAD");
         await fsp.rm(path.join(tmp, ".git"), { recursive: true, force: true });
+        // Tamper alarm: compare with the previous copy of this repo
+        if (!tamperOk.has(mkey(owner, repo, sha)) && !tamperOk.has(key)) {
+            const prev = info.ok ? dest : previousCopy(owner, repo, key);
+            const findings = await tamperCheck(prev, tmp).catch(e => { log("tamper check", key, e.message); return []; });
+            if (findings.length) {
+                await fsp.rm(tmp, { recursive: true, force: true });
+                const known = info.tamper && info.tamper.sha === sha;
+                mirror.repos[key] = { ...info, ok: !!info.ok, at: info.ok ? info.at : Date.now(), tamper: { sha, at: Date.now(), findings } };
+                if (!known) event("warn", `Tamper alarm: ${owner}/${repo} changed and now has ${findings[0].what} in ${findings[0].file}${findings.length > 1 ? ` (+${findings.length - 1} more)` : ""}. The copy kept the old version.`);
+                return false;
+            }
+        }
         const all = await walk(tmp);
         const old = dest + ".old";
         await fsp.rm(old, { recursive: true, force: true });
         await fsp.rename(dest, old).catch(() => {});
         await fsp.rename(tmp, dest);
         fsp.rm(old, { recursive: true, force: true }).catch(() => {});
-        mirror.repos[key] = { ok: true, at: Date.now(), sha, files: all.length, bytes: all.reduce((n, x) => n + x.size, 0) };
+        mirror.repos[key] = { ok: true, at: Date.now(), sha, files: all.length, bytes: all.reduce((n, x) => n + x.size, 0) };   // (no tamper flag: this version is fine)
         return true;
     } catch (e) {
         await fsp.rm(tmp, { recursive: true, force: true }).catch(() => {});
@@ -299,6 +326,7 @@ async function mirrorWanted() {
     add("freebuisness", "assets", "main");
     add("freebuisness", "covers", "main");
     add("SCHSwork", "GN-originals", "main");
+    try { const ok = JSON.parse(await getText("config/tamper-ok.json")); tamperOk = new Set((Array.isArray(ok) ? ok : ok.ok || []).map(k => { const m = /^([\w.-]+)\/([\w.-]+)@(.+)$/.exec(String(k)); return m ? mkey(m[1], m[2], m[3]) : ""; })); } catch { tamperOk = new Set(); }
     const pins = JSON.parse(await getText("config/library-pins.json")).pins || {};
     mirrorPins = {};
     for (const [k, sha] of Object.entries(pins)) {
@@ -349,7 +377,15 @@ async function mirrorAll() {
             for (const [k, [o, r, ref]] of todo) {
                 seen.add(k);
                 if (await diskFree() < MIRROR_MIN_FREE) { mirrorRun.stoppedFor = "disk"; break; }
-                if (await mirrorRepo(o, r, ref)) fetched++;
+                if (await mirrorRepo(o, r, ref)) {
+                    fetched++;
+                    // One huge repo can take a lot at once: never let the copy squeeze out saves
+                    if (await diskFree() < MIRROR_HARD_FREE) {
+                        await fsp.rm(mirrorPath(o, r, ref), { recursive: true, force: true }).catch(() => {});
+                        mirror.repos[k] = { ok: false, at: Date.now(), tries: 3, err: "too big for the disk space left", tooBig: true, bytes: mirror.repos[k].bytes };
+                        mirrorRun.stoppedFor = "disk"; fetched--;
+                    }
+                }
                 mirrorRun.done++;
                 if (mirror.repos[k]?.ok && pass < 2) await mirrorLinked(k, linked).catch(() => {});
                 if (mirrorRun.done % 10 === 0) await writeJson(MIRROR_FILE, mirror).catch(() => {});
@@ -384,13 +420,298 @@ function mirrorSummary() {
         repos: v.length, ok: v.filter(x => x.ok).length, failed: v.filter(x => !x.ok).length,
         files: v.reduce((n, x) => n + (x.ok ? x.files || 0 : 0), 0), bytes: v.reduce((n, x) => n + (x.ok ? x.bytes || 0 : 0), 0),
         lastRun: mirror.lastRun || null, running: mirrorRun.running, current: mirrorRun.current,
-        progress: mirrorRun.running ? { done: mirrorRun.done, of: mirrorRun.queued } : null, stoppedFor: mirrorRun.stoppedFor
+        progress: mirrorRun.running ? { done: mirrorRun.done, of: mirrorRun.queued } : null, stoppedFor: mirrorRun.stoppedFor,
+        held: Object.entries(mirror.repos).filter(([, x]) => x.tamper).map(([k, x]) => ({ repo: k.split("@")[0], newCommit: x.tamper.sha, at: x.tamper.at, findings: x.tamper.findings.slice(0, 5) }))
     };
 }
 app.get("/api/mirror", (req, res) => {
     res.set("Cache-Control", "no-store");
-    res.json({ ...mirrorSummary(), failedRepos: Object.entries(mirror.repos).filter(([, x]) => !x.ok).map(([k, x]) => ({ repo: k, err: x.err, gone: !!x.gone })).slice(0, 100) });
+    res.json({ ...mirrorSummary(), biggest: Object.entries(mirror.repos).filter(([, x]) => x.bytes).sort((a, b) => b[1].bytes - a[1].bytes).slice(0, 15).map(([k, x]) => ({ repo: k, gb: Math.round(x.bytes / 1e8) / 10, ok: !!x.ok })), failedRepos: Object.entries(mirror.repos).filter(([, x]) => !x.ok).map(([k, x]) => ({ repo: k, err: x.err, gone: !!x.gone })).slice(0, 100) });
 });
+
+// ── Tamper alarm for the library copy ───────────────────────────────────────
+// When a repo in the copy changes (a branch moves, or a pin moves to a newer
+// commit), the files that changed are checked for things that weren't there
+// before: new outside script hosts, ad networks, crypto miners, packed
+// eval() code, and the markers of the Oct 11 gn-math attack. If anything
+// turns up, the new version is NOT used: the copy keeps the old one, the
+// change is listed on the status page, and an event is logged. A change that
+// turns out fine goes in config/tamper-ok.json ("owner/repo@commit") on main.
+const TAMPER_MARKERS = [/data-r=["']c7a94e["']/i, /xa0f20fba9693cbb2c66516f1/, /__gnGameAd/];
+const TAMPER_WORDS = [
+    ["ad network", /googlesyndication|adsbygoogle|doubleclick\.net|popads|propellerads|adsterra|monetag|highperformanceformat|profitablecpm|a-ads\.com|exoclick|juicyads|popcash|hilltopads|clickadu|adcash/i],
+    ["crypto miner", /coinhive|cryptoloot|webminepool|coin-hive|miner\.start\(|CoinImp|monero/i],
+    ["packed code", /eval\(\s*(?:atob|unescape|decodeURIComponent)\(|document\.write\(\s*unescape\(|new Function\(\s*atob\(/i],
+    ["redirect", /(?:window|top|document)\.location(?:\.href)?\s*=\s*["'`]https?:\/\//i]
+];
+let tamperOk = new Set();   // accepted changes, from config/tamper-ok.json
+function tamperSignals(text) {
+    const out = new Set();
+    if (TAMPER_MARKERS.some(re => re.test(text))) out.add("the Oct 11 gn-math attack's markers");
+    for (const [name, re] of TAMPER_WORDS) { const m = re.exec(text); if (m) out.add(`${name} (${m[0].slice(0, 40)})`); }
+    for (const m of text.matchAll(/<script[^>]+src\s*=\s*["']?(?:https?:)?\/\/([\w.-]+)/gi)) out.add("script from " + m[1].toLowerCase());
+    return out;
+}
+// Compare a new copy with the previous one; returns what's new and suspicious.
+// Files that changed: anything above that the old file didn't have, including
+// scripts from a host the old copy never used. Brand-new files (new games
+// get added all the time): only the attack markers and crypto miners.
+async function tamperCheck(oldDir, newDir) {
+    const findings = [];
+    if (!oldDir) return findings;
+    const files = (await walk(newDir)).filter(x => /\.(html?|m?js)$/i.test(x.f) && x.size <= 5e6);
+    let oldHosts = null;
+    for (const x of files) {
+        const rel = path.relative(newDir, x.f), oldF = path.join(oldDir, rel);
+        const [nb, ob] = await Promise.all([fsp.readFile(x.f).catch(() => null), fsp.readFile(oldF).catch(() => null)]);
+        if (!nb || (ob && nb.equals(ob))) continue;
+        const now = tamperSignals(nb.toString("utf8"));
+        if (!ob) {
+            for (const sig of now) if (/attack|crypto miner/.test(sig)) findings.push({ file: rel.split(path.sep).join("/"), what: sig + " (new file)" });
+        } else {
+            const before = tamperSignals(ob.toString("utf8"));
+            if (!oldHosts) {   // every script host the old copy used anywhere
+                oldHosts = new Set();
+                for (const y of (await walk(oldDir)).filter(y => /\.html?$/i.test(y.f) && y.size <= 5e6))
+                    for (const sig of tamperSignals(await fsp.readFile(y.f, "utf8").catch(() => ""))) if (sig.startsWith("script from ")) oldHosts.add(sig);
+            }
+            for (const sig of now) if (!before.has(sig) && !(sig.startsWith("script from ") && oldHosts.has(sig))) findings.push({ file: rel.split(path.sep).join("/"), what: sig });
+        }
+        if (findings.length >= 20) break;
+    }
+    return findings;
+}
+// The newest good copy of the same repo (any commit or branch), to compare with
+function previousCopy(owner, repo, exceptKey) {
+    const pre = `${owner.toLowerCase()}/${repo.toLowerCase()}@`;
+    let best = null;
+    for (const [k, v] of Object.entries(mirror.repos)) {
+        if (!k.startsWith(pre) || !v.ok || (k === exceptKey && !v.ok)) continue;
+        if (!best || v.at > best.v.at) best = { k, v };
+    }
+    return best ? mirrorPath(owner, repo, best.k.slice(pre.length)) : null;
+}
+
+// ── Smaller downloads: compressed copies of game files ──────────────────────
+// Your upload is ~20 Mbps, so every byte counts. Text-like game files (code,
+// pages, WebAssembly, Unity data) are compressed once in the background and
+// kept in compressed/, then sent compressed to browsers (and Cloudflare) that
+// accept it. A file that doesn't get at least 10% smaller (already
+// compressed) is remembered and sent as it is.
+const COMP_DIR = DATA("compressed");
+fs.mkdirSync(COMP_DIR, { recursive: true });
+const COMP_EXT = new Set([".js", ".mjs", ".html", ".htm", ".css", ".json", ".wasm", ".svg", ".txt", ".xml", ".data", ".unityweb", ".pck", ".mem", ".map", ".csv", ".glsl", ".obj", ".atlas", ".fnt", ".tmx", ".ttf", ".otf", ".md"]);
+const COMP_MAX = 300e6, COMP_MIN = 1500;
+const compQueue = [], compBusy = new Set();
+let compRunning = false;
+const compStats = readJson(path.join(STATE_DIR, "compress.json"), { files: 0, saved: 0, skipped: 0 });
+function compName(file, st, enc) { return path.join(COMP_DIR, crypto.createHash("sha1").update(`${file}|${st.size}|${st.mtimeMs}`).digest("hex") + "." + enc); }
+async function compressedFor(req, file, st) {
+    if (!st || st.size < COMP_MIN || st.size > COMP_MAX || !COMP_EXT.has(path.extname(file).toLowerCase())) return null;
+    if (req.headers.range) return null;
+    const accept = String(req.headers["accept-encoding"] || "");
+    const enc = /\bbr\b/.test(accept) ? "br" : /\bgzip\b/.test(accept) ? "gz" : null;
+    if (!enc) return null;
+    const out = compName(file, st, enc);
+    const have = await exists(out);
+    if (have && have.size > 0) return { file: out, enc: enc === "br" ? "br" : "gzip" };
+    if (have) return null;                          // empty marker: doesn't compress well
+    if (await diskFree() < 20 * 1024 ** 3) return null;   // short on space: send files as they are
+    if (!compBusy.has(out) && compQueue.length < 500) { compBusy.add(out); compQueue.push([file, st, enc, out]); compNext(); }
+    return null;
+}
+async function compNext() {
+    if (compRunning) return;
+    compRunning = true;
+    try {
+        while (compQueue.length) {
+            const [file, st, enc, out] = compQueue.shift();
+            try {
+                const buf = await fsp.readFile(file);
+                const z = await new Promise((res, rej) => enc === "br"
+                    ? zlib.brotliCompress(buf, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: buf.length > 20e6 ? 5 : 9, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: buf.length } }, (e, r) => e ? rej(e) : res(r))
+                    : zlib.gzip(buf, { level: 9 }, (e, r) => e ? rej(e) : res(r)));
+                if (z.length < buf.length * 0.9) { await writeAtomic(out, z); compStats.files++; compStats.saved += buf.length - z.length; }
+                else { await fsp.writeFile(out, ""); compStats.skipped++; }
+            } catch (e) { log("compress failed", file, e.message); }
+            compBusy.delete(out);
+        }
+    } finally { compRunning = false; writeJson(path.join(STATE_DIR, "compress.json"), compStats).catch(() => {}); }
+}
+// Compressed copies of files that are gone, or not asked for in 30 days, are removed nightly
+async function trimCompressed() {
+    for (const x of await walk(COMP_DIR)) if (Date.now() - x.at > 30 * 86400000) await fsp.unlink(x.f).catch(() => {});
+}
+
+// ── Which game sources work for players (the "school block map") ────────────
+// Once a day, each browser says which game sources worked for it and which
+// were blocked or down (js/app.js, sendReachReport). Counted per day, kept 30
+// days. Nothing about the player is kept; only the counts.
+const REACH_FILE = path.join(STATE_DIR, "reach.json");
+let reach = readJson(REACH_FILE, {});
+const REACH_SOURCES = new Set(["jsdelivr", "github", "githack", "fastly", "gcore", "testingcf", "home", "firebase"]);
+const perIp = new Map();   // ip -> { hour, n }, so one school can't flood the counts
+function ipAllowed(req, max) {
+    const ip = req.get("cf-connecting-ip") || req.ip, h = Math.floor(Date.now() / 3600000);
+    const e = perIp.get(ip + max) || { h, n: 0 };
+    if (e.h !== h) { e.h = h; e.n = 0; }
+    e.n++; perIp.set(ip + max, e);
+    if (perIp.size > 20000) perIp.clear();
+    return e.n <= max;
+}
+app.post("/api/reach", express.text({ type: "*/*", limit: "4kb" }), (req, res) => {
+    res.set("Cache-Control", "no-store");
+    let b; try { b = JSON.parse(req.body || "{}"); } catch { return res.sendStatus(400); }
+    if (!ipAllowed(req, 300)) return res.sendStatus(429);
+    const okL = (Array.isArray(b.ok) ? b.ok : []).filter(s => REACH_SOURCES.has(s));
+    const downL = (Array.isArray(b.down) ? b.down : []).filter(s => REACH_SOURCES.has(s) && !okL.includes(s));
+    const d = reach[today()] ||= { browsers: 0, sources: {} };
+    d.browsers++;
+    if (b.chromebook) d.chromebooks = (d.chromebooks || 0) + 1;
+    for (const s of okL) (d.sources[s] ||= { ok: 0, down: 0 }).ok++;
+    for (const s of downL) (d.sources[s] ||= { ok: 0, down: 0 }).down++;
+    res.sendStatus(204);
+});
+app.get("/api/reach", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const days = Object.keys(reach).sort().slice(-30);
+    res.json(days.map(day => ({ day, ...reach[day] })));
+});
+async function saveReach() {
+    const keep = Object.keys(reach).sort().slice(-30);
+    for (const k of Object.keys(reach)) if (!keep.includes(k)) delete reach[k];
+    await writeJson(REACH_FILE, reach).catch(() => {});
+}
+
+// ── Error reports go through the server (js/errors.js) ──────────────────────
+// Browsers send their error reports here instead of writing to Firestore
+// themselves. The same error from many players is added up here and written
+// to Firestore errorLogs every 10 minutes as ONE write with the total, so the
+// Admin Panel's Errors list works the same with far fewer Firebase writes.
+// If the server is off, browsers write to Firestore directly like before.
+// Each game's crash count for today is also kept for the owner panel.
+const pendingErrors = new Map();   // sig -> { entry, n, lastAt }
+const ERR_FILE = path.join(STATE_DIR, "errors-daily.json");
+let errorsDaily = readJson(ERR_FILE, {});   // day -> { total, games: { id: { name, n } }, sources: { source: n } }
+const shortStr = (v, n) => typeof v === "string" ? v.slice(0, n) : "";
+app.post("/api/errors", express.json({ limit: "64kb" }), (req, res) => {
+    res.set("Cache-Control", "no-store");
+    if (!db) return res.sendStatus(503);
+    if (!ipAllowed(req, 400)) return res.sendStatus(429);
+    const list = Array.isArray(req.body) ? req.body.slice(0, 10) : [];
+    const day = today(), d = errorsDaily[day] ||= { total: 0, games: {}, sources: {} };
+    let took = 0;
+    for (const e of list) {
+        if (!e || typeof e.sig !== "string" || !/^[a-z0-9]{6,30}$/.test(e.sig)) continue;
+        const s = e.sample && typeof e.sample === "object" ? e.sample : {};
+        const sample = {};
+        for (const [k, n] of [["message", 500], ["stack", 1500], ["detail", 500], ["browser", 60], ["ua", 300], ["screen", 30], ["memory", 10], ["version", 20], ["blockedSources", 120], ["user", 40], ["at", 40]]) sample[k] = shortStr(s[k], n);
+        sample.online = s.online !== false;
+        sample.secondsOnPage = Math.max(0, Math.min(1e7, Number(s.secondsOnPage) || 0));
+        const entry = { sig: e.sig, source: shortStr(e.source, 20), message: shortStr(e.message, 200), where: shortStr(e.where, 160), gameId: shortStr(e.gameId, 12), gameName: shortStr(e.gameName, 80) };
+        const p = pendingErrors.get(e.sig) || { entry, n: 0 };
+        p.n++; p.last = sample; p.lastAt = Date.now();
+        pendingErrors.set(e.sig, p);
+        d.total++;
+        d.sources[entry.source || "?"] = (d.sources[entry.source || "?"] || 0) + 1;
+        if (entry.gameId) { const g = d.games[entry.gameId] ||= { name: entry.gameName, n: 0 }; g.n++; if (entry.gameName) g.name = entry.gameName; }
+        took++;
+    }
+    res.json({ ok: took });
+});
+app.get("/api/errors", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const days = Object.keys(errorsDaily).sort().slice(-7);
+    res.json(days.map(day => {
+        const d = errorsDaily[day];
+        return { day, total: d.total, sources: d.sources, games: Object.entries(d.games).map(([id, g]) => ({ id, name: g.name, n: g.n })).sort((a, b) => b.n - a.n).slice(0, 25) };
+    }));
+});
+async function flushErrors() {
+    if (!db || !pendingErrors.size) return;
+    const batch = [...pendingErrors.values()];
+    pendingErrors.clear();
+    const FV = admin.firestore.FieldValue, now = FV.serverTimestamp();
+    for (const p of batch) {
+        const ref = db.collection("errorLogs").doc("e" + p.entry.sig);
+        try {
+            await ref.update({ count: FV.increment(p.n), lastAt: now, last: p.last, status: "open" });
+        } catch (e) {
+            if (e.code === 5 || /NOT_FOUND|No document/i.test(e.message)) {
+                await ref.set({ ...p.entry, count: p.n, firstAt: now, lastAt: now, last: p.last, status: "open" }).catch(err => log("error log write", err.message));
+            } else { log("error log write", e.message); const q = pendingErrors.get(p.entry.sig); if (!q) pendingErrors.set(p.entry.sig, p); }
+        }
+    }
+    const keep = Object.keys(errorsDaily).sort().slice(-7);
+    for (const k of Object.keys(errorsDaily)) if (!keep.includes(k)) delete errorsDaily[k];
+    await writeJson(ERR_FILE, errorsDaily).catch(() => {});
+}
+
+// ── Drive health ────────────────────────────────────────────────────────────
+// Checked every 6 hours: the drive's own health report (SMART, through
+// smartctl, installed by update.sh), disk errors the system logged in the last
+// day, and how fast free space is shrinking. A warning shows on the status page
+// and in Recent events. Inside a virtual machine the real drive is hidden, so
+// only the error log and free space can be checked there.
+const DRIVE_FILE = path.join(STATE_DIR, "drive.json");
+let drive = readJson(DRIVE_FILE, { freeByDay: {} });
+drive.freeByDay ||= {};
+function runAny(cmd, args) {
+    return new Promise(resolve => execFile(cmd, args, { timeout: 60000, maxBuffer: 4 << 20 }, (err, out) => resolve(String(out || ""))));
+}
+async function checkDrive() {
+    const h = { checkedAt: Date.now(), warnings: [] };
+    try {
+        // Which physical drive the server's files are on
+        const src = (await runAny("findmnt", ["-n", "-o", "SOURCE", "--target", ROOT])).trim().replace(/\[.*\]$/, "");
+        const parent = src.startsWith("/dev/") ? (await runAny("lsblk", ["-no", "pkname", src])).trim().split("\n")[0] : "";
+        const dev = parent ? "/dev/" + parent : src;
+        h.device = dev;
+        const raw = dev ? await runAny("sudo", ["-n", "smartctl", "-j", "-a", dev]) : "";
+        let j = null; try { j = JSON.parse(raw); } catch {}
+        const model = j && (j.model_name || j.model_family || (j.device && j.device.model_name)) || "";
+        if (!j) h.smart = { available: false, why: "smartctl isn't installed yet (the next update installs it)" };
+        else if (/QEMU|VBOX|VirtualBox|Virtual disk|VMware|Msft Virtual/i.test(model + " " + (j.device && j.device.protocol || "")) || (j.smart_support && j.smart_support.available === false) || !j.smart_status) {
+            h.smart = { available: false, model, why: "this server runs in a virtual machine, which hides the real drive's health" };
+        } else {
+            const attrs = {}; for (const a of (j.ata_smart_attributes && j.ata_smart_attributes.table) || []) attrs[a.id] = a.raw && a.raw.value;
+            const nv = j.nvme_smart_health_information_log || {};
+            h.smart = {
+                available: true, model, passed: !!(j.smart_status && j.smart_status.passed),
+                tempC: j.temperature && j.temperature.current, hours: j.power_on_time && j.power_on_time.hours,
+                reallocated: attrs[5] ?? null, pending: attrs[197] ?? null, uncorrectable: attrs[198] ?? null,
+                wearPct: nv.percentage_used ?? null, mediaErrors: nv.media_errors ?? null
+            };
+            const s = h.smart;
+            if (!s.passed) h.warnings.push("the drive says its own health check FAILED: copy everything off it now");
+            if (s.reallocated > 0) h.warnings.push(`${s.reallocated} worn-out spots on the drive were replaced`);
+            if (s.pending > 0 || s.uncorrectable > 0) h.warnings.push(`${(s.pending || 0) + (s.uncorrectable || 0)} spots on the drive can't be read`);
+            if (s.wearPct >= 90) h.warnings.push(`the SSD is ${s.wearPct}% worn out`);
+            if (s.mediaErrors > 0) h.warnings.push(`${s.mediaErrors} read errors on the SSD`);
+            if (s.tempC >= 65) h.warnings.push(`the drive is hot (${s.tempC} °C)`);
+        }
+        // Disk errors the system logged in the last 24 hours
+        const kern = await runAny("sudo", ["-n", "journalctl", "-k", "--since", "-24h", "--no-pager", "-q", "-o", "cat"]);
+        h.diskErrors = (kern.match(/I\/O error|blk_update_request|Buffer I\/O error|EXT4-fs error|XFS .*error|nvme.*(timeout|reset)|ata\d+.*(failed command|exception)/gi) || []).length;
+        if (h.diskErrors) h.warnings.push(`${h.diskErrors} disk error${h.diskErrors === 1 ? "" : "s"} in the system log in the last day`);
+    } catch (e) { log("drive check", e.message); }
+    // Free space: one reading a day, then how many days until it's full at the recent rate
+    const free = await diskFree();
+    if (isFinite(free)) {
+        drive.freeByDay[today()] = free;
+        const days = Object.keys(drive.freeByDay).sort().slice(-14);
+        for (const k of Object.keys(drive.freeByDay)) if (!days.includes(k)) delete drive.freeByDay[k];
+        if (days.length >= 3) {
+            const perDay = (drive.freeByDay[days[0]] - free) / (days.length - 1);
+            h.fullInDays = perDay > 1e8 ? Math.round(free / perDay) : null;
+            if (h.fullInDays != null && h.fullInDays < 30) h.warnings.push(`the disk will be full in about ${h.fullInDays} days at this rate`);
+        }
+    }
+    const before = (drive.health && drive.health.warnings || []).join("|");
+    drive.health = h;
+    await writeJson(DRIVE_FILE, drive).catch(() => {});
+    if (h.warnings.length && h.warnings.join("|") !== before) event("warn", "Drive health: " + h.warnings.join("; "));
+}
 
 // ── Play counts ─────────────────────────────────────────────────────────────
 const PLAYS_FILE = path.join(STATE_DIR, "plays.json");
@@ -1149,6 +1470,10 @@ app.get("/api/status", async (req, res) => {
         gamesFlagged: gameHealth().flagged.length,
         mirror: mirrorSummary(),
         offsite: offsiteSummary(),
+        compressed: { files: compStats.files, savedBytes: compStats.saved, waiting: compQueue.length },
+        drive: drive.health || null,
+        reachToday: reach[today()] || null,
+        errorsToday: errorsDaily[today()] ? { total: errorsDaily[today()].total, topGames: Object.entries(errorsDaily[today()].games).map(([id, g]) => ({ id, name: g.name, n: g.n })).sort((a, b) => b.n - a.n).slice(0, 5) } : null,
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         authError,
         refusedSaves: Object.entries(refused).filter(([, r]) => Date.now() - r.at < 3600000).map(([u, r]) => ({ who: u.slice(0, 5), ...r })),
@@ -1181,6 +1506,14 @@ app.listen(8080, "127.0.0.1", () => {
     setInterval(liveRound, ROUND_MS);
     backup(); setInterval(backup, 60 * 60 * 1000);
     setTimeout(offsiteBackup, 60000); setInterval(offsiteBackup, 10 * 60000);   // also picks up new R2 keys within 10 minutes
-    setTimeout(mirrorAll, 3 * 60000); setInterval(mirrorAll, 6 * 3600000);
+    setTimeout(mirrorAll, 3 * 60000);
+    // On restart (updates), write out error reports and source counts that are waiting
+    for (const sig of ["SIGINT", "SIGTERM"]) process.once(sig, async () => {
+        try { await Promise.race([Promise.all([flushErrors(), saveReach()]), new Promise(r => setTimeout(r, 4000))]); } catch {}
+        process.exit(0);
+    });
+    setInterval(() => { flushErrors().catch(e => log("flush errors", e.message)); saveReach(); }, 10 * 60000);
+    setTimeout(checkDrive, 90000); setTimeout(checkDrive, 15 * 60000); setInterval(checkDrive, 6 * 3600000);
+    setInterval(trimCompressed, 24 * 3600000); setInterval(mirrorAll, 6 * 3600000);
     if (db) { setTimeout(runSync, 20000); setInterval(runSync, SYNC_EVERY_MS); }
 });

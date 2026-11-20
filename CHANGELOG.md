@@ -2,6 +2,18 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 20, 2026 — Tamper alarm, smaller downloads, and more from the GN 2.0 Server
+
+### Added
+- **Tamper alarm.** When a game repo in the server's library copy changes, the changed files are checked for anything suspicious that wasn't there before (ad networks, crypto miners, packed code, scripts from a new site, the Oct 11 attack's markers). If something turns up, the copy keeps the old version and the change is listed on the server status page. Changes that turn out fine go in config/tamper-ok.json.
+- **Smaller downloads.** Game code, pages, WebAssembly and Unity data from the GN 2.0 Server are compressed once and then sent compressed, often 60–70% smaller, which matters with the server's upload speed.
+- **Game source report.** Once a day, each browser tells the server which game sources worked and which were blocked (nothing about the player). The server status page shows how often each source is blocked.
+- **Drive health.** The server checks its drive (SMART), disk errors in the system log, and how fast free space is shrinking, and warns on the status page.
+
+### Changed
+- **Error reports go through the GN 2.0 Server,** which adds up the same error from many players and writes it to the Admin Panel's Errors list every 10 minutes, so far fewer Firebase writes. If the server is off, reports go straight to Firebase like before.
+- **The library copy can't crowd out saves:** a repo that leaves less than 20 GB free is removed again and skipped for a week.
+
 ## November 20, 2026 — A full copy of the game library, and save backups off the PC
 
 ### Added
