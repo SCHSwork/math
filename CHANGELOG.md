@@ -2,6 +2,13 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — Cloud saves on the home server
+
+### Changed
+- **Cloud save data now lives on the home server instead of Firebase.** Firebase still signs players in and keeps the small record of which save is newest, but the save itself (up to ~18 MB per player, the biggest use of Firebase) goes to the PC at home. The home server checks the player's Firebase sign-in, so nobody can read or change someone else's save.
+- **Nothing is lost when the PC is off.** If it can't be reached, saves go to Firebase like before, and loading tries the home server first and then Firebase. Saves made before this change load from Firebase as always. If a save is on the home server while it's off, the error says so.
+- Deleting an account also deletes its saves on the home server.
+
 ## November 19, 2026 — The home server
 
 ### Added
