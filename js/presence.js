@@ -256,6 +256,22 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             updateTransforms: [{ fieldPath: "t", setToServerValue: "REQUEST_TIME" }]
         }] };
     }
+    // The GN 2.0 Server takes the heartbeat when it can be reached (no Firebase
+    // write); it adds everyone up and writes the live/now summary itself. If it
+    // can't be reached, the heartbeat goes to Firestore like before (and the
+    // server is tried again 5 minutes later).
+    async function beatServer() {
+        if (typeof HOME_SERVER === "undefined" || (window.gnHomeDownUntil || 0) > Date.now()) return false;
+        const body = { id: presenceId(), s: PRESENCE.site, g: presenceGameAllowed() ? currentGame() : "" };
+        if (fbOn()) { const t = getFbTally(); body.u = { [t.day]: { r: Math.min(100000, t.r), w: Math.min(100000, t.w) } }; }
+        try {
+            const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 8000);
+            const res = await fetch(HOME_SERVER + "/api/presence", { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(body), signal: ctrl.signal }).finally(() => clearTimeout(timer));
+            if (res.ok) { gameNoted = body.g; return true; }
+        } catch {}
+        window.gnHomeDownUntil = Date.now() + 5 * 60000;
+        return false;
+    }
     async function beat() {
         if (booted || document.hidden || (fbOn() && fbBackgroundPaused())) return;
         lastBeat = Date.now();
@@ -266,6 +282,10 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         // Nothing from this browser for a while: a new visit, so a new session
         const newVisit = Date.now() - Math.max(prevBeat, presenceShared().sessionAt || 0) > PRESENCE.activeMs;
         try {
+            if (await beatServer()) {
+                if (newVisit) { setPresenceShared({ sessionAt: Date.now() }); writeSession(); }
+                return;
+            }
             if (fbOn()) fbCount(0, 1);
             const withUsage = presenceUsageAllowed();
             try {
@@ -353,6 +373,8 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
 
     // Adds up every browser's Firebase count for today (about 1 read per 1,000 browsers)
     async function sumUsage() {
+        // The GN 2.0 Server adds everyone's usage up (live.js gets it from there)
+        if (Date.now() - (window.gnServerUsageAt || 0) < 10 * 60000) return;
         const day = fbDayKey();
         try {
             fbCount(1, 0);

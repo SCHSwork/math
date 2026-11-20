@@ -2,6 +2,16 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — Online counts and broken games on the GN 2.0 Server
+
+### Changed
+- **"Online now", "N playing" and the week's Top 10 now run on the GN 2.0 Server.** Every open copy of the site used to write to Firebase every 2 minutes to say it was still there; now it tells the server instead, and the server adds everyone up and saves one summary to Firebase every few minutes. That was the site's biggest Firebase use after saves. "N playing" badges also update every 90 seconds instead of every 5 minutes.
+- **The admin panel's Sessions, Visitors and abilities lists read from the server** when it's up, so they stay accurate.
+- **If the server can't be reached**, everything works the old way through Firebase, and the server is tried again 5 minutes later.
+
+### Added
+- **Games that won't load for players get flagged automatically.** When a game crashes or never starts, the site tells the server. If 3 or more people hit it within a day and it fails for at least a quarter of its plays, its card shows "Not loading for many", and it's listed on the status page. Lost 3D graphics don't count, since that's the computer running low on memory, not the game.
+
 ## November 19, 2026 — Cloud saves kept in two places
 
 ### Changed

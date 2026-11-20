@@ -49,3 +49,54 @@ function sendHomePlay(id) {
 
 checkHomeServer();
 setInterval(checkHomeServer, 5 * 60 * 1000);
+
+// ── Games that won't load for real players ──────────────────────────────────
+// When a game crashes or never starts (game-error.js), the site tells the GN
+// 2.0 Server. If 3+ different people hit it within a day and it fails for a
+// big share of its plays, the server flags it, and its card shows
+// "Not loading for many". Lost graphics aren't sent: that's the computer
+// running low on memory, not the game.
+const AUTO_BROKEN_KEY = "gnmath-auto-broken";
+let autoBroken = (() => { try { return JSON.parse(localStorage.getItem(AUTO_BROKEN_KEY) || "null") || { at: 0, ids: {} }; } catch { return { at: 0, ids: {} }; } })();
+function reportGameTrouble(id, kind, msg) {
+    if (kind === "graphics" || !id) return;
+    try {
+        const body = new Blob([JSON.stringify({ id: String(id), kind: String(kind || "crash"), msg: String(msg || "").slice(0, 200), v: homeVisitorId() })], { type: "text/plain" });
+        if (navigator.sendBeacon) navigator.sendBeacon(HOME_SERVER + "/api/game-report", body);
+        else fetch(HOME_SERVER + "/api/game-report", { method: "POST", body, keepalive: true, mode: "no-cors" }).catch(() => {});
+    } catch {}
+}
+function autoBrokenInfo(id) { return autoBroken.ids[String(id)] || null; }
+function autoBrokenBadge(id) {
+    const g = autoBrokenInfo(id);
+    if (!g) return null;
+    const el = document.createElement("div");
+    el.className = "card-flag card-autoflag";
+    el.innerHTML = `${typeof gnIcon === "function" ? gnIcon("warning") : "⚠"} Not loading for many`;
+    el.title = `${g.people} players couldn't get this game to load in the last day. It may not work right now.`;
+    return el;
+}
+function applyAutoBrokenFlags() {
+    document.querySelectorAll(".zone-item[data-id]").forEach(card => {
+        const old = card.querySelector(".card-autoflag");
+        const has = !!autoBrokenInfo(card.dataset.id);
+        if (!has) { if (old) old.remove(); return; }
+        if (old || card.querySelector(".card-flag")) return;   // already flagged by reports
+        let box = card.querySelector(".card-badges");
+        if (!box) { box = document.createElement("div"); box.className = "card-badges"; card.appendChild(box); }
+        const b = autoBrokenBadge(card.dataset.id);
+        if (b) box.appendChild(b);
+    });
+}
+async function loadGameHealth() {
+    try {
+        const res = await fetch(HOME_SERVER + "/api/game-health");
+        if (!res.ok) return;
+        const j = await res.json();
+        autoBroken = { at: Date.now(), ids: Object.fromEntries((j.flagged || []).map(g => [String(g.id), { people: g.people, rate: g.rate }])) };
+        try { localStorage.setItem(AUTO_BROKEN_KEY, JSON.stringify(autoBroken)); } catch {}
+        applyAutoBrokenFlags();
+    } catch {}
+}
+setTimeout(loadGameHealth, 6000);
+setInterval(() => { if (!document.hidden) loadGameHealth(); }, 10 * 60 * 1000);

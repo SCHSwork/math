@@ -74,7 +74,7 @@ let minute = blankMinute();
 function rollMinute() {
     const m = minute;
     minute = blankMinute();
-    history.push({ t: m.t, req: m.req, saves: m.saves, gh: m.gh, plays: m.plays, bytes: m.bytes, errors: m.errors, ms: m.req ? Math.round(m.msTotal / m.req) : 0 });
+    history.push({ t: m.t, req: m.req, saves: m.saves, gh: m.gh, plays: m.plays, beats: m.beats || 0, online: live.online, bytes: m.bytes, errors: m.errors, ms: m.req ? Math.round(m.msTotal / m.req) : 0 });
     while (history.length && Date.now() - history[0].t > 86400000) history.shift();
 }
 setTimeout(() => { rollMinute(); setInterval(rollMinute, 60000); }, 60000 - (Date.now() % 60000));
@@ -90,6 +90,7 @@ app.use((req, res, next) => {
         if (req.path.startsWith("/api/saves")) minute.saves++;
         else if (req.path.startsWith("/gh/")) minute.gh++;
         else if (req.path === "/api/play") minute.plays++;
+        else if (req.path === "/api/presence" && req.method === "POST") minute.beats = (minute.beats || 0) + 1;
     });
     next();
 });
@@ -271,6 +272,225 @@ app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req
     }
 });
 
+
+// ── Online now, "N playing", Top 10 (takes over Firestore presence) ─────────
+// Each open copy of the site says "still here" (and which game is open) every
+// couple of minutes: POST /api/presence. That used to be a Firestore write per
+// browser; now it's in memory here. Every few minutes the server adds them up
+// (plus anyone still using Firestore because they can't reach this server) and
+// writes ONE summary to Firestore live/now and the week's Top 10 counts, the
+// same documents as before, so everything that reads them keeps working.
+const ONLINE_MS = 5 * 60000, LIST_MS = 10 * 60000, ROUND_MS = 4 * 60000;
+const presence = new Map();                      // id -> { t, s, g, u }
+const VISITORS_FILE = path.join(STATE_DIR, "visitors.json");
+const visitors = readJson(VISITORS_FILE, {});    // id -> [firstSeen, lastSeen, inFirestore: 1 | 0 | -1 unknown]
+let visitorsDirty = false;
+const ID20 = /^[A-Za-z0-9]{20}$/;
+app.post("/api/presence", express.text({ type: "*/*", limit: "4kb" }), (req, res) => {
+    res.set("Cache-Control", "no-store");
+    let b; try { b = JSON.parse(req.body || "{}"); } catch { return res.sendStatus(400); }
+    const id = String(b.id || "");
+    if (!ID20.test(id)) return res.sendStatus(400);
+    const g = /^\d{1,7}$/.test(String(b.g || "")) ? String(b.g) : "";
+    const site = /^[a-z0-9]{1,10}$/.test(String(b.s || "")) ? String(b.s) : "gn2";
+    let u = null;
+    if (b.u && typeof b.u === "object") {
+        const day = Object.keys(b.u)[0];
+        const v = b.u[day] || {};
+        if (/^[\w-]{1,12}$/.test(day || "")) u = { day, r: Math.min(100000, Math.max(0, v.r | 0)), w: Math.min(100000, Math.max(0, v.w | 0)) };
+    }
+    const now = Date.now();
+    presence.set(id, { t: now, s: site, g, u });
+    const v = visitors[id];
+    if (v) v[1] = now; else visitors[id] = [now, now, -1];
+    visitorsDirty = true;
+    res.json({ ok: true });
+});
+let live = { online: 0, games: {}, at: 0, h: [] };
+let liveWeek = { id: "", p: {} };
+let fsSessions = [];                             // people still on Firestore presence
+let fsUsage = { day: "", r: 0, w: 0 };
+let fsCounts = { at: 0, day: null, week: null, all: null };
+function weekId(at = Date.now()) {
+    const d = new Date(at), t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const y = t.getUTCFullYear(), wk = Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7);
+    return `w${y}${String(wk).padStart(2, "0")}`;
+}
+const packHist = list => list.map(([t, n]) => Math.floor(t / 60000).toString(36) + ":" + n.toString(36)).join(",");
+const parseHist = str => String(str || "").split(",").map(x => x.split(":")).filter(x => x.length === 2)
+    .map(([m, n]) => [parseInt(m, 36) * 60000, parseInt(n, 36)]).filter(([t, n]) => t > 0 && n >= 0 && Date.now() - t < 86400000);
+async function liveStartup() {
+    if (!db) return;
+    try {
+        const now = await db.collection("live").doc("now").get();
+        if (now.exists) live.h = parseHist(now.get("h"));
+    } catch (e) { log("live startup", e.message); }
+}
+async function readWeek(id) {
+    liveWeek = { id, p: {} };
+    if (!db) return;
+    try { const d = await db.collection("live").doc(id).get(); if (d.exists) liveWeek.p = { ...(d.get("p") || {}) }; } catch {}
+}
+function usageNow() {
+    const counts = {};
+    for (const p of presence.values()) if (p.u) { const c = counts[p.u.day] = counts[p.u.day] || { r: 0, w: 0 }; c.r += p.u.r; c.w += p.u.w; }
+    const day = Object.keys(counts).sort().pop() || fsUsage.day;
+    const mine = counts[day] || { r: 0, w: 0 };
+    const extra = fsUsage.day === day ? fsUsage : { r: 0, w: 0 };
+    return day ? { day, r: mine.r + extra.r, w: mine.w + extra.w } : null;
+}
+let liveBusy = false;
+async function liveRound() {
+    if (liveBusy) return;
+    liveBusy = true;
+    try {
+        const now = Date.now(), cutoff = now - ONLINE_MS;
+        if (db) {
+            try {
+                const snap = await db.collection("presence").where("t", ">", admin.firestore.Timestamp.fromMillis(now - LIST_MS)).select("s", "g", "t").get();
+                fsSessions = snap.docs.filter(d => !presence.has(d.id)).map(d => ({ id: d.id, t: d.get("t") ? d.get("t").toMillis() : 0, s: d.get("s") || "gn2", g: d.get("g") || "" }));
+            } catch (e) { log("presence read", e.message); }
+        }
+        let online = 0;
+        const counts = {};
+        const add = p => { if (p.t <= cutoff) return; online++; if (p.g && /^\d{1,7}$/.test(p.g)) counts[p.g] = (counts[p.g] || 0) + 1; };
+        for (const [id, p] of presence) { if (p.t < now - 3 * LIST_MS) presence.delete(id); else add(p); }
+        fsSessions.forEach(add);
+        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 150);
+        live.h.push([now, online]);
+        while (live.h.length > 400 || (live.h.length && now - live.h[0][0] > 86400000)) live.h.shift();
+        live = { online, games: Object.fromEntries(top), at: now, h: live.h };
+        const wk = weekId(now);
+        if (liveWeek.id !== wk) await readWeek(wk);
+        for (const [id, n] of top) liveWeek.p[id] = (liveWeek.p[id] || 0) + n;
+        if (db) {
+            const FV = admin.firestore.FieldValue;
+            await db.collection("live").doc("now").set({ online, games: live.games, h: packHist(live.h), at: FV.serverTimestamp() });
+            if (top.length) await db.collection("live").doc(wk).set({ at: FV.serverTimestamp(), p: Object.fromEntries(top.map(([id, n]) => [id, FV.increment(n)])) }, { merge: true });
+        }
+        await checkVisitorsInFirestore();
+    } catch (e) {
+        log("live round", e.message);
+    } finally { liveBusy = false; }
+}
+// Browsers seen here for the first time: did they ever write Firestore presence
+// (so the all-time visitor count doesn't count them twice)? One cheap check each, ever.
+async function checkVisitorsInFirestore() {
+    if (!db) return;
+    const unknown = Object.entries(visitors).filter(([, v]) => v[2] === -1).slice(0, 300).map(([id]) => id);
+    for (let i = 0; i < unknown.length; i += 100) {
+        const group = unknown.slice(i, i + 100);
+        const snaps = await db.getAll(...group.map(id => db.collection("presence").doc(id)), { fieldMask: [] });
+        snaps.forEach((s, k) => { visitors[group[k]][2] = s.exists ? 1 : 0; });
+        visitorsDirty = true;
+    }
+}
+// Visitor totals and the Firebase use everyone reported (cached 10 minutes)
+async function firestoreCounts() {
+    if (!db || Date.now() - fsCounts.at < 10 * 60000) return fsCounts;
+    const col = db.collection("presence"), TS = admin.firestore.Timestamp;
+    const cnt = async q => { try { return (await q.count().get()).data().count; } catch { return null; } };
+    const [day, week, all] = await Promise.all([
+        cnt(col.where("t", ">", TS.fromMillis(Date.now() - 86400000))),
+        cnt(col.where("t", ">", TS.fromMillis(Date.now() - 7 * 86400000))),
+        cnt(col)
+    ]);
+    fsCounts = { at: Date.now(), day, week, all };
+    const u = usageNow();
+    if (u) {
+        try {
+            const AF = admin.firestore.AggregateField;
+            const out = await col.aggregate({ r: AF.sum(`u.\`${u.day}\`.r`), w: AF.sum(`u.\`${u.day}\`.w`) }).get();
+            fsUsage = { day: u.day, r: out.data().r || 0, w: out.data().w || 0 };
+        } catch {}
+    }
+    return fsCounts;
+}
+app.get("/api/live", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const wk = weekId();
+    res.json({ online: live.online, games: live.games, at: live.at, h: packHist(live.h), week: { id: wk, p: liveWeek.id === wk ? liveWeek.p : {} }, usage: usageNow() });
+});
+app.get("/api/presence", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const since = Date.now() - LIST_MS;
+    const mine = [...presence].filter(([, p]) => p.t > since).map(([id, p]) => ({ id, t: p.t, s: p.s, g: p.g }));
+    res.json({ sessions: mine.concat(fsSessions.filter(p => p.t > since)) });
+});
+app.get("/api/visitors", async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const fc = await firestoreCounts();
+    const now = Date.now(), list = Object.values(visitors);
+    const here = ms => list.filter(v => v[1] > now - ms).length;
+    const plus = (a, b) => a == null ? b : a + b;
+    res.json({
+        day: plus(fc.day, here(86400000)), week: plus(fc.week, here(7 * 86400000)),
+        all: plus(fc.all, list.filter(v => v[2] !== 1).length),
+        online: live.online
+    });
+});
+setInterval(() => {
+    if (!visitorsDirty) return;
+    visitorsDirty = false;
+    writeJson(VISITORS_FILE, visitors).catch(() => {});
+}, 60000);
+
+// ── Games that won't load for real players ──────────────────────────────────
+// When a game crashes or never starts, the site tells the server
+// (POST /api/game-report). If 3+ different people hit it within a day and it
+// fails for a big share of its plays, it's flagged: the site shows a
+// "Not loading for many" badge and the status page lists it.
+const REPORTS_FILE = path.join(STATE_DIR, "game-reports.json");
+let reports = readJson(REPORTS_FILE, []).filter(r => Date.now() - r.t < 7 * 86400000);
+const reportSeen = new Map();
+const KINDS_OK = new Set(["stopped", "start", "graphics", "crash", "load"]);
+let flaggedBefore = new Set();
+app.post("/api/game-report", express.text({ type: "*/*", limit: "4kb" }), (req, res) => {
+    res.set("Cache-Control", "no-store");
+    let b; try { b = JSON.parse(req.body || "{}"); } catch { return res.sendStatus(400); }
+    const id = String(b.id || ""), kind = String(b.kind || ""), v = String(b.v || "").slice(0, 40);
+    if (!/^[\w.-]{1,40}$/.test(id) || !KINDS_OK.has(kind)) return res.sendStatus(400);
+    const key = v + "|" + id, now = Date.now();
+    if (v && now - (reportSeen.get(key) || 0) < 30 * 60000) return res.sendStatus(204);
+    reportSeen.set(key, now);
+    reports.push({ t: now, id, kind, msg: String(b.msg || "").slice(0, 200), v: v || crypto.randomBytes(4).toString("hex") });
+    if (reports.length > 5000) reports = reports.slice(-5000);
+    writeJson(REPORTS_FILE, reports).catch(() => {});
+    gameHealthCache = null;
+    res.sendStatus(204);
+});
+let gameHealthCache = null;
+function gameHealth() {
+    if (gameHealthCache && Date.now() - gameHealthCache.at < 60000) return gameHealthCache;
+    const now = Date.now(), since = now - 86400000;
+    const yday = new Date(now - 86400000).toISOString().slice(0, 10);
+    const byId = {};
+    for (const r of reports) {
+        if (r.t < since) continue;
+        const g = byId[r.id] = byId[r.id] || { id: r.id, fails: 0, people: new Set(), kinds: {}, lastMsg: "", lastAt: 0, firstAt: r.t };
+        g.fails++; g.people.add(r.v); g.kinds[r.kind] = (g.kinds[r.kind] || 0) + 1;
+        if (r.t > g.lastAt) { g.lastAt = r.t; if (r.msg) g.lastMsg = r.msg; }
+    }
+    const list = Object.values(byId).map(g => {
+        const playsN = ((plays[today()] || {})[g.id] || 0) + ((plays[yday] || {})[g.id] || 0);
+        const people = g.people.size, rate = playsN ? Math.min(1, people / playsN) : 1;
+        return { id: g.id, fails: g.fails, people, plays: playsN, rate: Math.round(rate * 100) / 100, kinds: g.kinds, lastMsg: g.lastMsg, lastAt: g.lastAt, since: g.firstAt, flagged: people >= 3 && rate >= 0.25 };
+    }).sort((a, b) => b.people - a.people || b.fails - a.fails);
+    const flagged = list.filter(g => g.flagged);
+    for (const g of flagged) if (!flaggedBefore.has(g.id)) event("warn", `Game ${g.id} isn't loading for ${g.people} players`);
+    flaggedBefore = new Set(flagged.map(g => g.id));
+    gameHealthCache = { at: now, flagged, watching: list.filter(g => !g.flagged).slice(0, 20) };
+    return gameHealthCache;
+}
+app.get("/api/game-health", (req, res) => {
+    res.set("Cache-Control", "public, max-age=60");
+    const h = gameHealth();
+    res.json({ updated: h.at, flagged: h.flagged, watching: h.watching });
+});
+setInterval(() => { gameHealth(); const cut = Date.now() - 7 * 86400000; if (reports.length && reports[0].t < cut) { reports = reports.filter(r => r.t >= cut); writeJson(REPORTS_FILE, reports).catch(() => {}); } }, 10 * 60000);
+
 // ── Two-way sync with Firebase (needs firebase-key.json) ────────────────────
 // For every save that changed (in Firebase, or written here) since the last
 // sync: every part the save record points at (current save, earlier kept
@@ -413,6 +633,8 @@ app.get("/api/status", async (req, res) => {
         ok: true, version: VERSION, uptime: Math.round((Date.now() - started) / 1000), now: Date.now(),
         cacheFiles: cacheStats.files, cacheBytes: cacheStats.bytes,
         players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
+        online: live.online, onlineHere: [...presence.values()].filter(p => p.t > Date.now() - ONLINE_MS).length, onlineFirestore: fsSessions.filter(p => p.t > Date.now() - ONLINE_MS).length,
+        gamesFlagged: gameHealth().flagged.length,
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
         system: { load: os.loadavg()[0], cpus: os.cpus().length, memUsed: os.totalmem() - os.freemem(), memTotal: os.totalmem(), rss: process.memoryUsage().rss, hostUptime: os.uptime(), disk, node: process.version },
         thisMinute: { req: minute.req, saves: minute.saves, gh: minute.gh, plays: minute.plays }, lastMinute: last,
@@ -432,6 +654,8 @@ app.listen(8080, "127.0.0.1", () => {
     event("start", `Server started (version ${VERSION})`);
     trimCache(); setInterval(trimCache, 60 * 60 * 1000);
     countSaves(); setInterval(countSaves, 10 * 60 * 1000);
+    liveStartup().then(() => setTimeout(liveRound, 30000));
+    setInterval(liveRound, ROUND_MS);
     backup(); setInterval(backup, 60 * 60 * 1000);
     if (db) { setTimeout(runSync, 20000); setInterval(runSync, SYNC_EVERY_MS); }
 });

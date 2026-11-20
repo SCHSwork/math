@@ -209,14 +209,53 @@ function renderTop10() {
         applyLiveBadges();
     }
 
+    // The GN 2.0 Server adds everyone up every few minutes, so when it can be
+    // reached the counts, the online graph, the week's Top 10 and the Firebase
+    // use total all come from one request to it (no Firebase reads), and this
+    // browser never needs to do the round itself.
+    const SERVER_READ_MS = 90 * 1000;
+    async function readServer() {
+        if (typeof HOME_SERVER === "undefined" || (window.gnHomeDownUntil || 0) > Date.now()) return false;
+        try {
+            const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 8000);
+            const res = await fetch(HOME_SERVER + "/api/live", { cache: "no-store", signal: ctrl.signal }).finally(() => clearTimeout(timer));
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const d = await res.json();
+            if (!d.at || Date.now() - d.at > 12 * 60000) return false;   // just started, nothing added up yet
+            const games = Object.entries(d.games || {}).map(([k, n]) => [k, Number(n) || 0]).filter(([, n]) => n > 0);
+            liveNow = { online: Number(d.online) || 0, games: new Map(games), at: d.at, updateTime: null };
+            const hist = parseHist(d.h);
+            setShared({ readAt: Date.now(), fromServer: true, online: liveNow.online, games, at: d.at, updateTime: null, h: packHist(hist) });
+            setHist(hist);
+            if (liveNow.online > 0) {
+                window.gnActiveUsers = { count: Math.max(1, liveNow.online), at: Date.now(), error: null };
+                if (typeof updateSiteStatus === "function") updateSiteStatus();
+            }
+            if (d.week && d.week.id === liveWeekId()) {
+                liveWeek = { week: d.week.id, p: d.week.p || {}, readAt: Date.now() };
+                try { localStorage.setItem(LIVE.weekKey, JSON.stringify(liveWeek)); } catch {}
+            }
+            if (d.usage && fbOn() && typeof setFbUsage === "function" && d.usage.r + d.usage.w > 0) {
+                setFbUsage(d.usage.r, d.usage.w);
+                window.gnServerUsageAt = Date.now();
+            }
+            applyLiveBadges();
+            return true;
+        } catch {
+            window.gnHomeDownUntil = Date.now() + 5 * 60000;
+            return false;
+        }
+    }
     async function tick() {
         if (document.hidden || busy) return;
         if (fbOn() && fbPaused()) return;
         busy = true;
         try {
             const s = shared();
-            const readEvery = fbOn() ? fbEvery(LIVE.readMs) : LIVE.readMs;
-            if (Date.now() - (s.readAt || 0) < readEvery) {
+            const readEvery = s.fromServer ? SERVER_READ_MS : fbOn() ? fbEvery(LIVE.readMs) : LIVE.readMs;
+            if (Date.now() - (s.readAt || 0) >= readEvery && await readServer()) {
+                // Counts came from the GN 2.0 Server
+            } else if (Date.now() - (s.readAt || 0) < readEvery) {
                 // Another tab read it recently
                 if (s.games) { liveNow = { online: s.online, games: new Map(s.games), at: s.at, updateTime: s.updateTime }; applyLiveBadges(); }
                 if (s.h && !window.gnOnlineHistory) setHist(parseHist(s.h));
