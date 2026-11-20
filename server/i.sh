@@ -3,11 +3,11 @@
 set -e
 cd ~/gn-data
 echo "node $(node -v)"
-curl -fsSL "https://raw.githubusercontent.com/SCHSwork/math/main/server/server.js?$(date +%s)" -o server.js.new
-node --check server.js.new
+curl -fsSL "https://raw.githubusercontent.com/SCHSwork/math/main/server/server.js?$(date +%s)" -o server.new.js
+node --check server.new.js
 [ -f server.js ] && cp server.js "server.js.bak"
 npm install express@4 firebase-admin@13 --no-fund --no-audit --loglevel=error
-mv server.js.new server.js
+mv server.new.js server.js
 pm2 restart gn-data --update-env 2>/dev/null || pm2 start server.js --name gn-data
 pm2 save >/dev/null
 sleep 4
