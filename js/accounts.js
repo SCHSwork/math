@@ -104,6 +104,10 @@ function markBlobPartDone(name) {
     } catch {}
 }
 function blobsOf(save) { return Array.isArray(save && save.blobs) ? save.blobs.filter(b => b && b.id) : []; }
+// Live Save (live-save.js) reuses unchanged databases between saves, so the
+// same entry objects come back: remember what each one was split into, so a
+// big entry isn't turned into text and fingerprinted again every time.
+const splitMemo = new WeakMap();
 async function splitBlobs(bundle) {
     const blobs = new Map();
     const indexedDB = [];
@@ -112,8 +116,15 @@ async function splitBlobs(bundle) {
         for (const st of db.stores) {
             const entries = [];
             for (const e of st.entries) {
+                const memo = e && typeof e === "object" ? splitMemo.get(e) : null;
+                if (memo && memo.small) { entries.push(e); continue; }
+                if (memo && blobPackCache.has(memo.id)) {
+                    if (!blobs.has(memo.id)) blobs.set(memo.id, { id: memo.id, n: memo.n, size: memo.size, db: db.name });
+                    entries.push({ __ref: memo.id, n: memo.n });
+                    continue;
+                }
                 const j = JSON.stringify(e);
-                if (j.length < CLOUD.blobMin) { entries.push(e); continue; }
+                if (j.length < CLOUD.blobMin) { if (e && typeof e === "object") splitMemo.set(e, { small: true }); entries.push(e); continue; }
                 const id = (await sha256Hex(j)).slice(0, 32);
                 let b = blobs.get(id);
                 if (!b) {
@@ -122,6 +133,7 @@ async function splitBlobs(bundle) {
                     b = { id, n: Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars)), size: packed.length, db: db.name };
                     blobs.set(id, b);
                 }
+                if (e && typeof e === "object") splitMemo.set(e, { id: b.id, n: b.n, size: b.size });
                 entries.push({ __ref: b.id, n: b.n });
             }
             stores.push({ ...st, entries });
@@ -629,8 +641,17 @@ async function runCloudUpload(opts) {
 }
 async function cloudAutosaveTick() {
     if (!cloudUser) return;
+    // Live Save is working: it saves to the GN 2.0 Server as you play, so the
+    // full cloud save only needs to run every 10 minutes (and it catches
+    // anything Live Save missed)
+    if (typeof liveSaveActive === "function" && liveSaveActive() && Date.now() - (window.gnFullSaveAt || 0) < 10 * 60000) {
+        liveSaveNow(document.hidden ? "hidden" : "autosave");
+        return true;
+    }
     try { if (typeof syncOpenGameFiles === "function") await syncOpenGameFiles(); } catch {}
-    return uploadCloudSave({ background: true });
+    const ok = await uploadCloudSave({ background: true });
+    if (ok) window.gnFullSaveAt = Date.now();
+    return ok;
 }
 function startCloudAutosave() {
     clearInterval(cloudAutosaveTimer);
@@ -695,6 +716,7 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         noteSaveState("saving", { step: "Checking your account", startedAt: Date.now(), part: 0, parts: 0 }); setCloudStatus("Saving…");
         const meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
         clearTimeout(cloudSyncRetryTimer); cloudSyncRetryDelay = 0;
+        if (typeof liveAdopt === "function") liveAdopt(meta);
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
@@ -880,6 +902,7 @@ async function cloudSyncOnSignIn() {
     try {
         const meta = await cloudStep(fetchCloudMeta(), 30000, "Checking your account");
         clearTimeout(cloudSyncRetryTimer); cloudSyncRetryDelay = 0;
+        if (typeof liveAdopt === "function") liveAdopt(meta);
         const localGen = localStorage.getItem(CLOUD.keys.syncedGen);
         // Progress the owner gave back to this account (tools/recover_save.mjs)
         if (meta && meta.grant && typeof applyGrant === "function") { try { applyGrant(meta.grant); } catch (e) { console.warn(e); } }

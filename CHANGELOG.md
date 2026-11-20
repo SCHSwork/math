@@ -2,6 +2,14 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — Live Save
+
+### Added
+- **Live Save.** While you play signed in, your progress is saved to the GN 2.0 Server every 20 seconds, but only when something actually changed. Closing the tab or the Chromebook now loses a few seconds at most instead of up to 2 minutes, and leaving sends one last save.
+- **The server turns your newest Live Save into your cloud save in Firebase** when you go offline (no activity for 5 minutes), and every 30 minutes during long sessions, so switching devices still picks up where you left off. The full cloud save still runs every 10 minutes as a safety net.
+- **Light on slow computers.** It only saves when a game wrote something, only re-reads the game data that changed, waits for idle moments and never runs while a game is loading. If saving ever makes the page stutter on a computer, Live Save turns itself off there for a day and saves go back to every 2 minutes.
+- If the GN 2.0 Server can't be reached, cloud saves work exactly like before.
+
 ## November 19, 2026 — GN 2.0's own play counts, and a faster backup source
 
 ### Changed
