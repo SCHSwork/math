@@ -3285,6 +3285,41 @@ function showOwnerPanel() {
     requestOwnerAccess(renderOwnerPanel);
 }
 
+// ── Off-PC save backup (GN 2.0 Server → Cloudflare R2) ──────────────────────
+// The keys are written to Firestore serverSecrets/r2, which only the owner can
+// write and nobody can read (the server reads it with its admin key).
+async function ownerOffsiteStatus() {
+    const el = document.getElementById("owner-offsite-status");
+    if (!el) return;
+    let o = null;
+    try { const r = await fetch(HOME_SERVER + "/api/status", { cache: "no-store" }); if (r.ok) o = (await r.json()).offsite; } catch {}
+    if (!document.getElementById("owner-offsite-status")) return;
+    const when = t => new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    el.style.color = "";
+    if (!o) { el.textContent = "The GN 2.0 Server can't be reached right now, so its backup status is unknown."; return; }
+    if (o.err) { el.style.color = "var(--danger, #ef4444)"; el.textContent = "Last try failed: " + o.err; return; }
+    if (o.running) { el.textContent = "Uploading tonight's backup now…"; return; }
+    if (o.lastOk) { el.style.color = "var(--success, #22c55e)"; el.textContent = `Working. Last copied ${when(o.lastOk)} (${Math.round(o.bytes / 1e6)} MB, ${o.kept || 1} kept in R2).`; return; }
+    el.textContent = o.configured ? "Keys saved. The first copy goes up within 10 minutes." : "Not set up yet: backups only exist on your PC.";
+}
+async function ownerSaveOffsite() {
+    const v = id => (document.getElementById(id)?.value || "").trim();
+    const data = { accountId: v("owner-r2-account").toLowerCase(), bucket: v("owner-r2-bucket").toLowerCase(), accessKeyId: v("owner-r2-key"), secretAccessKey: v("owner-r2-secret") };
+    if (!/^[0-9a-f]{32}$/.test(data.accountId)) return notify("The Account ID should be 32 letters and numbers (it's on the R2 page).", { type: "error" });
+    if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(data.bucket)) return notify("That bucket name doesn't look right.", { type: "error" });
+    if (!data.accessKeyId || !data.secretAccessKey) return notify("Paste both the Access Key ID and the Secret Access Key.", { type: "error" });
+    if (typeof cloudDb === "undefined" || !cloudDb || !cloudUser) return notify("Sign in to your account first.", { type: "error" });
+    try {
+        await cloudDb.collection("serverSecrets").doc("r2").set({ ...data, at: firebase.firestore.FieldValue.serverTimestamp() });
+        for (const id of ["owner-r2-key", "owner-r2-secret"]) document.getElementById(id).value = "";
+        notify("Saved. The server copies the first backup off your PC within 10 minutes.", { type: "success" });
+        const el = document.getElementById("owner-offsite-status");
+        if (el) { el.style.color = ""; el.textContent = "Keys saved. The first copy goes up within 10 minutes."; }
+    } catch (e) {
+        notify("Couldn't save the keys: " + (e.message || e), { type: "error" });
+    }
+}
+
 function renderOwnerPanel() {
     document.getElementById('popupTitle').textContent = "Owner Panel";
     const popupBody = document.getElementById('popupBody');
@@ -3469,6 +3504,17 @@ function renderOwnerPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>Off-PC Save Backup</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">The GN 2.0 Server makes a backup of every save each night. With a Cloudflare R2 bucket set up, that backup is also copied off your PC (the newest 7 are kept), so a dead drive doesn't lose anyone's progress. The keys go straight to the server: nobody can read them back from here, not even you.</p>
+        <p id="owner-offsite-status" style="margin:0 0 0.75rem;font-size:13px;">Checking…</p>
+        <input id="owner-r2-account" placeholder="Account ID (32 letters and numbers)" autocomplete="off" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <input id="owner-r2-bucket" placeholder="Bucket name, e.g. gn-backups" autocomplete="off" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <input id="owner-r2-key" placeholder="Access Key ID" autocomplete="off" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <input id="owner-r2-secret" type="password" placeholder="Secret Access Key" autocomplete="new-password" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:14px;margin-bottom:0.5rem;font-family:inherit;">
+        <button class="settings-button" type="button" onclick="ownerSaveOffsite()">Save keys</button>
+    </div>
+
+    <div class="settings-section">
         <h4>Zone Cache</h4>
         <button class="settings-button" type="button" onclick="forceRefreshZones()">Force Refresh Zones</button>
     </div>
@@ -3481,6 +3527,7 @@ function renderOwnerPanel() {
     </div>
     `;
 
+    ownerOffsiteStatus();
     const ownerGameList = document.getElementById("owner-game-list");
     const disabledIds = getDisabledZoneIds();
     zones.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(zone => {
