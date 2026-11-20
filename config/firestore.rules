@@ -168,6 +168,20 @@ service cloud.firestore {
       allow delete: if isAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
     }
 
+    // Settings only the GN 2.0 Server reads (with its admin key, which skips
+    // these rules). The owner writes the Cloudflare R2 keys for the off-PC save
+    // backup from the Owner Panel; nobody can read them back.
+    match /serverSecrets/{id} {
+      allow create, update: if isOwner() && id == 'r2'
+        && request.resource.data.keys().hasOnly(['accountId', 'bucket', 'accessKeyId', 'secretAccessKey', 'at'])
+        && request.resource.data.accountId is string && request.resource.data.accountId.size() == 32
+        && request.resource.data.bucket is string && request.resource.data.bucket.size() <= 63
+        && request.resource.data.accessKeyId is string && request.resource.data.accessKeyId.size() <= 200
+        && request.resource.data.secretAccessKey is string && request.resource.data.secretAccessKey.size() <= 200
+        && request.resource.data.at == request.time;
+      allow read, delete: if false;
+    }
+
     // Live site mode (js/realtime.js): the owner's browser writes the site
     // mode, its message and "back at" time here so open pages switch at once.
     match /site/mode {

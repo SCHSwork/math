@@ -6,7 +6,8 @@
 //
 //   GET  /health                         alive check
 //   GET  /api/status                     uptime, cache, saves, sync
-//   GET  /gh/:owner/:repo@:ref/:path     backup game-file source (cached copy of GitHub)
+//   GET  /gh/:owner/:repo@:ref/:path     backup game-file source (cached copy of GitHub, plus a full copy of the library)
+//   GET  /api/mirror                     the full library copy: how far along, and repos that couldn't be copied
 //   POST /api/play                       count a play  {id, v}
 //   GET  /api/plays?period=day|week|month|year
 //   GET|HEAD|PUT|DELETE /api/saves/:uid/:kind/:name   cloud save parts (Firebase sign-in required)
@@ -31,7 +32,7 @@ const CACHE_DIR = DATA("cache/gh");
 const SAVES_DIR = DATA("saves");
 const STATE_DIR = DATA("state");
 const BACKUP_DIR = DATA("backups");
-const CACHE_MAX_BYTES = 40 * 1024 ** 3;
+const CACHE_MAX_BYTES = 15 * 1024 ** 3;   // most game files are in the full library copy (mirror/) now
 const SAVE_QUOTA = 400 * 1024 * 1024;   // per player: their save, the earlier ones kept for a week, and Live Save
 const BRANCH_TTL_MS = 10 * 60 * 1000;
 const SYNC_EVERY_MS = 30 * 60 * 1000;
@@ -139,21 +140,31 @@ app.use("/gh", async (req, res) => {
     const sha = /^[0-9a-f]{40}$/.test(ref);
     const local = path.join(CACHE_DIR, owner, repo, ref.replace(/\//g, "__"), file);
     if (!local.startsWith(CACHE_DIR + path.sep)) return res.sendStatus(400);
+    const send = f => {
+        const type = TYPES[path.extname(f).toLowerCase()];
+        res.sendFile(f, {
+            headers: { "Cache-Control": sha ? "public, max-age=31536000, immutable" : "public, max-age=600", ...(type ? { "Content-Type": type } : {}) },
+            dotfiles: "allow"
+        });
+    };
     let st = await exists(local);
+    // A commit that's in the full library copy needs no download at all
+    if (!st && sha) { const mf = await mirrorFile(owner, repo, ref, file); if (mf) return send(mf); }
     if (!st || (!sha && Date.now() - st.mtimeMs > BRANCH_TTL_MS)) {
         const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref === "latest" ? "HEAD" : ref}/${file.split("/").map(encodeURIComponent).join("/")}`;
         let code = 502;
         try { code = await fetchToCache(url, local); } catch (e) { log("gh fetch failed", url, e.message); }
-        if (code !== 200 && !st) return res.sendStatus(code === 404 ? 404 : 502);
-        if (code === 404) { fsp.unlink(local).catch(() => {}); return res.sendStatus(404); }
+        if (code !== 200) {
+            // GitHub can't be reached, or the repo was taken down: the library copy still has it
+            const mf = await mirrorFile(owner, repo, ref, file);
+            if (mf) return send(mf);
+            if (!st) return res.sendStatus(code === 404 ? 404 : 502);
+            if (code === 404) { fsp.unlink(local).catch(() => {}); return res.sendStatus(404); }
+        }
         st = await exists(local);
     }
     fsp.utimes(local, new Date(), st.mtime).catch(() => {});
-    const type = TYPES[path.extname(local).toLowerCase()];
-    res.sendFile(local, {
-        headers: { "Cache-Control": sha ? "public, max-age=31536000, immutable" : "public, max-age=600", ...(type ? { "Content-Type": type } : {}) },
-        dotfiles: "allow"
-    });
+    send(local);
 });
 async function walk(dir, out = []) {
     for (const e of await fsp.readdir(dir, { withFileTypes: true }).catch(() => [])) {
@@ -174,6 +185,212 @@ async function trimCache() {
     const left = all.filter(x => !x.gone);
     cacheStats = { files: left.length, bytes: left.reduce((n, x) => n + x.size, 0) };
 }
+
+// ── Full copy of the game library ───────────────────────────────────────────
+// The /gh cache above only keeps files someone already played. This keeps a
+// whole copy of every GitHub repo the library's games come from, so if
+// jsDelivr is blocked at a school, or a game repo disappears or gets tampered
+// with, every game still loads from here. The list of repos comes from the
+// site itself (SCHSwork/math main): the pinned commits in
+// config/library-pins.json, the other catalogs (config/*-games.json), the main
+// game library (LIBRARY_REF in js/app.js), GN Originals, plus any other repo the
+// copied game pages link to. Each repo is downloaded once per commit (git,
+// newest commit only, ~1 Gbps down); branches are refreshed once a day.
+//   mirror/<owner>/<repo>/<ref>/...   (owner and repo in lower case)
+const MIRROR_DIR = DATA("mirror");
+const MIRROR_FILE = path.join(STATE_DIR, "mirror.json");
+const MIRROR_MIN_FREE = 30 * 1024 ** 3;          // stop copying with less disk free than this
+const MIRROR_REPO_TIMEOUT = 45 * 60000;
+const MIRROR_BRANCH_EVERY = 24 * 3600000;
+const MIRROR_MAX_REPOS = 600;
+const SITE_RAW = "https://raw.githubusercontent.com/SCHSwork/math/main/";
+fs.mkdirSync(MIRROR_DIR, { recursive: true });
+let mirror = readJson(MIRROR_FILE, { repos: {}, lastRun: 0 });
+mirror.repos ||= {};
+let mirrorRun = { running: false, current: null, queued: 0, done: 0, stoppedFor: null };
+let mirrorPins = {};   // "owner/repo@branch" (lower case) -> commit, from library-pins.json
+const mkey = (o, r, ref) => `${o.toLowerCase()}/${r.toLowerCase()}@${ref}`;
+const mirrorPath = (o, r, ref) => path.join(MIRROR_DIR, o.toLowerCase(), r.toLowerCase(), ref.replace(/[\/\\]/g, "__"));
+const isSha = ref => /^[0-9a-f]{40}$/.test(ref);
+
+// Where a requested file is in the copy, or null. Commits: that exact copy.
+// Branches ("main", "latest"): the branch's copy, or the commit it's pinned to.
+async function mirrorFile(owner, repo, ref, file) {
+    const tries = [ref];
+    if (!isSha(ref)) {
+        const branch = ref === "latest" ? "HEAD" : ref;
+        tries.splice(0, 1, branch);
+        const pin = mirrorPins[mkey(owner, repo, ref)] || mirrorPins[mkey(owner, repo, branch)];
+        if (pin) tries.push(pin);
+    }
+    for (const t of tries) {
+        const info = mirror.repos[mkey(owner, repo, t)];
+        if (!info || !info.ok) continue;
+        const base = mirrorPath(owner, repo, t);
+        const f = path.join(base, file);
+        if (!f.startsWith(base + path.sep)) return null;
+        const st = await exists(f);
+        if (st && st.isFile()) return f;
+    }
+    return null;
+}
+
+function run(cmd, args, opts = {}) {
+    return new Promise((resolve, reject) => {
+        const p = execFile(cmd, args, { timeout: MIRROR_REPO_TIMEOUT, maxBuffer: 1 << 20, ...opts }, (err, out, errOut) => {
+            if (err) { err.message = (errOut || err.message || "").toString().trim().split("\n").slice(-2).join(" ").slice(0, 300); reject(err); }
+            else resolve(String(out).trim());
+        });
+        try { os.setPriority(p.pid, 10); } catch {}   // players' requests come first
+    });
+}
+async function diskFree() { try { const d = await fsp.statfs(ROOT); return d.bavail * d.bsize; } catch { return Infinity; } }
+async function dirBytes(dir) { return (await walk(dir)).reduce((n, x) => n + x.size, 0); }
+
+// Download one repo at one commit or branch into the copy
+async function mirrorRepo(owner, repo, ref) {
+    const key = mkey(owner, repo, ref), info = mirror.repos[key] || {};
+    if (info.ok && isSha(ref)) return false;                                      // commits never change
+    if (info.ok && Date.now() - info.at < MIRROR_BRANCH_EVERY) return false;       // branch checked today
+    if (info.gone && Date.now() - info.at < 7 * 86400000) return false;            // repo was missing, try again in a week
+    if (!info.ok && info.tries >= 3 && Date.now() - info.at < 86400000) return false;
+    const dest = mirrorPath(owner, repo, ref), tmp = dest + ".new";
+    await fsp.rm(tmp, { recursive: true, force: true });
+    await fsp.mkdir(tmp, { recursive: true });
+    mirrorRun.current = key;
+    const git = (...a) => run("git", ["-c", "advice.detachedHead=false", "-c", "core.longpaths=true", ...a], { cwd: tmp, env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_LFS_SKIP_SMUDGE: "1" } });
+    try {
+        await git("init", "-q");
+        await git("remote", "add", "origin", `https://github.com/${owner}/${repo}.git`);
+        await git("fetch", "-q", "--depth", "1", "--no-tags", "origin", ref === "HEAD" ? "HEAD" : ref);
+        const sha = await git("rev-parse", "FETCH_HEAD");
+        if (!isSha(ref) && info.ok && info.sha === sha) {                          // branch hasn't moved
+            await fsp.rm(tmp, { recursive: true, force: true });
+            mirror.repos[key] = { ...info, at: Date.now() };
+            return false;
+        }
+        await git("checkout", "-q", "FETCH_HEAD");
+        await fsp.rm(path.join(tmp, ".git"), { recursive: true, force: true });
+        const all = await walk(tmp);
+        const old = dest + ".old";
+        await fsp.rm(old, { recursive: true, force: true });
+        await fsp.rename(dest, old).catch(() => {});
+        await fsp.rename(tmp, dest);
+        fsp.rm(old, { recursive: true, force: true }).catch(() => {});
+        mirror.repos[key] = { ok: true, at: Date.now(), sha, files: all.length, bytes: all.reduce((n, x) => n + x.size, 0) };
+        return true;
+    } catch (e) {
+        await fsp.rm(tmp, { recursive: true, force: true }).catch(() => {});
+        const gone = /not found|could not read Username|Repository not found|couldn't find remote ref|not our ref/i.test(e.message);
+        mirror.repos[key] = { ...info, ok: !!info.ok, at: info.ok ? info.at : Date.now(), tries: (info.tries || 0) + 1, gone: gone && !info.ok, err: e.message };
+        log("mirror failed", key, e.message);
+        return false;
+    } finally { mirrorRun.current = null; }
+}
+
+// Every repo the library uses, from the site's own lists
+async function mirrorWanted() {
+    const getText = async p => { const r = await fetch(SITE_RAW + p + "?t=" + Date.now(), { signal: AbortSignal.timeout(30000) }); if (!r.ok) throw new Error(p + " " + r.status); return r.text(); };
+    const want = new Map();   // key -> [owner, repo, ref]
+    const add = (o, r, ref) => { if (o && r && ref && /^[\w.-]+$/.test(o) && /^[\w.-]+$/.test(r) && /^[\w.\-\/]+$/.test(ref)) want.set(mkey(o, r, ref), [o, r, ref]); };
+    const app = await getText("js/app.js");
+    const lib = /const LIBRARY_REF = "([0-9a-f]{40})"/.exec(app);
+    if (lib) add("freebuisness", "html", lib[1]);
+    add("freebuisness", "assets", "main");
+    add("freebuisness", "covers", "main");
+    add("SCHSwork", "GN-originals", "main");
+    const pins = JSON.parse(await getText("config/library-pins.json")).pins || {};
+    mirrorPins = {};
+    for (const [k, sha] of Object.entries(pins)) {
+        const m = /^([\w.-]+)\/([\w.-]+)@(.+)$/.exec(k);
+        if (!m || !isSha(sha)) continue;
+        mirrorPins[mkey(m[1], m[2], m[3])] = sha;
+        add(m[1], m[2], sha);
+    }
+    for (const c of ["radon", "selenite", "ubzone", "55gms", "bchs"]) {
+        try { const j = JSON.parse(await getText(`config/${c}-games.json`)); const [o, r] = String(j.repo || "").split("/"); add(o, r, j.ref || "HEAD"); }
+        catch (e) { log("mirror list", c, e.message); }
+    }
+    return want;
+}
+// Other repos the copied game pages link to (jsDelivr, GitHub and githack links)
+const LINK_RES = [
+    /(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([\w.-]+)\/([\w.-]+)@([\w.-]+)\//g,
+    /raw\.githubusercontent\.com\/([\w.-]+)\/([\w.-]+)\/([\w.-]+)\//g,
+    /(?:rawcdn|raw)\.githack\.com\/([\w.-]+)\/([\w.-]+)\/([\w.-]+)\//g
+];
+async function mirrorLinked(key, out) {
+    const [o, rest] = key.split("/"), [r, ref] = rest.split("@");
+    const files = (await walk(mirrorPath(o, r, ref))).filter(x => /\.html?$/i.test(x.f) && x.size < 3e6);
+    for (const x of files) {
+        const s = await fsp.readFile(x.f, "utf8").catch(() => "");
+        for (const re of LINK_RES) for (const m of s.matchAll(re)) {
+            if (m[1] === "gh" || m[3] === "refs") continue;
+            let ref2 = m[3] === "latest" ? "HEAD" : m[3];
+            const pin = mirrorPins[mkey(m[1], m[2], m[3])] || mirrorPins[mkey(m[1], m[2], ref2)];
+            if (pin) ref2 = pin;
+            out.set(mkey(m[1], m[2], ref2), [m[1], m[2], ref2]);
+        }
+    }
+}
+async function mirrorAll() {
+    if (mirrorRun.running) return;
+    mirrorRun = { running: true, current: null, queued: 0, done: 0, stoppedFor: null, startedAt: Date.now() };
+    let fetched = 0;
+    try {
+        const want = await mirrorWanted();
+        const seen = new Set();
+        // Go through the list; repos the copied pages link to are added as they're found
+        for (let pass = 0; pass < 3; pass++) {
+            const todo = [...want.entries()].filter(([k]) => !seen.has(k)).slice(0, MIRROR_MAX_REPOS - seen.size);
+            if (!todo.length) break;
+            mirrorRun.queued += todo.length;
+            const linked = new Map();
+            for (const [k, [o, r, ref]] of todo) {
+                seen.add(k);
+                if (await diskFree() < MIRROR_MIN_FREE) { mirrorRun.stoppedFor = "disk"; break; }
+                if (await mirrorRepo(o, r, ref)) fetched++;
+                mirrorRun.done++;
+                if (mirror.repos[k]?.ok && pass < 2) await mirrorLinked(k, linked).catch(() => {});
+                if (mirrorRun.done % 10 === 0) await writeJson(MIRROR_FILE, mirror).catch(() => {});
+            }
+            if (mirrorRun.stoppedFor) break;
+            for (const [k, v] of linked) if (!want.has(k)) want.set(k, v);
+        }
+        // Copies no longer on the list (old pins) are removed, once the list is complete
+        if (!mirrorRun.stoppedFor) {
+            for (const k of Object.keys(mirror.repos)) {
+                if (seen.has(k)) continue;
+                const [o, rest] = k.split("/"), [r, ref] = rest.split("@");
+                await fsp.rm(mirrorPath(o, r, ref), { recursive: true, force: true }).catch(() => {});
+                delete mirror.repos[k];
+            }
+        }
+        mirror.lastRun = Date.now();
+        await writeJson(MIRROR_FILE, mirror);
+        if (mirrorRun.stoppedFor === "disk") event("warn", "Library copy paused: less than 30 GB of disk left");
+        else if (fetched) event("mirror", `Library copy updated: ${fetched} repo${fetched === 1 ? "" : "s"} downloaded`);
+    } catch (e) {
+        log("mirror run failed", e.message);
+        event("warn", "Library copy couldn't run: " + e.message);
+    } finally {
+        mirrorRun.running = false;
+        mirrorRun.current = null;
+    }
+}
+function mirrorSummary() {
+    const v = Object.values(mirror.repos);
+    return {
+        repos: v.length, ok: v.filter(x => x.ok).length, failed: v.filter(x => !x.ok).length,
+        files: v.reduce((n, x) => n + (x.ok ? x.files || 0 : 0), 0), bytes: v.reduce((n, x) => n + (x.ok ? x.bytes || 0 : 0), 0),
+        lastRun: mirror.lastRun || null, running: mirrorRun.running, current: mirrorRun.current,
+        progress: mirrorRun.running ? { done: mirrorRun.done, of: mirrorRun.queued } : null, stoppedFor: mirrorRun.stoppedFor
+    };
+}
+app.get("/api/mirror", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({ ...mirrorSummary(), failedRepos: Object.entries(mirror.repos).filter(([, x]) => !x.ok).map(([k, x]) => ({ repo: k, err: x.err, gone: !!x.gone })).slice(0, 100) });
+});
 
 // ── Play counts ─────────────────────────────────────────────────────────────
 const PLAYS_FILE = path.join(STATE_DIR, "plays.json");
@@ -833,8 +1050,88 @@ function backup() {
         for (const f of all.slice(0, -7)) fs.unlinkSync(path.join(BACKUP_DIR, f));
         log("backup done", out);
         event("backup", "Nightly save backup made");
+        offsiteBackup();
     });
 }
+
+// ── Off-PC copy of the nightly save backup (Cloudflare R2) ──────────────────
+// The nightly backup above stays on this PC, so a dead drive would take it
+// too. Each night's backup is also uploaded to a Cloudflare R2 bucket (free up
+// to 10 GB), keeping the newest 7. The R2 keys are typed into the Owner Panel,
+// which writes them to Firestore serverSecrets/r2: only the owner can write
+// that, nobody can read it back, and this server reads it with its admin key.
+const https = require("https");
+const R2_KEEP = 7;
+const R2_FILE = path.join(STATE_DIR, "offsite.json");
+let offsite = readJson(R2_FILE, { uploadedDay: null, lastOk: null, bytes: 0 });
+let offsiteRun = { configured: false, checkedAt: 0, err: null, running: false };
+let r2Cfg = null;
+async function loadR2Config() {
+    if (!db) return null;
+    try {
+        const d = await db.collection("serverSecrets").doc("r2").get();
+        const c = d.exists ? d.data() : null;
+        r2Cfg = c && /^[0-9a-f]{32}$/i.test(c.accountId || "") && c.accessKeyId && c.secretAccessKey && /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(c.bucket || "") ? c : null;
+    } catch (e) { log("r2 config", e.message); }
+    offsiteRun.configured = !!r2Cfg;
+    offsiteRun.checkedAt = Date.now();
+    return r2Cfg;
+}
+const hmac = (k, s) => crypto.createHmac("sha256", k).update(s).digest();
+const sha256hex = s => crypto.createHash("sha256").update(s).digest("hex");
+const awsEnc = s => encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+// One signed request to R2's S3-style API. body: a file path to stream, or nothing.
+function r2Request(cfg, method, key, { query = {}, file = null, size = 0 } = {}) {
+    const host = `${cfg.accountId}.r2.cloudflarestorage.com`;
+    const uri = "/" + [cfg.bucket, ...(key ? key.split("/") : [])].map(awsEnc).join("/");
+    const qs = Object.keys(query).sort().map(k => `${awsEnc(k)}=${awsEnc(query[k])}`).join("&");
+    const amzDate = new Date().toISOString().replace(/[-:]|\.\d{3}/g, ""), day = amzDate.slice(0, 8);
+    const payload = file ? "UNSIGNED-PAYLOAD" : sha256hex("");
+    const headers = { host, "x-amz-content-sha256": payload, "x-amz-date": amzDate };
+    if (file) headers["content-length"] = String(size);
+    const signed = Object.keys(headers).sort();
+    const canon = [method, uri, qs, signed.map(h => `${h}:${headers[h]}\n`).join(""), signed.join(";"), payload].join("\n");
+    const scope = `${day}/auto/s3/aws4_request`;
+    const toSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha256hex(canon)].join("\n");
+    const kSign = hmac(hmac(hmac(hmac("AWS4" + cfg.secretAccessKey, day), "auto"), "s3"), "aws4_request");
+    headers.authorization = `AWS4-HMAC-SHA256 Credential=${cfg.accessKeyId}/${scope}, SignedHeaders=${signed.join(";")}, Signature=${crypto.createHmac("sha256", kSign).update(toSign).digest("hex")}`;
+    return new Promise((resolve, reject) => {
+        const req = https.request({ host, method, path: uri + (qs ? "?" + qs : ""), headers, timeout: 30 * 60000 }, res => {
+            let text = ""; res.setEncoding("utf8");
+            res.on("data", c => { if (text.length < 1e6) text += c; });
+            res.on("end", () => res.statusCode < 300 ? resolve(text) : reject(new Error(`R2 said ${res.statusCode}: ${(/<Message>([^<]*)/.exec(text) || [, text.slice(0, 120)])[1]}`)));
+        });
+        req.on("timeout", () => req.destroy(new Error("R2 upload timed out")));
+        req.on("error", reject);
+        if (file) fs.createReadStream(file).on("error", e => req.destroy(e)).pipe(req); else req.end();
+    });
+}
+async function offsiteBackup(force) {
+    if (offsiteRun.running) return;
+    const day = today(), file = path.join(BACKUP_DIR, `saves-${day}.tar.gz`);
+    if (!force && offsite.uploadedDay === day) return;
+    if (!fs.existsSync(file)) return;
+    if (!r2Cfg || Date.now() - offsiteRun.checkedAt > 10 * 60000) await loadR2Config();
+    if (!r2Cfg) return;
+    offsiteRun.running = true;
+    try {
+        const size = fs.statSync(file).size;
+        await r2Request(r2Cfg, "PUT", `gn2-saves/saves-${day}.tar.gz`, { file, size });
+        // Keep the newest 7 there too
+        const list = await r2Request(r2Cfg, "GET", "", { query: { "list-type": "2", prefix: "gn2-saves/" } });
+        const keys = [...list.matchAll(/<Key>([^<]+)<\/Key>/g)].map(m => m[1]).filter(k => /^gn2-saves\/saves-\d{4}-\d\d-\d\d\.tar\.gz$/.test(k)).sort();
+        for (const k of keys.slice(0, -R2_KEEP)) await r2Request(r2Cfg, "DELETE", k).catch(e => log("r2 delete", k, e.message));
+        offsite = { uploadedDay: day, lastOk: Date.now(), bytes: size, kept: Math.min(keys.length, R2_KEEP) };
+        await writeJson(R2_FILE, offsite);
+        offsiteRun.err = null;
+        event("backup", `Save backup copied off this PC (Cloudflare R2, ${Math.round(size / 1e6)} MB)`);
+    } catch (e) {
+        if (offsiteRun.err !== e.message) event("warn", "Off-PC save backup failed: " + e.message);
+        offsiteRun.err = e.message;
+        log("offsite backup failed", e.message);
+    } finally { offsiteRun.running = false; }
+}
+const offsiteSummary = () => ({ configured: offsiteRun.configured, lastOk: offsite.lastOk, bytes: offsite.bytes, kept: offsite.kept || 0, err: offsiteRun.err, running: offsiteRun.running });
 
 let saveBytes = 0;
 async function countSaves() { saveBytes = (await walk(SAVES_DIR)).reduce((n, x) => n + x.size, 0); }
@@ -850,6 +1147,8 @@ app.get("/api/status", async (req, res) => {
         players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
         online: live.online, onlineHere: [...presence.values()].filter(p => p.t > Date.now() - ONLINE_MS).length, onlineFirestore: fsSessions.filter(p => p.t > Date.now() - ONLINE_MS).length,
         gamesFlagged: gameHealth().flagged.length,
+        mirror: mirrorSummary(),
+        offsite: offsiteSummary(),
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         authError,
         refusedSaves: Object.entries(refused).filter(([, r]) => Date.now() - r.at < 3600000).map(([u, r]) => ({ who: u.slice(0, 5), ...r })),
@@ -881,5 +1180,7 @@ app.listen(8080, "127.0.0.1", () => {
     liveStartup().then(() => setTimeout(liveRound, 30000));
     setInterval(liveRound, ROUND_MS);
     backup(); setInterval(backup, 60 * 60 * 1000);
+    setTimeout(offsiteBackup, 60000); setInterval(offsiteBackup, 10 * 60000);   // also picks up new R2 keys within 10 minutes
+    setTimeout(mirrorAll, 3 * 60000); setInterval(mirrorAll, 6 * 3600000);
     if (db) { setTimeout(runSync, 20000); setInterval(runSync, SYNC_EVERY_MS); }
 });

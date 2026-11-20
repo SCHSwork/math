@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 20, 2026 — A full copy of the game library, and save backups off the PC
+
+### Added
+- **The GN 2.0 Server keeps a full copy of the game library.** Every GitHub repo the library's games come from is downloaded to the server (newest commit only, branches refreshed daily), not just the files someone already played. If jsDelivr is blocked or a game's repo disappears or gets tampered with, the game still loads from GN 2.0's own copy. The cache of other files is now capped at 15 GB, and copying pauses if the server's disk gets below 30 GB free.
+- **Off-PC save backups.** The nightly backup of every save can also be copied to a Cloudflare R2 bucket (newest 7 kept). Set it up in Owner Panel → Off-PC Save Backup; the keys are write-only.
+
 ## November 20, 2026 — Save Rewind
 
 ### Added
