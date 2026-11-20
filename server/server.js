@@ -19,6 +19,7 @@ const fsp = fs.promises;
 const path = require("path");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
+const os = require("os");
 
 const ROOT = __dirname;
 const DATA = p => path.join(ROOT, p);
@@ -54,6 +55,41 @@ const db = hasKey ? admin.firestore() : null;
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", true);
+
+// ── Live stats for the status page (schswork.github.io/Homework-/server.html) ─
+// Requests are counted per minute; the last 24 hours are kept in /api/history.
+const HISTORY_FILE = path.join(STATE_DIR, "history.json");
+const history = readJson(HISTORY_FILE, []).filter(p => p && Date.now() - p.t < 86400000);
+const events = readJson(path.join(STATE_DIR, "events.json"), []).slice(-50);
+function event(kind, text) {
+    events.push({ t: Date.now(), kind, text });
+    while (events.length > 50) events.shift();
+    writeJson(path.join(STATE_DIR, "events.json"), events).catch(() => {});
+}
+const blankMinute = () => ({ t: Math.floor(Date.now() / 60000) * 60000, req: 0, saves: 0, gh: 0, plays: 0, bytes: 0, errors: 0, msTotal: 0 });
+let minute = blankMinute();
+function rollMinute() {
+    const m = minute;
+    minute = blankMinute();
+    history.push({ t: m.t, req: m.req, saves: m.saves, gh: m.gh, plays: m.plays, bytes: m.bytes, errors: m.errors, ms: m.req ? Math.round(m.msTotal / m.req) : 0 });
+    while (history.length && Date.now() - history[0].t > 86400000) history.shift();
+}
+setTimeout(() => { rollMinute(); setInterval(rollMinute, 60000); }, 60000 - (Date.now() % 60000));
+setInterval(() => writeJson(HISTORY_FILE, history).catch(() => {}), 5 * 60000);
+app.use((req, res, next) => {
+    const t0 = process.hrtime.bigint();
+    res.on("finish", () => {
+        if (req.path.startsWith("/api/status") || req.path === "/api/history") return;   // the status page itself
+        minute.req++;
+        minute.msTotal += Number(process.hrtime.bigint() - t0) / 1e6;
+        minute.bytes += Number(res.getHeader("content-length") || 0);
+        if (res.statusCode >= 500) minute.errors++;
+        if (req.path.startsWith("/api/saves")) minute.saves++;
+        else if (req.path.startsWith("/gh/")) minute.gh++;
+        else if (req.path === "/api/play") minute.plays++;
+    });
+    next();
+});
 app.use((req, res, next) => {
     res.set({
         "Access-Control-Allow-Origin": "*",
@@ -344,6 +380,7 @@ async function runSync() {
         await writeJson(SYNC_FILE, syncState).catch(() => {});
         saveDirtyUids();
         log("sync", syncStatus.lastResult);
+        event(/^ok/.test(syncStatus.lastResult) ? "sync" : "warn", "Firebase sync " + syncStatus.lastResult);
     }
 }
 app.get("/api/sync-status", (req, res) => { res.set("Cache-Control", "no-store"); res.json(syncStatus); });
@@ -353,18 +390,35 @@ function backup() {
     const out = path.join(BACKUP_DIR, `saves-${today()}.tar.gz`);
     if (fs.existsSync(out)) return;
     execFile("tar", ["-czf", out, "-C", ROOT, "saves", "state"], err => {
-        if (err) return log("backup failed", err.message);
+        if (err) { event("warn", "Save backup failed: " + err.message); return log("backup failed", err.message); }
         const all = fs.readdirSync(BACKUP_DIR).filter(f => f.startsWith("saves-")).sort();
         for (const f of all.slice(0, -7)) fs.unlinkSync(path.join(BACKUP_DIR, f));
         log("backup done", out);
+        event("backup", "Nightly save backup made");
     });
 }
 
+let saveBytes = 0;
+async function countSaves() { saveBytes = (await walk(SAVES_DIR)).reduce((n, x) => n + x.size, 0); }
 app.get("/api/status", async (req, res) => {
     res.set("Cache-Control", "no-store");
     const saves = await fsp.readdir(SAVES_DIR).catch(() => []);
-    res.json({ ok: true, uptime: Math.round((Date.now() - started) / 1000), cacheFiles: cacheStats.files, cacheBytes: cacheStats.bytes,
-        players: saves.length, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0), sync: syncStatus });
+    let disk = null;
+    try { const d = await fsp.statfs(ROOT); disk = { free: d.bavail * d.bsize, total: d.blocks * d.bsize }; } catch {}
+    const last = history[history.length - 1] || null;
+    res.json({
+        ok: true, uptime: Math.round((Date.now() - started) / 1000), now: Date.now(),
+        cacheFiles: cacheStats.files, cacheBytes: cacheStats.bytes,
+        players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
+        sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
+        system: { load: os.loadavg()[0], cpus: os.cpus().length, memUsed: os.totalmem() - os.freemem(), memTotal: os.totalmem(), rss: process.memoryUsage().rss, hostUptime: os.uptime(), disk, node: process.version },
+        thisMinute: { req: minute.req, saves: minute.saves, gh: minute.gh, plays: minute.plays }, lastMinute: last,
+        events: events.slice(-20).reverse()
+    });
+});
+app.get("/api/history", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({ interval: 60000, points: history });
 });
 
 app.use(express.static(DATA("public"), { maxAge: "1h" }));
@@ -372,7 +426,9 @@ app.use((req, res) => res.status(404).json({ error: "not found" }));
 
 app.listen(8080, "127.0.0.1", () => {
     log(`GN 2.0 Server listening on 8080 (Firebase sync ${db ? "on" : "off: no firebase-key.json"})`);
+    event("start", "Server started");
     trimCache(); setInterval(trimCache, 60 * 60 * 1000);
+    countSaves(); setInterval(countSaves, 10 * 60 * 1000);
     backup(); setInterval(backup, 60 * 60 * 1000);
     if (db) { setTimeout(runSync, 20000); setInterval(runSync, SYNC_EVERY_MS); }
 });
