@@ -508,6 +508,7 @@ function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 //   - Firebase down or out of its daily limit: the server still has every save
 // Reading tries the server first (that keeps Firebase's usage low), then Firebase.
 const HOME_SAVES_RETRY_MS = 5 * 60 * 1000;
+const HOME_SLOW_MS = 8000;   // a save part taking longer than this from the server: ask Firebase too
 let homeSavesDownUntil = 0;
 function homeSavesDown() { homeSavesDownUntil = Date.now() + HOME_SAVES_RETRY_MS; }
 async function homeSaveFetch(path, opts = {}) {
@@ -530,12 +531,25 @@ function savePart(kind, name) {
     const fb = () => saveDocRef().collection(kind).doc(name);
     const path = kind + "/" + encodeURIComponent(name);
     return {
+        // Server first. If it hasn't answered within HOME_SLOW_MS, Firebase is
+        // asked too and whichever has the part first wins; if the server says
+        // no or is down, Firebase answers.
         async get() {
-            try {
+            const server = (async () => {
                 const res = await homeSaveFetch(path);
-                if (res.ok) { const d = await res.text(); return { exists: true, data: () => ({ d }) }; }
-            } catch {}
-            return fb().get();
+                if (!res.ok) throw new Error("not on the server");
+                const d = await res.text();
+                return { exists: true, data: () => ({ d }) };
+            })();
+            const first = await Promise.race([
+                server.then(v => ({ v }), e => ({ e })),
+                new Promise(r => setTimeout(() => r({ slow: true }), HOME_SLOW_MS))
+            ]);
+            if (first.v) return first.v;
+            const fromFb = fb().get();
+            if (first.e) return fromFb;
+            try { return await Promise.any([server, fromFb.then(snap => snap.exists ? snap : Promise.reject(new Error("not in Firebase")))]); }
+            catch { return fromFb; }
         },
         // Only whether it's there (no download), for parts sent by a save that was cut off
         async exists() {
