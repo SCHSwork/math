@@ -1753,6 +1753,12 @@
 "out": null,
 "r": "400q82"
 },
+"SCHSwork/GN-originals@main/covers/antimatter-dimensions.png": {
+"etag": "b3e69e752f052008da8757d8d8d8742c3e239cfd08029b87e8ac6d9152be1111",
+"in": 29079,
+"out": null,
+"r": "400q82"
+},
 "SCHSwork/GN-originals@main/covers/astray.png": {
 "etag": "5e5ec3cab053de9ed2369609cf3238ff9bd4e902fb6d8992c5a894aa784f2d88",
 "in": 144178,
@@ -1802,6 +1808,18 @@
 "r": "400q82",
 "size": 20238,
 "v": "4e39d286"
+},
+"SCHSwork/GN-originals@main/covers/candy-box-2.png": {
+"etag": "1b3e61761579fc5a1e91589f50f0125cb160db0a5a751d39455020388b6ffc38",
+"in": 6498,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@main/covers/candy-box.png": {
+"etag": "cc6e73c00db25a48ec385b721c5e3d792a6a3e4ae26dd94fde6835278c22faab",
+"in": 6464,
+"out": null,
+"r": "400q82"
 },
 "SCHSwork/GN-originals@main/covers/captain-rogers.png": {
 "etag": "abaa3ba1e67d1481f5173d2ed262569afc9d40b92a64112b980214fb572e2ab3",
@@ -2010,6 +2028,14 @@
 "in": 6771,
 "out": null,
 "r": "400q82"
+},
+"SCHSwork/GN-originals@main/covers/infiltrating-the-airship.png": {
+"etag": "abc6679d636e0677b2075910222af7556ce6d9197e07402e5076371536d0134b",
+"in": 61002,
+"out": "46611e5c2a453d07",
+"r": "400q82",
+"size": 11726,
+"v": "1c01f537"
 },
 "SCHSwork/GN-originals@main/covers/jolly-jumper.png": {
 "etag": "09ffa2064867bcde878bda88dc541cbb57e91704281c945bab0e5f8187c9e331",
@@ -6012,6 +6038,12 @@
 "SCHSwork/GN-originals@main/covers/js13k/zigclimb-reborn.jpg": {
 "etag": "d48bb07b1335b27ec08760efebdbdf76d8e7a524c90e585e6cb292da97cc61b9",
 "in": 15543,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@main/covers/kittens-game.png": {
+"etag": "3fb3eae1bab24a6772b65d78eec7962b83ef2431ba5c81e36fe17bc64e87e9ce",
+"in": 28142,
 "out": null,
 "r": "400q82"
 },
