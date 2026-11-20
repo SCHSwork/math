@@ -3438,6 +3438,7 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 .zone-controls button.save-chip.busy .gi { animation: saveChipPulse 1.2s ease-in-out infinite; }
 @keyframes saveChipPulse { 50% { opacity: 0.35; } }
 /* Live Save: the rocket lifts off a little each time a save goes through */
+.zone-controls button.save-chip.live .gi { width: 22px; height: 22px; margin: -4px 0; vertical-align: middle; }
 .zone-controls button.save-chip.live.fresh .gi { animation: liveSaveLift 0.9s ease-out; }
 @keyframes liveSaveLift { 0% { transform: translate(0, 0); } 40% { transform: translate(2px, -3px); } 100% { transform: translate(0, 0); } }
 @media (prefers-reduced-motion: reduce) { .zone-controls button.save-chip.busy .gi, .zone-controls button.save-chip.live.fresh .gi { animation: none; } }
