@@ -11,12 +11,17 @@ URL="https://raw.githubusercontent.com/SCHSwork/math/main/server"
 stamp() { date "+%F %T"; }
 
 # Keep the VM's clock right (VirtualBox clocks drift, and a wrong clock makes
-# Firebase sign-ins look like they're from the future). Once is enough.
-if [ ! -f state/ntp-on ]; then
-    sudo -n timedatectl set-ntp true 2>/dev/null
-    sudo -n systemctl restart systemd-timesyncd 2>/dev/null || sudo -n systemctl restart chrony 2>/dev/null
-    touch state/ntp-on
-    echo "$(stamp) turned on automatic clock sync"
+# Firebase sign-ins look like they're from the future). If the clock isn't
+# being synced, install chrony (a time-sync service) and step the clock now.
+if [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" != "yes" ] && [ ! -f state/ntp-tried-$(date +%F) ]; then
+    touch state/ntp-tried-$(date +%F)
+    echo "$(stamp) clock not synced, fixing"
+    sudo -n timedatectl set-ntp true 2>&1
+    if ! command -v chronyc >/dev/null; then sudo -n apt-get install -y chrony >/dev/null 2>&1 && echo "$(stamp) installed chrony"; fi
+    sudo -n systemctl enable --now chrony 2>&1
+    sleep 3
+    sudo -n chronyc -a makestep 2>&1
+    echo "$(stamp) clock now $(date -u +%T) UTC, synced: $(timedatectl show -p NTPSynchronized --value 2>/dev/null)"
 fi
 
 # The updater updates itself too (takes effect next run)
