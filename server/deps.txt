@@ -1,2 +1,3 @@
 express@4
 firebase-admin@13
+jose@5

@@ -7,7 +7,17 @@ cd "$HOME/gn-data" || exit 1
 mkdir -p state
 exec >> state/update.log 2>&1
 URL="https://raw.githubusercontent.com/SCHSwork/math/main/server"
+
 stamp() { date "+%F %T"; }
+
+# Keep the VM's clock right (VirtualBox clocks drift, and a wrong clock makes
+# Firebase sign-ins look like they're from the future). Once is enough.
+if [ ! -f state/ntp-on ]; then
+    sudo -n timedatectl set-ntp true 2>/dev/null
+    sudo -n systemctl restart systemd-timesyncd 2>/dev/null || sudo -n systemctl restart chrony 2>/dev/null
+    touch state/ntp-on
+    echo "$(stamp) turned on automatic clock sync"
+fi
 
 # The updater updates itself too (takes effect next run)
 curl -fsSL "$URL/update.sh?$(date +%s)" -o update.new.sh 2>/dev/null && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
