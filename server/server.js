@@ -795,7 +795,6 @@ app.get("/api/status", async (req, res) => {
         gamesFlagged: gameHealth().flagged.length,
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         authError,
-        siteMirror: { commit: siteState.sha.slice(0, 7), at: siteState.at, error: siteState.error },
         refusedSaves: Object.entries(refused).filter(([, r]) => Date.now() - r.at < 3600000).map(([u, r]) => ({ who: u.slice(0, 5), ...r })),
         biggestPlayers: [...usage].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([u, b]) => ({ who: u.slice(0, 5), mb: Math.round(b / 1e5) / 10 })),
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
@@ -809,52 +808,12 @@ app.get("/api/history", (req, res) => {
     res.json({ interval: 60000, points: history });
 });
 
-// ── Mirror of the site itself ───────────────────────────────────────────────
-// A copy of GN 2.0 (SCHSwork/math, main) served at this server's address, in
-// case the main site is taken down or blocked. Checked every 5 minutes: when
-// main has a new commit, the whole site is downloaded again and swapped in.
-const SITE_DIR = DATA("site");
-const SITE_STATE = path.join(STATE_DIR, "site.json");
-let siteState = readJson(SITE_STATE, { sha: "", at: 0, error: "" });
-let siteBusy = false;
-async function updateSiteMirror() {
-    if (siteBusy) return;
-    siteBusy = true;
-    try {
-        const r = await fetch("https://api.github.com/repos/SCHSwork/math/commits/main", { headers: { Accept: "application/vnd.github.sha", "User-Agent": "gn2-server" } });
-        if (!r.ok) throw new Error("GitHub said " + r.status);
-        const sha = (await r.text()).trim();
-        if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error("bad commit id");
-        if (sha === siteState.sha && fs.existsSync(path.join(SITE_DIR, "index.html"))) return;
-        const tmp = DATA("site.new"), tgz = DATA("site.tgz");
-        await fsp.rm(tmp, { recursive: true, force: true });
-        await fsp.mkdir(tmp, { recursive: true });
-        const res = await fetch(`https://codeload.github.com/SCHSwork/math/tar.gz/${sha}`);
-        if (!res.ok) throw new Error("download said " + res.status);
-        await fsp.writeFile(tgz, Buffer.from(await res.arrayBuffer()));
-        await new Promise((ok, bad) => execFile("tar", ["-xzf", tgz, "-C", tmp, "--strip-components=1"], { maxBuffer: 1e7 }, e => e ? bad(e) : ok()));
-        if (!fs.existsSync(path.join(tmp, "index.html"))) throw new Error("download had no index.html");
-        const old = DATA("site.old");
-        await fsp.rm(old, { recursive: true, force: true });
-        if (fs.existsSync(SITE_DIR)) await fsp.rename(SITE_DIR, old);
-        await fsp.rename(tmp, SITE_DIR);
-        await fsp.rm(old, { recursive: true, force: true });
-        await fsp.rm(tgz, { force: true });
-        siteState = { sha, at: Date.now(), error: "" };
-        event("site", `Site mirror updated to ${sha.slice(0, 7)}`);
-    } catch (e) {
-        siteState.error = String(e.message || e);
-        log("site mirror", siteState.error);
-    } finally {
-        siteBusy = false;
-        writeJson(SITE_STATE, siteState).catch(() => {});
-    }
-}
+// The site itself is NOT served from here (home upload is only ~20 Mbps):
+// learnresearch.org is hosted by Cloudflare Pages. Clear out the copy an
+// earlier version kept.
+for (const d of ["site", "site.new", "site.old", "site.tgz"]) fsp.rm(DATA(d), { recursive: true, force: true }).catch(() => {});
 app.use(express.static(DATA("public"), { maxAge: "1h" }));
-app.use(express.static(SITE_DIR, {
-    // The page itself is always checked for a newer copy; files with a version (?v=…) can be kept
-    setHeaders: (res, file) => res.set("Cache-Control", /\.html$|sw\.js$|\.json$/.test(file) ? "no-cache" : "public, max-age=600")
-}));
+
 app.use((req, res) => res.status(404).json({ error: "not found" }));
 
 app.listen(8080, "127.0.0.1", () => {
@@ -862,7 +821,6 @@ app.listen(8080, "127.0.0.1", () => {
     event("start", `Server started (version ${VERSION})`);
     trimCache(); setInterval(trimCache, 60 * 60 * 1000);
     countSaves(); setInterval(countSaves, 10 * 60 * 1000);
-    updateSiteMirror(); setInterval(updateSiteMirror, 5 * 60 * 1000);
     liveStartup().then(() => setTimeout(liveRound, 30000));
     setInterval(liveRound, ROUND_MS);
     backup(); setInterval(backup, 60 * 60 * 1000);
