@@ -536,7 +536,7 @@ function savePart(kind, name) {
         }
     };
 }
-function homeSavesNote() { return Date.now() < homeSavesDownUntil ? " (the home server that stores saves may be off right now)" : ""; }
+function homeSavesNote() { return Date.now() < homeSavesDownUntil ? " (the GN 2.0 Server, where saves are kept, may be down right now)" : ""; }
 async function fetchCloudMeta() {
     const snap = await saveDocRef().get();
     return snap.exists ? snap.data() : null;

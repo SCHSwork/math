@@ -2,20 +2,20 @@
 
 All the changes to GN 2.0, newest first.
 
-## November 19, 2026 — Cloud saves on the home server
+## November 19, 2026 — Cloud saves on the GN 2.0 Server
 
 ### Changed
-- **Cloud save data now lives on the home server instead of Firebase.** Firebase still signs players in and keeps the small record of which save is newest, but the save itself (up to ~18 MB per player, the biggest use of Firebase) goes to the PC at home. The home server checks the player's Firebase sign-in, so nobody can read or change someone else's save.
-- **Nothing is lost when the PC is off.** If it can't be reached, saves go to Firebase like before, and loading tries the home server first and then Firebase. Saves made before this change load from Firebase as always. If a save is on the home server while it's off, the error says so.
-- Deleting an account also deletes its saves on the home server.
+- **Cloud save data now lives on the GN 2.0 Server instead of Firebase.** Firebase still signs players in and keeps the small record of which save is newest, but the save itself (up to ~18 MB per player, the biggest use of Firebase) goes to the GN 2.0 Server. It checks the player's Firebase sign-in, so nobody can read or change someone else's save.
+- **Nothing is lost when the server is down.** If it can't be reached, saves go to Firebase like before, and loading tries the GN 2.0 Server first and then Firebase. Saves made before this change load from Firebase as always. If a save is on the GN 2.0 Server while it's down, the error says so.
+- Deleting an account also deletes its saves on the GN 2.0 Server.
 
-## November 19, 2026 — The home server
+## November 19, 2026 — The GN 2.0 Server
 
 ### Added
-- **The spare PC at home (data.learnresearch.org) is now part of the site.** It's a backup the site never depends on:
-  - **Last-resort game source.** When jsDelivr, its backups and githack are all blocked or down, games and game lists load from the home server before falling back to GitHub (which can't run game scripts directly). It's tried last because home upload is only ~20 Mbps.
-  - **Play counts for this site.** Opening a game sends a tiny note to the home server, so it can count plays on GN 2.0 itself (the "plays" numbers on cards still come from jsDelivr, which counts every site using the library). Each browser gets a random id so one person reopening a game isn't counted over and over; it isn't tied to accounts.
-  - **"Home server" row in the status light**, showing whether it can be reached. It never turns the light yellow or red, since the site works fine without it.
+- **GN 2.0 now has its own server, the GN 2.0 Server (data.learnresearch.org).** It's a backup the site never depends on:
+  - **Last-resort game source.** When jsDelivr, its backups and githack are all blocked or down, games and game lists load from the GN 2.0 Server before falling back to GitHub (which can't run game scripts directly). It's tried last to keep its bandwidth for saves.
+  - **Play counts for this site.** Opening a game sends a tiny note to the GN 2.0 Server, so it can count plays on GN 2.0 itself (the "plays" numbers on cards still come from jsDelivr, which counts every site using the library). Each browser gets a random id so one person reopening a game isn't counted over and over; it isn't tied to accounts.
+  - **"GN 2.0 Server" row in the status light**, showing whether it can be reached. It never turns the light yellow or red, since the site works fine without it.
 
 ## November 18, 2026 — A scarier jumpscare
 
