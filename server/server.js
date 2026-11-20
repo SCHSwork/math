@@ -2,6 +2,7 @@
 // Cloudflare tunnel, on 127.0.0.1:8080, kept running by pm2 ("gn-data").
 // It updates itself: update.sh (cron, every 5 minutes) installs any new version
 // of this file pushed to main, and rolls back if it doesn't start.
+// (Auto-update tested 2026-11-19.)
 //
 //   GET  /health                         alive check
 //   GET  /api/status                     uptime, cache, saves, sync
