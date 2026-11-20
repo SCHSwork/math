@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — GN 2.0's own play counts, and a faster backup source
+
+### Changed
+- **Play counts and the Popular sort use GN 2.0's own numbers** once the GN 2.0 Server has counted enough for that period (100 plays for today, 300 for the week, 1,000 for the month, 3,000 for the year). Until then, or if the server can't be reached, they use jsDelivr's numbers like before, which count every site using the game library.
+- **The GN 2.0 Server becomes the second game source** (right after jsDelivr) once Cloudflare caches its game files. The site checks for this by itself, so nothing changes until the cache rule is on.
+
 ## November 19, 2026 — Online counts and broken games on the GN 2.0 Server
 
 ### Changed

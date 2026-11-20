@@ -100,3 +100,30 @@ async function loadGameHealth() {
 }
 setTimeout(loadGameHealth, 6000);
 setInterval(() => { if (!document.hidden) loadGameHealth(); }, 10 * 60 * 1000);
+
+// ── Is Cloudflare caching the server's game files? ─────────────────────────
+// With a Cloudflare cache rule for data.learnresearch.org/gh/*, Cloudflare
+// keeps each game file after the first download, so the PC's upload speed no
+// longer matters. A small file is asked for twice: if Cloudflare says it was
+// cached (or stored it), the server is promoted to the second game source
+// (promoteHomeMirror in app.js). Remembered for 6 hours.
+const HOME_CACHED_KEY = "gnmath-home-cached";
+async function checkHomeCached() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(HOME_CACHED_KEY) || "null");
+        if (saved && Date.now() - saved.at < 6 * 3600000) { window.gnHomeCached = saved.on; if (saved.on && typeof promoteHomeMirror === "function") promoteHomeMirror(); return; }
+    } catch {}
+    let on = false;
+    try {
+        const url = HOME_SERVER + "/gh/SCHSwork/math@main/manifest.json";
+        for (let i = 0; i < 2 && !on; i++) {
+            const res = await fetch(url, { cache: "no-store" });
+            const st = (res.headers.get("cf-cache-status") || "").toUpperCase();
+            on = res.ok && /^(HIT|MISS|EXPIRED|REVALIDATED|UPDATING|STALE)$/.test(st);
+        }
+    } catch {}
+    window.gnHomeCached = on;
+    try { localStorage.setItem(HOME_CACHED_KEY, JSON.stringify({ at: Date.now(), on })); } catch {}
+    if (on && typeof promoteHomeMirror === "function") promoteHomeMirror();
+}
+setTimeout(checkHomeCached, 8000);
