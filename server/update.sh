@@ -24,6 +24,12 @@ if [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" != "yes" ] && 
     echo "$(stamp) clock now $(date -u +%T) UTC, synced: $(timedatectl show -p NTPSynchronized --value 2>/dev/null)"
 fi
 
+# Drive health checks (server.js checkDrive) use smartctl
+if ! command -v smartctl >/dev/null && [ ! -f state/smart-tried-$(date +%F) ]; then
+    touch state/smart-tried-$(date +%F)
+    sudo -n apt-get install -y --no-install-recommends smartmontools >/dev/null 2>&1 && echo "$(stamp) installed smartmontools"
+fi
+
 # The updater updates itself too (takes effect next run)
 curl -fsSL "$URL/update.sh?$(date +%s)" -o update.new.sh 2>/dev/null && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
 rm -f update.new.sh

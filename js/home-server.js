@@ -47,6 +47,26 @@ function sendHomePlay(id) {
     } catch {}
 }
 
+// ── Which game sources work here (the server's "school block map") ─────────
+// Once a day, a few minutes into a visit, this browser tells the server which
+// game sources answered and which were blocked or down. Only the source names
+// are sent (and whether it's a Chromebook), nothing about the player.
+const HOME_REACH_KEY = "gnmath-reach-day";
+function sendReachReport() {
+    try {
+        const day = new Date().toISOString().slice(0, 10);
+        if (localStorage.getItem(HOME_REACH_KEY) === day) return;
+        const ok = typeof mirrorOkAt !== "undefined" ? Object.keys(mirrorOkAt) : [];
+        const down = typeof mirrorDown !== "undefined" ? [...mirrorDown].filter(s => !ok.includes(s)) : [];
+        if (!ok.length && !down.length) return;   // no game played yet: nothing to say
+        const body = new Blob([JSON.stringify({ ok, down, chromebook: /CrOS/.test(navigator.userAgent) })], { type: "text/plain" });
+        const sent = navigator.sendBeacon ? navigator.sendBeacon(HOME_SERVER + "/api/reach", body) : false;
+        if (sent) localStorage.setItem(HOME_REACH_KEY, day);
+    } catch {}
+}
+setTimeout(sendReachReport, 3 * 60 * 1000);
+setInterval(sendReachReport, 20 * 60 * 1000);
+
 checkHomeServer();
 setInterval(checkHomeServer, 5 * 60 * 1000);
 

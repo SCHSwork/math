@@ -124,8 +124,35 @@ function errorFlushSoon(ms = 3000) {
     clearTimeout(errorFlushTimer);
     errorFlushTimer = setTimeout(errorFlush, ms);
 }
+// The GN 2.0 Server adds up the same error from many players and writes it to
+// Firestore as one entry every 10 minutes, so most reports cost this browser
+// no Firebase write at all. If the server can't be reached, reports go
+// straight to Firestore like before.
+async function errorFlushToServer() {
+    let q = errorReadQueue();
+    if (!q.length) return true;
+    const room = ERROR_LOG.perDay - errorSentToday();
+    if (room <= 0) { errorWriteQueue([]); return true; }
+    q = q.slice(0, Math.min(room, 10));
+    try {
+        const base = typeof HOME_SERVER !== "undefined" ? HOME_SERVER : "https://data.learnresearch.org";
+        const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
+        const res = await fetch(base + "/api/errors", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q), signal: ctrl.signal, keepalive: true });
+        clearTimeout(t);
+        if (!res.ok) return false;
+    } catch { return false; }
+    const sent = new Set(q.map(e => e.sig));
+    for (let i = 0; i < sent.size; i++) errorNoteSent();
+    errorWriteQueue(errorReadQueue().filter(e => !sent.has(e.sig)));
+    return !errorReadQueue().length;
+}
 async function errorFlush() {
     if (errorFlushing) return;
+    errorFlushing = true;
+    let viaServer = false;
+    try { viaServer = await errorFlushToServer(); } catch {}
+    errorFlushing = false;
+    if (viaServer) return;
     // Firebase loads after the page; try again later if it isn't ready
     if (typeof cloudDb === "undefined" || !cloudDb || typeof firebase === "undefined") { errorFlushSoon(10000); return; }
     if (typeof fbPaused === "function" && fbPaused()) return;
