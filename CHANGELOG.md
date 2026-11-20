@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — Cloud saves kept in two places
+
+### Changed
+- **Every cloud save is now stored on both the GN 2.0 Server and Firebase.** If either one is down, saves still save and still load from the other. A save only fails if both are down at once.
+- Loading a save reads from the GN 2.0 Server first and only uses Firebase if the server can't be reached, which keeps Firebase's usage down.
+
 ## November 19, 2026 — Cloud saves on the GN 2.0 Server
 
 ### Changed

@@ -478,12 +478,12 @@ function progressIsLess(a, b) {
 }
 function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 // ── Where save data lives ───────────────────────────────────────────────────
-// The record of which save is newest (saves/{uid}) stays in Firebase, but the
-// save data itself (the chunks and blobs parts, up to ~18 MB per player) goes
-// to the home server (js/home-server.js), which checks the player's Firebase
-// sign-in. If the home server can't be reached, or says no, the part goes to
-// Firebase like before, and reading tries the home server first, then
-// Firebase. So saves made before this, or while the PC was off, still load.
+// The record of which save is newest (saves/{uid}) is in Firebase. The save
+// data itself (the chunks and blobs parts, up to ~18 MB per player) is written
+// to BOTH the GN 2.0 Server (js/home-server.js, which checks the player's
+// Firebase sign-in) and Firebase, so either one can be down without anyone
+// losing a save. A save only fails if both are down. Reading tries the server
+// first (that's what keeps Firebase's download usage low), then Firebase.
 const HOME_SAVES_RETRY_MS = 5 * 60 * 1000;
 let homeSavesDownUntil = 0;
 function homeSavesDown() { homeSavesDownUntil = Date.now() + HOME_SAVES_RETRY_MS; }
@@ -520,23 +520,24 @@ function savePart(kind, name) {
             return fb().get();
         },
         async set(v) {
+            const fbSave = fb().set(v);
+            let serverOk = false;
             try {
                 const res = await homeSaveFetch(path, { method: "PUT", body: v.d, headers: { "Content-Type": "text/plain" } });
-                if (res.ok) return;
-                homeSavesDown();   // not set up for saves (yet), or refused: use Firebase for now
+                serverOk = res.ok;
+                if (!res.ok) homeSavesDown();   // not set up for saves (yet), or refused
             } catch {}
-            return fb().set(v);
+            if (!serverOk) return fbSave;      // then Firebase has to work
+            // The server has it: give Firebase up to 30 s too, but a Firebase
+            // problem (e.g. its daily limit) doesn't fail the save
+            await Promise.race([fbSave.catch(e => console.warn("Save part not copied to Firebase", e)), new Promise(r => setTimeout(r, 30000))]);
         },
-        // The home server answers 200 if it had the part, so Firebase is only
-        // asked to delete parts that were stored there
         delete() {
-            return homeSaveFetch(path, { method: "DELETE" })
-                .then(res => { if (!res.ok) return fb().delete(); })
-                .catch(() => fb().delete());
+            return Promise.allSettled([homeSaveFetch(path, { method: "DELETE" }), fb().delete()]);
         }
     };
 }
-function homeSavesNote() { return Date.now() < homeSavesDownUntil ? " (the GN 2.0 Server, where saves are kept, may be down right now)" : ""; }
+function homeSavesNote() { return Date.now() < homeSavesDownUntil ? " (the GN 2.0 Server may be down right now)" : ""; }
 async function fetchCloudMeta() {
     const snap = await saveDocRef().get();
     return snap.exists ? snap.data() : null;
