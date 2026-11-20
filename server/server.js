@@ -266,14 +266,27 @@ async function syncUid(uid, counts) {
         if (local && known.has(kind + "/" + name)) continue;
         check.push({ kind, name, local });
     }
-    for (let i = 0; i < check.length; i += 50) {
-        const group = check.slice(i, i + 50);
-        const snaps = await db.getAll(...group.map(c => ref.collection(c.kind).doc(c.name)));
-        for (let k = 0; k < group.length; k++) {
-            const c = group[k], s = snaps[k], key = c.kind + "/" + c.name, file = path.join(SAVES_DIR, uid, c.kind, c.name);
-            if (s.exists) {
+    // Which parts Firebase has: asked without their contents (a field mask),
+    // so checking is cheap. Parts are up to ~500 KB each, so the ones to
+    // download are fetched a few at a time.
+    for (let i = 0; i < check.length; i += 100) {
+        const group = check.slice(i, i + 100);
+        const snaps = await db.getAll(...group.map(c => ref.collection(c.kind).doc(c.name)), { fieldMask: [] });
+        group.forEach((c, k) => { c.inFb = snaps[k].exists; });
+    }
+    const downloads = check.filter(c => c.inFb && !c.local);
+    for (let i = 0; i < downloads.length; i += 3) {
+        await Promise.all(downloads.slice(i, i + 3).map(async c => {
+            const s = await ref.collection(c.kind).doc(c.name).get();
+            const d = s.exists ? s.data().d : null;
+            if (typeof d === "string") { await writeAtomic(path.join(SAVES_DIR, uid, c.kind, c.name), d); counts.down++; }
+        }));
+    }
+    for (const c of check) {
+        const key = c.kind + "/" + c.name, file = path.join(SAVES_DIR, uid, c.kind, c.name);
+        {
+            if (c.inFb) {
                 known.add(key);
-                if (!c.local) { const d = s.data().d; if (typeof d === "string") { await writeAtomic(file, d); counts.down++; } }
             } else if (c.local) {
                 await ref.collection(c.kind).doc(c.name).set({ d: await fsp.readFile(file, "utf8") });
                 known.add(key); counts.up++;
@@ -309,13 +322,21 @@ async function runSync() {
         let q = db.collection("saves");
         if (syncState.lastSync) q = q.where("updatedAt", ">", admin.firestore.Timestamp.fromMillis(syncState.lastSync - 5 * 60 * 1000));
         (await q.select().get()).forEach(d => uids.add(d.id));
+        let failed = 0;
         for (const uid of uids) {
             if (!UID_RE.test(uid)) continue;
-            await syncUid(uid, counts);
-            dirtyUids.delete(uid);
+            try {
+                await syncUid(uid, counts);
+                dirtyUids.delete(uid);
+            } catch (e) {
+                if (/RESOURCE_EXHAUSTED|quota/i.test(e.message)) throw e;   // Firebase's daily limit: stop for now
+                failed++;
+                log("sync failed for", uid, e.message);                     // tried again next time
+            }
+            await writeJson(SYNC_FILE, syncState).catch(() => {});
         }
-        syncState.lastSync = startedAt;
-        syncStatus.lastResult = `ok: ${uids.size} player${uids.size === 1 ? "" : "s"}, ${counts.up} up, ${counts.down} down`;
+        if (!failed) syncState.lastSync = startedAt;
+        syncStatus.lastResult = `${failed ? "partly ok" : "ok"}: ${uids.size} player${uids.size === 1 ? "" : "s"}, ${counts.up} up, ${counts.down} down${failed ? `, ${failed} to retry` : ""}`;
     } catch (e) {
         syncStatus.lastResult = (/RESOURCE_EXHAUSTED|quota/i.test(e.message) ? "Firebase daily limit, will retry: " : "error: ") + e.message;
     } finally {
