@@ -1,6 +1,7 @@
 // GN 2.0 Server (data.learnresearch.org). Runs in the gn-home VM behind a
 // Cloudflare tunnel, on 127.0.0.1:8080, kept running by pm2 ("gn-data").
-// Update it with:  curl -sL raw.githubusercontent.com/SCHSwork/math/main/server/i.sh | bash
+// It updates itself: update.sh (cron, every 5 minutes) installs any new version
+// of this file pushed to main, and rolls back if it doesn't start.
 //
 //   GET  /health                         alive check
 //   GET  /api/status                     uptime, cache, saves, sync
@@ -35,6 +36,7 @@ const BRANCH_TTL_MS = 10 * 60 * 1000;
 const SYNC_EVERY_MS = 30 * 60 * 1000;
 for (const d of [CACHE_DIR, SAVES_DIR, STATE_DIR, BACKUP_DIR, DATA("public")]) fs.mkdirSync(d, { recursive: true });
 const started = Date.now();
+const VERSION = crypto.createHash("sha1").update(fs.readFileSync(__filename)).digest("hex").slice(0, 7);
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return d; } };
 const writeJson = async (f, v) => { await fsp.writeFile(f + ".tmp", JSON.stringify(v)); await fsp.rename(f + ".tmp", f); };
@@ -407,7 +409,7 @@ app.get("/api/status", async (req, res) => {
     try { const d = await fsp.statfs(ROOT); disk = { free: d.bavail * d.bsize, total: d.blocks * d.bsize }; } catch {}
     const last = history[history.length - 1] || null;
     res.json({
-        ok: true, uptime: Math.round((Date.now() - started) / 1000), now: Date.now(),
+        ok: true, version: VERSION, uptime: Math.round((Date.now() - started) / 1000), now: Date.now(),
         cacheFiles: cacheStats.files, cacheBytes: cacheStats.bytes,
         players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
@@ -426,7 +428,7 @@ app.use((req, res) => res.status(404).json({ error: "not found" }));
 
 app.listen(8080, "127.0.0.1", () => {
     log(`GN 2.0 Server listening on 8080 (Firebase sync ${db ? "on" : "off: no firebase-key.json"})`);
-    event("start", "Server started");
+    event("start", `Server started (version ${VERSION})`);
     trimCache(); setInterval(trimCache, 60 * 60 * 1000);
     countSaves(); setInterval(countSaves, 10 * 60 * 1000);
     backup(); setInterval(backup, 60 * 60 * 1000);
