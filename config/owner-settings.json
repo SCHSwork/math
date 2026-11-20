@@ -26,8 +26,8 @@
     "enabled": false,
     "type": "info"
   },
-  "siteMessage": "Will be back in a sec!",
-  "siteBackAt": "2026-11-18T19:13:00.000Z",
+  "siteMessage": "GN 2.0 Server offline :( PASSWORD 123456",
+  "siteBackAt": "2026-11-20T18:03:00.000Z",
   "statusOverride": {
     "level": "auto",
     "text": ""
@@ -90,5 +90,5 @@
     }
   },
   "ownerUid": "AKOZ92Fya7dXqNDcSFl8T6nLHwn2",
-  "updatedAt": "2026-11-20T17:59:41.347Z"
+  "updatedAt": "2026-11-20T18:00:19.460Z"
 }
