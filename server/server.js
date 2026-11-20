@@ -664,8 +664,9 @@ async function checkDrive() {
     try {
         // Which physical drive the server's files are on
         const src = (await runAny("findmnt", ["-n", "-o", "SOURCE", "--target", ROOT])).trim().replace(/\[.*\]$/, "");
-        const parent = src.startsWith("/dev/") ? (await runAny("lsblk", ["-no", "pkname", src])).trim().split("\n")[0] : "";
-        const dev = parent ? "/dev/" + parent : src;
+        // Follow partitions and LVM volumes down to the whole drive
+        const disk = src.startsWith("/dev/") ? (await runAny("lsblk", ["-nspo", "NAME,TYPE", src])).split("\n").map(l => l.trim().split(/\s+/)).find(([, t]) => t === "disk") : null;
+        const dev = disk ? disk[0] : src;
         h.device = dev;
         const raw = dev ? await runAny("sudo", ["-n", "smartctl", "-j", "-a", dev]) : "";
         let j = null; try { j = JSON.parse(raw); } catch {}
