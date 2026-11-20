@@ -224,6 +224,42 @@ async function authed(req, uid) {
     try { const t = await admin.auth().verifyIdToken(m[1]); return t.uid === uid ? 0 : 403; }
     catch { return 401; }
 }
+// ── Live Save: the newest progress while someone plays (js/live-save.js) ────
+// One file per player, replaced every time: saves/<uid>/live.json
+// { main (packed save), blobs, hash, sum, size, sid, at }. The game data it
+// points at is stored as normal blobs parts. promoteLive() below turns it into
+// a normal cloud save in Firebase when the player goes offline.
+const pendingLive = new Set();
+app.all(/^\/api\/saves\/([A-Za-z0-9]{1,128})\/live$/, express.text({ type: "*/*", limit: "30mb" }), async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    try {
+        const uid = req.params[0];
+        const bad = await authed(req, uid);
+        if (bad) return res.sendStatus(bad);
+        const file = path.join(SAVES_DIR, uid, "live.json");
+        if (req.method === "GET") { const st = await exists(file); if (!st) return res.sendStatus(404); return res.type("application/json").send(await fsp.readFile(file, "utf8")); }
+        if (req.method === "DELETE") { await fsp.unlink(file).catch(() => {}); return res.sendStatus(200); }
+        if (req.method !== "PUT") return res.sendStatus(405);
+        let b; try { b = JSON.parse(req.body || ""); } catch { return res.sendStatus(400); }
+        if (!b || typeof b.main !== "string" || !b.main || !Array.isArray(b.blobs) || typeof b.hash !== "string") return res.sendStatus(400);
+        const live = { main: b.main, blobs: b.blobs.filter(x => x && /^[A-Za-z0-9_-]{1,64}$/.test(String(x.id))).map(x => ({ id: String(x.id), n: Math.max(1, x.n | 0) })),
+            hash: b.hash.slice(0, 64), sum: b.sum && typeof b.sum === "object" ? b.sum : null, size: Number(b.size) || b.main.length,
+            sid: ID20.test(String(b.sid || "")) ? String(b.sid) : "", at: Date.now() };
+        const old = await exists(file);
+        const body = JSON.stringify(live);
+        const now = await uidBytes(uid) - (old ? old.size : 0) + Buffer.byteLength(body);
+        if (now > SAVE_QUOTA) return res.sendStatus(413);
+        await writeAtomic(file, body);
+        usage.set(uid, now);
+        pendingLive.add(uid);
+        dirtyUids.add(uid); saveDirtyUids();
+        liveSavesToday++;
+        res.sendStatus(200);
+    } catch (e) { log("live save error", e.message); res.sendStatus(500); }
+});
+let liveSavesToday = 0, liveSavesDay = today();
+setInterval(() => { if (today() !== liveSavesDay) { liveSavesDay = today(); liveSavesToday = 0; } }, 60000);
+
 app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req, res) => {
     res.set("Cache-Control", "no-store");
     try {
@@ -517,6 +553,12 @@ async function syncUid(uid, counts) {
     const rec = snap.data();
     const known = new Set(syncState.known[uid] || []);
     const need = partsOf(rec);
+    // Game data the newest Live Save points at gets a Firebase copy too
+    try {
+        const live = JSON.parse(await fsp.readFile(path.join(SAVES_DIR, uid, "live.json"), "utf8"));
+        const have = new Set(need.map(([k, n]) => k + "/" + n));
+        for (const b of live.blobs || []) for (let j = 0; j < (b.n || 1); j++) if (!have.has(`blobs/${b.id}_${j}`)) need.push(["blobs", `${b.id}_${j}`]);
+    } catch {}
     const current = new Set(partsOf({ gen: rec.gen, chunkCount: rec.chunkCount, blobs: rec.blobs }).map(([k, n]) => k + "/" + n));
     let currentInFb = true;
     const check = [];
@@ -608,6 +650,99 @@ async function runSync() {
 }
 app.get("/api/sync-status", (req, res) => { res.set("Cache-Control", "no-store"); res.json(syncStatus); });
 
+// ── Live Save → Firebase cloud save ─────────────────────────────────────────
+// When a player's newest Live Save is newer than their Firebase cloud save and
+// they've gone offline (no heartbeat from that browser for 5 minutes), or 30
+// minutes have passed in a long session, it becomes their cloud save in
+// Firebase: its pieces are written there, and the save record points at it
+// (with liveSid, so that browser knows it's its own progress: liveAdopt()).
+const PROMOTED_FILE = path.join(STATE_DIR, "promoted.json");
+const promoted = readJson(PROMOTED_FILE, {});     // uid -> { mtime, wall }
+async function promoteOne(uid, live) {
+    const ref = db.collection("saves").doc(uid), FV = admin.firestore.FieldValue;
+    const snap = await ref.get();
+    const meta = snap.exists ? snap.data() : null;
+    const metaAt = meta && meta.updatedAt && meta.updatedAt.toMillis ? meta.updatedAt.toMillis() : 0;
+    if (meta && (metaAt > live.at || meta.hash === live.hash)) return "already newer";
+    const gen = "L" + Date.now().toString(36) + crypto.randomBytes(2).toString("hex");
+    const CH = 500000, chunkCount = Math.max(1, Math.ceil(live.main.length / CH));
+    // The game data first: Firebase must have every piece before the record points at it
+    const parts = [];
+    for (const b of live.blobs || []) for (let j = 0; j < (b.n || 1); j++) parts.push(`${b.id}_${j}`);
+    for (let i = 0; i < parts.length; i += 100) {
+        const group = parts.slice(i, i + 100);
+        const snaps = await db.getAll(...group.map(n => ref.collection("blobs").doc(n)), { fieldMask: [] });
+        for (let k = 0; k < group.length; k++) {
+            if (snaps[k].exists) continue;
+            const d = await fsp.readFile(path.join(SAVES_DIR, uid, "blobs", group[k]), "utf8").catch(() => null);
+            if (d == null) throw new Error("missing game data " + group[k]);
+            await ref.collection("blobs").doc(group[k]).set({ d });
+        }
+    }
+    for (let i = 0; i < chunkCount; i++) {
+        const d = live.main.slice(i * CH, (i + 1) * CH);
+        await writeAtomic(path.join(SAVES_DIR, uid, "chunks", `${gen}_${i}`), d);
+        await ref.collection("chunks").doc(`${gen}_${i}`).set({ d });
+    }
+    let dropped = null;
+    await db.runTransaction(async t => {
+        const cur = await t.get(ref);
+        const m = cur.exists ? cur.data() : null;
+        if ((m && m.gen) !== (meta && meta.gen)) throw new Error("the save changed meanwhile");
+        let kept = Array.isArray(m && m.kept) ? m.kept.slice() : [];
+        // The save this replaces is kept for a week, unless it was this same
+        // browser's previous Live Save (like an autosave replacing its own)
+        if (m && m.gen) {
+            if (m.liveSid && m.liveSid === live.sid) dropped = m;
+            else kept.unshift({ gen: m.gen, chunkCount: m.chunkCount || 0, sum: m.sum || null, at: metaAt || Date.now(), until: Date.now() + 7 * 86400000, ...(Array.isArray(m.blobs) && m.blobs.length ? { blobs: m.blobs } : {}) });
+        }
+        kept = kept.filter(k => k && k.gen && (k.until || 0) > Date.now()).slice(0, 6);
+        const rec = { gen, chunkCount, hash: live.hash, sum: live.sum || null, blobs: live.blobs || [], size: live.size || live.main.length,
+            updatedAt: FV.serverTimestamp(), kept, liveSid: live.sid || null };
+        rec.fbCopy = { gen, chunkCount, hash: live.hash, sum: live.sum || null, blobs: rec.blobs, at: Date.now() };
+        t.set(ref, rec);
+    });
+    // Clean up the replaced Live Save's own pieces
+    if (dropped) {
+        for (let i = 0; i < (dropped.chunkCount || 0); i++) {
+            const n = `${dropped.gen}_${i}`;
+            ref.collection("chunks").doc(n).delete().catch(() => {});
+            fsp.unlink(path.join(SAVES_DIR, uid, "chunks", n)).catch(() => {});
+        }
+    }
+    return "promoted " + gen;
+}
+let promoting = false;
+async function promoteLive() {
+    if (!db || promoting) return;
+    promoting = true;
+    try {
+        for (const uid of await fsp.readdir(SAVES_DIR).catch(() => [])) {
+            if (!UID_RE.test(uid)) continue;
+            const file = path.join(SAVES_DIR, uid, "live.json");
+            const st = await exists(file);
+            if (!st) continue;
+            const pr = promoted[uid] || { mtime: 0, wall: 0 };
+            if (st.mtimeMs <= pr.mtime) continue;                       // nothing new since last time
+            let live; try { live = JSON.parse(await fsp.readFile(file, "utf8")); } catch { continue; }
+            const p = live.sid ? presence.get(live.sid) : null;
+            const online = p && Date.now() - p.t < ONLINE_MS;
+            if (online && Date.now() - pr.wall < 30 * 60000 && Date.now() - live.at < 30 * 60000) continue;   // still playing
+            try {
+                const r = await promoteOne(uid, live);
+                promoted[uid] = { mtime: st.mtimeMs, wall: Date.now() };
+                if (/^promoted/.test(r)) { liveSavesPromoted++; log("live save", uid, r); }
+            } catch (e) {
+                log("live save promotion failed", uid, e.message);
+                if (/RESOURCE_EXHAUSTED|quota/i.test(e.message)) break;
+            }
+        }
+        await writeJson(PROMOTED_FILE, promoted).catch(() => {});
+    } finally { promoting = false; }
+}
+let liveSavesPromoted = 0;
+setInterval(promoteLive, 60000);
+
 // ── Nightly backup of saves (keeps 7) ───────────────────────────────────────
 function backup() {
     const out = path.join(BACKUP_DIR, `saves-${today()}.tar.gz`);
@@ -635,6 +770,7 @@ app.get("/api/status", async (req, res) => {
         players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
         online: live.online, onlineHere: [...presence.values()].filter(p => p.t > Date.now() - ONLINE_MS).length, onlineFirestore: fsSessions.filter(p => p.t > Date.now() - ONLINE_MS).length,
         gamesFlagged: gameHealth().flagged.length,
+        liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         sync: { ...syncStatus, everyMs: SYNC_EVERY_MS },
         system: { load: os.loadavg()[0], cpus: os.cpus().length, memUsed: os.totalmem() - os.freemem(), memTotal: os.totalmem(), rss: process.memoryUsage().rss, hostUptime: os.uptime(), disk, node: process.version },
         thisMinute: { req: minute.req, saves: minute.saves, gh: minute.gh, plays: minute.plays }, lastMinute: last,
