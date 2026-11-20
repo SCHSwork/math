@@ -280,8 +280,16 @@ app.all(/^\/api\/saves\/([A-Za-z0-9]{1,128})\/live$/, express.text({ type: "*/*"
         res.sendStatus(200);
     } catch (e) { log("live save error", e.message); res.sendStatus(500); }
 });
-let liveSavesToday = 0, liveSavesDay = today();
-setInterval(() => { if (today() !== liveSavesDay) { liveSavesDay = today(); liveSavesToday = 0; } }, 60000);
+// Counted per day, kept on disk so restarts (every update) don't reset it
+const LIVE_COUNT_FILE = path.join(STATE_DIR, "live-saves.json");
+const liveCount0 = readJson(LIVE_COUNT_FILE, {});
+let liveSavesDay = today();
+let liveSavesToday = liveCount0.day === liveSavesDay ? liveCount0.n || 0 : 0;
+let liveSavesPromoted = liveCount0.day === liveSavesDay ? liveCount0.promoted || 0 : 0;
+setInterval(() => {
+    if (today() !== liveSavesDay) { liveSavesDay = today(); liveSavesToday = 0; liveSavesPromoted = 0; }
+    writeJson(LIVE_COUNT_FILE, { day: liveSavesDay, n: liveSavesToday, promoted: liveSavesPromoted }).catch(() => {});
+}, 60000);
 
 app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req, res) => {
     res.set("Cache-Control", "no-store");
@@ -763,7 +771,6 @@ async function promoteLive() {
         await writeJson(PROMOTED_FILE, promoted).catch(() => {});
     } finally { promoting = false; }
 }
-let liveSavesPromoted = 0;
 setInterval(promoteLive, 60000);
 
 // ── Nightly backup of saves (keeps 7) ───────────────────────────────────────
@@ -788,7 +795,7 @@ app.get("/api/status", async (req, res) => {
     try { const d = await fsp.statfs(ROOT); disk = { free: d.bavail * d.bsize, total: d.blocks * d.bsize }; } catch {}
     const last = history[history.length - 1] || null;
     res.json({
-        ok: true, version: VERSION, uptime: Math.round((Date.now() - started) / 1000), now: Date.now(),
+        ok: true, version: VERSION, uptime: Math.round(process.uptime()), now: Date.now(),   // process.uptime ignores clock changes
         cacheFiles: cacheStats.files, cacheBytes: cacheStats.bytes,
         players: saves.length, saveBytes, playsToday: Object.values(plays[today()] || {}).reduce((a, b) => a + b, 0),
         online: live.online, onlineHere: [...presence.values()].filter(p => p.t > Date.now() - ONLINE_MS).length, onlineFirestore: fsSessions.filter(p => p.t > Date.now() - ONLINE_MS).length,
