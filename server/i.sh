@@ -15,8 +15,12 @@ mv server.new.js server.js
 pm2 restart gn-data --update-env 2>/dev/null || pm2 start server.js --name gn-data
 pm2 save >/dev/null
 mkdir -p state
-( crontab -l 2>/dev/null | grep -v "gn-data/update.sh"; echo "*/5 * * * * \$HOME/gn-data/update.sh >> \$HOME/gn-data/state/update.log 2>&1" ) | crontab -
-echo "auto-update: $(crontab -l | grep -c gn-data/update.sh) cron job"
+# Auto-update: pm2 runs update.sh every 5 minutes (and keeps doing it after reboots)
+( crontab -l 2>/dev/null | grep -v "gn-data/update.sh" | crontab - ) 2>/dev/null || true
+pm2 delete gn-update >/dev/null 2>&1 || true
+pm2 start "$HOME/gn-data/update.sh" --name gn-update --interpreter bash --cron-restart "*/5 * * * *" --no-autorestart >/dev/null
+pm2 save >/dev/null
+echo "auto-update: $(pm2 jlist | grep -c '"name":"gn-update"') pm2 job"
 sleep 4
 echo; echo "== status"; curl -s localhost:8080/api/status | head -c 300; echo
 echo "== health"; curl -s localhost:8080/health; echo
