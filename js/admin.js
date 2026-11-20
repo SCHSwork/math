@@ -273,7 +273,34 @@ async function renderGameCheck(force) {
 // totals are count queries on the anonymous online heartbeats (presence/*),
 // about one read each per 1,000 browsers. "Browsers" because a person on two
 // devices counts twice, and clearing site data starts a new one.
+// Who's online and visitor totals come from the GN 2.0 Server when it can be
+// reached (it takes everyone's heartbeats now), else from Firestore presence.
+async function homeServerJson(path) {
+    if (typeof HOME_SERVER === "undefined") throw new Error("no server");
+    const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 8000);
+    const res = await fetch(HOME_SERVER + path, { cache: "no-store", signal: ctrl.signal }).finally(() => clearTimeout(timer));
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+}
+async function onlineSessions() {
+    try {
+        const j = await homeServerJson("/api/presence");
+        return (j.sessions || []).map(p => ({ id: p.id, s: p.s, g: p.g || undefined, t: { toMillis: () => p.t, toDate: () => new Date(p.t) } }));
+    } catch {}
+    const pres = await cloudDb.collection("presence").where("t", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 10 * 60000)).get();
+    return pres.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+}
+let visitorTotals = null;
 async function presenceCountSince(ms) {
+    try {
+        if (!visitorTotals || Date.now() - visitorTotals.at > 60000) visitorTotals = { at: Date.now(), p: homeServerJson("/api/visitors") };
+        const v = await visitorTotals.p;
+        const n = ms === 86400000 ? v.day : ms === 7 * 86400000 ? v.week : !ms ? v.all : null;
+        if (Number.isFinite(n)) return n;
+    } catch { visitorTotals = null; }
+    return presenceCountSinceFirestore(ms);
+}
+async function presenceCountSinceFirestore(ms) {
     const P = FIREBASE_CONFIG.projectId, KEY = FIREBASE_CONFIG.apiKey;
     const q = { from: [{ collectionId: "presence" }] };
     if (ms) q.where = { fieldFilter: { field: { fieldPath: "t" }, op: "GREATER_THAN", value: { timestampValue: new Date(Date.now() - ms).toISOString() } } };
@@ -432,7 +459,7 @@ async function renderSessions() {
     try {
         const TS = firebase.firestore.Timestamp;
         [pres, boots] = await Promise.all([
-            cloudDb.collection("presence").where("t", ">", TS.fromMillis(Date.now() - 10 * 60000)).get(),
+            onlineSessions(),
             cloudDb.collection("boots").where("until", ">", TS.now()).get().catch(() => ({ docs: [] }))
         ]);
         if (!adminData) await loadAdminData();
@@ -440,7 +467,7 @@ async function renderSessions() {
         box.innerHTML = `<p class="admin-summary">Couldn't load sessions: ${escapeHtmlText(e.message || e)}</p>`;
         return;
     }
-    const live = pres.docs.map(d => ({ id: d.id, ...(d.data() || {}) })).sort((a, b) => (b.t?.toMillis?.() || 0) - (a.t?.toMillis?.() || 0));
+    const live = pres.slice().sort((a, b) => (b.t?.toMillis?.() || 0) - (a.t?.toMillis?.() || 0));
     const details = new Map();
     for (let i = 0; i < live.length; i += 30) {
         const ids = live.slice(i, i + 30).map(x => x.id);
@@ -1124,8 +1151,7 @@ async function renderPerkSessions() {
     const perks = myPerks() || {};
     let live = [], bySid = new Map();
     try {
-        const pres = await cloudDb.collection("presence").where("t", ">", firebase.firestore.Timestamp.fromMillis(Date.now() - 10 * 60000)).get();
-        live = pres.docs.map(d => ({ id: d.id, ...(d.data() || {}) })).filter(p => p.s !== "light");
+        live = (await onlineSessions()).filter(p => p.s !== "light");
         for (let i = 0; i < live.length; i += 30) {
             const snap = await cloudDb.collection("profiles").where("sid", "in", live.slice(i, i + 30).map(x => x.id)).get();
             snap.docs.forEach(d => bySid.set((d.data() || {}).sid, { uid: d.id, ...(d.data() || {}) }));

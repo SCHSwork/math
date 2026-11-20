@@ -873,6 +873,10 @@ function createZoneCard(file) {
             flag.title = "A site moderator reported this game as broken. It may not load.";
         }
         badges.appendChild(flag);
+    } else if (typeof autoBrokenBadge === "function") {
+        // The GN 2.0 Server saw this game fail for many players (home-server.js)
+        const auto = autoBrokenBadge(file.id);
+        if (auto) badges.appendChild(auto);
     }
     // Partner games (html5games.com) may show their publisher's ads, so say so up front
     if (typeof isPartnerZone === "function" && isPartnerZone(file)) {

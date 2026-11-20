@@ -26,6 +26,7 @@ window.__gnmathGameFatal = function (ev) {
         gameFatalShownFor = win;
         const [what, help] = GAME_FATAL_TEXT[ev.kind] || GAME_FATAL_TEXT.crash;
         const detail = String(ev.message || "").trim();
+        if (typeof reportGameTrouble === "function") reportGameTrouble(zone.id, ev.kind, detail);
         closeGameFatal();
         // Red bar at the top
         const bar = document.createElement("div");
