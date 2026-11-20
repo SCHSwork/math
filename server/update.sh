@@ -30,6 +30,25 @@ if ! command -v smartctl >/dev/null && [ ! -f state/smart-tried-$(date +%F) ]; t
     sudo -n apt-get install -y --no-install-recommends smartmontools >/dev/null 2>&1 && echo "$(stamp) installed smartmontools"
 fi
 
+# Use all of the disk. When the VM's disk is made bigger (or Ubuntu left part of
+# it unused, which its installer does by default), grow the partition, the LVM
+# volume and the file system to fill it. Safe while running. Checked hourly.
+ROOTSRC=$(findmnt -n -o SOURCE /)
+if [[ "$ROOTSRC" == /dev/mapper/* ]] && [ ! -f state/grow-tried-$(date +%F-%H) ]; then
+    rm -f state/grow-tried-*; touch state/grow-tried-$(date +%F-%H)
+    PV=$(sudo -n pvs --noheadings -o pv_name 2>/dev/null | head -1 | tr -d ' ')
+    if [ -n "$PV" ]; then
+        DISK=/dev/$(lsblk -no pkname "$PV" | head -1); PART=$(echo "$PV" | grep -o '[0-9]*$')
+        command -v growpart >/dev/null || sudo -n apt-get install -y cloud-guest-utils >/dev/null 2>&1
+        if [ -n "$PART" ] && sudo -n growpart "$DISK" "$PART" >/dev/null 2>&1; then echo "$(stamp) partition $PV grown to fill $DISK"; fi
+        sudo -n pvresize "$PV" >/dev/null 2>&1
+        FREE=$(sudo -n vgs --noheadings --units b --nosuffix -o vg_free 2>/dev/null | head -1 | tr -d ' ')
+        if [ "${FREE:-0}" -gt 1073741824 ]; then
+            sudo -n lvextend -r -l +100%FREE "$ROOTSRC" >/dev/null 2>&1 && echo "$(stamp) disk grown: $(df -h / | awk 'NR==2{print $2" total, "$4" free"}')"
+        fi
+    fi
+fi
+
 # The updater updates itself too (takes effect next run)
 curl -fsSL "$URL/update.sh?$(date +%s)" -o update.new.sh 2>/dev/null && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
 rm -f update.new.sh
