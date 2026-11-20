@@ -32,6 +32,7 @@ const CLOUD = {
     chunkChars: 500000,                      // Firestore docs max out at ~1 MB; smaller parts get through slow connections
     blobMin: 64 * 1024,                      // game data entries bigger than this are stored once, by content (see splitBlobs)
     maxChars: 18000000,                      // ~18 MB compressed cap per save
+    fbCopyMs: 30 * 60 * 1000,                // saves are copied to Firebase at most every 30 minutes (see savePart)
     keys: {
         syncedGen: "gnmath-cloud-synced-gen",
         syncedHash: "gnmath-cloud-synced-hash",
@@ -151,7 +152,9 @@ async function prepareCloudSave(bundle) {
 }
 // Sends the big entries the cloud doesn't have yet. have: ids already in a
 // save there. onPart(done, todo) for the progress bar.
-async function uploadBlobs(blobs, have, onPart) {
+// fbHave: when copying to Firebase this time, the ids Firebase already has.
+// Returns { sent, fbOk } (fbOk: every part is in Firebase too).
+async function uploadBlobs(blobs, have, onPart, fbHave = null) {
     const done = blobsDone();
     const parts = [], check = [];
     for (const b of blobs) {
@@ -164,16 +167,33 @@ async function uploadBlobs(blobs, have, onPart) {
         const snaps = await cloudStep(Promise.all(check.slice(i, i + 20).map(([b, j]) => savePart("blobs", `${b.id}_${j}`).exists())), 60000, "Checking game data");
         snaps.forEach((snap, k) => { if (!snap.exists) parts.push(check[i + k]); });
     }
+    // Copying to Firebase: parts the server already has but Firebase doesn't
+    const toSend = new Set(parts.map(([b, j]) => `${b.id}_${j}`));
+    const fbOnly = [];
+    if (fbHave) for (const b of blobs) {
+        if (fbHave.has(b.id)) continue;
+        for (let j = 0; j < b.n; j++) if (!toSend.has(`${b.id}_${j}`)) fbOnly.push([b, j]);
+    }
+    let fbOk = true;
+    const total = parts.length + fbOnly.length;
+    for (let i = 0; i < fbOnly.length; i++) {
+        const [b, j] = fbOnly[i];
+        if (onPart) onPart(parts.length + i, total);
+        const packed = blobPackCache.get(b.id);
+        if (!packed) { fbOk = false; continue; }
+        if (!(await cloudStep(savePart("blobs", `${b.id}_${j}`).setFb({ d: packed.slice(j * CLOUD.chunkChars, (j + 1) * CLOUD.chunkChars) }), 60000, `Backing up game data (part ${i + 1} of ${fbOnly.length})`))) fbOk = false;
+    }
     for (let i = 0; i < parts.length; i++) {
         const [b, j] = parts[i];
-        if (onPart) onPart(i, parts.length);
+        if (onPart) onPart(i, total);
         let packed = blobPackCache.get(b.id);
         if (!packed) throw new Error("game data changed while saving, try again");
         const name = `${b.id}_${j}`;
-        await cloudStep(savePart("blobs", name).set({ d: packed.slice(j * CLOUD.chunkChars, (j + 1) * CLOUD.chunkChars) }), 60000, `Uploading game data (part ${i + 1} of ${parts.length})`);
+        const inFb = await cloudStep(savePart("blobs", name).set({ d: packed.slice(j * CLOUD.chunkChars, (j + 1) * CLOUD.chunkChars) }, { fb: !!fbHave }), 60000, `Uploading game data (part ${i + 1} of ${parts.length})`);
+        if (!inFb) fbOk = false;
         markBlobPartDone(name);
     }
-    return parts.length;
+    return { sent: total, fbOk };
 }
 // Big entries no save points at anymore
 function dropBlobs(dropped, keep) {
@@ -479,11 +499,14 @@ function progressIsLess(a, b) {
 function saveDocRef() { return cloudDb.collection("saves").doc(cloudUser.uid); }
 // ── Where save data lives ───────────────────────────────────────────────────
 // The record of which save is newest (saves/{uid}) is in Firebase. The save
-// data itself (the chunks and blobs parts, up to ~18 MB per player) is written
-// to BOTH the GN 2.0 Server (js/home-server.js, which checks the player's
-// Firebase sign-in) and Firebase, so either one can be down without anyone
-// losing a save. A save only fails if both are down. Reading tries the server
-// first (that's what keeps Firebase's download usage low), then Firebase.
+// data itself (the chunks and blobs parts, up to ~18 MB per player) goes to the
+// GN 2.0 Server (js/home-server.js, which checks the player's Firebase sign-in).
+// Every 30 minutes a save is also copied to Firebase, and the record notes
+// that copy (fbCopy). So:
+//   - server down: saves go to Firebase instead, and a save that's only on the
+//     server loads from the Firebase copy (at most ~30 minutes older)
+//   - Firebase down or out of its daily limit: the server still has every save
+// Reading tries the server first (that keeps Firebase's usage low), then Firebase.
 const HOME_SAVES_RETRY_MS = 5 * 60 * 1000;
 let homeSavesDownUntil = 0;
 function homeSavesDown() { homeSavesDownUntil = Date.now() + HOME_SAVES_RETRY_MS; }
@@ -519,19 +542,25 @@ function savePart(kind, name) {
             try { if ((await homeSaveFetch(path, { method: "HEAD" })).ok) return { exists: true }; } catch {}
             return fb().get();
         },
-        async set(v) {
-            const fbSave = fb().set(v);
+        // Resolves true if Firebase has it too. fb: also copy it to Firebase now.
+        async set(v, { fb: copy = false } = {}) {
             let serverOk = false;
             try {
                 const res = await homeSaveFetch(path, { method: "PUT", body: v.d, headers: { "Content-Type": "text/plain" } });
                 serverOk = res.ok;
                 if (!res.ok) homeSavesDown();   // not set up for saves (yet), or refused
             } catch {}
-            if (!serverOk) return fbSave;      // then Firebase has to work
-            // The server has it: give Firebase up to 30 s too, but a Firebase
-            // problem (e.g. its daily limit) doesn't fail the save
-            await Promise.race([fbSave.catch(e => console.warn("Save part not copied to Firebase", e)), new Promise(r => setTimeout(r, 30000))]);
+            if (!serverOk) { await fb().set(v); return true; }   // then Firebase has to work
+            if (!copy) return false;
+            // The server has it: give Firebase up to 30 s, but a Firebase problem
+            // (e.g. its daily limit) doesn't fail the save
+            return Promise.race([
+                fb().set(v).then(() => true, e => { console.warn("Save part not copied to Firebase", e); return false; }),
+                new Promise(r => setTimeout(() => r(false), 30000))
+            ]);
         },
+        // Firebase only: copying a part the server already has
+        setFb(v) { return fb().set(v).then(() => true, () => false); },
         delete() {
             return Promise.allSettled([homeSaveFetch(path, { method: "DELETE" }), fb().delete()]);
         }
@@ -689,12 +718,20 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         const have = new Set([meta, ...keptSaves(meta)].flatMap(blobsOf).map(b => b.id));
         const gen = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const chunkCount = Math.max(1, Math.ceil(packed.length / CLOUD.chunkChars));
-        const blobParts = await uploadBlobs(blobs, have, (i, n) => {
+        // Copy to Firebase too if the last copy is 30+ minutes old (or the
+        // server is down right now, so everything has to go there anyway)
+        const oldFbCopy = meta && meta.fbCopy && meta.fbCopy.gen ? meta.fbCopy : null;
+        const copyNow = !oldFbCopy || Date.now() - (oldFbCopy.at || 0) >= CLOUD.fbCopyMs || Date.now() < homeSavesDownUntil;
+        const fbHave = copyNow ? new Set(blobsOf(oldFbCopy).map(b => b.id)) : null;
+        const up = await uploadBlobs(blobs, have, (i, n) => {
             noteSaveState("saving", { step: `Uploading game data (part ${i + 1} of ${n})`, part: i, parts: n + chunkCount, size: total });
-        });
+        }, fbHave);
+        const blobParts = up.sent;
+        let fbOk = up.fbOk;
         for (let i = 0; i < chunkCount; i++) {
             noteSaveState("saving", { step: `Uploading part ${i + 1} of ${chunkCount}`, part: blobParts + i, parts: blobParts + chunkCount, size: total });
-            await cloudStep(savePart("chunks", `${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) }), 60000, `Uploading part ${i + 1} of ${chunkCount}`);
+            const inFb = await cloudStep(savePart("chunks", `${gen}_${i}`).set({ d: packed.slice(i * CLOUD.chunkChars, (i + 1) * CLOUD.chunkChars) }, { fb: copyNow }), 60000, `Uploading part ${i + 1} of ${chunkCount}`);
+            if (!inFb) fbOk = false;
         }
         noteSaveState("saving", { step: "Finishing up", part: 1, parts: 1 });
         // Replacing the cloud save keeps the old one for a week; expired ones are deleted
@@ -706,8 +743,12 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         kept = kept.filter(k => !drop.includes(k));
         if (meta && meta.gen && !replacing) drop.push(meta);   // an autosave over this device's own save
         const blobList = blobs.map(b => ({ id: b.id, n: b.n }));
+        // The Firebase copy: this save if it was fully copied, else the last one
+        const fbCopy = copyNow && fbOk ? { gen, chunkCount, hash, sum, blobs: blobList, at: now } : oldFbCopy;
+        if (oldFbCopy && fbCopy !== oldFbCopy) drop.push(oldFbCopy);
         await cloudStep(saveDocRef().set({
             gen, chunkCount, hash, sum, blobs: blobList,
+            ...(fbCopy ? { fbCopy } : {}),
             size: total,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             kept
@@ -715,10 +756,10 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         localStorage.setItem(CLOUD.keys.syncedGen, gen);
         localStorage.setItem(CLOUD.keys.syncedHash, hash);
         for (const old of drop) {
-            if (old.gen === gen || kept.some(k => k.gen === old.gen)) continue;
+            if (old.gen === gen || kept.some(k => k.gen === old.gen) || (fbCopy && old.gen === fbCopy.gen)) continue;
             for (let i = 0; i < (old.chunkCount || 0); i++) savePart("chunks", `${old.gen}_${i}`).delete().catch(() => {});
         }
-        dropBlobs(drop, [{ blobs: blobList }, ...kept]);
+        dropBlobs(drop, [{ blobs: blobList }, ...kept, ...(fbCopy ? [fbCopy] : [])]);
         noteSaveState("ok", { size: total, sum, left });
         setCloudStatus("Saved to cloud — " + new Date().toLocaleTimeString() + (left.length ? `. Left out (too big, kept on this device): ${left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ")}` : ""));
         return true;
@@ -778,16 +819,30 @@ async function downloadCloudSave({ previous = "" } = {}) {
             if (!k) { setCloudStatus("That earlier cloud save isn't there anymore."); return false; }
             meta = k;
         }
-        const parts = await cloudStep(Promise.all(
-            Array.from({ length: meta.chunkCount }, (_, i) => savePart("chunks", `${meta.gen}_${i}`).get())
-        ), 90000, "Downloading your cloud save");
-        if (parts.some(p => !p.exists)) throw new Error("cloud save is incomplete, try again" + homeSavesNote());
-        const json = await b64ToText(parts.map(p => p.data().d).join(""));
-        const bundle = await joinBlobs(JSON.parse(json));
+        const load = async m => {
+            const parts = await cloudStep(Promise.all(
+                Array.from({ length: m.chunkCount }, (_, i) => savePart("chunks", `${m.gen}_${i}`).get())
+            ), 90000, "Downloading your cloud save");
+            if (parts.some(p => !p.exists)) throw new Error("cloud save is incomplete, try again" + homeSavesNote());
+            return joinBlobs(JSON.parse(await b64ToText(parts.map(p => p.data().d).join(""))));
+        };
+        let bundle, usedBackup = false;
+        try { bundle = await load(meta); }
+        catch (e) {
+            // The newest save is only on the GN 2.0 Server and it's down: load the
+            // Firebase copy instead (up to ~30 minutes older)
+            const backup = !previous && meta.fbCopy && meta.fbCopy.gen && meta.fbCopy.gen !== meta.gen ? meta.fbCopy : null;
+            if (!backup) throw e;
+            bundle = await load(backup);
+            usedBackup = true;
+            const mins = Math.max(1, Math.round((Date.now() - (backup.at || Date.now())) / 60000));
+            try { sessionStorage.setItem("gnmath-cloud-backup-note", `The GN 2.0 Server is down, so your save from ${mins} minute${mins === 1 ? "" : "s"} earlier was loaded. Your newest save is kept in Account → Earlier cloud saves.`); } catch {}
+        }
         if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
         await applyCloudBundle(bundle);
-        if (previous) {
-            // Going back: the next save from this device becomes the cloud save again
+        if (previous || usedBackup) {
+            // Going back (or loaded the older Firebase copy): the next save from this
+            // device becomes the cloud save, and the one it replaces is kept for a week
             localStorage.removeItem(CLOUD.keys.syncedHash);
             localStorage.setItem(CLOUD.keys.pendingUndo, "1");
         } else {
@@ -1844,3 +1899,12 @@ async function initCloudAccounts() {
     }
 }
 initCloudAccounts();
+
+// After loading the Firebase copy of a save because the GN 2.0 Server was down
+// (downloadCloudSave), say so once the page has reloaded
+setTimeout(() => {
+    try {
+        const note = sessionStorage.getItem("gnmath-cloud-backup-note");
+        if (note && typeof notify === "function") { sessionStorage.removeItem("gnmath-cloud-backup-note"); notify(note, { duration: 15000 }); }
+    } catch {}
+}, 1500);
