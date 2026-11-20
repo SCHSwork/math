@@ -1688,6 +1688,7 @@ function renderSaveDetails() {
     if (s.phase === "conflict") rows.push(["Why", "Another device saved to your account after this one. Open Account to pick which progress to keep."]);
     if (s.phase === "paused") rows.push(["Why", "The site used up today's cloud saves (Firebase's daily limit). They start again tomorrow."]);
     if (s.phase === "error") rows.push(["What happened", escapeHtml(s.error || "The cloud turned the save down without saying why. Your progress is safe on this device."), true]);
+    if (typeof liveSaveStatusText === "function") { const t = liveSaveStatusText(); if (t) rows.push(["Live Save", escapeHtml(t), true]); }
     rows.push(["Last cloud save", s.lastAt ? `${new Date(s.lastAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (${agoText(now - s.lastAt)})` : "not yet on this device"]);
     if (s.size) rows.push(["Size", mb(s.size)]);
     if (s.left && s.left.length) rows.push(["Too big for the cloud", s.left.map(l => `${l.files} item${l.files === 1 ? "" : "s"} from ${l.name} (${l.mb} MB)`).join(", ") + ". They stay on this device; the rest is in the cloud. These are usually a game's downloaded files, not saves."]);

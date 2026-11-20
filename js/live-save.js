@@ -22,12 +22,22 @@
 const LIVE_SAVE = {
     everyMs: 20000,
     jankMs: 300,                          // long-task time during one Live Save that counts as "slow"
-    slowKey: "gnmath-live-save-slow",     // when this computer was found too slow
+    slowKey: "gnmath-live-save-slow2",    // when this computer was found too slow
     hashKey: "gnmath-live-hash"
 };
 let liveDirty = { ls: true, dbs: new Set(["*"]) };
 const liveDbCache = new Map();            // database name -> what was read last time
-const liveState = { hash: "", savedAt: 0, okAt: 0, busy: false, have: new Set(), slowHits: 0, ticks: 0 };
+const liveState = { hash: "", savedAt: 0, okAt: 0, busy: false, have: new Set(), slowHits: 0, ticks: 0, why: "" };
+// For the save details popup: what Live Save is doing, or why it isn't
+function liveSaveStatusText() {
+    if (typeof cloudUser === "undefined" || !cloudUser) return "";
+    if (liveSlowDevice()) return "Off on this computer for today: saving made the page stutter, so it saves every 2 minutes instead";
+    if (typeof homeSavesDownUntil !== "undefined" && Date.now() < homeSavesDownUntil) return "Waiting: the GN 2.0 Server can't be reached right now";
+    if (liveState.why) return liveState.why;
+    if (liveState.savedAt) return "On · last saved " + new Date(liveState.savedAt).toLocaleTimeString();
+    if (liveState.okAt) return "On · nothing new to save yet";
+    return "Starting…";
+}
 
 function liveSlowDevice() {
     try { return Date.now() - Number(localStorage.getItem(LIVE_SAVE.slowKey) || 0) < 86400000; } catch { return false; }
@@ -128,6 +138,9 @@ async function liveSaveNow(reason) {
     liveState.busy = true;
     const dirty = liveDirty;
     liveDirty = { ls: false, dbs: new Set() };
+    // Reading every database (the first time, or a new game page) is as heavy
+    // as a normal cloud save, so it doesn't count toward "too slow"
+    const fullRead = dirty.dbs.has("*") || !liveDbCache.size;
     let jank = 0, obs = null;
     try {
         if (reason !== "hidden") await liveIdle();
@@ -142,7 +155,7 @@ async function liveSaveNow(reason) {
         if (packed.length > CLOUD.maxChars) return false;
         const hash = (await sha256Hex(packed)).slice(0, 40);
         if (obs) obs.disconnect();
-        const slow = obs ? jank > LIVE_SAVE.jankMs : performance.now() - started > 2500;
+        const slow = !fullRead && (obs ? jank > LIVE_SAVE.jankMs : performance.now() - started > 2500);
         if (slow && ++liveState.slowHits >= 2) {
             try { localStorage.setItem(LIVE_SAVE.slowKey, String(Date.now())); } catch {}
             setCloudStatus("Live Save is off on this computer (saving made it stutter), so it cloud saves every 2 minutes instead.");
@@ -166,6 +179,7 @@ async function liveSaveNow(reason) {
         const res = await homeSaveFetch("live", { method: "PUT", body, headers: { "Content-Type": "text/plain" } });
         if (!res.ok) throw new Error("server said " + res.status);
         liveState.hash = hash;
+        liveState.why = "";
         liveState.savedAt = liveState.okAt = Date.now();
         try { localStorage.setItem(LIVE_SAVE.hashKey, hash); } catch {}
         setCloudStatus("Live Save — saved " + new Date().toLocaleTimeString());
@@ -175,6 +189,7 @@ async function liveSaveNow(reason) {
         // Try again next time, reading everything
         liveDirty.ls = true; liveDirty.dbs.add("*");
         console.info("Live Save didn't go through:", e.message || e);
+        liveState.why = "Didn't go through (" + (e.message || e) + "), trying again in 20 seconds";
         return false;
     } finally {
         if (obs) try { obs.disconnect(); } catch {}
