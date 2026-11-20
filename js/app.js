@@ -81,6 +81,8 @@ const htmlURLFallbacks = [
 // jsDelivr (fast CDN) → GitHub directly → githack (another CDN). A source that
 // fails, times out, or gets redirected (e.g. to a school filter's block page)
 // is skipped for the rest of the session.
+// The spare PC at home, reached through a Cloudflare tunnel (js/home-server.js)
+const HOME_SERVER = "https://data.learnresearch.org";
 const MIRRORS = {
     jsdelivr: (o, r, ref, p) => `https://cdn.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
     github:   (o, r, ref, p) => `https://raw.githubusercontent.com/${o}/${r}/${ref === "latest" ? "HEAD" : ref}/${p}`,
@@ -89,12 +91,14 @@ const MIRRORS = {
     // Cloudflare). A school filter that blocks cdn.jsdelivr.net often misses these.
     fastly:   (o, r, ref, p) => `https://fastly.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
     gcore:    (o, r, ref, p) => `https://gcore.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
-    testingcf:(o, r, ref, p) => `https://testingcf.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`
+    testingcf:(o, r, ref, p) => `https://testingcf.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
+    // Lincoln's home server (js/home-server.js), last resort: home upload is only ~20 Mbps
+    home:     (o, r, ref, p) => `${HOME_SERVER}/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`
 };
 const PRIMARY_MIRRORS = ["jsdelivr", "github", "githack"];
-const BACKUP_MIRRORS = ["fastly", "gcore", "testingcf"];
+const BACKUP_MIRRORS = ["fastly", "gcore", "testingcf", "home"];
 const MIRROR_HOSTS = { "cdn.jsdelivr.net": "jsdelivr", "raw.githubusercontent.com": "github", "rawcdn.githack.com": "githack",
-    "fastly.jsdelivr.net": "fastly", "gcore.jsdelivr.net": "gcore", "testingcf.jsdelivr.net": "testingcf" };
+    "fastly.jsdelivr.net": "fastly", "gcore.jsdelivr.net": "gcore", "testingcf.jsdelivr.net": "testingcf", "data.learnresearch.org": "home" };
 // Sources that failed recently, remembered across visits for a few hours so a
 // school filter that blocks one isn't waited on again every time the site opens.
 const MIRROR_DOWN_KEY = "gnmath-mirror-down-at", MIRROR_DOWN_MS = 6 * 3600000;
@@ -269,7 +273,7 @@ function useLocalLibs(html) {
 // jsdelivr.net address, and switching to a blocked backup broke every game.
 // The same switch is made inside the game while it runs (gameMirrorHook), for
 // files the game asks for itself (Unity data, Godot packs, split parts).
-const GH_MIRROR_ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "github"];
+const GH_MIRROR_ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "home", "github"];
 const GAME_MIRROR_URL_RE = /https?:\/\/(?:(?:cdn|fastly|gcore|testingcf)\.jsdelivr\.net|raw\.githubusercontent\.com|raw(?:cdn)?\.githack\.com)\/[^\s"'`<>()\\]*/g;
 // Moves one link to source T if its own source is in DOWN. Self-contained:
 // it's also copied into each game page for gameMirrorHook.
@@ -287,11 +291,13 @@ function gnMirrorUrl(u, T, DOWN) {
     if ((m = /^https?:\/\/(cdn|fastly|gcore|testingcf)\.jsdelivr\.net\/gh\/([\w.-]+)\/([\w.-]+?)(?:@([^\/]+))?(?:\/(.*))?$/.exec(u))) { name = jname(m[1]); o = m[2]; r = m[3]; ref = m[4] || "latest"; path = m[5] || ""; }
     else if ((m = /^https?:\/\/raw\.githubusercontent\.com\/([\w.-]+)\/([\w.-]+)\/(?:refs\/heads\/)?([^\/]+)\/(.*)$/.exec(u))) { name = "github"; o = m[1]; r = m[2]; ref = m[3]; path = m[4]; }
     else if ((m = /^https?:\/\/raw(?:cdn)?\.githack\.com\/([\w.-]+)\/([\w.-]+)\/([^\/]+)\/(.*)$/.exec(u))) { name = "githack"; o = m[1]; r = m[2]; ref = m[3]; path = m[4]; }
+    else if ((m = /^https?:\/\/data\.learnresearch\.org\/gh\/([\w.-]+)\/([\w.-]+?)@([^\/]+)\/(.*)$/.exec(u))) { name = "home"; o = m[1]; r = m[2]; ref = m[3]; path = m[4]; }
     else return u;
     if (name === T || DOWN.indexOf(name) < 0) return u;
     var branch = ref === "latest" ? "HEAD" : ref;
     if (T === "github") return "https://raw.githubusercontent.com/" + o + "/" + r + "/" + branch + "/" + path;
     if (T === "githack") return "https://rawcdn.githack.com/" + o + "/" + r + "/" + branch + "/" + path;
+    if (T === "home") return "https://data.learnresearch.org/gh/" + o + "/" + r + "@" + (ref === "HEAD" ? "latest" : ref) + "/" + path;
     return "https://" + (T === "jsdelivr" ? "cdn" : T) + ".jsdelivr.net/gh/" + o + "/" + r + "@" + (ref === "HEAD" ? "latest" : ref) + "/" + path;
 }
 const mirrorProbing = {};
@@ -381,13 +387,13 @@ async function adaptGameToMirrors(html) {
 // and if a source still fails, tries the others and tells the site.
 function gameMirrorHook(MAP, T, DOWN) {
     try {
-        var ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "github"];
+        var ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "home", "github"];
         var GH = /^https:\/\/raw\.githubusercontent\.com\//;
         var nameOf = function (u) {
             var m = /^https?:\/\/([^\/]+)\//.exec(u || ""); if (!m) return "";
             var h = m[1];
             if (/^(cdn|fastly|gcore|testingcf)\.jsdelivr\.net$/.test(h)) return h.split(".")[0] === "cdn" ? "jsdelivr" : h.split(".")[0];
-            return h === "raw.githubusercontent.com" ? "github" : /githack\.com$/.test(h) ? "githack" : "";
+            return h === "raw.githubusercontent.com" ? "github" : /githack\.com$/.test(h) ? "githack" : h === "data.learnresearch.org" ? "home" : "";
         };
         var map = function (u) { try { return MAP(String(u), T, DOWN); } catch (e) { return u; } };
         var abs = function (u) { try { return new URL(String(u), document.baseURI).href; } catch (e) { return String(u); } };
@@ -2254,6 +2260,7 @@ function openZone(file) {
         zoneViewer.style.display = "flex";
         zoneViewer.hidden = false;
         addRecentZone(file.id);
+        if (typeof sendHomePlay === "function") sendHomePlay(file.id);
         startPlaytime(file.id);
         currentGameId = String(file.id);
         updateRatingBar(file.id);
@@ -2279,6 +2286,7 @@ function openZone(file) {
         zoneViewer.style.display = "flex";
         zoneViewer.hidden = false;
         addRecentZone(file.id);
+        if (typeof sendHomePlay === "function") sendHomePlay(file.id);
         startPlaytime(file.id);
         currentGameId = String(file.id);
         updateRatingBar(file.id);

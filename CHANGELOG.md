@@ -2,6 +2,14 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 19, 2026 — The home server
+
+### Added
+- **The spare PC at home (data.learnresearch.org) is now part of the site.** It's a backup the site never depends on:
+  - **Last-resort game source.** When jsDelivr, its backups and githack are all blocked or down, games and game lists load from the home server before falling back to GitHub (which can't run game scripts directly). It's tried last because home upload is only ~20 Mbps.
+  - **Play counts for this site.** Opening a game sends a tiny note to the home server, so it can count plays on GN 2.0 itself (the "plays" numbers on cards still come from jsDelivr, which counts every site using the library). Each browser gets a random id so one person reopening a game isn't counted over and over; it isn't tied to accounts.
+  - **"Home server" row in the status light**, showing whether it can be reached. It never turns the light yellow or red, since the site works fine without it.
+
 ## November 18, 2026 — A scarier jumpscare
 
 ### Changed
