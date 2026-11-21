@@ -745,8 +745,36 @@ app.get("/api/owner/minecraft", async (req, res) => {
     try { const r = await fetch("http://127.0.0.1:8081/", { signal: AbortSignal.timeout(3000) }); ampUp = r.status < 500; } catch {}
     const playit = (await runAny("systemctl", ["is-active", "playit"])).trim();
     await applyGeyserNxs().catch(() => {});
-    res.json({ status: st, ampUp, playit, geyser: geyserNxs, log: logText.split("\n").filter(Boolean).slice(-40) });
+    res.json({ status: st, ampUp, playit, geyser: geyserNxs, setup: mcSetupSummary(), log: logText.split("\n").filter(Boolean).slice(-40) });
 });
+
+// ── Minecraft setup runs: is minecraft.sh running, when did it last finish ──
+// Read from state/minecraft.log. Only short, non-secret lines are kept as notes
+// (what was added/changed), so this can go in the public /api/status too.
+function mcSetupSummary() {
+    let text = "";
+    try { text = require("fs").readFileSync(path.join(STATE_DIR, "minecraft.log"), "utf8"); } catch { return null; }
+    const lines = text.split("\n");
+    let start = -1;
+    for (let i = lines.length - 1; i >= 0; i--) if (lines[i].includes("== Minecraft setup starting")) { start = i; break; }
+    if (start < 0) return null;
+    const t = l => { const m = /^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) /.exec(l); return m ? new Date(m[1].replace(" ", "T")).getTime() : null; };
+    const run = lines.slice(start);
+    const fin = run.find(l => l.includes("== Minecraft setup finished"));
+    const startedAt = t(lines[start]), finishedAt = fin ? t(fin) : null;
+    const notes = run.filter(l => /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d (GN Proxy|GN Craft|added |couldn't|Geyser|playitd has)/.test(l))
+        .map(l => l.slice(20).slice(0, 140)).slice(-12);
+    const running = !finishedAt && startedAt && Date.now() - startedAt < 35 * 60000;
+    return { running: !!running, startedAt, finishedAt, notes };
+}
+let mcSetup = mcSetupSummary();
+setInterval(() => {
+    const n = mcSetupSummary();
+    if (n && n.finishedAt && (!mcSetup || mcSetup.finishedAt !== n.finishedAt)) {
+        event("mc", "Minecraft setup finished" + (n.notes.length ? ": " + n.notes.slice(-4).join(" · ") : ""));
+    }
+    mcSetup = n;
+}, 20000);
 
 // ── GN Craft (the Minecraft server in AMP): is it up, who's on ──────────────
 // Asks the Minecraft server on this machine the same "server list ping" the game
@@ -1609,6 +1637,7 @@ app.get("/api/status", async (req, res) => {
         mirror: mirrorSummary(),
         offsite: offsiteSummary(),
         mcServer,
+        mcSetup,
         minecraft: (() => { const m = readJson(path.join(STATE_DIR, "minecraft.json"), null); return m ? { step: m.step, java: m.java, amp: !!m.amp, playit: m.playitRunning, claimLink: !!m.playitClaim } : null; })(),
         compressed: { files: compStats.files, savedBytes: compStats.saved, waiting: compQueue.length },
         drive: drive.health || null,

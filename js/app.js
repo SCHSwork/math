@@ -3314,11 +3314,24 @@ async function ownerMinecraft() {
     } catch { err = "The GN 2.0 Server can't be reached right now."; }
     if (!document.getElementById("owner-mc")) return;
     if (!d) { el.textContent = err; return; }
+    if (d.setup) {
+        if (ownerMinecraft.wasRunning && !d.setup.running) notify("Minecraft setup finished", { type: "success" });
+        ownerMinecraft.wasRunning = d.setup.running;
+        clearTimeout(ownerMinecraft.timer);
+        if (d.setup.running) ownerMinecraft.timer = setTimeout(ownerMinecraft, 20000);
+    }
     const s = d.status || {}, a = s.amp;
     const row = (label, html) => `<div style="display:flex;gap:0.5rem;align-items:center;margin:0.25rem 0;flex-wrap:wrap;"><b style="min-width:7rem;">${label}</b><span>${html}</span></div>`;
     const copy = v => `<code style="user-select:all;">${escapeHtml(v)}</code> <button class="settings-button" type="button" style="min-width:0;padding:0.2rem 0.6rem;font-size:12px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>notify('Copied',{type:'success'}))">Copy</button>`;
     el.innerHTML =
-        row("Setup", !s.step ? "Not started yet (starts within about 10 minutes of an update)" : s.step === "done" ? "Finished" : "Running…") +
+        row("Setup", (() => {
+            const u = d.setup;
+            if (!u) return !s.step ? "Not started yet (starts within about 10 minutes of an update)" : s.step === "done" ? "Finished" : "Running…";
+            const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : new Date(ms).toLocaleString(); };
+            const head = u.running ? `<span style="color:var(--warning,#f59e0b)">Running now</span> (started ${ago(u.startedAt)}) · this updates by itself`
+                : `<span style="color:var(--success,#22c55e)">Done</span> · finished ${ago(u.finishedAt)}`;
+            return head + (u.notes && u.notes.length ? `<ul style="margin:0.25rem 0 0 1rem;padding:0;font-size:12px;">${u.notes.map(n => `<li>${escapeHtml(n)}</li>`).join("")}</ul>` : "");
+        })()) +
         row("AMP panel", d.ampUp ? `<span style="color:var(--success,#22c55e)">Running</span> · <a href="https://amp.learnresearch.org" target="_blank" rel="noopener">amp.learnresearch.org</a>` : "Not running yet") +
         (a ? row("AMP login", copy(a.user) + " " + copy(a.pass)) : "") +
         (d.geyser && (d.geyser.appliedAt || d.geyser.error) ? row("Bedrock setup", d.geyser.error ? `<span style="color:var(--danger,#ef4444)">${escapeHtml(d.geyser.error)}</span>` : `<span style="color:var(--success,#22c55e)">Geyser set up</span> · restart GN Craft in AMP if you haven't since`) : "") +
