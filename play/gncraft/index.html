@@ -58,7 +58,7 @@
     const d = await r.json().catch(() => ({}));
     if (!r.ok) return stop(d.error || "GN Craft can't be reached right now. Try again in a few minutes.", r.status === 401);
     pass = d;
-    sub.textContent = "You'll play as " + d.name + ". GN Craft will be first in Multiplayer.";
+    sub.textContent = "You'll play as " + d.name + ". You'll go straight into GN Craft.";
   } catch (e) {
     return stop("Couldn't check your GN 2.0 sign-in. Check your connection and reload.");
   }
@@ -90,7 +90,10 @@
   // world and players live on the server), and this keeps its settings apart from
   // the site's other Eaglercraft games and out of GN 2.0 cloud saves (js/accounts.js)
   const changed = html.replace(/servers:\s*\[(?:\s*\{[^{}]*\}\s*,?)*\s*\]\s*,/, servers)
-    .replace(/worldsDB:\s*"worlds"\s*,/, 'worldsDB: "gncraft_worlds", localStorageNamespace: "_gncraft",');
+    .replace(/worldsDB:\s*"worlds"\s*,/, 'worldsDB: "gncraft_worlds", localStorageNamespace: "_gncraft",')
+    // Straight into GN Craft when the game starts (no menus); the server is also
+    // first in Multiplayer for rejoining after a disconnect
+    .replace(/servers:\s*\[/, () => `joinServer: "${pass.server}",\n    servers: [`);
   if (changed === html) console.warn("GN Craft: couldn't add the server to the list; reload this page");
   // After a browser dialog (like "Leave site?" from Ctrl+W while sprinting) the
   // game never hears the keys being let go, so they stay "held" and the controls
