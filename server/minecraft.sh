@@ -178,6 +178,13 @@ if command -v playit >/dev/null; then
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
 fi
 
+# ── GN Proxy (Velocity): listen on the port AMP gave it (25566), not GN Craft's ─
+for VT in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -path '*GNProxy*' -name velocity.toml 2>/dev/null); do
+    if sudo -n grep -q '^bind = "0.0.0.0:25565"' "$VT"; then
+        sudo -n sed -i 's/^bind = "0.0.0.0:25565"/bind = "0.0.0.0:25566"/' "$VT" && say "GN Proxy now listens on 25566"
+    fi
+done
+
 # ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
 echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
 for VT in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -name velocity.toml 2>/dev/null); do
