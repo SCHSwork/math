@@ -11,6 +11,7 @@
 //   GET  /api/reach                      those counts, last 30 days
 //   POST /api/errors                     error reports from browsers (added up, written to Firestore every 10 min)
 //   GET  /api/errors                     errors per day and per game, last 7 days
+//   GET  /api/minecraft                  GN Craft (the Minecraft server): online, players, version (503 when down)
 //   GET  /api/mirror                     the full library copy: how far along, and repos that couldn't be copied
 //   POST /api/play                       count a play  {id, v}
 //   GET  /api/plays?period=day|week|month|year
@@ -738,6 +739,58 @@ app.get("/api/owner/minecraft", async (req, res) => {
     try { const r = await fetch("http://127.0.0.1:8081/", { signal: AbortSignal.timeout(3000) }); ampUp = r.status < 500; } catch {}
     const playit = (await runAny("systemctl", ["is-active", "playit"])).trim();
     res.json({ status: st, ampUp, playit, log: logText.split("\n").filter(Boolean).slice(-40) });
+});
+
+// ── GN Craft (the Minecraft server in AMP): is it up, who's on ──────────────
+// Asks the Minecraft server on this machine the same "server list ping" the game
+// uses for its server list, every 30 seconds. Shown on the status pages
+// (/api/minecraft and mcServer in /api/status). Player names are shown, nothing else.
+const net = require("net");
+const MC_HOST = "127.0.0.1", MC_PORT = 25565, MC_ADDRESS = "mc.learnresearch.org";
+let mcServer = { online: false, checkedAt: 0 };
+let mcUpSince = null;
+function mcPing(host = MC_HOST, port = MC_PORT, timeout = 4000) {
+    return new Promise(resolve => {
+        const t0 = Date.now(), sock = net.connect(port, host);
+        let buf = Buffer.alloc(0), done = false;
+        const finish = r => { if (done) return; done = true; sock.destroy(); resolve(r); };
+        const varint = n => { const out = []; do { let b = n & 0x7f; n >>>= 7; if (n) b |= 0x80; out.push(b); } while (n); return Buffer.from(out); };
+        const packet = body => Buffer.concat([varint(body.length), body]);
+        const readVarint = (b, i) => { let n = 0, s = 0, c; do { if (i >= b.length) return null; c = b[i++]; n |= (c & 0x7f) << s; s += 7; } while (c & 0x80); return [n, i]; };
+        sock.setTimeout(timeout, () => finish({ online: false, error: "timeout" }));
+        sock.on("error", e => finish({ online: false, error: e.code || e.message }));
+        sock.on("connect", () => {
+            const addr = Buffer.from(host, "utf8"), p = Buffer.alloc(2); p.writeUInt16BE(port);
+            sock.write(packet(Buffer.concat([varint(0), varint(767), varint(addr.length), addr, p, varint(1)])));
+            sock.write(packet(varint(0)));
+        });
+        sock.on("data", d => {
+            buf = Buffer.concat([buf, d]);
+            const a = readVarint(buf, 0); if (!a) return;
+            const [len, i] = a; if (buf.length < i + len) return;
+            const b = readVarint(buf, i); if (!b) return;
+            const c = readVarint(buf, b[1]); if (!c) return;
+            try {
+                const j = JSON.parse(buf.slice(c[1], c[1] + c[0]).toString("utf8"));
+                const motd = typeof j.description === "string" ? j.description : [j.description?.text, ...(j.description?.extra || []).map(x => x.text || "")].join("");
+                finish({ online: true, ms: Date.now() - t0, players: j.players?.online ?? 0, max: j.players?.max ?? 0,
+                    names: (j.players?.sample || []).map(x => String(x.name).slice(0, 20)).filter(n => /^[\w.\-*]{1,20}$/.test(n)).slice(0, 20),
+                    version: String(j.version?.name || "").slice(0, 40), motd: motd.replace(/§./g, "").slice(0, 100) });
+            } catch (e) { finish({ online: false, error: "bad reply" }); }
+        });
+    });
+}
+async function checkMc() {
+    const r = await mcPing();
+    if (r.online && !mcServer.online) mcUpSince = Date.now();
+    if (!r.online) mcUpSince = null;
+    if (mcServer.checkedAt && r.online !== mcServer.online) event(r.online ? "start" : "warn", r.online ? "GN Craft (Minecraft) is up" : "GN Craft (Minecraft) stopped answering");
+    mcServer = { ...r, address: MC_ADDRESS, upSince: mcUpSince, checkedAt: Date.now() };
+}
+checkMc(); setInterval(checkMc, 30000);
+app.get("/api/minecraft", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.status(mcServer.online ? 200 : 503).json(mcServer);
 });
 
 // ── Play counts ─────────────────────────────────────────────────────────────
@@ -1497,6 +1550,7 @@ app.get("/api/status", async (req, res) => {
         gamesFlagged: gameHealth().flagged.length,
         mirror: mirrorSummary(),
         offsite: offsiteSummary(),
+        mcServer,
         minecraft: (() => { const m = readJson(path.join(STATE_DIR, "minecraft.json"), null); return m ? { step: m.step, java: m.java, amp: !!m.amp, playit: m.playitRunning, claimLink: !!m.playitClaim } : null; })(),
         compressed: { files: compStats.files, savedBytes: compStats.saved, waiting: compQueue.length },
         drive: drive.health || null,
