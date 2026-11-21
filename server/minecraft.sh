@@ -46,11 +46,23 @@ if command -v ampinstmgr >/dev/null; then
         PASS="Gn$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 14)7!"
         say "creating AMP's main panel (ADS) on port 8081"
         OUT=$(sudo -n runuser -l amp -c "ampinstmgr quickstart gnadmin '$PASS' 0.0.0.0 8081" 2>&1); RC=$?
-        echo "$OUT" | tail -8
+        echo "$OUT" | grep -v "$PASS" | tail -8
         if [ $RC -eq 0 ] && sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -qi "ADS"; then
             set_status "{\"amp\":{\"user\":\"gnadmin\",\"pass\":\"$PASS\",\"port\":8081}}"
             say "AMP panel created (login is in the Owner Panel)"
         else say "AMP quickstart FAILED"; fi
+    fi
+    # The panel exists but its login was never saved (an earlier run was cut off): set a new one
+    if sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -qi "ADS" && ! grep -q '"pass"' "$STATUS" 2>/dev/null; then
+        ADS=$(sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -o 'ADS[0-9A-Za-z_]*' | head -1)
+        PASS="Gn$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 14)7!"
+        say "setting a new AMP login on $ADS"
+        sudo -n runuser -l amp -c "ampinstmgr stop $ADS" >/dev/null 2>&1
+        OUT=$(sudo -n runuser -l amp -c "ampinstmgr resetlogin $ADS gnadmin '$PASS'" 2>&1); RC=$?
+        echo "$OUT" | grep -v "$PASS" | tail -5
+        sudo -n runuser -l amp -c "ampinstmgr start $ADS" >/dev/null 2>&1
+        if [ $RC -eq 0 ]; then set_status "{\"amp\":{\"user\":\"gnadmin\",\"pass\":\"$PASS\",\"port\":8081}}"; say "new AMP login saved (shown in the Owner Panel)"
+        else say "resetting the AMP login FAILED"; fi
     fi
     # Start AMP's instances when the VM boots
     ( sudo -n crontab -u amp -l 2>/dev/null | grep -q "ampinstmgr -b" ) || \
