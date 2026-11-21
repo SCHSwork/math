@@ -433,9 +433,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.NamespacedKey;
+import org.bukkit.event.Event;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -456,11 +464,95 @@ import java.util.Map;
 // 2) The GN Craft Menu (/menu, or right-click the menu compass): buttons for the
 //    everyday commands, so nobody has to type them (the browser game has no
 //    command helper). Works the same on Java, Bedrock and browser.
+// 3) The claim shovel: /claim (or the menu) hands you a golden shovel for
+//    GriefPrevention that can't be dropped or stored, and takes it away again
+//    once your claim is made, after 10 minutes, or when you type /claim again.
 public class Browser extends JavaPlugin implements Listener {
     static final String MENU_ITEM = "GN Craft Menu";
+    private NamespacedKey toolKey;
+    private final Map<java.util.UUID, Long> toolSince = new HashMap<>();
 
     @Override
-    public void onEnable() { getServer().getPluginManager().registerEvents(this, this); }
+    public void onEnable() {
+        toolKey = new NamespacedKey(this, "claim_tool");
+        getServer().getPluginManager().registerEvents(this, this);
+        // GriefPrevention says when a claim is made (looked up by name: no build dependency on it)
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends Event> created = (Class<? extends Event>) Class.forName("me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent");
+            getServer().getPluginManager().registerEvent(created, this, EventPriority.MONITOR, (l, ev) -> {
+                if (!created.isInstance(ev)) return;
+                try {
+                    Object who = ev.getClass().getMethod("getCreator").invoke(ev);
+                    if (who instanceof Player) {
+                        Player p = (Player) who;
+                        Bukkit.getScheduler().runTask(this, () -> { if (takeTool(p)) p.sendMessage(c("&aClaim made! &7The claim shovel is put away. Use &f/claim &7again for another.")); });
+                    }
+                } catch (Exception ignored) {}
+            }, this, true);
+        } catch (Exception e) { getLogger().warning("GriefPrevention's claim event not found: " + e); }
+        // Shovels nobody finished with go away after 10 minutes
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            long now = System.currentTimeMillis();
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                Long at = toolSince.get(p.getUniqueId());
+                if (at != null && now - at > 10 * 60000L && takeTool(p)) p.sendMessage(c("&7The claim shovel was put away. Use &f/claim &7to get it back."));
+            }
+        }, 600L, 600L);
+    }
+
+    // ── The claim shovel ──
+    private boolean isTool(ItemStack it) {
+        return it != null && it.getType() == Material.GOLDEN_SHOVEL && it.hasItemMeta()
+            && it.getItemMeta().getPersistentDataContainer().has(toolKey, PersistentDataType.BYTE);
+    }
+    private boolean takeTool(Player p) {
+        toolSince.remove(p.getUniqueId());
+        boolean had = false;
+        ItemStack[] all = p.getInventory().getContents();
+        for (int i = 0; i < all.length; i++) if (isTool(all[i])) { p.getInventory().setItem(i, null); had = true; }
+        if (isTool(p.getItemOnCursor())) { p.setItemOnCursor(null); had = true; }
+        return had;
+    }
+    void toggleTool(Player p) {
+        if (takeTool(p)) { p.sendMessage(c("&7Claim shovel put away.")); return; }
+        ItemStack it = item(Material.GOLDEN_SHOVEL, "&6Claim Shovel", "&7Right-click one corner of your land,", "&7then the opposite corner.", "&7Goes away when you're done.");
+        ItemMeta meta = it.getItemMeta();
+        meta.getPersistentDataContainer().set(toolKey, PersistentDataType.BYTE, (byte) 1);
+        it.setItemMeta(meta);
+        int slot = p.getInventory().getHeldItemSlot();
+        if (p.getInventory().getItem(slot) != null) {
+            int free = p.getInventory().firstEmpty();
+            if (free < 0) { p.sendMessage(c("&cYour inventory is full. Make a free slot and try &f/claim &cagain.")); return; }
+            if (free < 9) p.getInventory().setHeldItemSlot(free); else { p.getInventory().setItem(free, p.getInventory().getItem(slot)); }
+            slot = p.getInventory().getHeldItemSlot();
+        }
+        p.getInventory().setItem(slot, it);
+        toolSince.put(p.getUniqueId(), System.currentTimeMillis());
+        p.sendMessage(c("&6Claim shovel ready! &eRight-click one corner of your land, then the opposite corner."));
+        p.sendMessage(c("&7It disappears when your claim is made. Type &f/claim &7again to put it away."));
+    }
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onClaimCommand(PlayerCommandPreprocessEvent e) {
+        String m = e.getMessage().trim().toLowerCase(java.util.Locale.ROOT);
+        if (m.equals("/claim") || m.equals("/claimtool")) { e.setCancelled(true); toggleTool(e.getPlayer()); }
+    }
+    @EventHandler
+    public void onDrop(PlayerDropItemEvent e) { if (isTool(e.getItemDrop().getItemStack())) e.setCancelled(true); }
+    @EventHandler
+    public void onStore(InventoryClickEvent e) {
+        if (e.getInventory().getHolder() instanceof Menu) return;
+        InventoryType top = e.getView().getTopInventory().getType();
+        if (top == InventoryType.CRAFTING || top == InventoryType.PLAYER) return;   // just the player's own inventory
+        ItemStack hot = e.getHotbarButton() >= 0 ? e.getWhoClicked().getInventory().getItem(e.getHotbarButton()) : null;
+        if (isTool(e.getCurrentItem()) || isTool(e.getCursor()) || isTool(hot)) e.setCancelled(true);
+    }
+    @EventHandler
+    public void onStoreDrag(InventoryDragEvent e) { if (!(e.getInventory().getHolder() instanceof Menu) && isTool(e.getOldCursor())) e.setCancelled(true); }
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) { e.getDrops().removeIf(this::isTool); toolSince.remove(e.getEntity().getUniqueId()); }
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) { takeTool(e.getPlayer()); }
 
     private void exempt(Player p) {
         if (p.getUniqueId().toString().startsWith("6e637261-") && !p.hasPermission("grim.exempt")) p.addAttachment(this, "grim.exempt", true);
@@ -497,7 +589,7 @@ public class Browser extends JavaPlugin implements Listener {
         put(m, 10, item(Material.RED_BED, "&aSet home here", "&7Saves this spot.", "&7Up to 3 homes."), "sethome");
         put(m, 11, item(Material.OAK_DOOR, "&aGo home", "&7Teleports you to your home."), "home");
         put(m, 12, item(Material.CLOCK, "&aGo back", "&7Back to where you died", "&7or last teleported."), "back");
-        put(m, 13, item(Material.GOLDEN_SHOVEL, "&6Claim land here", "&7Protects the land around you", "&7so nobody else can break it."), "claim");
+        put(m, 13, item(Material.GOLDEN_SHOVEL, "&6Claim land", "&7Gives you a claim shovel:", "&7right-click two corners of your land.", "&7It goes away when you're done."), "claimtool");
         put(m, 14, item(Material.ENDER_PEARL, "&bVisit a player", "&7Pick someone to ask", "&7if you can teleport to them."), "pick:tpa");
         put(m, 15, item(Material.PLAYER_HEAD, "&bLet a friend build here", "&7Pick someone to trust", "&7in the claim you're standing in."), "pick:trust");
         put(m, 16, item(Material.LIME_DYE, "&aAccept teleport request", "&7Someone asked to visit you."), "tpaccept");
@@ -542,6 +634,7 @@ public class Browser extends JavaPlugin implements Listener {
         if (a.equals("main")) { openMain(p); return; }
         if (a.startsWith("pick:")) { openPick(p, a.substring(5)); return; }
         p.closeInventory();
+        if (a.equals("claimtool")) { toggleTool(p); return; }
         if (a.equals("msg-claimcheck")) { p.sendMessage(c("&eHold a &fstick &eand right-click a block to see who owns that land.")); return; }
         Bukkit.getScheduler().runTask(this, () -> p.performCommand(a));
     }
@@ -560,7 +653,7 @@ public class Browser extends JavaPlugin implements Listener {
     }
 }
 JAVAEOF
-        printf 'name: GNCraftBrowser\nversion: "1.1"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
+        printf 'name: GNCraftBrowser\nversion: "1.2"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
             # The Paper API needs its own libraries (Adventure etc.) on the classpath too
@@ -588,7 +681,7 @@ if [ -n "$MD" ] && sudo -n test -d "$MD/plugins/Essentials"; then
 &7One survival world for Java, Bedrock and browser players.
 &e/sethome &7save a spot   &e/home &7go back to it
 &e/tpa <name> &7visit a friend   &e/back &7go back after dying
-&e/claim &7protects the land around you (or use a &6golden shovel &7on two corners)
+&e/claim &7gives you a claim shovel: right-click two corners to protect your land
 &7Type &e/menu &7for buttons instead of commands, or &e/help &7for the list.
 TXTEOF
     cat > /tmp/gn-help.txt <<'TXTEOF'
@@ -599,7 +692,7 @@ TXTEOF
 &eAnswer a request: &f/tpaccept &7or &f/tpdeny
 &eGo back: &f/back &7returns to where you died or last teleported
 &eChat: &f/msg <player> <text>&7, &f/r <text> &7replies, &f/list &7shows who's on, &f/afk
-&eProtect your stuff: &f/claim &7claims the land around you, or right-click two corners with a &6golden shovel
+&eProtect your stuff: &f/claim &7gives you a claim shovel, then right-click two opposite corners
 &eShare a claim: &f/trust <player>&7, &f/untrust <player>&7, &f/abandonclaim &7gives it up
 &7You earn more claim blocks the longer you play.
 TXTEOF
@@ -619,7 +712,7 @@ if [ -n "$MD" ] && sudo -n test -f "$MD/plugins/Essentials/kits.yml" && sudo -n 
     node -e '
 const fs=require("fs"),Y=require("yaml");
 const k=Y.parseDocument(fs.readFileSync("/tmp/ess-kits.yml","utf8"));
-k.setIn(["kits","starter"], k.createNode({ delay: -1, items: ["compass 1 name:&bGN_Craft_Menu", "golden_shovel 1 name:&6Claim_Shovel", "stick 1 name:&eClaim_Checker"] }));
+k.setIn(["kits","starter"], k.createNode({ delay: -1, items: ["compass 1 name:&bGN_Craft_Menu", "stick 1 name:&eClaim_Checker"] }));
 fs.writeFileSync("/tmp/ess-kits.yml", k.toString());
 const c=Y.parseDocument(fs.readFileSync("/tmp/ess-config.yml","utf8"));
 c.setIn(["newbies","kit"], "starter");
@@ -638,7 +731,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 16]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 17]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
