@@ -3302,6 +3302,30 @@ async function ownerOffsiteStatus() {
     if (o.lastOk) { el.style.color = "var(--success, #22c55e)"; el.textContent = `Working. Last copied ${when(o.lastOk)} (${Math.round(o.bytes / 1e6)} MB, ${o.kept || 1} kept in R2).`; return; }
     el.textContent = o.configured ? "Keys saved. The first copy goes up within 10 minutes." : "Not set up yet: backups only exist on your PC.";
 }
+// ── Minecraft hosting on the GN 2.0 server (owner only) ─────────────────────
+async function ownerMinecraft() {
+    const el = document.getElementById("owner-mc");
+    if (!el) return;
+    if (typeof cloudUser === "undefined" || !cloudUser) { el.textContent = "Sign in to see this."; return; }
+    let d = null, err = "";
+    try {
+        const r = await fetch(HOME_SERVER + "/api/owner/minecraft", { headers: { Authorization: "Bearer " + await cloudUser.getIdToken() }, cache: "no-store" });
+        if (r.ok) d = await r.json(); else err = r.status === 404 ? "The server hasn't updated yet. Try again in a few minutes." : "The server said " + r.status;
+    } catch { err = "The GN 2.0 Server can't be reached right now."; }
+    if (!document.getElementById("owner-mc")) return;
+    if (!d) { el.textContent = err; return; }
+    const s = d.status || {}, a = s.amp;
+    const row = (label, html) => `<div style="display:flex;gap:0.5rem;align-items:center;margin:0.25rem 0;flex-wrap:wrap;"><b style="min-width:7rem;">${label}</b><span>${html}</span></div>`;
+    const copy = v => `<code style="user-select:all;">${escapeHtml(v)}</code> <button class="settings-button" type="button" style="min-width:0;padding:0.2rem 0.6rem;font-size:12px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>notify('Copied',{type:'success'}))">Copy</button>`;
+    el.innerHTML =
+        row("Setup", !s.step ? "Not started yet (starts within about 10 minutes of an update)" : s.step === "done" ? "Finished" : "Running…") +
+        row("AMP panel", d.ampUp ? `<span style="color:var(--success,#22c55e)">Running</span> · <a href="https://amp.learnresearch.org" target="_blank" rel="noopener">amp.learnresearch.org</a>` : "Not running yet") +
+        (a ? row("AMP login", copy(a.user) + " " + copy(a.pass)) : "") +
+        row("playit", d.playit === "active" ? `<span style="color:var(--success,#22c55e)">Running</span>` : escapeHtml(d.playit || "not installed")) +
+        (s.playitClaim ? row("playit link", `<a href="${escapeHtml(s.playitClaim)}" target="_blank" rel="noopener">Claim this server on playit.gg</a>`) : "") +
+        `<details style="margin-top:0.5rem;"><summary>Setup log</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:16rem;overflow:auto;">${escapeHtml((d.log || []).join("\n"))}</pre></details>`;
+}
+
 // ── GN 2.0 Server maintenance (Firestore siteStatus/maintenance) ────────────
 async function ownerMaintStatus() {
     const el = document.getElementById("owner-maint-status");
@@ -3549,6 +3573,13 @@ function renderOwnerPanel() {
     </div>
 
     <div class="settings-section">
+        <h4>Minecraft Server</h4>
+        <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">AMP, Java and playit are installed on the GN 2.0 server by its auto-updater. Only your account can see this.</p>
+        <div id="owner-mc" style="font-size:13px;">Checking…</div>
+        <button class="settings-button" type="button" style="margin-top:0.5rem;" onclick="ownerMinecraft()">Refresh</button>
+    </div>
+
+    <div class="settings-section">
         <h4>GN 2.0 Server Maintenance</h4>
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">Planning to restart or work on the server? While maintenance is on, the status pages show it in amber as "Down for maintenance, back in about X min" instead of down, and it doesn't count as an outage.</p>
         <p id="owner-maint-status" style="margin:0 0 0.75rem;font-size:13px;">Checking…</p>
@@ -3591,6 +3622,7 @@ function renderOwnerPanel() {
     `;
 
     ownerOffsiteStatus();
+    ownerMinecraft();
     ownerMaintStatus();
     const ownerGameList = document.getElementById("owner-game-list");
     const disabledIds = getDisabledZoneIds();
