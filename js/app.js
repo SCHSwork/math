@@ -3321,9 +3321,23 @@ async function ownerMinecraft() {
         row("Setup", !s.step ? "Not started yet (starts within about 10 minutes of an update)" : s.step === "done" ? "Finished" : "Running…") +
         row("AMP panel", d.ampUp ? `<span style="color:var(--success,#22c55e)">Running</span> · <a href="https://amp.learnresearch.org" target="_blank" rel="noopener">amp.learnresearch.org</a>` : "Not running yet") +
         (a ? row("AMP login", copy(a.user) + " " + copy(a.pass)) : "") +
+        (d.geyser && (d.geyser.appliedAt || d.geyser.error) ? row("Bedrock setup", d.geyser.error ? `<span style="color:var(--danger,#ef4444)">${escapeHtml(d.geyser.error)}</span>` : `<span style="color:var(--success,#22c55e)">Geyser set up</span> · restart GN Craft in AMP if you haven't since`) : "") +
         row("playit", d.playit === "active" ? `<span style="color:var(--success,#22c55e)">Running</span>` : escapeHtml(d.playit || "not installed")) +
         (s.playitClaim ? row("playit link", `<a href="${escapeHtml(s.playitClaim)}" target="_blank" rel="noopener">Claim this server on playit.gg</a>`) : "") +
         `<details style="margin-top:0.5rem;"><summary>Setup log</summary><pre style="white-space:pre-wrap;font-size:11px;max-height:16rem;overflow:auto;">${escapeHtml((d.log || []).join("\n"))}</pre></details>`;
+}
+
+async function ownerSavePlayitNxs() {
+    const el = document.getElementById("owner-playit-nxs"), cfg = (el && el.value || "").trim();
+    if (!/^\s*bedrock\s*:/m.test(cfg) || !/nxs\s*:/.test(cfg)) return notify("Paste the whole block from playit's Configuration help (it starts with bedrock:).", { type: "error" });
+    if (/•/.test(cfg)) return notify("The token is hidden in what you pasted. Use playit's Copy button (or Show token first).", { type: "error" });
+    if (typeof cloudDb === "undefined" || !cloudDb || !cloudUser) return notify("Sign in to your account first.", { type: "error" });
+    try {
+        await cloudDb.collection("serverSecrets").doc("playit-nxs").set({ config: cfg.slice(0, 6000), at: firebase.firestore.FieldValue.serverTimestamp() });
+        el.value = "";
+        notify("Sent. The server sets up Geyser within a minute; then restart GN Craft in AMP.", { type: "success" });
+        setTimeout(ownerMinecraft, 8000);
+    } catch (e) { notify("Couldn't send it: " + (e.message || e), { type: "error" }); }
 }
 
 // ── GN 2.0 Server maintenance (Firestore siteStatus/maintenance) ────────────
@@ -3577,6 +3591,9 @@ function renderOwnerPanel() {
         <p style="margin:0 0 0.5rem;font-size:13px;color:var(--text-muted);">AMP, Java and playit are installed on the GN 2.0 server by its auto-updater. Only your account can see this.</p>
         <div id="owner-mc" style="font-size:13px;">Checking…</div>
         <button class="settings-button" type="button" style="margin-top:0.5rem;" onclick="ownerMinecraft()">Refresh</button>
+        <p style="margin:1rem 0 0.35rem;font-size:13px;"><b>Bedrock (NetherNet) setup:</b> on playit.gg open the Bedrock tunnel → Configuration help → Geyser → <b>Copy</b>, then paste it here. It has a private token: it goes straight to the server and nobody can read it back.</p>
+        <textarea id="owner-playit-nxs" rows="6" placeholder="bedrock:&#10;  address: 0.0.0.0&#10;  …" style="width:100%;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);font-size:12px;font-family:monospace;"></textarea>
+        <button class="settings-button" type="button" style="margin-top:0.5rem;" onclick="ownerSavePlayitNxs()">Send to the server</button>
     </div>
 
     <div class="settings-section">

@@ -744,7 +744,8 @@ app.get("/api/owner/minecraft", async (req, res) => {
     let ampUp = false;
     try { const r = await fetch("http://127.0.0.1:8081/", { signal: AbortSignal.timeout(3000) }); ampUp = r.status < 500; } catch {}
     const playit = (await runAny("systemctl", ["is-active", "playit"])).trim();
-    res.json({ status: st, ampUp, playit, log: logText.split("\n").filter(Boolean).slice(-40) });
+    await applyGeyserNxs().catch(() => {});
+    res.json({ status: st, ampUp, playit, geyser: geyserNxs, log: logText.split("\n").filter(Boolean).slice(-40) });
 });
 
 // ── GN Craft (the Minecraft server in AMP): is it up, who's on ──────────────
@@ -798,6 +799,57 @@ app.get("/api/minecraft", (req, res) => {
     res.set("Cache-Control", "no-store");
     res.status(mcServer.online ? 200 : 503).json(mcServer);
 });
+
+// ── Geyser ← playit NetherNet settings (owner pastes them in the Owner Panel) ─
+// Bedrock 26.60+ joins over NetherNet, which goes through playit's signaling
+// service. playit's tunnel page gives a Geyser config block with a private
+// token; the owner pastes it into Owner Panel → Minecraft Server, which stores
+// it write-only in Firestore serverSecrets/playit-nxs. Here it's merged into
+// every Geyser config on this PC (only the keys in the pasted block change).
+// Restart GN Craft in AMP afterwards so Geyser picks it up.
+const GEYSER_FILE = path.join(STATE_DIR, "geyser-nxs.json");
+let geyserNxs = readJson(GEYSER_FILE, { hash: null, appliedAt: null, error: null, files: 0 });
+let yamlLib = null;
+async function applyGeyserNxs() {
+    if (!db) return;
+    let cfg;
+    try { const d = await db.collection("serverSecrets").doc("playit-nxs").get(); cfg = d.exists ? String(d.data().config || "") : ""; }
+    catch (e) { return; }
+    if (!cfg) return;
+    const hash = crypto.createHash("sha256").update(cfg).digest("hex").slice(0, 16);
+    if (geyserNxs.hash === hash && !geyserNxs.error) return;
+    try {
+        yamlLib ||= require("yaml");
+        const want = yamlLib.parse(cfg);
+        if (!want || typeof want !== "object" || !want.bedrock) throw new Error("the pasted text has no bedrock: section");
+        const files = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "-path", "*/plugins/Geyser-Spigot/config.yml"])).trim().split("\n").filter(Boolean);
+        if (!files.length) throw new Error("no Geyser config found (start GN Craft once first)");
+        for (const f of files) {
+            const text = await runAny("sudo", ["-n", "cat", f]);
+            const doc = yamlLib.parseDocument(text);
+            const setLeaves = (obj, at) => {
+                for (const [k, v] of Object.entries(obj)) {
+                    if (v && typeof v === "object" && !Array.isArray(v)) setLeaves(v, [...at, k]);
+                    else doc.setIn([...at, k], v);
+                }
+            };
+            setLeaves(want, []);
+            const tmp = path.join(os.tmpdir(), "geyser-config-" + Date.now() + ".yml");
+            await fsp.writeFile(tmp, doc.toString(), { mode: 0o600 });
+            await runAny("sudo", ["-n", "cp", f, f + ".before-playit"]);
+            await runAny("sudo", ["-n", "cp", tmp, f]);
+            await runAny("sudo", ["-n", "chown", "amp:amp", f]);
+            await fsp.unlink(tmp).catch(() => {});
+        }
+        geyserNxs = { hash, appliedAt: Date.now(), error: null, files: files.length };
+        event("mc", "Geyser set up for playit's NetherNet tunnel: restart GN Craft in AMP to use it");
+    } catch (e) {
+        geyserNxs = { hash, appliedAt: null, error: e.message, files: 0 };
+        log("geyser nxs", e.message);
+    }
+    await writeJson(GEYSER_FILE, geyserNxs).catch(() => {});
+}
+setTimeout(applyGeyserNxs, 20000); setInterval(applyGeyserNxs, 2 * 60000);
 
 // ── Play counts ─────────────────────────────────────────────────────────────
 const PLAYS_FILE = path.join(STATE_DIR, "plays.json");
