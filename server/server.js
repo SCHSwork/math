@@ -831,7 +831,9 @@ app.get("/api/mc/redeem", (req, res) => {
     const v = mcTickets.get(String(req.query.t || ""));
     if (!v || Date.now() - v.at > 60 * 60000) return res.json({ ok: false });
     // A pass works for an hour (the game may sit in the menu, or reconnect), but only for one account
-    const uuid = crypto.createHash("md5").update("GNCraft:" + v.uid).digest("hex");
+    // Browser players' UUIDs all start with 6e637261 ("ncra") so GN Craft can tell
+    // them apart (the GNCraftBrowser plugin there exempts them from Grim)
+    const uuid = "6e637261" + crypto.createHash("md5").update("GNCraft:" + v.uid).digest("hex").slice(8);
     res.json({ ok: true, name: v.name, uuid: uuid.slice(0, 8) + "-" + uuid.slice(8, 12) + "-" + uuid.slice(12, 16) + "-" + uuid.slice(16, 20) + "-" + uuid.slice(20) });
 });
 

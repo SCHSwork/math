@@ -412,12 +412,64 @@ JAVAEOF
     rm -rf "$B"
 fi
 
+# ── GNCraftBrowser: browser players skip Grim on GN Craft ───────────────────
+# Built here against the Paper API that Paper unpacks into libraries/.
+if [ -n "$MD" ]; then
+    PAPI=$(sudo -n find "$MD/libraries" -name 'paper-api-*.jar' 2>/dev/null | sort | tail -1)
+    if [ -n "$PAPI" ] && command -v javac >/dev/null; then
+        B=/tmp/gncraftbrowser; rm -rf "$B"; mkdir -p "$B/src/gn/craft" "$B/out"
+        cat > "$B/src/gn/craft/Browser.java" <<'JAVAEOF'
+package gn.craft;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+
+// Browser (Eaglercraft) players come in through GN Proxy with UUIDs starting
+// 6e637261 (set by GNCraftLogin from their GN 2.0 account). Their movement is
+// translated from an old game version, which Grim reads as cheating and keeps
+// teleporting them back, so they skip Grim. Everyone else is still checked.
+public class Browser extends JavaPlugin implements Listener {
+    @Override
+    public void onEnable() { getServer().getPluginManager().registerEvents(this, this); }
+
+    private void exempt(Player p) {
+        if (p.getUniqueId().toString().startsWith("6e637261-") && !p.hasPermission("grim.exempt")) p.addAttachment(this, "grim.exempt", true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLogin(PlayerLoginEvent e) { exempt(e.getPlayer()); }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onJoin(PlayerJoinEvent e) { exempt(e.getPlayer()); }
+}
+JAVAEOF
+        printf 'name: GNCraftBrowser\nversion: "1.0"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\n' > "$B/out/plugin.yml"
+        SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
+        if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
+            sudo -n cat "$PAPI" > "$B/paper-api.jar"
+            if javac --release 21 -nowarn -cp "$B/paper-api.jar" -d "$B/out" "$B/src/gn/craft/Browser.java" > "$B/javac.log" 2>&1 \
+               && (cd "$B/out" && jar cf "$B/GNCraftBrowser.jar" .); then
+                sudo -n cp "$B/GNCraftBrowser.jar" "$MD/plugins/GNCraftBrowser.jar" && sudo -n chown amp:amp "$MD/plugins/GNCraftBrowser.jar" \
+                    && echo "$SRCHASH" > state/gncraftbrowser-built && say "GN Craft: built the browser-player plugin (restart GN Craft in AMP)"
+            else
+                say "GN Craft: couldn't build the browser-player plugin: $(grep -m2 -E 'error' "$B/javac.log" | tr '\n' ' ' | cut -c1-200)"
+            fi
+        fi
+        rm -rf "$B"
+    elif [ -z "$PAPI" ]; then say "GN Craft: no Paper API jar found in libraries/"; fi
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 11]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 12]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
