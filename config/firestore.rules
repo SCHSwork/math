@@ -131,13 +131,16 @@ service cloud.firestore {
     match /sessions/{id} {
       allow get, list: if isAdmin();
       allow create, update: if id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['st', 's', 'b', 'os', 'd', 'sc', 'lang', 'tz', 'host'])
+        && request.resource.data.keys().hasOnly(['st', 's', 'b', 'os', 'd', 'sc', 'lang', 'tz', 'host', 'bs', 'bf'])
         && request.resource.data.st == request.time
         && request.resource.data.s in ['gn2', 'light']
         && shortText(request.resource.data.b, 40) && shortText(request.resource.data.os, 40)
         && request.resource.data.d in ['computer', 'tablet', 'phone']
         && shortText(request.resource.data.sc, 12) && shortText(request.resource.data.lang, 20)
-        && shortText(request.resource.data.tz, 60) && shortText(request.resource.data.host, 100);
+        && shortText(request.resource.data.tz, 60) && shortText(request.resource.data.host, 100)
+        // Bot score and its signs (js/botcheck.js), optional
+        && (!('bs' in request.resource.data) || (request.resource.data.bs is int && request.resource.data.bs >= 0 && request.resource.data.bs <= 99))
+        && (!('bf' in request.resource.data) || shortText(request.resource.data.bf, 60));
       allow delete: if isAdmin();
     }
 

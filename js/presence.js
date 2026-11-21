@@ -135,14 +135,31 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         };
     }
     const PRESENCE_NO_SESSION_KEY = "gnmath-presence-no-session";
+    const PRESENCE_NO_BOTSCORE_KEY = "gnmath-presence-no-botscore";
+    // Bot score (js/botcheck.js), shown in Admin Panel → Sessions
+    function botFields() {
+        try { if (Date.now() - Number(localStorage.getItem(PRESENCE_NO_BOTSCORE_KEY) || 0) < 6 * 3600000) return null; } catch {}
+        const b = window.gnBotScore || { score: 0, flags: "" };
+        return { bs: { integerValue: String(Math.max(0, Math.min(99, b.score | 0))) }, bf: { stringValue: String(b.flags || "").slice(0, 60) } };
+    }
     async function writeSession() {
         try { if (Date.now() - Number(localStorage.getItem(PRESENCE_NO_SESSION_KEY) || 0) < 6 * 3600000) return; } catch {}
+        const write = fields => post("commit", { writes: [{
+            update: { name: `projects/${P}/databases/(default)/documents/sessions/${presenceId()}`, fields },
+            updateTransforms: [{ fieldPath: "st", setToServerValue: "REQUEST_TIME" }]
+        }] });
         try {
             if (fbOn()) fbCount(0, 1);
-            await post("commit", { writes: [{
-                update: { name: `projects/${P}/databases/(default)/documents/sessions/${presenceId()}`, fields: browserInfo() },
-                updateTransforms: [{ fieldPath: "st", setToServerValue: "REQUEST_TIME" }]
-            }] });
+            const bot = botFields();
+            try {
+                await write(bot ? { ...browserInfo(), ...bot } : browserInfo());
+            } catch (e) {
+                // Database rules without the bot score yet: send without it for a while
+                if (!bot || !/HTTP 403/.test(e.message)) throw e;
+                try { localStorage.setItem(PRESENCE_NO_BOTSCORE_KEY, String(Date.now())); } catch {}
+                if (fbOn()) fbCount(0, 1);
+                await write(browserInfo());
+            }
         } catch (e) {
             // Rules without sessions yet: try again in a few hours
             if (/HTTP 403/.test(e.message)) { try { localStorage.setItem(PRESENCE_NO_SESSION_KEY, String(Date.now())); } catch {} }
@@ -396,8 +413,11 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
         }
     }
 
-    // Wait until the page has settled so this never slows down the first load
-    setTimeout(async () => {
+    // Wait until the page has settled so this never slows down the first load, and
+    // until a real tap, click, key or mouse move (js/botcheck.js), so bots that only
+    // load the page are never counted as a visit or as online
+    const settled = new Promise(r => setTimeout(r, 4000));
+    Promise.all([settled, window.gnHuman || Promise.resolve()]).then(async () => {
         await beat();
         count(true);
         setInterval(() => {
@@ -405,7 +425,7 @@ window.gnActiveUsers = { count: null, at: 0, error: null };
             if (Date.now() - lastBeat >= presenceBeatMs() - 1000) beat();
             if (Date.now() - lastCount >= presenceCountMs()) count(true);
         }, 30000);
-    }, 4000);
+    });
     document.addEventListener("visibilitychange", () => {
         if (!booted && !document.hidden && lastBeat && Date.now() - lastBeat >= presenceBeatMs()) { beat().then(() => count(true)); }
     });

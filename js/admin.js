@@ -590,6 +590,8 @@ async function renderSessions() {
         if (!acct) tags.push(["Guest", "guest"]);
         if (p.s === "light") tags.push(["GN Light", "light"]);
         if (bootMap.has(p.id)) tags.push(["Booted", "banned"]);
+        // Bot score from js/botcheck.js: 3 or more is worth a look, 5 or more is very likely a bot
+        if ((d.bs || 0) >= 3) tags.push([d.bs >= 5 ? "Likely bot" : "Bot?", "bot"]);
         for (const [t, cls] of tags) { const x = document.createElement("span"); x.className = "admin-badge " + cls; x.textContent = t; sum.appendChild(x); }
         const meta = document.createElement("small");
         const info = [d.b, d.os ? "on " + d.os : "", d.d && d.d !== "computer" ? `(${d.d})` : ""].filter(Boolean).join(" ");
@@ -605,7 +607,9 @@ async function renderSessions() {
             ["Account", acct ? acct.username : "None (guest)"],
             ["Browser", d.b || "–"], ["System", [d.os, d.d].filter(Boolean).join(", ") || "–"],
             ["Screen", d.sc || "–"], ["Language", d.lang || "–"], ["Time zone", d.tz || "–"],
-            ["Site address", d.host || "–"], ["Session ID", p.id]
+            ["Site address", d.host || "–"],
+            ["Bot score", d.bs == null ? "–" : `${d.bs}${d.bf ? " (" + d.bf + ")" : ""}`],
+            ["Session ID", p.id]
         ];
         more.innerHTML = `<dl class="admin-session-info">${lines.map(([k, v]) => `<dt>${escapeHtmlText(k)}</dt><dd>${escapeHtmlText(v)}</dd>`).join("")}</dl>` +
             (!details.has(p.id) ? `<p class="admin-footnote">No session details yet (they opened the site before this was added, or on GN Light).</p>` : "");

@@ -2,6 +2,20 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 21, 2026 — Bots get a different page
+
+### Added
+- **Bot check.** Before anything else loads, the page checks for browsers that can't be real: an "iPhone" with a computer-sized screen, no touch screen or a PC graphics chip, a "Safari" or "Firefox" with Chrome-only features, automated or headless browsers, and known crawlers. Those get a plain math practice page instead, and none of the site's scripts, Firebase or session tracking load for them. Only checks a real browser can never fail are used. Add `?botpage` to the address to see what bots see.
+- **Cloud networks get the bot page.** The GN 2.0 Server checks whether a visit comes from a cloud server (AWS, Google Cloud, Azure, Hetzner and others), using the free iptoasn.com list, updated weekly. A network where someone played a game in the last 30 days is trusted (some school filters go through a cloud), and a browser that has signed in or played a game for a minute is never blocked this way. Counts are at `/api/bots` on the server and in its status.
+- **Trap link.** A link people can't see or reach. A browser that opens it is remembered as a bot for 30 days, unless it has signed in or played here. Add `?notbot` to the address to clear it on a browser.
+- **Bot score in Admin Panel → Sessions.** Each visit gets a score from soft signs (software graphics, no window, no languages, UTC time zone, a cloud network...). 3 or more shows a "Bot?" badge, 5 or more "Likely bot", and the signs are listed in the session's details. These don't block anyone; they're there to see what gets flagged.
+
+### Changed
+- **Visits only count after a real tap, click, key or mouse move,** so bots that just load the page don't show up in Sessions or the online count.
+
+## Added
+- **Bot check.** Before anything else loads, the page checks for browsers that can't be real: an "iPhone" with a computer-sized screen or no touch, a "Safari" or "Firefox" that has Chrome-only features, automated or headless browsers, and known crawlers. Those get a plain math practice page instead, and none of the site's scripts, Firebase or session tracking load for them, so they don't show up in the visitor list. Only checks a real browser can never fail are used. Add `?botpage` to the address to see what bots see.
+
 ## November 20, 2026 — Tamper alarm, smaller downloads, and more from the GN 2.0 Server
 
 ### Added

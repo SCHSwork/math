@@ -13,6 +13,9 @@
 //   GET  /api/errors                     errors per day and per game, last 7 days
 //   GET  /api/minecraft                  GN Craft (the Minecraft server): online, players, version (503 when down)
 //   GET  /api/mirror                     the full library copy: how far along, and repos that couldn't be copied
+//   GET  /api/net                        bot check: is this visitor on a cloud network (and is that network trusted)
+//   POST /api/trap                       bot check: something opened the hidden trap link
+//   GET  /api/bots                       bot check counts per day, last 30 days
 //   POST /api/play                       count a play  {id, v}
 //   GET  /api/plays?period=day|week|month|year
 //   GET|HEAD|PUT|DELETE /api/saves/:uid/:kind/:name   cloud save parts (Firebase sign-in required)
@@ -980,6 +983,7 @@ app.post("/api/play", express.text({ type: "*/*", limit: "2kb" }), (req, res) =>
     let b; try { b = JSON.parse(req.body || "{}"); } catch { return res.sendStatus(400); }
     const id = String(b.id || "").slice(0, 40), v = String(b.v || "").slice(0, 40);
     if (!/^[\w.-]+$/.test(id)) return res.sendStatus(400);
+    markTrusted(req);
     const key = v + "|" + id, now = Date.now();
     if (v && now - (recent.get(key) || 0) < 30 * 60 * 1000) return res.sendStatus(204);
     if (v) recent.set(key, now);
@@ -1183,6 +1187,94 @@ app.use("/api/saves", express.text({ type: "*/*", limit: "1100kb" }), async (req
 });
 
 
+// ── Bot check: cloud networks (GET /api/net) and the trap link (POST /api/trap) ─
+// Most bots run on cloud servers (AWS, Google Cloud, Azure, Hetzner...), and
+// players are at school or home, never on one. The page asks /api/net once in a
+// while; a cloud network gets the bot page. Some school web filters send traffic
+// out through a cloud, so a network where someone played a game in the last 30
+// days (counted per /24) is trusted and never sent to the bot page.
+// The network list is the free iptoasn.com table, downloaded weekly. Only the
+// ranges that belong to hosting companies are kept in memory.
+const ASN_FILE = path.join(STATE_DIR, "ip2asn-v4.tsv.gz");
+const TRUSTED_FILE = path.join(STATE_DIR, "trusted-nets.json");
+const BOTS_FILE = path.join(STATE_DIR, "bots.json");
+const CLOUD_ASNS = new Set([16509, 14618, 8987, 15169, 396982, 19527, 8075, 8068, 14061, 24940, 213230, 16276, 63949, 20473,
+    31898, 45102, 132203, 51167, 12876, 60781, 28753, 9009, 47583, 136907, 36352, 212238, 21859, 8560, 54290, 8100, 40676,
+    197540, 62567, 202425, 399629, 46664, 53667, 35916, 49981, 206264, 210644, 62240, 395954, 29802, 32244, 55286, 141995]);
+const CLOUD_NAMES = /AMAZON|GOOGLE-CLOUD|MICROSOFT-CORP|DIGITALOCEAN|HETZNER|\bOVH|LINODE|VULTR|CHOOPA|ORACLE-|ALIBABA|TENCENT|CONTABO|SCALEWAY|LEASEWEB|\bM247|HOSTINGER|COLOCROSSING|DATACAMP|ZENLAYER|HUAWEI-CLOUD|IONOS|HOSTWINDS|QUADRANET|PSYCHZ|NETCUP|SERVERS-COM|DATAPACKET|GCORE|G-CORE|CDN77|BUYVM|FRANTECH|RACKNERD|WORLDSTREAM|HOSTHATCH|LIQUIDWEB|HIVELOCITY|KAMATERA|UPCLOUD|HOSTROYALE|TERASWITCH|CLOUDZY|PONYNET|ALEXHOST|AEZA|STARK-INDUSTRIES|SPARKLAYER|SHOCK-1|IPXO/i;
+const NOT_CLOUD = /CLOUDFLARE|AKAMAI-AS|AKAMAI-ASN|FASTLY|ZSCALER|APPLE|NETSKOPE|IBOSS|LIGHTSPEED|SECURLY|GOGUARDIAN|CONTENTKEEPER|BLOCKSI|FORTINET|PALO-ALTO|CISCO/i;
+let cloudStarts = new Uint32Array(0), cloudEnds = new Uint32Array(0), cloudOrg = [];
+const trustedNets = readJson(TRUSTED_FILE, {});   // "a.b.c" (/24) -> last time someone played there
+const bots = readJson(BOTS_FILE, {});             // day -> { checks, cloud, sent, trusted, trap }
+let trustedDirty = false, botsDirty = false;
+const ipNum = ip => { const m = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(ip || ""); return m ? ((+m[1] << 24) >>> 0) + (+m[2] << 16) + (+m[3] << 8) + +m[4] : -1; };
+const net24 = ip => /^\d+\.\d+\.\d+\.\d+$/.test(ip || "") ? ip.split(".").slice(0, 3).join(".") : "";
+const clientIp = req => String(req.get("cf-connecting-ip") || req.ip || "").replace(/^::ffff:/, "");
+function botCount(k) { const d = (bots[today()] = bots[today()] || {}); d[k] = (d[k] || 0) + 1; botsDirty = true; }
+function markTrusted(req) {
+    const n = net24(clientIp(req));
+    if (!n) return;
+    const now = Date.now();
+    if (now - (trustedNets[n] || 0) > 3600000) { trustedNets[n] = now; trustedDirty = true; }
+}
+function cloudOf(ip) {
+    const x = ipNum(ip);
+    if (x < 0 || !cloudStarts.length) return null;
+    let lo = 0, hi = cloudStarts.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (cloudStarts[mid] > x) hi = mid - 1;
+        else if (cloudEnds[mid] < x) lo = mid + 1;
+        else return cloudOrg[mid];
+    }
+    return null;
+}
+async function loadCloudRanges() {
+    try {
+        const st = await exists(ASN_FILE);
+        if (!st || Date.now() - st.mtimeMs > 7 * 86400000) {
+            const r = await fetch("https://iptoasn.com/data/ip2asn-v4.tsv.gz", { signal: AbortSignal.timeout(120000) });
+            if (!r.ok) throw new Error("download " + r.status);
+            await writeAtomic(ASN_FILE, Buffer.from(await r.arrayBuffer()));
+        }
+        const text = zlib.gunzipSync(await fsp.readFile(ASN_FILE)).toString("utf8");
+        const s = [], e = [], o = [];
+        for (const line of text.split("\n")) {
+            const f = line.split("\t");
+            if (f.length < 5) continue;
+            const asn = +f[2], name = f[4];
+            if (!asn || NOT_CLOUD.test(name) || !(CLOUD_ASNS.has(asn) || CLOUD_NAMES.test(name))) continue;
+            s.push(ipNum(f[0])); e.push(ipNum(f[1])); o.push(`AS${asn} ${name}`.slice(0, 60));
+        }
+        const idx = s.map((_, i) => i).sort((a, b) => s[a] - s[b]);
+        cloudStarts = Uint32Array.from(idx.map(i => s[i])); cloudEnds = Uint32Array.from(idx.map(i => e[i])); cloudOrg = idx.map(i => o[i]);
+        log("cloud network ranges loaded:", cloudStarts.length);
+    } catch (err) { log("cloud network list", err.message); }
+}
+setTimeout(() => { loadCloudRanges(); setInterval(loadCloudRanges, 86400000); }, 20000);
+setInterval(() => {
+    const cut = Date.now() - 30 * 86400000;
+    for (const [k, t] of Object.entries(trustedNets)) if (t < cut) { delete trustedNets[k]; trustedDirty = true; }
+    for (const d of Object.keys(bots)) if (d < new Date(cut).toISOString().slice(0, 10)) { delete bots[d]; botsDirty = true; }
+    if (trustedDirty) { trustedDirty = false; writeJson(TRUSTED_FILE, trustedNets).catch(() => {}); }
+    if (botsDirty) { botsDirty = false; writeJson(BOTS_FILE, bots).catch(() => {}); }
+}, 5 * 60000);
+app.get("/api/net", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const ip = clientIp(req), org = cloudOf(ip), trusted = !!trustedNets[net24(ip)];
+    if (ipAllowed(req, 600)) { botCount("checks"); if (org) { botCount("cloud"); botCount(trusted ? "trusted" : "sent"); } }
+    res.json({ dc: !!org, org: org || "", trusted });
+});
+app.post("/api/trap", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    if (ipAllowed(req, 100)) botCount("trap");
+    res.sendStatus(204);
+});
+app.get("/api/bots", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({ days: bots, cloudRanges: cloudStarts.length, trustedNetworks: Object.keys(trustedNets).length });
+});
+
 // ── Online now, "N playing", Top 10 (takes over Firestore presence) ─────────
 // Each open copy of the site says "still here" (and which game is open) every
 // couple of minutes: POST /api/presence. That used to be a Firestore write per
@@ -1210,6 +1302,7 @@ app.post("/api/presence", express.text({ type: "*/*", limit: "4kb" }), (req, res
         if (/^[\w-]{1,12}$/.test(day || "")) u = { day, r: Math.min(100000, Math.max(0, v.r | 0)), w: Math.min(100000, Math.max(0, v.w | 0)) };
     }
     const now = Date.now();
+    if (g) markTrusted(req);   // someone playing a game: a real network (bot check)
     presence.set(id, { t: now, s: site, g, u });
     const v = visitors[id];
     if (v) v[1] = now; else visitors[id] = [now, now, -1];
@@ -1732,6 +1825,7 @@ app.get("/api/status", async (req, res) => {
         compressed: { files: compStats.files, savedBytes: compStats.saved, waiting: compQueue.length },
         drive: drive.health || null,
         reachToday: reach[today()] || null,
+        botsToday: bots[today()] || null,
         errorsToday: errorsDaily[today()] ? { total: errorsDaily[today()].total, topGames: Object.entries(errorsDaily[today()].games).map(([id, g]) => ({ id, name: g.name, n: g.n })).sort((a, b) => b.n - a.n).slice(0, 5) } : null,
         liveSaves: { today: liveSavesToday, toFirebase: liveSavesPromoted },
         authError,

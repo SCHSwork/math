@@ -4,6 +4,75 @@
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+    // Bot check. Runs before anything else on the page. Browsers that claim to be
+    // something they can't be (an iPhone with a 1080p screen, Safari with Chrome-only
+    // features, automated/headless browsers) get a plain math practice page instead,
+    // and none of the site's scripts, Firebase or presence ever load for them.
+    // Only checks a real browser can never fail are used, so players aren't caught.
+    // Preview the bot page with ?botpage. ?notbot clears a remembered bot mark.
+    (function () {
+        var why = "";
+        try {
+            var n = navigator, ua = n.userAgent || "", ls = window.localStorage;
+            var sw = screen.width || 0, sh = screen.height || 0;
+            var lo = Math.min(sw, sh), hi = Math.max(sw, sh);
+            var touch = n.maxTouchPoints || 0;
+            var iphone = /iPhone|iPod/.test(ua), ipad = /iPad/.test(ua);
+            var chromium = /Chrome\/|Chromium\/|CriOS\/|Edg|OPR\//.test(ua);
+            var mm = function (q) { try { return matchMedia(q).matches; } catch (e) { return true; } };
+            // A real iPhone/iPad reports "Apple GPU"; these names mean a PC or a headless browser
+            var gpu = function () {
+                try {
+                    var c = document.createElement("canvas"), gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+                    if (!gl) return "";
+                    var x = gl.getExtension("WEBGL_debug_renderer_info");
+                    var r = String(gl.getParameter(x ? x.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || "");
+                    var lose = gl.getExtension("WEBGL_lose_context"); if (lose) lose.loseContext();
+                    return r;
+                } catch (e) { return ""; }
+            };
+            // ?notbot clears a remembered bot mark (the trap link or a cloud network) on this browser
+            if (/[?&]notbot\b/.test(location.search)) { try { ls.removeItem("gn-bot"); ls.setItem("gn-real", String(Date.now())); } catch (e) {} }
+            var mark = null; try { mark = JSON.parse(ls.getItem("gn-bot") || "null"); } catch (e) {}
+            var real = false; try { real = !!ls.getItem("gn-real"); } catch (e) {}
+            if (/[?&]botpage\b/.test(location.search)) why = "preview";
+            else if (n.webdriver) why = "webdriver";
+            else if (/HeadlessChrome|PhantomJS|Puppeteer|Playwright|Selenium|python-requests|curl\/|wget\//i.test(ua)) why = "headless ua";
+            else if (/bot\b|bot\/|crawler|spider|slurp|Lighthouse|PageSpeed|facebookexternalhit|Bytespider|GPTBot|ClaudeBot|anthropic-ai|PerplexityBot|CCBot|Applebot|AhrefsBot|SemrushBot|MJ12bot|DotBot|PetalBot|YandexBot|Baiduspider|bingpreview/i.test(ua)) why = "bot ua";
+            // Every iPhone screen is 320–440 wide and 568–956 tall (portrait), with touch
+            else if (iphone && (lo > 480 || hi > 1000 || touch === 0)) why = "fake iphone " + sw + "x" + sh;
+            else if (ipad && touch === 0) why = "fake ipad";
+            // Phones and tablets with touch always have a touch pointer
+            else if ((iphone || ipad) && !mm("(any-pointer: coarse)")) why = "fake touch";
+            // userAgentData and window.chrome only exist in Chrome/Edge, so a "Safari" or "Firefox" with them is Chrome pretending
+            else if (n.userAgentData && !chromium) why = "fake browser";
+            else if (window.chrome && !chromium && !/CriOS|FxiOS|EdgiOS/.test(ua)) why = "fake browser";
+            else if (sw === 0 || sh === 0) why = "no screen";
+            else if ((iphone || ipad) && /ANGLE|SwiftShader|llvmpipe|softpipe|Mesa|NVIDIA|GeForce|Radeon|Intel|Mali|Adreno|PowerVR/i.test(gpu())) why = "fake iphone gpu";
+            // Marked earlier by the trap link or a cloud network (js/botcheck.js); never for a
+            // browser that has signed in or played here
+            else if (mark && mark.until > Date.now() && !real) why = String(mark.why || "marked").slice(0, 60);
+        } catch (e) {}
+        if (!why) return;
+        window.GN_BOT = why;
+        try { window.stop(); } catch (e) {}
+        var q = [["3/4 + 1/8", "7/8"], ["2/3 × 9/10", "3/5"], ["5/6 − 1/4", "7/12"], ["1 1/2 ÷ 3/4", "2"], ["0.375 as a fraction", "3/8"], ["40% of 65", "26"]];
+        var rows = "";
+        for (var i = 0; i < q.length; i++) rows += "<li><span>" + q[i][0] + " =</span> <details><summary>Show answer</summary>" + q[i][1] + "</details></li>";
+        document.documentElement.innerHTML =
+            "<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Math Practice</title>" +
+            "<meta name='description' content='Fraction, decimal and percent practice problems with answers.'>" +
+            "<style>body{font:17px/1.6 Georgia,serif;max-width:680px;margin:40px auto;padding:0 20px;color:#222;background:#fdfdfb}" +
+            "h1{font-size:28px;margin-bottom:4px}p.sub{color:#666;margin-top:0}ol{padding-left:22px}li{margin:14px 0}" +
+            "details{display:inline;margin-left:8px;color:#2a5d9f}summary{cursor:pointer;display:inline}footer{margin-top:48px;color:#888;font-size:14px}</style></head>" +
+            "<body><h1>Math Practice</h1><p class='sub'>Unit 4 review: fractions, decimals and percents</p>" +
+            "<p>Work each problem on paper first, then check your answer. Simplify all fractions.</p><ol>" + rows + "</ol>" +
+            "<h2>Tips</h2><p>To add or subtract fractions, find a common denominator first. To divide by a fraction, multiply by its reciprocal. " +
+            "To turn a percent into a decimal, move the decimal point two places to the left.</p>" +
+            "<footer>Practice set 4B</footer></body>";
+    })();
+    </script>
     <!-- Open connections to the game sources early -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
@@ -53,7 +122,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="GN 2.0">
     <meta name="twitter:description" content="Free browser games on GN 2.0. No downloads, no ads from us, and cloud saves with a free account.">
-    <link rel="stylesheet" href="css/styles.css?v=cac1e9ad85">
+    <link rel="stylesheet" href="css/styles.css?v=9d39f7ea02">
     <script>
     // Each site style's look is in its own file (css/skins/), so only the one in use
     // is loaded. Load the saved one now, before the page is drawn, so it never flashes.
@@ -67,6 +136,8 @@
     <meta name="theme-color" content="#fb2651">
 </head>
 <body class="dark-mode">
+    <!-- Bot trap: people never see or reach this link; bots that follow every link do (archive/, js/botcheck.js) -->
+    <a href="archive/" rel="nofollow" tabindex="-1" aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden">Archive</a>
 
     <header>
         <div class="header-content">
@@ -326,8 +397,9 @@
 <script src="js/takedown.js?v=000ce03d85"></script>
 <script src="js/admin-core.js?v=f55a05aa4e"></script>
 <!-- The Admin Panel loads only when opened (js/admin-core.js); its version is stamped here -->
-<meta name="gn-admin-js" data-src="js/admin.js?v=8909a8f5a9">
-<script src="js/presence.js?v=0d29200ad2"></script>
+<meta name="gn-admin-js" data-src="js/admin.js?v=7b312995df">
+<script src="js/botcheck.js?v=183109f399"></script>
+<script src="js/presence.js?v=72ae329ed6"></script>
 <script src="js/live.js?v=48aaba5e8f"></script>
 <script src="js/game-error.js?v=22b4a24c49"></script>
 <script src="js/identify.js?v=be164191ca"></script>

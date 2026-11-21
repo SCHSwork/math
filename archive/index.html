@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Archive</title>
+<script>
+// Bot trap. The only link here is hidden on the main page, so people never land
+// on it; bots that follow every link do. The browser is remembered as a bot for
+// 30 days (the main page then shows the bot page), unless it has signed in or
+// played on GN 2.0 before. ?notbot on the main page clears it.
+(function () {
+    try {
+        if (!localStorage.getItem("gn-real")) localStorage.setItem("gn-bot", JSON.stringify({ why: "trap link", until: Date.now() + 30 * 86400000 }));
+    } catch (e) {}
+    try { navigator.sendBeacon("https://data.learnresearch.org/api/trap", ""); } catch (e) {}
+    location.replace("../");
+})();
+</script>
+</head>
+<body><p>This archive has moved.</p></body>
+</html>
