@@ -1488,6 +1488,7 @@ app.get("/api/status", async (req, res) => {
         gamesFlagged: gameHealth().flagged.length,
         mirror: mirrorSummary(),
         offsite: offsiteSummary(),
+        minecraft: (() => { const m = readJson(path.join(STATE_DIR, "minecraft.json"), null); return m ? { step: m.step, java: m.java, amp: !!m.amp, playit: m.playitRunning, claimLink: !!m.playitClaim } : null; })(),
         compressed: { files: compStats.files, savedBytes: compStats.saved, waiting: compQueue.length },
         drive: drive.health || null,
         reachToday: reach[today()] || null,
