@@ -658,6 +658,8 @@ async function listZones() {
                 if (embed) {
                     if (typeof isPartnerZone === "function" && isPartnerZone(zone)) {
                         window.location.replace(partnerPlayUrl(zone));
+                    } else if (zone.inPlayer) {
+                        window.location.replace(zone.url);
                     } else if (zone.url.startsWith("http")) {
                         window.open(zone.url, "_blank");
                     } else {
@@ -681,7 +683,7 @@ async function listZones() {
         const playId = search.get('play');
         if (playId && !embed) {
             const zone = zones.find(z => String(z.id) === String(playId));
-            if (zone && !String(zone.url || "").startsWith("http")) setTimeout(() => openZone(zone), 0);
+            if (zone && (zone.inPlayer || !String(zone.url || "").startsWith("http"))) setTimeout(() => openZone(zone), 0);
             else if (!zone) notify("That game link is for a game that isn't on the site anymore.");
         }
         if (!embed) clearZoneIdFromUrl();
@@ -2283,7 +2285,7 @@ function openZone(file) {
         return;
     }
 
-    if (file.url.startsWith("http")) {
+    if (file.url.startsWith("http") && !file.inPlayer) {
         window.open(file.url, "_blank");
     } else if (typeof isPartnerZone === "function" && isPartnerZone(file)) {
         // Partner game (html5games.com): plays from Famobi's own site and may show their ads
@@ -2331,6 +2333,15 @@ function openZone(file) {
         // (e.g. "Identifier 'GODOT_CONFIG' has already been declared").
         replaceZoneFrame();
         const token = ++zoneOpenToken;
+        // A page of GN 2.0's own that plays in the normal player (play/<name>/,
+        // e.g. GN Craft): load it at its own address so its links and sign-in work
+        if (file.inPlayer) {
+            markGamePageWritten();
+            zoneFrame.addEventListener("load", () => { if (token === zoneOpenToken) endGameLoad(); }, { once: true });
+            zoneFrame.src = file.url;
+            startGameScrollTidy();
+            return;
+        }
         zoneFrame.contentDocument.open();
         zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
         zoneFrame.contentDocument.close();

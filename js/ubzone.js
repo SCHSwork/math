@@ -153,12 +153,14 @@ function toUbzoneZone(g, c, repo, ref) {
         authorLink: c.site,
         // path: a page in the collection's repo (plays in the normal player)
         // link: a Scratch project; play: a page of GN 2.0's own (play/<name>/) for games
-        // that need a full tab. Both open in a new tab.
+        // that need a full tab. Both open in a new tab, except a play page marked
+        // inPlayer (it works in the normal player, like GN Craft).
         url: g.path ? ghUrl(g.path) : g.play ? new URL(g.play, location.href).href : g.link,
         // A cover is a path in the collection's repo, or "owner/repo@commit/path" in another checked repo
         cover: !g.cover ? "" : /@[0-9a-f]{40}\//.test(g.cover) ? "gh:" + g.cover : ghUrl(g.cover),
         special: [c.key === "ubzone" ? UBZONE_TAG : c.key, ...(g.link ? ["scratch"] : [])],
-        newTab: !!(g.play || g.link),
+        newTab: !!((g.play && g.inPlayer !== true) || g.link),
+        inPlayer: !!(g.play && g.inPlayer === true),
         sources: Array.isArray(g.sources) ? g.sources.filter(s => typeof s === "string").slice(0, 8)
             : g.path ? [`${repo}@${ref}/${String(g.path).replace(/\/[^/]*$/, "")}`] : []
     };
