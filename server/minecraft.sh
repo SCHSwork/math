@@ -232,9 +232,12 @@ EOF
     }
     pget Geyser-Velocity "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
     pget floodgate-velocity "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity"
-    pmod ViaVersion viaversion
-    pmod ViaBackwards viabackwards
-    pmod ViaRewind viarewind
+    # No ViaVersion on the proxy: Grim (anti-cheat on GN Craft) kicks anyone who
+    # came through a proxy running it. Version translation is done on GN Craft.
+    sudo -n mkdir -p "$PD/plugins/disabled"
+    for J in $(sudo -n sh -c "ls '$PD/plugins' | grep -iE '^via(version|backwards|rewind).*\.jar$'"); do
+        sudo -n mv "$PD/plugins/$J" "$PD/plugins/disabled/$J" && say "GN Proxy: ViaVersion moved off the proxy ($J)"
+    done
     pmod EaglerXServer eaglercraftxserver
     # Bedrock moves to the proxy: same Geyser settings (incl. playit NetherNet) and floodgate key
     G="$MD/plugins/Geyser-Spigot/config.yml"
@@ -250,6 +253,14 @@ EOF
     for J in $(sudo -n sh -c "ls '$MD/plugins' | grep -i '^geyser.*\\.jar$'"); do
         sudo -n mv "$MD/plugins/$J" "$MD/plugins/moved-to-proxy/$J" && say "GN Craft: Geyser moved to GN Proxy ($J)"
     done
+    # GN Craft translates versions (ViaVersion + ViaBackwards from AMP's Store);
+    # ViaRewind adds 1.8 for browser (Eaglercraft) players
+    if ! sudo -n sh -c "ls '$MD/plugins' | grep -qiE '^viarewind.*\.jar$'"; then
+        U=$(curl -fsSL "https://api.modrinth.com/v2/project/viarewind/version?loaders=%5B%22paper%22%5D" 2>/dev/null | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const v=JSON.parse(d)[0];const f=v.files.find(f=>f.primary)||v.files[0];process.stdout.write(f.url)}catch{}})')
+        if [ -n "$U" ] && curl -fsSL "$U" -o /tmp/ViaRewind.jar && [ -s /tmp/ViaRewind.jar ]; then
+            sudo -n mv /tmp/ViaRewind.jar "$MD/plugins/ViaRewind.jar" && say "GN Craft: added ViaRewind (1.8 browser players)"
+        else say "GN Craft: couldn't download ViaRewind"; fi
+    fi
     # GN Craft: only accept players from the proxy
     sudo -n sed -i 's/^online-mode=true/online-mode=false/' "$MC"
     PG="$MD/config/paper-global.yml"
@@ -406,7 +417,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 9]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 10]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
