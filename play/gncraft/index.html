@@ -92,9 +92,22 @@
   const changed = html.replace(/servers:\s*\[(?:\s*\{[^{}]*\}\s*,?)*\s*\]\s*,/, servers)
     .replace(/worldsDB:\s*"worlds"\s*,/, 'worldsDB: "gncraft_worlds", localStorageNamespace: "_gncraft",');
   if (changed === html) console.warn("GN Craft: couldn't add the server to the list; reload this page");
+  // After a browser dialog (like "Leave site?" from Ctrl+W while sprinting) the
+  // game never hears the keys being let go, so they stay "held" and the controls
+  // go wrong. When the game gets focus back, let go of every key.
+  const release = () => {
+    for (const code of ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight", "AltLeft", "AltRight", "MetaLeft", "KeyW", "KeyA", "KeyS", "KeyD", "Space"]) {
+      const key = code.startsWith("Key") ? code.slice(3).toLowerCase() : code === "Space" ? " " : code.replace(/Left|Right/, "");
+      for (const t of [window, document, document.body, document.querySelector("canvas")]) {
+        if (t) try { t.dispatchEvent(new KeyboardEvent("keyup", { code, key, bubbles: true })); } catch {}
+      }
+    }
+  };
   document.open();
   document.write(changed);
   document.close();
+  window.addEventListener("focus", release);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) release(); });
 })();
 </script>
 </body>

@@ -149,7 +149,7 @@ function toUbzoneZone(g, c, repo, ref) {
         id: Number(g.id),
         name: g.name,
         // "by" is the game's maker when the collection's list names one
-        author: c.key === "ubzone" ? "unblockedzone" : (typeof g.by === "string" && g.by.trim() ? g.by.trim().slice(0, 80) : c.label),
+        author: typeof g.by === "string" && g.by.trim() ? g.by.trim().slice(0, 80) : c.key === "ubzone" ? "unblockedzone" : c.label,
         authorLink: c.site,
         // path: a page in the collection's repo (plays in the normal player)
         // link: a Scratch project; play: a page of GN 2.0's own (play/<name>/) for games

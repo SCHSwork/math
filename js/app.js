@@ -2522,7 +2522,13 @@ function downloadZone() {
 
 function fullscreenZone() {
     if (zoneFrame.requestFullscreen) {
-        zoneFrame.requestFullscreen();
+        const p = zoneFrame.requestFullscreen();
+        // Minecraft (GN Craft) sprints with Ctrl, and Ctrl+W closes the tab ("Leave
+        // site?"). In fullscreen, Chrome lets a page keep keys like that for itself
+        // (hold Esc to leave fullscreen instead)
+        if (window.gnNoSaveGame && navigator.keyboard && navigator.keyboard.lock && p && p.then) {
+            p.then(() => navigator.keyboard.lock().catch(() => {})).catch(() => {});
+        }
     } else if (zoneFrame.mozRequestFullScreen) {
         zoneFrame.mozRequestFullScreen();
     } else if (zoneFrame.webkitRequestFullscreen) {
