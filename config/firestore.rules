@@ -195,6 +195,15 @@ service cloud.firestore {
         && request.resource.data.at == request.time;
       allow read, delete: if false;
     }
+    // playit's Geyser config for Bedrock NetherNet (has a private token). Owner
+    // pastes it in Owner Panel → Minecraft Server; the server merges it into Geyser.
+    match /serverSecrets/playit-nxs {
+      allow create, update: if isOwner()
+        && request.resource.data.keys().hasOnly(['config', 'at'])
+        && request.resource.data.config is string && request.resource.data.config.size() <= 6000
+        && request.resource.data.at == request.time;
+      allow read, delete: if false;
+    }
 
     // Live site mode (js/realtime.js): the owner's browser writes the site
     // mode, its message and "back at" time here so open pages switch at once.
