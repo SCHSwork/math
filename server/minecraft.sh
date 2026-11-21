@@ -476,7 +476,7 @@ if [ -n "$MD" ] && sudo -n test -d "$MD/plugins/Essentials"; then
 &7One survival world for Java, Bedrock and browser players.
 &e/sethome &7save a spot   &e/home &7go back to it
 &e/tpa <name> &7visit a friend   &e/back &7go back after dying
-&6Golden shovel&7: right-click two corners to claim land so nobody can grief it
+&e/claim &7protects the land around you (or use a &6golden shovel &7on two corners)
 &7Type &e/help &7to see everything you can do.
 TXTEOF
     cat > /tmp/gn-help.txt <<'TXTEOF'
@@ -486,7 +486,7 @@ TXTEOF
 &eAnswer a request: &f/tpaccept &7or &f/tpdeny
 &eGo back: &f/back &7returns to where you died or last teleported
 &eChat: &f/msg <player> <text>&7, &f/r <text> &7replies, &f/list &7shows who's on, &f/afk
-&eProtect your stuff: &7hold a &6golden shovel &7and right-click two opposite corners to claim land
+&eProtect your stuff: &f/claim &7claims the land around you, or right-click two corners with a &6golden shovel
 &eShare a claim: &f/trust <player>&7, &f/untrust <player>&7, &f/abandonclaim &7gives it up
 &7You earn more claim blocks the longer you play.
 TXTEOF
@@ -499,12 +499,33 @@ TXTEOF
     done
 fi
 
+# ── New players start with a golden shovel (claiming land) and a stick
+# (right-click to see who owns a claim): Essentials gives the "starter" kit once
+if [ -n "$MD" ] && sudo -n test -f "$MD/plugins/Essentials/kits.yml" && sudo -n test -f "$MD/plugins/Essentials/config.yml"; then
+    for F in kits config; do sudo -n cat "$MD/plugins/Essentials/$F.yml" > "/tmp/ess-$F.yml"; done
+    node -e '
+const fs=require("fs"),Y=require("yaml");
+const k=Y.parseDocument(fs.readFileSync("/tmp/ess-kits.yml","utf8"));
+k.setIn(["kits","starter"], k.createNode({ delay: -1, items: ["golden_shovel 1 name:&6Claim_Shovel", "stick 1 name:&eClaim_Checker"] }));
+fs.writeFileSync("/tmp/ess-kits.yml", k.toString());
+const c=Y.parseDocument(fs.readFileSync("/tmp/ess-config.yml","utf8"));
+c.setIn(["newbies","kit"], "starter");
+fs.writeFileSync("/tmp/ess-config.yml", c.toString());' 2>/tmp/ess-err.log || say "GN Craft: couldn't set the starter kit: $(head -c 150 /tmp/ess-err.log)"
+    for F in kits config; do
+        if [ -s "/tmp/ess-$F.yml" ] && ! sudo -n cmp -s "/tmp/ess-$F.yml" "$MD/plugins/Essentials/$F.yml"; then
+            sudo -n cp "/tmp/ess-$F.yml" "$MD/plugins/Essentials/$F.yml" && sudo -n chown amp:amp "$MD/plugins/Essentials/$F.yml" \
+                && say "GN Craft: starter kit set up in Essentials $F.yml (run essentials reload)"
+        fi
+        rm -f "/tmp/ess-$F.yml"
+    done
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 14]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 15]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"

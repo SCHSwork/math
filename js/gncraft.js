@@ -37,7 +37,7 @@
             <div><code>/tpa name</code> ask to teleport to a friend, who answers with <code>/tpaccept</code> or <code>/tpdeny</code></div>
             <div><code>/back</code> go back to where you died or last teleported</div>
             <div><code>/msg name text</code> private message, <code>/r text</code> to reply, <code>/list</code> to see who's on</div>
-            <div><b>Protect your stuff:</b> hold a golden shovel and right-click two opposite corners to claim land. <code>/trust name</code> lets a friend build there.</div>
+            <div><b>Protect your stuff:</b> <code>/claim</code> claims the land around you (new players also get a golden shovel to claim by right-clicking two corners). <code>/trust name</code> lets a friend build there.</div>
             <div class="gcs-note">Type <code>/help</code> in the game for the full list.</div>
         </div>
         <div class="gcs-addrs" hidden>
