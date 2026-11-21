@@ -844,13 +844,14 @@ async function applyGeyserNxs() {
     try { const d = await db.collection("serverSecrets").doc("playit-nxs").get(); cfg = d.exists ? String(d.data().config || "") : ""; }
     catch (e) { return; }
     if (!cfg) return;
-    const hash = crypto.createHash("sha256").update(cfg).digest("hex").slice(0, 16);
+    // Every Geyser config on the machine: Paper (Geyser-Spigot) and Velocity (Geyser-Velocity)
+    const files = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "(", "-path", "*/plugins/Geyser-Spigot/config.yml", "-o", "-path", "*/plugins/Geyser-Velocity/config.yml", "-o", "-path", "*/plugins/geyser/config.yml", ")"])).trim().split("\n").filter(Boolean).sort();
+    const hash = crypto.createHash("sha256").update(cfg + "\n" + files.join("\n")).digest("hex").slice(0, 16);
     if (geyserNxs.hash === hash && !geyserNxs.error) return;
     try {
         yamlLib ||= require("yaml");
         const want = yamlLib.parse(cfg);
         if (!want || typeof want !== "object" || !want.bedrock) throw new Error("the pasted text has no bedrock: section");
-        const files = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "(", "-path", "*/plugins/Geyser-Spigot/config.yml", "-o", "-path", "*/plugins/geyser/config.yml", ")"])).trim().split("\n").filter(Boolean);
         if (!files.length) throw new Error("no Geyser config found (start GN Craft once first)");
         for (const f of files) {
             const text = await runAny("sudo", ["-n", "cat", f]);
@@ -870,7 +871,7 @@ async function applyGeyserNxs() {
             await fsp.unlink(tmp).catch(() => {});
         }
         geyserNxs = { hash, appliedAt: Date.now(), error: null, files: files.length };
-        event("mc", "Geyser set up for playit's NetherNet tunnel: restart GN Craft in AMP to use it");
+        event("mc", "Geyser set up for playit's NetherNet tunnel (" + files.map(f => f.split("/")[5]).join(", ") + "): restart those in AMP to use it");
     } catch (e) {
         geyserNxs = { hash, appliedAt: null, error: e.message, files: 0 };
         log("geyser nxs", e.message);
