@@ -43,7 +43,7 @@
   const text = document.getElementById("text"), fill = document.getElementById("fill"), sub = document.getElementById("sub");
   const stop = (msg, link) => {
     text.textContent = msg; document.getElementById("bar").style.display = "none";
-    sub.innerHTML = link ? `<a href="../../" style="color:#4ade80;">Go to GN 2.0 to sign in</a>` : "";
+    sub.innerHTML = link ? `<a href="../../" target="_top" style="color:#4ade80;">Go to GN 2.0 to sign in</a>` : "";
   };
   // Signed in to GN 2.0? (same Firebase project and saved sign-in as the site, js/accounts.js)
   const load = src => new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
