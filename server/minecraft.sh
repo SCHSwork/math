@@ -284,12 +284,17 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 4]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 5]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
 LT=$(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*' -name listeners.toml 2>/dev/null | head -1)
 [ -n "$LT" ] && sudo -n grep -nE '^\s*(forward_ip|forward_secret|dual_stack|inject_address|listener_name)\s*=' "$LT" | head -6 | sed 's/^/GN Proxy test listeners.toml: /' | while read -r l; do say "$l"; done
+
+# ── GN Proxy: names of the Eaglercraft server-list settings (MOTD and icon only)
+for F in $(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*/plugins/eaglerxserver/listeners.toml' 2>/dev/null); do
+    sudo -n grep -nE '^\s*[a-z_]*(motd|icon)[a-z_]*\s*=' "$F" | head -6 | while read -r l; do say "GN Proxy listing: $l"; done
+done
 
 # ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
 echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
