@@ -86,25 +86,9 @@ if command -v ampinstmgr >/dev/null; then
     curl -s -o /dev/null -w "AMP panel answers on 8081: HTTP %{http_code}\n" localhost:8081 | sed "s/^/$(stamp) /"
 fi
 
-# ── Plugins for every Paper server in AMP ───────────────────────────────────
-#   Geyser + Floodgate: Bedrock players (phones, consoles, Windows) can join
-#   CoreProtect: logs every block change so griefing can be rolled back
-# Only added if missing; restart the server in AMP to load them.
-for MC in $(sudo -n find /home/amp/.ampdata/instances -mindepth 2 -maxdepth 2 -type d -name Minecraft 2>/dev/null); do
-    sudo -n test -d "$MC" || continue
-    sudo -n test -f "$MC/server.properties" || continue
-    sudo -n mkdir -p "$MC/plugins"
-    get_plugin() {   # name url
-        if sudo -n sh -c "ls '$MC/plugins' | grep -qi '^$1'"; then return; fi
-        if curl -fsSL "$2" -o "/tmp/$1.jar" && [ -s "/tmp/$1.jar" ]; then
-            sudo -n mv "/tmp/$1.jar" "$MC/plugins/$1.jar" && sudo -n chown amp:amp "$MC/plugins/$1.jar" && say "added $1 to $(basename "$(dirname "$MC")")"
-        else say "couldn't download $1"; fi
-    }
-    get_plugin Geyser-Spigot "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot"
-    get_plugin floodgate-spigot "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot"
-    CP=$(curl -fsSL 'https://api.modrinth.com/v2/project/coreprotect/version?loaders=%5B%22paper%22%5D' 2>/dev/null | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const v=JSON.parse(d)[0];process.stdout.write(v.files.find(f=>f.primary)?.url||v.files[0].url)}catch{}})')
-    if [ -n "$CP" ]; then get_plugin CoreProtect "$CP"; else say "couldn't find a CoreProtect download"; fi
-done
+# ── Plugins ─────────────────────────────────────────────────────────────────
+# Plugins are managed in AMP's own plugin Store now, so they show up there and
+# AMP can update them. This script no longer downloads any plugins.
 
 # ── playit.gg ───────────────────────────────────────────────────────────────
 if ! command -v playit >/dev/null; then
