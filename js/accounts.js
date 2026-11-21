@@ -44,13 +44,14 @@ let cloudBusy = false, cloudStatus = "", cloudAutosaveTimer = null;
 
 // ── What goes into a save ────────────────────────────────────────────────────
 function isCloudExcludedStorageKey(key) {
-    return isProtectedStorageKey(key) || key.startsWith("gnmath-cloud-") || key.startsWith("gnmath-cache-") || key.startsWith("firebase:");
+    return isProtectedStorageKey(key) || key.startsWith("gnmath-cloud-") || key.startsWith("gnmath-cache-") || key.startsWith("firebase:")
+        || key.startsWith("_gncraft");   // GN Craft (play/gncraft): saves on the Minecraft server, not here
 }
 function isCloudExcludedDb(name) {
     // Firebase's own login/cache databases, Unity's download cache (game files, not progress),
     // and the site's own save backups (game-extras.js), which would only make cloud saves bigger
     // Also emulators' downloaded cores, ROMs and BIOS files (EmulatorJS keeps saves in its own "states" database, which stays)
-    return /^firebase|^firestore\//i.test(name) || name === "UnityCache" || name === "gnmath-backups" || /^EmulatorJS-(core|cores|roms|bios)$/i.test(name);
+    return /^firebase|^firestore\//i.test(name) || /^_?gncraft/i.test(name) || name === "UnityCache" || name === "gnmath-backups" || /^EmulatorJS-(core|cores|roms|bios)$/i.test(name);
 }
 // A save bigger than the cloud can hold used to not save at all. Now the
 // biggest pieces of game data are left out (they stay on this device) until
@@ -1568,7 +1569,8 @@ function saveChipInfo() {
 function renderSaveChip() {
     const el = document.getElementById("saveChip");
     if (!el) return;
-    const info = cloudUser && !accountNeedsVerify() && !accountNeedsUsername() ? saveChipInfo() : null;
+    // Games that save on their own server (GN Craft) don't show the site's save chip
+    const info = cloudUser && !accountNeedsVerify() && !accountNeedsUsername() && !window.gnNoSaveGame ? saveChipInfo() : null;
     el.hidden = !info;
     if (!info) { closeSaveDetails(); return; }
     el.className = "save-chip " + info.cls;
@@ -1990,7 +1992,7 @@ async function initCloudAccounts() {
         // (after the game has written its last progress: retireGameFrame in app.js)
         closeZone = function () {
             let name = "";
-            try { if (zoneViewer.style.display !== "none") name = (document.getElementById("zoneName").textContent || "").trim(); } catch {}
+            try { if (zoneViewer.style.display !== "none" && !window.gnNoSaveGame) name = (document.getElementById("zoneName").textContent || "").trim(); } catch {}
             const r = originalCloseZone.apply(this, arguments);
             if (cloudUser && name) showCloseSaveToast(name);
             if (cloudUser) Promise.race([Promise.resolve(window.gnGameFlush), new Promise(res => setTimeout(res, 4000))]).then(() => uploadCloudSave());

@@ -161,6 +161,7 @@ function toUbzoneZone(g, c, repo, ref) {
         special: [c.key === "ubzone" ? UBZONE_TAG : c.key, ...(g.link ? ["scratch"] : [])],
         newTab: !!((g.play && g.inPlayer !== true) || g.link),
         inPlayer: !!(g.play && g.inPlayer === true),
+        noSaves: g.noSaves === true,   // progress lives on the game's own server (GN Craft)
         sources: Array.isArray(g.sources) ? g.sources.filter(s => typeof s === "string").slice(0, 8)
             : g.path ? [`${repo}@${ref}/${String(g.path).replace(/\/[^/]*$/, "")}`] : []
     };

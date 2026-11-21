@@ -96,7 +96,7 @@ function liveWatchWindow(w) {
 liveWatchWindow(window);
 // Each game runs in its own frame (a new page every time a game opens)
 setInterval(() => {
-    try { if (typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow) liveWatchWindow(zoneFrame.contentWindow); } catch {}
+    try { if (!window.gnNoSaveGame && typeof zoneFrame !== "undefined" && zoneFrame && zoneFrame.contentWindow) liveWatchWindow(zoneFrame.contentWindow); } catch {}
 }, 500);
 
 // ── Saving ──────────────────────────────────────────────────────────────────

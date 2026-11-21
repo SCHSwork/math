@@ -2285,6 +2285,9 @@ function openZone(file) {
         return;
     }
 
+    // Games that keep their progress on their own server (GN Craft): no site saves
+    window.gnNoSaveGame = !!file.noSaves;
+    if (typeof renderSaveChip === "function") renderSaveChip();
     if (file.url.startsWith("http") && !file.inPlayer) {
         window.open(file.url, "_blank");
     } else if (typeof isPartnerZone === "function" && isPartnerZone(file)) {
@@ -2469,6 +2472,7 @@ function aboutBlank() {
 
 function closeZone() {
     if (typeof closeGameFatal === "function") closeGameFatal();
+    setTimeout(() => { window.gnNoSaveGame = false; }, 0);   // after the close-save hook has looked
     zoneOpenToken++;
     stopPlaytime();
     if (typeof closeGameMenu === "function") closeGameMenu();

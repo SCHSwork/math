@@ -86,7 +86,11 @@
   const servers = `servers: [
         { addr: "${pass.server}", name: "§a§lGN Craft§r", hideAddr: true }
     ],`;
-  const changed = html.replace(/servers:\s*\[(?:\s*\{[^{}]*\}\s*,?)*\s*\]\s*,/, servers);
+  // Own storage names: GN Craft keeps nothing that matters in the browser (the
+  // world and players live on the server), and this keeps its settings apart from
+  // the site's other Eaglercraft games and out of GN 2.0 cloud saves (js/accounts.js)
+  const changed = html.replace(/servers:\s*\[(?:\s*\{[^{}]*\}\s*,?)*\s*\]\s*,/, servers)
+    .replace(/worldsDB:\s*"worlds"\s*,/, 'worldsDB: "gncraft_worlds", localStorageNamespace: "_gncraft",');
   if (changed === html) console.warn("GN Craft: couldn't add the server to the list; reload this page");
   document.open();
   document.write(changed);
