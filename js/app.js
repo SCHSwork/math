@@ -2520,14 +2520,23 @@ function downloadZone() {
     });
 }
 
+// Leaving fullscreen leaves the keyboard on the page around the game: give it back
+document.addEventListener("fullscreenchange", () => {
+    if (document.fullscreenElement || !window.gnNoSaveGame || !zoneFrame) return;
+    setTimeout(() => { try { zoneFrame.focus(); zoneFrame.contentWindow.focus(); } catch {} }, 50);
+});
 function fullscreenZone() {
     if (zoneFrame.requestFullscreen) {
         const p = zoneFrame.requestFullscreen();
         // Minecraft (GN Craft) sprints with Ctrl, and Ctrl+W closes the tab ("Leave
         // site?"). In fullscreen, Chrome lets a page keep keys like that for itself
         // (hold Esc to leave fullscreen instead)
-        if (window.gnNoSaveGame && navigator.keyboard && navigator.keyboard.lock && p && p.then) {
-            p.then(() => navigator.keyboard.lock().catch(() => {})).catch(() => {});
+        if (window.gnNoSaveGame && p && p.then) {
+            p.then(() => {
+                if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock().catch(() => {});
+                // Keys go to the game, not the page around it
+                try { zoneFrame.focus(); zoneFrame.contentWindow.focus(); } catch {}
+            }).catch(() => {});
         }
     } else if (zoneFrame.mozRequestFullScreen) {
         zoneFrame.mozRequestFullScreen();
