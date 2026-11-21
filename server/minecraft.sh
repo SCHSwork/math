@@ -42,12 +42,12 @@ if ! command -v ampinstmgr >/dev/null; then
 fi
 if command -v ampinstmgr >/dev/null; then
     id amp >/dev/null 2>&1 || { sudo -n useradd -d /home/amp -m amp -s /bin/bash && say "created the amp user"; }
-    if ! sudo -n -u amp -H ampinstmgr -l 2>/dev/null | grep -qi "ADS"; then
+    if ! sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -qi "ADS"; then
         PASS="Gn$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 14)7!"
         say "creating AMP's main panel (ADS) on port 8081"
-        OUT=$(sudo -n -u amp -H ampinstmgr quickstart lincoln "$PASS" 0.0.0.0 8081 2>&1); RC=$?
+        OUT=$(sudo -n runuser -l amp -c "ampinstmgr quickstart lincoln '$PASS' 0.0.0.0 8081" 2>&1); RC=$?
         echo "$OUT" | tail -8
-        if [ $RC -eq 0 ] && sudo -n -u amp -H ampinstmgr -l 2>/dev/null | grep -qi "ADS"; then
+        if [ $RC -eq 0 ] && sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -qi "ADS"; then
             set_status "{\"amp\":{\"user\":\"lincoln\",\"pass\":\"$PASS\",\"port\":8081}}"
             say "AMP panel created (login is in the Owner Panel)"
         else say "AMP quickstart FAILED"; fi
@@ -56,7 +56,7 @@ if command -v ampinstmgr >/dev/null; then
     ( sudo -n crontab -u amp -l 2>/dev/null | grep -q "ampinstmgr -b" ) || \
         { ( sudo -n crontab -u amp -l 2>/dev/null; echo "@reboot /opt/cubecoders/amp/ampinstmgr -b" ) | sudo -n crontab -u amp - && say "AMP set to start on boot"; }
     sudo -n systemctl enable ampinstmgr >/dev/null 2>&1
-    sudo -n -u amp -H ampinstmgr -b >/dev/null 2>&1
+    sudo -n runuser -l amp -c "ampinstmgr -b" >/dev/null 2>&1
     curl -s -o /dev/null -w "AMP panel answers on 8081: HTTP %{http_code}\n" localhost:8081 | sed "s/^/$(stamp) /"
 fi
 
@@ -71,7 +71,9 @@ fi
 if command -v playit >/dev/null; then
     sudo -n systemctl enable --now playit >/dev/null 2>&1
     sleep 15
-    CLAIM=$(sudo -n journalctl -u playit --no-pager -q -n 300 2>/dev/null | grep -o 'https://playit\.gg/claim/[A-Za-z0-9]*' | tail -1)
+    JLOG=$(sudo -n journalctl -u playit --no-pager -q -o cat -n 300 2>/dev/null)
+    echo "--- playit's own log (last lines):"; echo "$JLOG" | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tail -15; echo "---"
+    CLAIM=$(echo "$JLOG" | grep -o 'https://playit\.gg/[A-Za-z0-9/_-]*claim[A-Za-z0-9/_-]*' | tail -1)
     if [ -n "$CLAIM" ]; then set_status "{\"playitClaim\":\"$CLAIM\"}"; say "playit claim link found (shown in the Owner Panel)"
     else say "no playit claim link in its log (already claimed, or still starting)"; fi
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
