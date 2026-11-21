@@ -903,9 +903,9 @@
   },
   {
    "id": 300093,
-   "name": "GN Craft (Minecraft server)",
+   "name": "GN Craft",
    "play": "play/gncraft/",
-   "cover": "assets/img/main/188.png",
+   "cover": "SCHSwork/math@d97e67fae89944da05667212449da9a49677e7d8/play/gncraft/cover.png",
    "sources": [
     "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wasm18.html"
    ]
