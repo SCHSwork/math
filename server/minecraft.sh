@@ -451,8 +451,10 @@ JAVAEOF
         printf 'name: GNCraftBrowser\nversion: "1.0"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
-            sudo -n cat "$PAPI" > "$B/paper-api.jar"
-            if javac --release 21 -nowarn -cp "$B/paper-api.jar" -d "$B/out" "$B/src/gn/craft/Browser.java" > "$B/javac.log" 2>&1 \
+            # The Paper API needs its own libraries (Adventure etc.) on the classpath too
+            CP=$(sudo -n find "$MD/libraries" -name '*.jar' 2>/dev/null | paste -sd: -)
+            if sudo -n javac --release 21 -nowarn -cp "$CP" -d "$B/out" "$B/src/gn/craft/Browser.java" > "$B/javac.log" 2>&1 \
+               && sudo -n chown -R "$(id -u):$(id -g)" "$B/out" \
                && (cd "$B/out" && jar cf "$B/GNCraftBrowser.jar" .); then
                 sudo -n cp "$B/GNCraftBrowser.jar" "$MD/plugins/GNCraftBrowser.jar" && sudo -n chown amp:amp "$MD/plugins/GNCraftBrowser.jar" \
                     && echo "$SRCHASH" > state/gncraftbrowser-built && say "GN Craft: built the browser-player plugin (restart GN Craft in AMP)"
@@ -469,7 +471,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 12]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 13]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
