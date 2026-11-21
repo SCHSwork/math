@@ -274,7 +274,9 @@ async function mirrorRepo(owner, repo, ref) {
     await fsp.rm(tmp, { recursive: true, force: true });
     await fsp.mkdir(tmp, { recursive: true });
     mirrorRun.current = key;
-    const git = (...a) => run("git", ["-c", "advice.detachedHead=false", "-c", "core.longpaths=true", ...a], { cwd: tmp, env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_LFS_SKIP_SMUDGE: "1" } });
+    // Lowest CPU and disk priority (ionice idle, nice 19), and git limited to one thread,
+    // so the copy can't starve the server, Minecraft or the VM itself
+    const git = (...a) => run("ionice", ["-c3", "nice", "-n19", "git", "-c", "advice.detachedHead=false", "-c", "core.longpaths=true", "-c", "pack.threads=1", "-c", "index.threads=1", ...a], { cwd: tmp, env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_LFS_SKIP_SMUDGE: "1" } });
     try {
         await git("init", "-q");
         await git("remote", "add", "origin", `https://github.com/${owner}/${repo}.git`);
@@ -539,7 +541,7 @@ async function compNext() {
             try {
                 const buf = await fsp.readFile(file);
                 const z = await new Promise((res, rej) => enc === "br"
-                    ? zlib.brotliCompress(buf, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: buf.length > 20e6 ? 5 : 9, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: buf.length } }, (e, r) => e ? rej(e) : res(r))
+                    ? zlib.brotliCompress(buf, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: buf.length > 2e6 ? 4 : 8, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: buf.length } }, (e, r) => e ? rej(e) : res(r))
                     : zlib.gzip(buf, { level: 9 }, (e, r) => e ? rej(e) : res(r)));
                 if (z.length < buf.length * 0.9) { await writeAtomic(out, z); compStats.files++; compStats.saved += buf.length - z.length; }
                 else { await fsp.writeFile(out, ""); compStats.skipped++; }
@@ -718,6 +720,10 @@ async function checkDrive() {
             if (h.fullInDays != null && h.fullInDays < 30) h.warnings.push(`the disk will be full in about ${h.fullInDays} days at this rate`);
         }
     }
+    // The last kernel warnings before the VM's last restart (saved by update.sh), to find crash causes
+    const prev = await fsp.readFile(path.join(STATE_DIR, "previous-boot-kernel.log"), "utf8").catch(() => "");
+    h.previousBoot = prev.split("\n").filter(Boolean).slice(-15).map(l => l.slice(0, 220));
+    h.bootedAt = Date.now() - os.uptime() * 1000;
     const before = (drive.health && drive.health.warnings || []).join("|");
     drive.health = h;
     await writeJson(DRIVE_FILE, drive).catch(() => {});

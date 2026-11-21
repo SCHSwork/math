@@ -24,6 +24,23 @@ if [ "$(timedatectl show -p NTPSynchronized --value 2>/dev/null)" != "yes" ] && 
     echo "$(stamp) clock now $(date -u +%T) UTC, synced: $(timedatectl show -p NTPSynchronized --value 2>/dev/null)"
 fi
 
+# Crashes: if Ubuntu ever panics (it froze with the keyboard lights blinking),
+# reboot by itself after 10 seconds instead of sitting frozen, and keep the logs
+# of earlier boots so the cause can be found (journalctl -b -1).
+if [ "$(sysctl -n kernel.panic 2>/dev/null)" != "10" ]; then
+    printf 'kernel.panic = 10\nkernel.panic_on_oops = 1\nkernel.hung_task_panic = 0\n' | sudo -n tee /etc/sysctl.d/90-gn-autoreboot.conf >/dev/null && sudo -n sysctl -q -p /etc/sysctl.d/90-gn-autoreboot.conf && echo "$(stamp) set the VM to reboot itself after a crash"
+fi
+if [ ! -d /var/log/journal ]; then
+    sudo -n mkdir -p /var/log/journal && sudo -n systemd-tmpfiles --create --prefix /var/log/journal >/dev/null 2>&1 && sudo -n systemctl restart systemd-journald && echo "$(stamp) kept logs across reboots"
+fi
+# What happened right before the last restart (saved for the server's status page)
+if [ ! -f state/lastboot-$(cat /proc/sys/kernel/random/boot_id 2>/dev/null) ]; then
+    rm -f state/lastboot-*; touch state/lastboot-$(cat /proc/sys/kernel/random/boot_id)
+    sudo -n journalctl -b -1 -n 60 --no-pager -o short-iso 2>/dev/null > state/previous-boot.log
+    sudo -n journalctl -b -1 -k -p warning --no-pager -o short-iso 2>/dev/null | tail -40 > state/previous-boot-kernel.log
+    echo "$(stamp) saved the last lines from before the restart"
+fi
+
 # Drive health checks (server.js checkDrive) use smartctl
 if ! command -v smartctl >/dev/null && [ ! -f state/smart-tried-$(date +%F) ]; then
     touch state/smart-tried-$(date +%F)
