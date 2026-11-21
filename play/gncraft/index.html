@@ -7,7 +7,9 @@
 <!--
   GN Craft: EaglercraftX 1.8.8 (WASM) with the GN Craft server already in the
   Multiplayer list (wss://eagler.learnresearch.org, through GN Proxy on the
-  GN 2.0 Server). The game is the same checked UBZone file as "EaglerCraft 1.8.8
+  GN 2.0 Server). Players must be signed in to GN 2.0: this page gets a join
+  pass for their account from the GN 2.0 Server and puts it in the server
+  address, and GN Proxy lets them in under their GN 2.0 username. The game is the same checked UBZone file as "EaglerCraft 1.8.8
   (WASM)" (js/ubzone.js), from the exact checked commit below; only its server
   list is changed before it starts. Opens in its own tab like other play/ pages.
 -->
@@ -24,21 +26,41 @@
   <b style="font-size:22px;">GN Craft</b>
   <div id="text">Loading Minecraft (about 15 MB)…</div>
   <div id="bar"><div id="fill"></div></div>
-  <small>The GN Craft server will be first in Multiplayer.</small>
+  <small id="sub">Checking your GN 2.0 sign-in…</small>
 </div>
 <script>
 "use strict";
 (async () => {
   const REPO = "s0n-1m-cr1n3/sc13nc3", SHA = "3096333fcce4d7a42ce18f59725abb62d5811116";
   const FILE = "assets/html/main/wasm18.html";
-  const SERVER = "wss://eagler.learnresearch.org";
   const urls = [
     `https://cdn.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
     `https://fastly.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
     `https://raw.githubusercontent.com/${REPO}/${SHA}/${FILE}`,
     `https://gcore.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`
   ];
-  const text = document.getElementById("text"), fill = document.getElementById("fill");
+  const text = document.getElementById("text"), fill = document.getElementById("fill"), sub = document.getElementById("sub");
+  const stop = (msg, link) => {
+    text.textContent = msg; document.getElementById("bar").style.display = "none";
+    sub.innerHTML = link ? `<a href="../../" style="color:#4ade80;">Go to GN 2.0 to sign in</a>` : "";
+  };
+  // Signed in to GN 2.0? (same Firebase project and saved sign-in as the site, js/accounts.js)
+  const load = src => new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+  let pass;
+  try {
+    const base = "https://www.gstatic.com/firebasejs/10.12.2";
+    await load(base + "/firebase-app-compat.js"); await load(base + "/firebase-auth-compat.js");
+    firebase.initializeApp({ apiKey: "AIzaSyCVUtHKcMZCs7aaCcO_Gp8fmy41MZnjqcs", authDomain: "gn-math-dfd85.firebaseapp.com", projectId: "gn-math-dfd85" });
+    const user = await new Promise(r => { const off = firebase.auth().onAuthStateChanged(u => { off(); r(u); }); });
+    if (!user) return stop("Sign in to GN 2.0 to play GN Craft. Your GN 2.0 username is your name in the game.", true);
+    const r = await fetch("https://data.learnresearch.org/api/mc/ticket", { method: "POST", headers: { Authorization: "Bearer " + await user.getIdToken() } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return stop(d.error || "GN Craft can't be reached right now. Try again in a few minutes.", r.status === 401);
+    pass = d;
+    sub.textContent = "You'll play as " + d.name + ". GN Craft will be first in Multiplayer.";
+  } catch (e) {
+    return stop("Couldn't check your GN 2.0 sign-in. Check your connection and reload.");
+  }
   let html = null;
   for (const u of urls) {
     try {
@@ -60,11 +82,11 @@
   }
   if (!html) { text.textContent = "Couldn't download the game. Check your connection and reload."; return; }
   const servers = `servers: [
-        { addr: "${SERVER}", name: "§a§lGN Craft§r", hideAddr: false }
+        { addr: "${pass.server}", name: "§a§lGN Craft§r", hideAddr: true }
     ],
     relays`;
   const changed = html.replace(/servers:\s*\[[\s\S]*?\]\s*,\s*relays/, servers);
-  if (changed === html) console.warn("GN Craft: couldn't add the server to the list; add " + SERVER + " in Multiplayer");
+  if (changed === html) console.warn("GN Craft: couldn't add the server to the list; reload this page");
   document.open();
   document.write(changed);
   document.close();

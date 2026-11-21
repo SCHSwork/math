@@ -293,12 +293,120 @@ if [ -n "$LT" ] && [ -n "$MD" ] && [ -n "$PD" ]; then
     say "GN Proxy: browser players see GN Craft's name and icon (restart GN Proxy in AMP)"
 fi
 
+# ── GNCraftLogin: browser players sign in with their GN 2.0 account ─────────
+# A small plugin for GN Proxy, built here from the source below (needs a JDK).
+# Rebuilt when the source changes. Restart GN Proxy in AMP to load it.
+if [ -n "$PD" ] && sudo -n test -f "$PD/minecraft_server.jar" && sudo -n test -f "$PD/plugins/EaglerXServer.jar"; then
+    command -v javac >/dev/null || { say "installing a Java compiler (for GN Proxy's sign-in plugin)"; $APT install openjdk-25-jdk-headless >/dev/null 2>&1 || $APT install openjdk-21-jdk-headless >/dev/null 2>&1; }
+    B=/tmp/gncraftlogin; rm -rf "$B"; mkdir -p "$B/src/gn/craft" "$B/out"
+    cat > "$B/src/gn/craft/GNCraftLogin.java" <<'JAVAEOF'
+package gn.craft;
+
+import com.google.inject.Inject;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.PreLoginEvent;
+import net.lax1dude.eaglercraft.backend.server.api.velocity.event.EaglercraftLoginEvent;
+import org.slf4j.Logger;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+// GN Craft sign-in for browser (Eaglercraft) players. The GN Craft page puts a
+// pass from the GN 2.0 Server in the address (?t=...). This checks it with the
+// GN 2.0 Server on this machine and lets the player in under their GN 2.0
+// username, skipping the Mojang check only for them. Everyone else (Java) is
+// still checked by Mojang as usual.
+public class GNCraftLogin {
+    private static final Pattern PASS = Pattern.compile("[?&]t=([A-Za-z0-9_-]{10,64})");
+    private static final Pattern OK = Pattern.compile("\"ok\":true");
+    private static final Pattern NAME = Pattern.compile("\"name\":\"([A-Za-z0-9_]{3,16})\"");
+    private static final Pattern ID = Pattern.compile("\"uuid\":\"([0-9a-f-]{36})\"");
+    private final Logger log;
+    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+    private final Map<String, Long> browserNames = new ConcurrentHashMap<>();
+
+    @Inject
+    public GNCraftLogin(Logger log) { this.log = log; }
+
+    private static String key() {
+        try { return Files.readString(Path.of("plugins", "gncraftlogin", "key.txt")).trim(); } catch (Exception e) { return ""; }
+    }
+
+    @Subscribe
+    public void onBrowserLogin(EaglercraftLoginEvent e) {
+        String path = e.getLoginConnection().getWebSocketPath();
+        Matcher m = PASS.matcher(path == null ? "" : path);
+        if (!m.find()) { e.setKickMessage("Open GN Craft on GN 2.0 while signed in to play."); return; }
+        try {
+            HttpRequest req = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8080/api/mc/redeem?t=" + m.group(1) + "&k=" + key()))
+                .timeout(Duration.ofSeconds(5)).GET().build();
+            String body = http.send(req, HttpResponse.BodyHandlers.ofString()).body();
+            Matcher n = NAME.matcher(body), u = ID.matcher(body);
+            if (!OK.matcher(body).find() || !n.find() || !u.find()) {
+                e.setKickMessage("Your GN Craft pass ran out. Close this tab and open GN Craft on GN 2.0 again.");
+                return;
+            }
+            String name = n.group(1);
+            e.setProfileUsername(name);
+            e.setProfileUUID(UUID.fromString(u.group(1)));
+            browserNames.put(name.toLowerCase(Locale.ROOT), System.currentTimeMillis());
+            log.info("GN Craft browser sign-in: " + name);
+        } catch (Exception ex) {
+            log.warn("GN Craft couldn't check a browser sign-in: " + ex);
+            e.setKickMessage("GN Craft couldn't check your sign-in. Try again in a minute.");
+        }
+    }
+
+    // Right after a browser sign-in, its login skips Mojang (browser players
+    // have no Mojang account). Only for that name, only for a few seconds.
+    @Subscribe
+    public void onPreLogin(PreLoginEvent e) {
+        Long at = browserNames.remove(e.getUsername().toLowerCase(Locale.ROOT));
+        if (at != null && System.currentTimeMillis() - at < 15000) {
+            e.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+        }
+    }
+}
+JAVAEOF
+    printf '%s' '{"id":"gncraftlogin","name":"GNCraftLogin","version":"1.0","description":"GN 2.0 sign-in for browser players","authors":["GN 2.0"],"main":"gn.craft.GNCraftLogin","dependencies":[{"id":"eaglerxserver","optional":false}]}' > "$B/out/velocity-plugin.json"
+    SRCHASH=$(cat "$B/src/gn/craft/GNCraftLogin.java" "$B/out/velocity-plugin.json" | sha1sum | cut -c1-12)
+    if [ "$SRCHASH" != "$(cat state/gncraftlogin-built 2>/dev/null)" ] || ! sudo -n test -f "$PD/plugins/GNCraftLogin.jar"; then
+        sudo -n cat "$PD/minecraft_server.jar" > "$B/velocity.jar"; sudo -n cat "$PD/plugins/EaglerXServer.jar" > "$B/eagler.jar"
+        if javac --release 21 -nowarn -cp "$B/velocity.jar:$B/eagler.jar" -d "$B/out" "$B/src/gn/craft/GNCraftLogin.java" > "$B/javac.log" 2>&1 \
+           && (cd "$B/out" && jar cf "$B/GNCraftLogin.jar" .); then
+            sudo -n cp "$B/GNCraftLogin.jar" "$PD/plugins/GNCraftLogin.jar" && echo "$SRCHASH" > state/gncraftlogin-built
+            say "GN Proxy: built the GN 2.0 sign-in plugin (restart GN Proxy in AMP)"
+        else
+            say "GN Proxy: couldn't build the sign-in plugin: $(grep -m2 -E 'error' "$B/javac.log" | tr '\n' ' ' | cut -c1-200)"
+        fi
+    fi
+    # The key it uses to ask the GN 2.0 Server about passes
+    if [ -s state/mc-login.key ]; then
+        sudo -n mkdir -p "$PD/plugins/gncraftlogin"
+        sudo -n cp state/mc-login.key "$PD/plugins/gncraftlogin/key.txt"
+        sudo -n chmod 600 "$PD/plugins/gncraftlogin/key.txt"
+    fi
+    sudo -n chown -R amp:amp "$PD/plugins"
+    rm -rf "$B"
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 6]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 7]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"

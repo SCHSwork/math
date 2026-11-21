@@ -768,6 +768,73 @@ async function watchCommits() {
 }
 setTimeout(() => { watchCommits(); setInterval(watchCommits, 30000); }, 15000);
 
+// ── GN Craft sign-in for browser (Eaglercraft) players ──────────────────────
+// The GN Craft page (play/gncraft) asks for a one-time join pass with the
+// player's GN 2.0 sign-in; the pass rides in the WebSocket address
+// (wss://eagler.learnresearch.org/?t=PASS). The GNCraftLogin plugin on GN Proxy
+// redeems it here (from this machine only, with a shared key) and lets the
+// player in under their GN 2.0 username with a fixed UUID per account.
+const MC_KEY_FILE = path.join(STATE_DIR, "mc-login.key");
+let mcLoginKey = "";
+try { mcLoginKey = require("fs").readFileSync(MC_KEY_FILE, "utf8").trim(); } catch {}
+if (!/^[a-f0-9]{48}$/.test(mcLoginKey)) {
+    mcLoginKey = crypto.randomBytes(24).toString("hex");
+    try { require("fs").writeFileSync(MC_KEY_FILE, mcLoginKey, { mode: 0o600 }); } catch {}
+}
+// GN Proxy's sign-in plugin reads the key from its own folder (owned by AMP)
+async function syncMcKey() {
+    const dirs = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "-maxdepth", "4", "-path", "*GNProxy*", "-name", "velocity.toml"])).trim().split("\n").filter(Boolean).map(f => path.dirname(f));
+    for (const d of dirs) {
+        const k = path.join(d, "plugins", "gncraftlogin", "key.txt");
+        if ((await runAny("sudo", ["-n", "cat", k])).trim() === mcLoginKey) continue;
+        await runAny("sudo", ["-n", "mkdir", "-p", path.dirname(k)]);
+        await runAny("sudo", ["-n", "cp", MC_KEY_FILE, k]);
+        await runAny("sudo", ["-n", "chown", "-R", "amp:amp", path.dirname(k)]);
+        await runAny("sudo", ["-n", "chmod", "600", k]);
+    }
+}
+setTimeout(() => { syncMcKey().catch(() => {}); setInterval(() => syncMcKey().catch(() => {}), 10 * 60000); }, 10000);
+const mcTickets = new Map();   // pass -> { uid, name, at }
+const mcName = n => { let s = String(n || "").replace(/[^A-Za-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "").slice(0, 16); return s.length >= 3 ? s : ""; };
+async function gnUsername(uid) {
+    // The same rules as the site (js/accounts.js currentUsername): old accounts
+    // sign in as <name>@gnmath.local; newer ones keep it in displayName,
+    // checked against the usernames/<name> claim; else their profile.
+    const u = await admin.auth().getUser(uid);
+    if (u.email && u.email.endsWith("@gnmath.local")) return u.email.split("@")[0];
+    const tries = [String(u.displayName || "").trim().toLowerCase()];
+    if (db) { try { const p = await db.collection("profiles").doc(uid).get(); if (p.exists && p.data().username) tries.push(String(p.data().username).toLowerCase()); } catch {} }
+    for (const n of tries) {
+        if (!/^[a-z0-9_]{3,20}$/.test(n) || !db) continue;
+        try { const d = await db.collection("usernames").doc(n).get(); if (d.exists && d.data().uid === uid) return n; } catch {}
+    }
+    return "";
+}
+app.post("/api/mc/ticket", async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const m = /^Bearer (.+)$/.exec(req.get("authorization") || "");
+    const t = m && await verifyToken(m[1]);
+    if (!t) return res.status(401).json({ error: "Sign in to GN 2.0 first." });
+    let name = "";
+    try { name = mcName(await gnUsername(t.uid)); } catch (e) { log("mc ticket", e.message); }
+    if (!name) return res.status(409).json({ error: "Your GN 2.0 account needs a username (3 or more letters or numbers) to play GN Craft." });
+    for (const [k, v] of mcTickets) if (Date.now() - v.at > 60 * 60000) mcTickets.delete(k);
+    const pass = crypto.randomBytes(18).toString("base64url");
+    mcTickets.set(pass, { uid: t.uid, name, at: Date.now() });
+    res.json({ pass, name, server: "wss://eagler.learnresearch.org/?t=" + pass });
+});
+app.get("/api/mc/redeem", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    // Only GN Proxy on this machine: no Cloudflare headers, local address, right key
+    const local = /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(req.socket.remoteAddress || "");
+    if (!local || req.get("cf-connecting-ip") || req.get("cf-ray") || req.query.k !== mcLoginKey) return res.sendStatus(403);
+    const v = mcTickets.get(String(req.query.t || ""));
+    if (!v || Date.now() - v.at > 60 * 60000) return res.json({ ok: false });
+    // A pass works for an hour (the game may sit in the menu, or reconnect), but only for one account
+    const uuid = crypto.createHash("md5").update("GNCraft:" + v.uid).digest("hex");
+    res.json({ ok: true, name: v.name, uuid: uuid.slice(0, 8) + "-" + uuid.slice(8, 12) + "-" + uuid.slice(12, 16) + "-" + uuid.slice(16, 20) + "-" + uuid.slice(20) });
+});
+
 // ── Minecraft setup runs: is minecraft.sh running, when did it last finish ──
 // Read from state/minecraft.log. Only short, non-secret lines are kept as notes
 // (what was added/changed), so this can go in the public /api/status too.
