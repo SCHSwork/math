@@ -122,6 +122,34 @@ if command -v playit >/dev/null; then
     AFTER=$(playit --version 2>/dev/null | head -1)
     [ "$BEFORE" != "$AFTER" ] && { say "playit updated: $BEFORE -> $AFTER"; sudo -n systemctl restart playit; }
     say "playit version: $AFTER"
+    # Bedrock's new NetherNet connections need playit's Geyser tunnel, which needs
+    # agent 1.2+. The apt source may lag, so look for a newer .deb on playit's site
+    # and GitHub, and install it if it's newer.
+    CUR=$(echo "$AFTER" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    if dpkg --compare-versions "${CUR:-0}" lt 1.2.0; then
+        echo "--- looking for playit 1.2+:"
+        apt-cache policy playit 2>/dev/null | sed -n '1,6p'
+        PAGES=$(for u in https://playit.gg/download/linux https://playit.gg/download https://api.github.com/repos/playit-cloud/playit-agent/releases; do curl -fsSL -m 30 "$u" 2>/dev/null; echo; done)
+        for js in $(echo "$PAGES" | grep -oE '/_next/static/[^"]+\.js|/assets/[^"]+\.js' | sort -u | head -40); do
+            PAGES="$PAGES $(curl -fsSL -m 20 "https://playit.gg$js" 2>/dev/null)"
+        done
+        echo "$PAGES" | grep -oE 'https?://[^"'"'"' )]+' | grep -iE 'playit[^ ]*(amd64|x86_64)' | sort -u | head -15
+        DEB=$(echo "$PAGES" | grep -oE 'https?://[^"'"'"' )]+\.deb' | grep -iE 'amd64|x86_64' | sort -uV | tail -1)
+        if [ -n "$DEB" ]; then
+            say "trying $DEB"
+            if curl -fsSL -m 120 "$DEB" -o /tmp/playit-new.deb && [ -s /tmp/playit-new.deb ]; then
+                NEWV=$(dpkg-deb -f /tmp/playit-new.deb Version 2>/dev/null)
+                if dpkg --compare-versions "${NEWV:-0}" gt "${CUR:-0}"; then
+                    sudo -n cp /etc/playit/playit.toml /tmp/playit-secret-backup.toml 2>/dev/null
+                    $APT install /tmp/playit-new.deb >/dev/null 2>&1 && say "playit $NEWV installed from $DEB" || say "installing playit $NEWV FAILED"
+                    sudo -n test -s /etc/playit/playit.toml || { sudo -n cp /tmp/playit-secret-backup.toml /etc/playit/playit.toml && sudo -n chown playit:playit /etc/playit/playit.toml; }
+                    sudo -n systemctl restart playit
+                    say "playit version now: $(playit --version 2>/dev/null | head -1)"
+                else say "that .deb is version ${NEWV:-unknown}, not newer"; fi
+            else say "couldn't download it"; fi
+        else say "no newer playit .deb found on playit.gg or GitHub"; fi
+        echo "---"
+    fi
     sudo -n systemctl enable --now playit >/dev/null 2>&1
     sleep 15
     JLOG=$(sudo -n journalctl -u playit --no-pager -q -o cat -n 300 2>/dev/null)
