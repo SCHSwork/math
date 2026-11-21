@@ -421,34 +421,146 @@ if [ -n "$MD" ]; then
         cat > "$B/src/gn/craft/Browser.java" <<'JAVAEOF'
 package gn.craft;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
-// Browser (Eaglercraft) players come in through GN Proxy with UUIDs starting
-// 6e637261 (set by GNCraftLogin from their GN 2.0 account). Their movement is
-// translated from an old game version, which Grim reads as cheating and keeps
-// teleporting them back, so they skip Grim. Everyone else is still checked.
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+// GN Craft's own plugin.
+// 1) Browser (Eaglercraft) players come in through GN Proxy with UUIDs starting
+//    6e637261 (set by GNCraftLogin from their GN 2.0 account). Their movement is
+//    translated from an old game version, which Grim reads as cheating, so they
+//    skip Grim. Everyone else is still checked.
+// 2) The GN Craft Menu (/menu, or right-click the menu compass): buttons for the
+//    everyday commands, so nobody has to type them (the browser game has no
+//    command helper). Works the same on Java, Bedrock and browser.
 public class Browser extends JavaPlugin implements Listener {
+    static final String MENU_ITEM = "GN Craft Menu";
+
     @Override
     public void onEnable() { getServer().getPluginManager().registerEvents(this, this); }
 
     private void exempt(Player p) {
         if (p.getUniqueId().toString().startsWith("6e637261-") && !p.hasPermission("grim.exempt")) p.addAttachment(this, "grim.exempt", true);
     }
-
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(PlayerLoginEvent e) { exempt(e.getPlayer()); }
-
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e) { exempt(e.getPlayer()); }
+
+    // ── The menu ──
+    static class Menu implements InventoryHolder {
+        Inventory inv;
+        final Map<Integer, String> actions = new HashMap<>();
+        public Inventory getInventory() { return inv; }
+    }
+    private static String c(String s) { return ChatColor.translateAlternateColorCodes('&', s); }
+    private static ItemStack item(Material m, String name, String... lore) {
+        ItemStack it = new ItemStack(m);
+        ItemMeta meta = it.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(c(name));
+            List<String> l = new ArrayList<>();
+            for (String x : lore) l.add(c(x));
+            meta.setLore(l);
+            it.setItemMeta(meta);
+        }
+        return it;
+    }
+    private static void put(Menu m, int slot, ItemStack it, String action) { m.inv.setItem(slot, it); m.actions.put(slot, action); }
+
+    void openMain(Player p) {
+        Menu m = new Menu();
+        m.inv = Bukkit.createInventory(m, 27, c("&2GN Craft Menu"));
+        put(m, 10, item(Material.RED_BED, "&aSet home here", "&7Saves this spot.", "&7Up to 3 homes."), "sethome");
+        put(m, 11, item(Material.OAK_DOOR, "&aGo home", "&7Teleports you to your home."), "home");
+        put(m, 12, item(Material.CLOCK, "&aGo back", "&7Back to where you died", "&7or last teleported."), "back");
+        put(m, 13, item(Material.GOLDEN_SHOVEL, "&6Claim land here", "&7Protects the land around you", "&7so nobody else can break it."), "claim");
+        put(m, 14, item(Material.ENDER_PEARL, "&bVisit a player", "&7Pick someone to ask", "&7if you can teleport to them."), "pick:tpa");
+        put(m, 15, item(Material.PLAYER_HEAD, "&bLet a friend build here", "&7Pick someone to trust", "&7in the claim you're standing in."), "pick:trust");
+        put(m, 16, item(Material.LIME_DYE, "&aAccept teleport request", "&7Someone asked to visit you."), "tpaccept");
+        put(m, 22, item(Material.BOOK, "&eAll commands", "&7Shows the full list in chat."), "help");
+        put(m, 23, item(Material.RED_DYE, "&cDeny teleport request"), "tpdeny");
+        put(m, 21, item(Material.STICK, "&eWho owns this land?", "&7Hold a stick and right-click", "&7a block to check a claim."), "msg-claimcheck");
+        p.openInventory(m.inv);
+    }
+
+    void openPick(Player p, String cmd) {
+        Menu m = new Menu();
+        m.inv = Bukkit.createInventory(m, 54, c(cmd.equals("tpa") ? "&2Visit who?" : "&2Trust who?"));
+        int slot = 0;
+        for (Player o : Bukkit.getOnlinePlayers()) {
+            if (o.equals(p) || slot >= 45) continue;
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta meta = head.getItemMeta();
+            if (meta instanceof SkullMeta) ((SkullMeta) meta).setOwningPlayer(o);
+            if (meta != null) { meta.setDisplayName(c("&f" + o.getName())); head.setItemMeta(meta); }
+            put(m, slot++, head, cmd + " " + o.getName());
+        }
+        if (slot == 0) m.inv.setItem(22, item(Material.BARRIER, "&7Nobody else is on right now"));
+        put(m, 49, item(Material.ARROW, "&eBack to the menu"), "main");
+        p.openInventory(m.inv);
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (sender instanceof Player) openMain((Player) sender);
+        else sender.sendMessage("Players only.");
+        return true;
+    }
+
+    @EventHandler
+    public void onClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof Menu)) return;
+        e.setCancelled(true);
+        if (!(e.getWhoClicked() instanceof Player)) return;
+        Player p = (Player) e.getWhoClicked();
+        String a = ((Menu) e.getInventory().getHolder()).actions.get(e.getRawSlot());
+        if (a == null) return;
+        if (a.equals("main")) { openMain(p); return; }
+        if (a.startsWith("pick:")) { openPick(p, a.substring(5)); return; }
+        p.closeInventory();
+        if (a.equals("msg-claimcheck")) { p.sendMessage(c("&eHold a &fstick &eand right-click a block to see who owns that land.")); return; }
+        Bukkit.getScheduler().runTask(this, () -> p.performCommand(a));
+    }
+    @EventHandler
+    public void onDrag(InventoryDragEvent e) { if (e.getInventory().getHolder() instanceof Menu) e.setCancelled(true); }
+
+    // Right-click with the menu compass (from the starter kit)
+    @EventHandler
+    public void onUse(PlayerInteractEvent e) {
+        if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        ItemStack it = e.getItem();
+        if (it == null || it.getType() != Material.COMPASS || !it.hasItemMeta() || !it.getItemMeta().hasDisplayName()) return;
+        if (!ChatColor.stripColor(it.getItemMeta().getDisplayName()).equals(MENU_ITEM)) return;
+        e.setCancelled(true);
+        openMain(e.getPlayer());
+    }
 }
 JAVAEOF
-        printf 'name: GNCraftBrowser\nversion: "1.0"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\n' > "$B/out/plugin.yml"
+        printf 'name: GNCraftBrowser\nversion: "1.1"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
             # The Paper API needs its own libraries (Adventure etc.) on the classpath too
@@ -477,10 +589,11 @@ if [ -n "$MD" ] && sudo -n test -d "$MD/plugins/Essentials"; then
 &e/sethome &7save a spot   &e/home &7go back to it
 &e/tpa <name> &7visit a friend   &e/back &7go back after dying
 &e/claim &7protects the land around you (or use a &6golden shovel &7on two corners)
-&7Type &e/help &7to see everything you can do.
+&7Type &e/menu &7for buttons instead of commands, or &e/help &7for the list.
 TXTEOF
     cat > /tmp/gn-help.txt <<'TXTEOF'
 &a&l--- GN Craft commands ---
+&eNo typing: &f/menu &7opens buttons for all of these
 &eHomes &7(up to 3): &f/sethome [name]&7, &f/home [name]&7, &f/delhome <name>
 &eVisit friends: &f/tpa <player> &7asks to go to them, &f/tpahere <player> &7asks them to come to you
 &eAnswer a request: &f/tpaccept &7or &f/tpdeny
@@ -506,7 +619,7 @@ if [ -n "$MD" ] && sudo -n test -f "$MD/plugins/Essentials/kits.yml" && sudo -n 
     node -e '
 const fs=require("fs"),Y=require("yaml");
 const k=Y.parseDocument(fs.readFileSync("/tmp/ess-kits.yml","utf8"));
-k.setIn(["kits","starter"], k.createNode({ delay: -1, items: ["golden_shovel 1 name:&6Claim_Shovel", "stick 1 name:&eClaim_Checker"] }));
+k.setIn(["kits","starter"], k.createNode({ delay: -1, items: ["compass 1 name:&bGN_Craft_Menu", "golden_shovel 1 name:&6Claim_Shovel", "stick 1 name:&eClaim_Checker"] }));
 fs.writeFileSync("/tmp/ess-kits.yml", k.toString());
 const c=Y.parseDocument(fs.readFileSync("/tmp/ess-config.yml","utf8"));
 c.setIn(["newbies","kit"], "starter");
@@ -525,7 +638,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 15]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 16]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"

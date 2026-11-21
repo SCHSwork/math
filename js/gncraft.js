@@ -33,6 +33,7 @@
             <button type="button" class="gcs-cmds-btn" aria-expanded="false">Commands and tips</button>
         </div>
         <div class="gcs-cmds" hidden>
+            <div><b>Easiest:</b> type <code>/menu</code> (or right-click the menu compass you start with) for buttons instead of commands</div>
             <div><code>/sethome</code> then <code>/home</code> save a spot and teleport back to it (up to 3 homes)</div>
             <div><code>/tpa name</code> ask to teleport to a friend, who answers with <code>/tpaccept</code> or <code>/tpdeny</code></div>
             <div><code>/back</code> go back to where you died or last teleported</div>
