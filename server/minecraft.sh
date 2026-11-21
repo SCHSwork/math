@@ -31,6 +31,15 @@ if ! java -version 2>&1 | grep -q '"21'; then
     $APT install openjdk-21-jre-headless >/dev/null 2>&1 && say "Java 21 installed" || say "Java 21 install FAILED"
 fi
 
+# ── Java 25 (newest Minecraft versions need it) ──────────────────────────────
+JAVA25_NEW=0
+if ! ls /usr/lib/jvm 2>/dev/null | grep -q -- '-25-'; then
+    say "installing Java 25"
+    $APT update >/dev/null 2>&1
+    if $APT install openjdk-25-jre-headless >/dev/null 2>&1; then say "Java 25 installed"; JAVA25_NEW=1
+    else say "Java 25 install FAILED: $(apt-cache policy openjdk-25-jre-headless 2>/dev/null | grep -m1 Candidate)"; fi
+fi
+
 # ── AMP (CubeCoders) ────────────────────────────────────────────────────────
 if ! command -v ampinstmgr >/dev/null; then
     say "installing AMP's instance manager"
@@ -64,6 +73,11 @@ if command -v ampinstmgr >/dev/null; then
         if [ $RC -eq 0 ]; then set_status "{\"amp\":{\"user\":\"gnadmin\",\"pass\":\"$PASS\",\"port\":8081}}"; say "new AMP login saved (shown in the Owner Panel)"
         else say "resetting the AMP login FAILED"; fi
     fi
+    # AMP only looks for Java when it starts: restart it after installing a new one
+    if [ "$JAVA25_NEW" = 1 ]; then
+        ADS=$(sudo -n runuser -l amp -c "ampinstmgr -l" 2>/dev/null | grep -o 'ADS[0-9A-Za-z_]*' | head -1)
+        sudo -n runuser -l amp -c "ampinstmgr restartall" >/dev/null 2>&1 && say "AMP restarted so it sees Java 25"
+    fi
     # Start AMP's instances when the VM boots
     ( sudo -n crontab -u amp -l 2>/dev/null | grep -q "ampinstmgr -b" ) || \
         { ( sudo -n crontab -u amp -l 2>/dev/null; echo "@reboot /opt/cubecoders/amp/ampinstmgr -b" ) | sudo -n crontab -u amp - && say "AMP set to start on boot"; }
@@ -91,5 +105,5 @@ if command -v playit >/dev/null; then
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
 fi
 
-set_status "{\"step\":\"done\",\"java\":$(java -version 2>&1 | grep -q '"21' && echo true || echo false),\"amp\":$(node -e 'try{const s=require(process.argv[1]);process.stdout.write(JSON.stringify(s.amp||null))}catch{process.stdout.write("null")}' "$PWD/$STATUS")}"
+set_status "{\"step\":\"done\",\"java\":$(ls /usr/lib/jvm 2>/dev/null | grep -q -- '-25-' && echo true || echo false),\"amp\":$(node -e 'try{const s=require(process.argv[1]);process.stdout.write(JSON.stringify(s.amp||null))}catch{process.stdout.write("null")}' "$PWD/$STATUS")}"
 say "== Minecraft setup finished"
