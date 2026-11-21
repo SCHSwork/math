@@ -466,12 +466,45 @@ JAVAEOF
     elif [ -z "$PAPI" ]; then say "GN Craft: no Paper API jar found in libraries/"; fi
 fi
 
+# ── What players see: a welcome with the useful commands, and a short /help ──
+# Essentials shows motd.txt on join and help.txt for /help (instead of its huge
+# list of every command). Run "essentials reload" in GN Craft's console (or
+# restart it) after these change.
+if [ -n "$MD" ] && sudo -n test -d "$MD/plugins/Essentials"; then
+    cat > /tmp/gn-motd.txt <<'TXTEOF'
+&a&lWelcome to GN Craft, {PLAYER}!
+&7One survival world for Java, Bedrock and browser players.
+&e/sethome &7save a spot   &e/home &7go back to it
+&e/tpa <name> &7visit a friend   &e/back &7go back after dying
+&6Golden shovel&7: right-click two corners to claim land so nobody can grief it
+&7Type &e/help &7to see everything you can do.
+TXTEOF
+    cat > /tmp/gn-help.txt <<'TXTEOF'
+&a&l--- GN Craft commands ---
+&eHomes &7(up to 3): &f/sethome [name]&7, &f/home [name]&7, &f/delhome <name>
+&eVisit friends: &f/tpa <player> &7asks to go to them, &f/tpahere <player> &7asks them to come to you
+&eAnswer a request: &f/tpaccept &7or &f/tpdeny
+&eGo back: &f/back &7returns to where you died or last teleported
+&eChat: &f/msg <player> <text>&7, &f/r <text> &7replies, &f/list &7shows who's on, &f/afk
+&eProtect your stuff: &7hold a &6golden shovel &7and right-click two opposite corners to claim land
+&eShare a claim: &f/trust <player>&7, &f/untrust <player>&7, &f/abandonclaim &7gives it up
+&7You earn more claim blocks the longer you play.
+TXTEOF
+    for F in motd help; do
+        if ! sudo -n cmp -s "/tmp/gn-$F.txt" "$MD/plugins/Essentials/$F.txt"; then
+            sudo -n cp "/tmp/gn-$F.txt" "$MD/plugins/Essentials/$F.txt" && sudo -n chown amp:amp "$MD/plugins/Essentials/$F.txt" \
+                && say "GN Craft: updated the player $F (run essentials reload)"
+        fi
+        rm -f "/tmp/gn-$F.txt"
+    done
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 13]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 14]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
