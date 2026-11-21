@@ -279,22 +279,31 @@ if [ -n "$LT" ] && sudo -n grep -q 'inject_address = "0.0.0.0:25565"' "$LT"; the
         && say "GN Proxy: Eaglercraft now on port 25566 (restart GN Proxy in AMP)"
 fi
 
+# What browser (Eaglercraft) players see in their server list: GN Craft's name,
+# description and icon instead of "An EaglercraftX server", and 20 player slots.
+LT=$(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*' -name listeners.toml 2>/dev/null | head -1)
+if [ -n "$LT" ] && [ -n "$MD" ] && [ -n "$PD" ]; then
+    sudo -n sed -i 's/^\(\s*\)server_motd = .*/\1server_motd = ["\&a\&lGN Craft", "\&7Java, Bedrock \& browser - survival"]/' "$LT"
+    if sudo -n test -f "$MD/server-icon.png"; then
+        sudo -n cp "$MD/server-icon.png" "$PD/server-icon.png"
+        sudo -n mkdir -p "$PD/plugins/eaglerxserver" && sudo -n cp "$MD/server-icon.png" "$PD/plugins/eaglerxserver/server-icon.png"
+    fi
+    sudo -n sed -i 's/^show-max-players = .*/show-max-players = 20/' "$PX"
+    sudo -n chown -R amp:amp "$PD"
+    say "GN Proxy: browser players see GN Craft's name and icon (restart GN Proxy in AMP)"
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 5]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 6]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
 LT=$(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*' -name listeners.toml 2>/dev/null | head -1)
 [ -n "$LT" ] && sudo -n grep -nE '^\s*(forward_ip|forward_secret|dual_stack|inject_address|listener_name)\s*=' "$LT" | head -6 | sed 's/^/GN Proxy test listeners.toml: /' | while read -r l; do say "$l"; done
-
-# ── GN Proxy: names of the Eaglercraft server-list settings (MOTD and icon only)
-for F in $(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*/plugins/eaglerxserver/listeners.toml' 2>/dev/null); do
-    sudo -n grep -nE '^\s*[a-z_]*(motd|icon)[a-z_]*\s*=' "$F" | head -6 | while read -r l; do say "GN Proxy listing: $l"; done
-done
 
 # ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
 echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
