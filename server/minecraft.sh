@@ -466,7 +466,8 @@ import java.util.Map;
 //    command helper). Works the same on Java, Bedrock and browser.
 // 3) The claim shovel: /claim (or the menu) hands you a golden shovel for
 //    GriefPrevention that can't be dropped or stored, and takes it away again
-//    once your claim is made, after 10 minutes, or when you type /claim again.
+//    once your claim is made, after 5 minutes without using it, or when you
+//    type /claim again.
 public class Browser extends JavaPlugin implements Listener {
     static final String MENU_ITEM = "GN Craft Menu";
     private NamespacedKey toolKey;
@@ -491,12 +492,12 @@ public class Browser extends JavaPlugin implements Listener {
                 } catch (Exception ignored) {}
             }, this, true);
         } catch (Exception e) { getLogger().warning("GriefPrevention's claim event not found: " + e); }
-        // Shovels nobody finished with go away after 10 minutes
+        // Shovels not used for 5 minutes go away (checked every 30 seconds)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             long now = System.currentTimeMillis();
             for (Player p : Bukkit.getOnlinePlayers()) {
                 Long at = toolSince.get(p.getUniqueId());
-                if (at != null && now - at > 10 * 60000L && takeTool(p)) p.sendMessage(c("&7The claim shovel was put away. Use &f/claim &7to get it back."));
+                if (at != null && now - at > 5 * 60000L && takeTool(p)) p.sendMessage(c("&7The claim shovel was put away after 5 minutes without use. Use &f/claim &7to get it back."));
             }
         }, 600L, 600L);
     }
@@ -516,7 +517,7 @@ public class Browser extends JavaPlugin implements Listener {
     }
     void toggleTool(Player p) {
         if (takeTool(p)) { p.sendMessage(c("&7Claim shovel put away.")); return; }
-        ItemStack it = item(Material.GOLDEN_SHOVEL, "&6Claim Shovel", "&7Right-click one corner of your land,", "&7then the opposite corner.", "&7Goes away when you're done.");
+        ItemStack it = item(Material.GOLDEN_SHOVEL, "&6Claim Shovel", "&7Right-click one corner of your land,", "&7then the opposite corner.", "&7Goes away when your claim is made,", "&7or after 5 minutes without using it.");
         ItemMeta meta = it.getItemMeta();
         meta.getPersistentDataContainer().set(toolKey, PersistentDataType.BYTE, (byte) 1);
         it.setItemMeta(meta);
@@ -530,7 +531,7 @@ public class Browser extends JavaPlugin implements Listener {
         p.getInventory().setItem(slot, it);
         toolSince.put(p.getUniqueId(), System.currentTimeMillis());
         p.sendMessage(c("&6Claim shovel ready! &eRight-click one corner of your land, then the opposite corner."));
-        p.sendMessage(c("&7It disappears when your claim is made. Type &f/claim &7again to put it away."));
+        p.sendMessage(c("&7It disappears when your claim is made, or after 5 minutes without using it. &f/claim &7again puts it away."));
     }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClaimCommand(PlayerCommandPreprocessEvent e) {
@@ -642,10 +643,12 @@ public class Browser extends JavaPlugin implements Listener {
     public void onDrag(InventoryDragEvent e) { if (e.getInventory().getHolder() instanceof Menu) e.setCancelled(true); }
 
     // Right-click with the menu compass (from the starter kit)
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onUse(PlayerInteractEvent e) {
-        if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         ItemStack it = e.getItem();
+        // Using the claim shovel restarts its 5 minutes
+        if (isTool(it)) { toolSince.put(e.getPlayer().getUniqueId(), System.currentTimeMillis()); return; }
+        if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (it == null || it.getType() != Material.COMPASS || !it.hasItemMeta() || !it.getItemMeta().hasDisplayName()) return;
         if (!ChatColor.stripColor(it.getItemMeta().getDisplayName()).equals(MENU_ITEM)) return;
         e.setCancelled(true);
@@ -653,7 +656,7 @@ public class Browser extends JavaPlugin implements Listener {
     }
 }
 JAVAEOF
-        printf 'name: GNCraftBrowser\nversion: "1.2"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
+        printf 'name: GNCraftBrowser\nversion: "1.3"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
             # The Paper API needs its own libraries (Adventure etc.) on the classpath too
@@ -731,7 +734,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 17]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 18]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
