@@ -57,14 +57,14 @@
   },
   "11": {
    "s": "slow",
-   "at": "2026-11-20",
-   "t": "2026-11-20T17:57:13.758Z",
+   "at": "2026-11-21",
+   "t": "2026-11-21T16:53:12.780Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
-    "HTTP 404 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
-    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
+    "Failed https://data.learnresearch.org/api/play",
     "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/",
-    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/images/601a0de398a32bd53366c6fee57ea531-CHAR_Drago"
+    "HTTP 404 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
+    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js"
    ],
    "since": "2026-11-10"
   },
@@ -734,14 +734,9 @@
    "t": "2026-11-11T18:58:56.431Z"
   },
   "164": {
-   "s": "slow",
-   "at": "2026-11-20",
-   "t": "2026-11-20T17:55:55.394Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "Script error: Unexpected token '.'"
-   ],
-   "since": "2026-11-20"
+   "s": "ok",
+   "at": "2026-11-21",
+   "t": "2026-11-21T16:52:14.379Z"
   },
   "165": {
    "s": "ok",
@@ -749,14 +744,9 @@
    "t": "2026-11-11T18:59:17.151Z"
   },
   "166": {
-   "s": "slow",
-   "at": "2026-11-20",
-   "t": "2026-11-20T17:55:54.759Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "Script error: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data"
-   ],
-   "since": "2026-11-20"
+   "s": "ok",
+   "at": "2026-11-21",
+   "t": "2026-11-21T16:52:32.481Z"
   },
   "167": {
    "s": "ok",
@@ -1199,11 +1189,9 @@
    "t": "2026-11-11T19:12:50.446Z"
   },
   "258": {
-   "s": "slow",
-   "at": "2026-11-20",
-   "t": "2026-11-20T17:57:13.817Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-11"
+   "s": "ok",
+   "at": "2026-11-21",
+   "t": "2026-11-21T16:53:45.766Z"
   },
   "259": {
    "s": "ok",
@@ -8899,11 +8887,11 @@
   }
  },
  "next": 425,
- "updated": "2026-11-20T17:57:13.817Z",
+ "updated": "2026-11-21T16:53:45.766Z",
  "total": 2331,
  "counts": {
-  "ok": 1761,
-  "slow": 9,
+  "ok": 1764,
+  "slow": 6,
   "broken": 2
  }
 }
