@@ -185,6 +185,92 @@ for VT in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -path '*GNProx
     fi
 done
 
+# ── GN Proxy (Velocity) in front of GN Craft ───────────────────────────────
+# Everyone joins through GN Proxy (port 25566): Java, Bedrock (Geyser moves to
+# the proxy) and Eaglercraft (EaglerXServer, WebSocket on the same port, reached
+# through the Cloudflare tunnel). GN Craft only accepts players sent by the proxy
+# (Velocity modern forwarding). Files are changed here; they take effect when
+# GN Craft and GN Proxy are restarted in AMP. Safe to run again.
+PX=$(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -path '*GNProxy*' -name velocity.toml 2>/dev/null | head -1)
+MC=$(sudo -n find /home/amp/.ampdata/instances -maxdepth 3 -path '*GNCraft*' -name server.properties 2>/dev/null | head -1)
+if [ -n "$PX" ] && [ -n "$MC" ]; then
+    PD=$(dirname "$PX"); MD=$(dirname "$MC")
+    SECRET=$(sudo -n cat "$PD/forwarding.secret" 2>/dev/null | tr -d '\r\n')
+    if [ -z "$SECRET" ]; then
+        SECRET=$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)
+        echo -n "$SECRET" | sudo -n tee "$PD/forwarding.secret" >/dev/null
+    fi
+    # velocity.toml: modern forwarding, one server (GN Craft), show GN Craft's MOTD/players
+    sudo -n cat "$PX" > /tmp/velocity.toml
+    python3 - /tmp/velocity.toml <<'EOF'
+import re, sys
+f = sys.argv[1]; t = open(f).read()
+t = re.sub(r'(?m)^player-info-forwarding-mode = .*$', 'player-info-forwarding-mode = "modern"', t)
+t = re.sub(r'(?m)^ping-passthrough = .*$', 'ping-passthrough = "ALL"', t)
+t = re.sub(r'(?m)^forwarding-secret-file = .*$', 'forwarding-secret-file = "forwarding.secret"', t)
+t = re.sub(r'(?ms)^\[servers\].*?(?=^\[advanced\])',
+    '[servers]\ngncraft = "127.0.0.1:25565"\ntry = [\n\t"gncraft"\n]\n\n[forced-hosts]\n\n', t)
+open(f, "w").write(t)
+EOF
+    if ! sudo -n cmp -s /tmp/velocity.toml "$PX"; then
+        sudo -n cp "$PX" "$PX.before-gncraft" 2>/dev/null
+        sudo -n cp /tmp/velocity.toml "$PX" && say "GN Proxy: velocity.toml now sends players to GN Craft"
+    fi
+    rm -f /tmp/velocity.toml
+    # Plugins on the proxy
+    sudo -n mkdir -p "$PD/plugins"
+    pget() {   # name url
+        if sudo -n sh -c "ls '$PD/plugins' | grep -qi '^$1.*\\.jar$'"; then return; fi
+        if curl -fsSL "$2" -o "/tmp/$1.jar" && [ -s "/tmp/$1.jar" ]; then
+            sudo -n mv "/tmp/$1.jar" "$PD/plugins/$1.jar" && say "GN Proxy: added $1"
+        else rm -f "/tmp/$1.jar"; say "GN Proxy: couldn't download $1"; fi
+    }
+    pmod() {   # name slug: newest Velocity build on Modrinth
+        local U
+        U=$(curl -fsSL "https://api.modrinth.com/v2/project/$2/version?loaders=%5B%22velocity%22%5D" 2>/dev/null | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{const v=JSON.parse(d)[0];const f=v.files.find(f=>f.primary)||v.files[0];process.stdout.write(f.url)}catch{}})')
+        if [ -n "$U" ]; then pget "$1" "$U"; else say "GN Proxy: couldn't find $1"; fi
+    }
+    pget Geyser-Velocity "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/velocity"
+    pget floodgate-velocity "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/velocity"
+    pmod ViaVersion viaversion
+    pmod ViaBackwards viabackwards
+    pmod ViaRewind viarewind
+    pmod EaglerXServer eaglercraftxserver
+    # Bedrock moves to the proxy: same Geyser settings (incl. playit NetherNet) and floodgate key
+    G="$MD/plugins/Geyser-Spigot/config.yml"
+    if sudo -n test -f "$G" && ! sudo -n test -f "$PD/plugins/geyser/config.yml"; then
+        sudo -n mkdir -p "$PD/plugins/geyser"
+        sudo -n cp "$G" "$PD/plugins/geyser/config.yml" && say "GN Proxy: copied GN Craft's Geyser settings (Bedrock/playit)"
+    fi
+    if sudo -n test -f "$MD/plugins/floodgate/key.pem" && ! sudo -n test -f "$PD/plugins/floodgate/key.pem"; then
+        sudo -n mkdir -p "$PD/plugins/floodgate"
+        sudo -n cp "$MD/plugins/floodgate/key.pem" "$PD/plugins/floodgate/key.pem" && say "GN Proxy: copied floodgate key"
+    fi
+    sudo -n mkdir -p "$MD/plugins/moved-to-proxy"
+    for J in $(sudo -n sh -c "ls '$MD/plugins' | grep -i '^geyser.*\\.jar$'"); do
+        sudo -n mv "$MD/plugins/$J" "$MD/plugins/moved-to-proxy/$J" && say "GN Craft: Geyser moved to GN Proxy ($J)"
+    done
+    # GN Craft: only accept players from the proxy
+    sudo -n sed -i 's/^online-mode=true/online-mode=false/' "$MC"
+    PG="$MD/config/paper-global.yml"
+    if sudo -n test -f "$PG"; then
+        sudo -n cat "$PG" > /tmp/paper-global.yml
+        SECRET="$SECRET" node -e '
+const fs=require("fs"),Y=require("yaml"),f="/tmp/paper-global.yml";
+const d=Y.parseDocument(fs.readFileSync(f,"utf8"));
+d.setIn(["proxies","velocity","enabled"],true);
+d.setIn(["proxies","velocity","online-mode"],true);
+d.setIn(["proxies","velocity","secret"],process.env.SECRET);
+fs.writeFileSync(f,d.toString());'
+        if ! sudo -n cmp -s /tmp/paper-global.yml "$PG"; then
+            sudo -n cp /tmp/paper-global.yml "$PG" && say "GN Craft: now only accepts players from GN Proxy"
+        fi
+        rm -f /tmp/paper-global.yml
+    fi
+    sudo -n chown -R amp:amp "$PD" "$MD/plugins" "$MD/config" "$MC"
+    say "GN Proxy setup done: restart GN Craft, then GN Proxy, in AMP"
+fi
+
 # ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
 echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
 for VT in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -name velocity.toml 2>/dev/null); do

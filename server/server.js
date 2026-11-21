@@ -822,7 +822,7 @@ async function applyGeyserNxs() {
         yamlLib ||= require("yaml");
         const want = yamlLib.parse(cfg);
         if (!want || typeof want !== "object" || !want.bedrock) throw new Error("the pasted text has no bedrock: section");
-        const files = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "-path", "*/plugins/Geyser-Spigot/config.yml"])).trim().split("\n").filter(Boolean);
+        const files = (await runAny("sudo", ["-n", "find", "/home/amp/.ampdata/instances", "(", "-path", "*/plugins/Geyser-Spigot/config.yml", "-o", "-path", "*/plugins/geyser/config.yml", ")"])).trim().split("\n").filter(Boolean);
         if (!files.length) throw new Error("no Geyser config found (start GN Craft once first)");
         for (const f of files) {
             const text = await runAny("sudo", ["-n", "cat", f]);
