@@ -135,31 +135,27 @@ if command -v playit >/dev/null; then
         [ -n "$CLAIM" ] && { set_status "{\"playitClaim\":\"$CLAIM\"}"; say "playit claim link found in its files"; }
         echo "---"
     fi
-    # playit 1.x: the daemon waits for a secret. Make a claim code, show its link in
-    # the Owner Panel, and wait (up to 2 hours) in the background for it to be
-    # claimed; then save the secret where playitd reads it and restart it.
-    if ! sudo -n test -s /etc/playit/playit.toml && ! pgrep -f "playit claim exchange" >/dev/null; then
-        CODE=$(playit claim generate 2>/dev/null | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE '[A-Za-z0-9]{6,}' | tail -1)
-        if [ -n "$CODE" ]; then
-            URL=$(playit claim url "$CODE" 2>/dev/null | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE 'https://[^ ]+' | tail -1)
-            if [ -n "$URL" ]; then
-                set_status "{\"playitClaim\":\"$URL\"}"; say "playit claim link made (shown in the Owner Panel); waiting up to 2 hours for it to be claimed"
-                setsid nohup bash -c '
-                    cd "$HOME/gn-data"
-                    OUT=$(timeout 7200 playit claim exchange "'"$CODE"'" 2>&1)
-                    SECRET=$(echo "$OUT" | grep -oE "[0-9a-f]{64}" | tail -1)
-                    if [ -n "$SECRET" ]; then
-                        printf "secret_key = \"%s\"\n" "$SECRET" | sudo -n tee /etc/playit/playit.toml >/dev/null
-                        sudo -n chown playit:playit /etc/playit/playit.toml; sudo -n chmod 640 /etc/playit/playit.toml
-                        sudo -n systemctl restart playit
-                        echo "$(date "+%F %T") playit claimed and connected" >> state/minecraft.log
-                        node -e "const fs=require(\"fs\"),f=\"state/minecraft.json\";let s={};try{s=JSON.parse(fs.readFileSync(f,\"utf8\"))}catch{};delete s.playitClaim;s.playitClaimed=true;fs.writeFileSync(f,JSON.stringify(s,null,1))"
-                    else
-                        echo "$(date "+%F %T") playit claim not finished: $(echo "$OUT" | grep -v -E "[0-9a-f]{64}" | tail -3 | tr "\n" " ")" >> state/minecraft.log
-                    fi' >/dev/null 2>&1 < /dev/null &
-            else say "couldn't make a playit claim URL"; fi
-        else say "couldn't make a playit claim code"; fi
-    elif sudo -n test -s /etc/playit/playit.toml; then say "playit is already claimed"; fi
+    # playit 1.x: playitd only takes its secret from "playit setup" (over its IPC
+    # socket), not from the file. If it's still waiting for one, run "playit setup"
+    # in the background: it makes a claim link (shown in the Owner Panel), waits
+    # for it to be claimed, and hands the secret to playitd itself.
+    sleep 3
+    PLOG=$(sudo -n tail -3 /var/log/playit/playit.log 2>/dev/null | sed 's/\x1b\[[0-9;]*[A-Za-z]//g')
+    echo "--- playitd log:"; echo "$PLOG"; echo "---"
+    if echo "$PLOG" | tail -1 | grep -q "Waiting for frontend secret provisioning" && ! pgrep -f "playit setup" >/dev/null; then
+        playit setup --help 2>&1 | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | head -12
+        sudo -n rm -f /tmp/playit-setup.out
+        setsid nohup sudo -n timeout 7200 script -qfc "playit setup" /tmp/playit-setup.out >/dev/null 2>&1 < /dev/null &
+        for i in $(seq 1 20); do
+            sleep 2
+            URL=$(sudo -n cat /tmp/playit-setup.out 2>/dev/null | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -oE 'https://playit\.gg/[^ ]+' | tail -1)
+            [ -n "$URL" ] && break
+        done
+        echo "--- playit setup says:"; sudo -n cat /tmp/playit-setup.out 2>/dev/null | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tr '\r' '\n' | grep -v '^\s*$' | tail -8; echo "---"
+        if [ -n "$URL" ]; then set_status "{\"playitClaim\":\"$URL\",\"playitClaimed\":false}"; say "new playit claim link from 'playit setup' (shown in the Owner Panel)"
+        else say "'playit setup' didn't give a claim link"; fi
+    elif echo "$PLOG" | grep -qi "Waiting for frontend secret"; then :
+    else say "playitd has its secret"; set_status '{"playitClaimed":true}'; fi
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
 fi
 
