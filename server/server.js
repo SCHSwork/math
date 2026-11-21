@@ -361,7 +361,12 @@ async function mirrorLinked(key, out) {
         }
     }
 }
+// OFF for now: the VM's disk is "grow as needed", and the copy filled the
+// Windows drive it lives on (VirtualBox VERR_DISK_FULL), which froze the VM.
+// The free-space checks only see the VM's own disk, not the real drive.
+const MIRROR_ENABLED = false;
 async function mirrorAll() {
+    if (!MIRROR_ENABLED) { mirrorRun.stoppedFor = "off"; return; }
     if (mirrorRun.running) return;
     mirrorRun = { running: true, current: null, queued: 0, done: 0, stoppedFor: null, startedAt: Date.now() };
     let fetched = 0;
