@@ -271,12 +271,20 @@ fs.writeFileSync(f,d.toString());'
     say "GN Proxy setup done: restart GN Craft, then GN Proxy, in AMP"
 fi
 
+# EaglerXServer joins the Velocity listener whose address matches inject_address;
+# its default is 25565, but GN Proxy listens on 25566.
+LT=$(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*' -name listeners.toml 2>/dev/null | head -1)
+if [ -n "$LT" ] && sudo -n grep -q 'inject_address = "0.0.0.0:25565"' "$LT"; then
+    sudo -n sed -i 's/inject_address = "0.0.0.0:25565"/inject_address = "0.0.0.0:25566"/' "$LT" && sudo -n chown amp:amp "$LT" \
+        && say "GN Proxy: Eaglercraft now on port 25566 (restart GN Proxy in AMP)"
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 2]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 3]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
