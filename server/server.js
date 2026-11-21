@@ -361,10 +361,12 @@ async function mirrorLinked(key, out) {
         }
     }
 }
-// OFF for now: the VM's disk is "grow as needed", and the copy filled the
-// Windows drive it lives on (VirtualBox VERR_DISK_FULL), which froze the VM.
-// The free-space checks only see the VM's own disk, not the real drive.
-const MIRROR_ENABLED = false;
+// The VM's disk is "grow as needed": it once filled the Windows drive it lives
+// on (VirtualBox VERR_DISK_FULL) and froze the VM. It's on D: now (1 TB), and
+// the VM's disk can't grow past 526 GB, so D: can't fill up. On top of that the
+// copy itself stops at MIRROR_MAX_BYTES, leaving the rest for saves and Minecraft.
+const MIRROR_ENABLED = true;
+const MIRROR_MAX_BYTES = 300e9;
 async function mirrorAll() {
     if (!MIRROR_ENABLED) { mirrorRun.stoppedFor = "off"; return; }
     if (mirrorRun.running) return;
@@ -382,6 +384,7 @@ async function mirrorAll() {
             for (const [k, [o, r, ref]] of todo) {
                 seen.add(k);
                 if (await diskFree() < MIRROR_MIN_FREE) { mirrorRun.stoppedFor = "disk"; break; }
+                if (Object.values(mirror.repos).reduce((n, x) => n + (x.ok ? x.bytes || 0 : 0), 0) >= MIRROR_MAX_BYTES) { mirrorRun.stoppedFor = "limit"; break; }
                 if (await mirrorRepo(o, r, ref)) {
                     fetched++;
                     // One huge repo can take a lot at once: never let the copy squeeze out saves
@@ -410,6 +413,7 @@ async function mirrorAll() {
         mirror.lastRun = Date.now();
         await writeJson(MIRROR_FILE, mirror);
         if (mirrorRun.stoppedFor === "disk") event("warn", "Library copy paused: less than 30 GB of disk left");
+        else if (mirrorRun.stoppedFor === "limit") event("mirror", "Library copy reached its 300 GB limit");
         else if (fetched) event("mirror", `Library copy updated: ${fetched} repo${fetched === 1 ? "" : "s"} downloaded`);
     } catch (e) {
         log("mirror run failed", e.message);
