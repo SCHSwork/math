@@ -122,6 +122,19 @@ if command -v playit >/dev/null; then
     CLAIM=$(echo "$JLOG" | grep -o 'https://playit\.gg/[A-Za-z0-9/_-]*claim[A-Za-z0-9/_-]*' | tail -1)
     if [ -n "$CLAIM" ]; then set_status "{\"playitClaim\":\"$CLAIM\"}"; say "playit claim link found (shown in the Owner Panel)"
     else say "no playit claim link in its log (already claimed, or still starting)"; fi
+    if [ -z "$CLAIM" ]; then
+        echo "--- playit details:"
+        playit --version 2>&1 | head -2
+        playit --help 2>&1 | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | head -30
+        playit claim --help 2>&1 | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | head -15
+        systemctl cat playit 2>/dev/null | grep -i '^ExecStart'
+        sudo -n ls -la /etc/playit /var/log/playit /var/lib/playit 2>&1 | head -20
+        LOGF=$(sudo -n find /var/log/playit /var/lib/playit /etc/playit -type f -name '*.log*' 2>/dev/null | head -1)
+        [ -n "$LOGF" ] && { echo "tail of $LOGF:"; sudo -n tail -20 "$LOGF" | sed 's/\x1b\[[0-9;]*[A-Za-z]//g'; }
+        CLAIM=$(sudo -n grep -rhoa 'https://playit\.gg/[A-Za-z0-9/_-]*claim[A-Za-z0-9/_-]*' /var/log/playit /var/lib/playit /etc/playit 2>/dev/null | tail -1)
+        [ -n "$CLAIM" ] && { set_status "{\"playitClaim\":\"$CLAIM\"}"; say "playit claim link found in its files"; }
+        echo "---"
+    fi
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
 fi
 
