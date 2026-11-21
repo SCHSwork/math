@@ -444,6 +444,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -464,6 +469,9 @@ import java.util.Map;
 // 2) The GN Craft Menu (/menu, or right-click the menu compass): buttons for the
 //    everyday commands, so nobody has to type them (the browser game has no
 //    command helper). Works the same on Java, Bedrock and browser.
+// 4) Clickable chat buttons (on join and after /help) that open the menu, and
+//    for the owner (ops) an Admin menu: time, weather, game mode, fly, vanish,
+//    maintenance, and player actions (teleport, bring, kick, heal, claim blocks).
 // 3) The claim shovel: /claim (or the menu) hands you a golden shovel for
 //    GriefPrevention that can't be dropped or stored, and takes it away again
 //    once your claim is made, after 5 minutes without using it, or when you
@@ -536,7 +544,8 @@ public class Browser extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClaimCommand(PlayerCommandPreprocessEvent e) {
         String m = e.getMessage().trim().toLowerCase(java.util.Locale.ROOT);
-        if (m.equals("/claim") || m.equals("/claimtool")) { e.setCancelled(true); toggleTool(e.getPlayer()); }
+        if (m.equals("/claim") || m.equals("/claimtool")) { e.setCancelled(true); toggleTool(e.getPlayer()); return; }
+        if (m.equals("/help") || m.startsWith("/help ")) { Player p = e.getPlayer(); Bukkit.getScheduler().runTaskLater(this, () -> sendButtons(p), 2L); }
     }
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) { if (isTool(e.getItemDrop().getItemStack())) e.setCancelled(true); }
@@ -561,7 +570,29 @@ public class Browser extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(PlayerLoginEvent e) { exempt(e.getPlayer()); }
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onJoin(PlayerJoinEvent e) { exempt(e.getPlayer()); }
+    public void onJoin(PlayerJoinEvent e) {
+        exempt(e.getPlayer());
+        Player p = e.getPlayer();
+        Bukkit.getScheduler().runTaskLater(this, () -> { if (p.isOnline()) sendButtons(p); }, 30L);
+    }
+
+    // ── Clickable chat buttons ──
+    private static Component button(String label, String cmd, NamedTextColor color, String hover) {
+        return Component.text("[" + label + "]", color, TextDecoration.BOLD)
+            .clickEvent(ClickEvent.runCommand(cmd))
+            .hoverEvent(HoverEvent.showText(Component.text(hover)));
+    }
+    void sendButtons(Player p) {
+        Component line = Component.text("Click: ", NamedTextColor.GRAY)
+            .append(button("Menu", "/menu", NamedTextColor.GREEN, "Buttons for homes, teleports and claims"))
+            .append(Component.text("  "))
+            .append(button("Claim land", "/claim", NamedTextColor.GOLD, "Get a claim shovel"))
+            .append(Component.text("  "))
+            .append(button("Help", "/help", NamedTextColor.YELLOW, "All commands"));
+        if (isAdmin(p)) line = line.append(Component.text("  ")).append(button("Admin", "/gnadmin", NamedTextColor.RED, "Owner controls"));
+        p.sendMessage(line);
+    }
+    private static boolean isAdmin(Player p) { return p.isOp() || p.hasPermission("gncraft.admin"); }
 
     // ── The menu ──
     static class Menu implements InventoryHolder {
@@ -596,13 +627,43 @@ public class Browser extends JavaPlugin implements Listener {
         put(m, 16, item(Material.LIME_DYE, "&aAccept teleport request", "&7Someone asked to visit you."), "tpaccept");
         put(m, 22, item(Material.BOOK, "&eAll commands", "&7Shows the full list in chat."), "help");
         put(m, 23, item(Material.RED_DYE, "&cDeny teleport request"), "tpdeny");
+        if (isAdmin(p)) put(m, 26, item(Material.NETHER_STAR, "&cAdmin", "&7Owner controls"), "admin");
         put(m, 21, item(Material.STICK, "&eWho owns this land?", "&7Hold a stick and right-click", "&7a block to check a claim."), "msg-claimcheck");
         p.openInventory(m.inv);
     }
 
-    void openPick(Player p, String cmd) {
+    void openAdmin(Player p) {
+        if (!isAdmin(p)) { p.sendMessage(c("&cThat's for the server owner.")); return; }
         Menu m = new Menu();
-        m.inv = Bukkit.createInventory(m, 54, c(cmd.equals("tpa") ? "&2Visit who?" : "&2Trust who?"));
+        m.inv = Bukkit.createInventory(m, 54, c("&4GN Craft Admin"));
+        put(m, 10, item(Material.SUNFLOWER, "&eMake it day"), "run:time set day");
+        put(m, 11, item(Material.BLACK_BED, "&9Make it night"), "run:time set night");
+        put(m, 12, item(Material.LIGHT_BLUE_DYE, "&bClear weather"), "run:weather clear");
+        put(m, 13, item(Material.WATER_BUCKET, "&3Make it rain"), "run:weather rain");
+        put(m, 15, item(Material.GRASS_BLOCK, "&aCreative mode"), "run:gamemode creative");
+        put(m, 16, item(Material.IRON_SWORD, "&aSurvival mode"), "run:gamemode survival");
+        put(m, 19, item(Material.ENDER_EYE, "&aSpectator mode"), "run:gamemode spectator");
+        put(m, 20, item(Material.FEATHER, "&fToggle flying"), "run:fly");
+        put(m, 21, item(Material.GOLDEN_APPLE, "&cHeal and feed me"), "run:heal;feed");
+        put(m, 22, item(Material.GLASS, "&7Toggle vanish", "&7Hide from players"), "run:vanish");
+        put(m, 23, item(Material.GOLDEN_SHOVEL, "&6Ignore claims", "&7Build anywhere to fix things", "&7(click again to stop)"), "run:ignoreclaims");
+        put(m, 24, item(Material.CHEST, "&aSave the world now"), "console:save-all");
+        put(m, 25, item(Material.REDSTONE_TORCH, "&cMaintenance ON", "&7Only you can join"), "console:maintenance on");
+        put(m, 34, item(Material.LEVER, "&aMaintenance OFF", "&7Everyone can join again"), "console:maintenance off");
+        put(m, 28, item(Material.ENDER_PEARL, "&bTeleport to a player"), "pick:tp");
+        put(m, 29, item(Material.LEAD, "&bBring a player to me"), "pick:tphere");
+        put(m, 30, item(Material.GOLDEN_CARROT, "&cHeal a player"), "pick:heal");
+        put(m, 31, item(Material.GOLD_BLOCK, "&6Give 1000 claim blocks"), "pick:console:adjustbonusclaimblocks {} 1000");
+        put(m, 32, item(Material.BARRIER, "&4Kick a player"), "pick:kick");
+        put(m, 49, item(Material.COMPASS, "&eRegular menu"), "main");
+        p.openInventory(m.inv);
+    }
+
+    void openPick(Player p, String cmd) {
+        boolean admin = !cmd.equals("tpa") && !cmd.equals("trust");
+        if (admin && !isAdmin(p)) return;
+        Menu m = new Menu();
+        m.inv = Bukkit.createInventory(m, 54, c(cmd.equals("tpa") ? "&2Visit who?" : cmd.equals("trust") ? "&2Trust who?" : "&4Which player?"));
         int slot = 0;
         for (Player o : Bukkit.getOnlinePlayers()) {
             if (o.equals(p) || slot >= 45) continue;
@@ -610,16 +671,17 @@ public class Browser extends JavaPlugin implements Listener {
             ItemMeta meta = head.getItemMeta();
             if (meta instanceof SkullMeta) ((SkullMeta) meta).setOwningPlayer(o);
             if (meta != null) { meta.setDisplayName(c("&f" + o.getName())); head.setItemMeta(meta); }
-            put(m, slot++, head, cmd + " " + o.getName());
+            String act = cmd.contains("{}") ? cmd.replace("{}", o.getName()) : cmd + " " + o.getName();
+            put(m, slot++, head, admin && !act.startsWith("console:") ? "run:" + act : act);
         }
         if (slot == 0) m.inv.setItem(22, item(Material.BARRIER, "&7Nobody else is on right now"));
-        put(m, 49, item(Material.ARROW, "&eBack to the menu"), "main");
+        put(m, 49, item(Material.ARROW, "&eBack"), admin ? "admin" : "main");
         p.openInventory(m.inv);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) openMain((Player) sender);
+        if (sender instanceof Player) { if (command.getName().equalsIgnoreCase("gnadmin")) openAdmin((Player) sender); else openMain((Player) sender); }
         else sender.sendMessage("Players only.");
         return true;
     }
@@ -633,6 +695,20 @@ public class Browser extends JavaPlugin implements Listener {
         String a = ((Menu) e.getInventory().getHolder()).actions.get(e.getRawSlot());
         if (a == null) return;
         if (a.equals("main")) { openMain(p); return; }
+        if (a.equals("admin")) { openAdmin(p); return; }
+        if (a.startsWith("run:") || a.startsWith("console:")) {
+            if (!isAdmin(p)) return;
+            boolean console = a.startsWith("console:");
+            String cmds = a.substring(console ? 8 : 4);
+            p.closeInventory();
+            Bukkit.getScheduler().runTask(this, () -> {
+                for (String one : cmds.split(";")) {
+                    if (console) Bukkit.dispatchCommand(Bukkit.getConsoleSender(), one); else p.performCommand(one);
+                }
+                if (console) p.sendMessage(c("&aDone: &f" + cmds));
+            });
+            return;
+        }
         if (a.startsWith("pick:")) { openPick(p, a.substring(5)); return; }
         p.closeInventory();
         if (a.equals("claimtool")) { toggleTool(p); return; }
@@ -656,7 +732,7 @@ public class Browser extends JavaPlugin implements Listener {
     }
 }
 JAVAEOF
-        printf 'name: GNCraftBrowser\nversion: "1.3"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n' > "$B/out/plugin.yml"
+        printf 'name: GNCraftBrowser\nversion: "1.4"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n  gnadmin:\n    description: Owner controls\n    aliases: [admin]\n    permission: gncraft.admin\npermissions:\n  gncraft.admin:\n    default: op\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
             # The Paper API needs its own libraries (Adventure etc.) on the classpath too
@@ -734,7 +810,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 18]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 19]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
