@@ -714,6 +714,23 @@ async function checkDrive() {
     if (h.warnings.length && h.warnings.join("|") !== before) event("warn", "Drive health: " + h.warnings.join("; "));
 }
 
+// ── Minecraft hosting (owner only) ──────────────────────────────────────────
+// minecraft.sh (run by update.sh) installs AMP, Java and playit and writes the
+// AMP login and the playit claim link to state/minecraft.json. Only the site
+// owner's account can read them (Owner Panel → Minecraft Server).
+const OWNER_UID = "AKOZ92Fya7dXqNDcSFl8T6nLHwn2";
+app.get("/api/owner/minecraft", async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const bad = await authed(req, OWNER_UID);
+    if (bad) return res.sendStatus(bad);
+    const st = readJson(path.join(STATE_DIR, "minecraft.json"), null);
+    const logText = await fsp.readFile(path.join(STATE_DIR, "minecraft.log"), "utf8").catch(() => "");
+    let ampUp = false;
+    try { const r = await fetch("http://127.0.0.1:8081/", { signal: AbortSignal.timeout(3000) }); ampUp = r.status < 500; } catch {}
+    const playit = (await runAny("systemctl", ["is-active", "playit"])).trim();
+    res.json({ status: st, ampUp, playit, log: logText.split("\n").filter(Boolean).slice(-40) });
+});
+
 // ── Play counts ─────────────────────────────────────────────────────────────
 const PLAYS_FILE = path.join(STATE_DIR, "plays.json");
 const plays = readJson(PLAYS_FILE, {});           // { "2026-11-20": { "123": 4 } }

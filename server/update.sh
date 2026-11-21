@@ -53,6 +53,19 @@ fi
 curl -fsSL "$URL/update.sh?$(date +%s)" -o update.new.sh 2>/dev/null && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
 rm -f update.new.sh
 
+# Minecraft hosting (AMP + Java + playit, see minecraft.sh): runs once, and again
+# whenever minecraft.sh changes. In the background, so the updater isn't held up.
+curl -fsSL "$URL/minecraft.sh?$(date +%s)" -o minecraft.new.sh 2>/dev/null
+if [ -s minecraft.new.sh ] && bash -n minecraft.new.sh; then
+    NEW=$(sha1sum minecraft.new.sh | cut -c1-12)
+    if [ "$NEW" != "$(cat state/minecraft-ran 2>/dev/null)" ] && ! pgrep -f "gn-data/minecraft.sh" >/dev/null; then
+        mv minecraft.new.sh minecraft.sh; chmod +x minecraft.sh; echo "$NEW" > state/minecraft-ran
+        echo "$(stamp) running minecraft.sh"
+        setsid nohup timeout 1800 bash "$HOME/gn-data/minecraft.sh" >/dev/null 2>&1 < /dev/null &
+    fi
+fi
+rm -f minecraft.new.sh
+
 curl -fsSL "$URL/deps.txt?$(date +%s)" -o deps.new.txt 2>/dev/null
 if [ -s deps.new.txt ] && ! cmp -s deps.new.txt deps.txt; then
     echo "$(stamp) installing $(tr '\n' ' ' < deps.new.txt)"
