@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GN Craft</title>
 <!--
-  GN Craft: EaglercraftX 1.8.8 (WASM) with the GN Craft server already in the
+  GN Craft: Eaglercraft 1.12.2 (WASM) with the GN Craft server already in the
   Multiplayer list (wss://eagler.learnresearch.org, through GN Proxy on the
   GN 2.0 Server). Players must be signed in to GN 2.0: this page gets a join
   pass for their account from the GN 2.0 Server and puts it in the server
-  address, and GN Proxy lets them in under their GN 2.0 username. The game is the same checked UBZone file as "EaglerCraft 1.8.8
+  address, and GN Proxy lets them in under their GN 2.0 username. The game is the same checked UBZone file as "Eaglercraft 1.12
   (WASM)" (js/ubzone.js), from the exact checked commit below; only its server
   list is changed before it starts. Opens in its own tab like other play/ pages.
 -->
@@ -24,7 +24,7 @@
 <body>
 <div id="msg">
   <b style="font-size:22px;">GN Craft</b>
-  <div id="text">Loading Minecraft (about 15 MB)…</div>
+  <div id="text">Loading Minecraft (about 20 MB)…</div>
   <div id="bar"><div id="fill"></div></div>
   <small id="sub">Checking your GN 2.0 sign-in…</small>
 </div>
@@ -32,12 +32,13 @@
 "use strict";
 (async () => {
   const REPO = "s0n-1m-cr1n3/sc13nc3", SHA = "3096333fcce4d7a42ce18f59725abb62d5811116";
-  const FILE = "assets/html/main/wasm18.html";
+  const FILE = "assets/html/main/wasm112.html";   // 1.12: fewer translation problems than 1.8 on GN Craft (26.3)
   const urls = [
     `https://cdn.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
     `https://fastly.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
     `https://raw.githubusercontent.com/${REPO}/${SHA}/${FILE}`,
-    `https://gcore.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`
+    `https://gcore.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
+    `https://data.learnresearch.org/gh/${REPO}@${SHA}/${FILE}`
   ];
   const text = document.getElementById("text"), fill = document.getElementById("fill"), sub = document.getElementById("sub");
   const stop = (msg, link) => {
@@ -66,7 +67,7 @@
     try {
       const r = await fetch(u);
       if (!r.ok) continue;
-      const total = Number(r.headers.get("content-length")) || 15200000;
+      const total = Number(r.headers.get("content-length")) || 20103742;
       const reader = r.body.getReader(), parts = [];
       let got = 0;
       for (;;) {
@@ -81,11 +82,11 @@
     } catch {}
   }
   if (!html) { text.textContent = "Couldn't download the game. Check your connection and reload."; return; }
+  // The files list one or two servers of their own; swap the whole list for GN Craft
   const servers = `servers: [
         { addr: "${pass.server}", name: "§a§lGN Craft§r", hideAddr: true }
-    ],
-    relays`;
-  const changed = html.replace(/servers:\s*\[[\s\S]*?\]\s*,\s*relays/, servers);
+    ],`;
+  const changed = html.replace(/servers:\s*\[(?:\s*\{[^{}]*\}\s*,?)*\s*\]\s*,/, servers);
   if (changed === html) console.warn("GN Craft: couldn't add the server to the list; reload this page");
   document.open();
   document.write(changed);
