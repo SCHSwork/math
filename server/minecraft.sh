@@ -276,12 +276,12 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 1]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 2]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
 LT=$(sudo -n find /home/amp/.ampdata/instances -path '*GNProxy*' -name listeners.toml 2>/dev/null | head -1)
-[ -n "$LT" ] && sudo -n grep -nE '^\s*(inject|dual_stack|enable|allow|forward|http|websocket|protocol|max)' "$LT" | head -20 | sed 's/^/GN Proxy test listeners.toml: /' | while read -r l; do say "$l"; done
+[ -n "$LT" ] && sudo -n grep -nE '^\s*(forward_ip|forward_secret|dual_stack|inject_address|listener_name)\s*=' "$LT" | head -6 | sed 's/^/GN Proxy test listeners.toml: /' | while read -r l; do say "$l"; done
 
 # ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
 echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
