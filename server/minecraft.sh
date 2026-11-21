@@ -115,6 +115,13 @@ if ! command -v playit >/dev/null; then
     $APT install playit >/dev/null 2>&1 && say "playit installed" || say "playit install FAILED"
 fi
 if command -v playit >/dev/null; then
+    # Keep playit current (Bedrock tunnels for Geyser need 1.2+)
+    $APT update >/dev/null 2>&1
+    BEFORE=$(playit --version 2>/dev/null | head -1)
+    $APT install --only-upgrade playit >/dev/null 2>&1
+    AFTER=$(playit --version 2>/dev/null | head -1)
+    [ "$BEFORE" != "$AFTER" ] && { say "playit updated: $BEFORE -> $AFTER"; sudo -n systemctl restart playit; }
+    say "playit version: $AFTER"
     sudo -n systemctl enable --now playit >/dev/null 2>&1
     sleep 15
     JLOG=$(sudo -n journalctl -u playit --no-pager -q -o cat -n 300 2>/dev/null)
