@@ -1,12 +1,17 @@
 #!/bin/bash
-# Runs every 5 minutes from pm2 ("gn-update", set up by i.sh). When server/server.js on
+# Runs every 5 minutes from pm2 ("gn-update", set up by i.sh), and right away when
+# server.js sees a new commit on GitHub (it restarts gn-update). When server/server.js on
 # GitHub (SCHSwork/math, main) changes, installs it and restarts the server.
 # If the new version doesn't answer /health, the old one is put back.
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.npm-global/bin:$PATH"
 cd "$HOME/gn-data" || exit 1
 mkdir -p state
 exec >> state/update.log 2>&1
-URL="https://raw.githubusercontent.com/SCHSwork/math/main/server"
+# Read files from the newest commit itself (raw "main" links are cached for up to
+# 5 minutes, which made every change wait). git ls-remote is never cached.
+SHA=$(timeout 20 git ls-remote https://github.com/SCHSwork/math refs/heads/main 2>/dev/null | cut -c1-40)
+if [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then URL="https://raw.githubusercontent.com/SCHSwork/math/$SHA/server"
+else URL="https://raw.githubusercontent.com/SCHSwork/math/main/server"; fi
 
 stamp() { date "+%F %T"; }
 

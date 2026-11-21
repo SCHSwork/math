@@ -748,6 +748,26 @@ app.get("/api/owner/minecraft", async (req, res) => {
     res.json({ status: st, ampUp, playit, geyser: geyserNxs, setup: mcSetupSummary(), log: logText.split("\n").filter(Boolean).slice(-40) });
 });
 
+// ── Update right away: when a new commit lands on GitHub (SCHSwork/math main),
+// run the updater now instead of waiting for its 5-minute timer. git ls-remote
+// is one tiny request and isn't rate limited or cached. If the updater is
+// already running, wait for it and try again on the next check.
+let seenCommit = null, pendingUpdate = false;
+async function watchCommits() {
+    const out = (await runAny("git", ["ls-remote", "https://github.com/SCHSwork/math", "refs/heads/main"])).slice(0, 40);
+    if (!/^[0-9a-f]{40}$/.test(out)) return;
+    if (seenCommit && out !== seenCommit) pendingUpdate = true;
+    seenCommit = out;
+    if (!pendingUpdate) return;
+    let busy = false;
+    try { busy = JSON.parse(await runAny("pm2", ["jlist"]) || "[]").some(p => p.name === "gn-update" && p.pm2_env && p.pm2_env.status === "online"); } catch {}
+    if (busy) return;
+    pendingUpdate = false;
+    log("update", "new commit " + out.slice(0, 7) + ", updating now");
+    await runAny("pm2", ["restart", "gn-update"]);
+}
+setTimeout(() => { watchCommits(); setInterval(watchCommits, 30000); }, 15000);
+
 // ── Minecraft setup runs: is minecraft.sh running, when did it last finish ──
 // Read from state/minecraft.log. Only short, non-secret lines are kept as notes
 // (what was added/changed), so this can go in the public /api/status too.
@@ -878,7 +898,7 @@ async function applyGeyserNxs() {
     }
     await writeJson(GEYSER_FILE, geyserNxs).catch(() => {});
 }
-setTimeout(applyGeyserNxs, 20000); setInterval(applyGeyserNxs, 2 * 60000);
+setTimeout(applyGeyserNxs, 20000); setInterval(applyGeyserNxs, 60000);
 
 // ── Play counts ─────────────────────────────────────────────────────────────
 const PLAYS_FILE = path.join(STATE_DIR, "plays.json");
