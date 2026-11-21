@@ -30,6 +30,15 @@
         <div class="gcs-actions">
             <button type="button" class="settings-button gcs-play">Play in browser</button>
             <button type="button" class="gcs-more" aria-expanded="false">Join from Java or Bedrock</button>
+            <button type="button" class="gcs-cmds-btn" aria-expanded="false">Commands and tips</button>
+        </div>
+        <div class="gcs-cmds" hidden>
+            <div><code>/sethome</code> then <code>/home</code> save a spot and teleport back to it (up to 3 homes)</div>
+            <div><code>/tpa name</code> ask to teleport to a friend, who answers with <code>/tpaccept</code> or <code>/tpdeny</code></div>
+            <div><code>/back</code> go back to where you died or last teleported</div>
+            <div><code>/msg name text</code> private message, <code>/r text</code> to reply, <code>/list</code> to see who's on</div>
+            <div><b>Protect your stuff:</b> hold a golden shovel and right-click two opposite corners to claim land. <code>/trust name</code> lets a friend build there.</div>
+            <div class="gcs-note">Type <code>/help</code> in the game for the full list.</div>
         </div>
         <div class="gcs-addrs" hidden>
             <div><b>Java</b> <code>${JAVA}</code> <button type="button" data-copy="${JAVA}">Copy</button></div>
@@ -45,10 +54,13 @@
         if (z && typeof openZone === "function") openZone(z);
         else if (typeof notify === "function") notify("GN Craft is still loading. Try again in a second.");
     };
-    $(".gcs-more").onclick = () => {
-        const a = $(".gcs-addrs"), open = a.hidden;
-        a.hidden = !open;
-        $(".gcs-more").setAttribute("aria-expanded", String(open));
+    // Two panels (addresses, commands): opening one closes the other
+    const panels = [[".gcs-more", ".gcs-addrs"], [".gcs-cmds-btn", ".gcs-cmds"]];
+    for (const [btn, panel] of panels) $(btn).onclick = () => {
+        const open = $(panel).hidden;
+        for (const [b, p] of panels) { $(p).hidden = true; $(b).setAttribute("aria-expanded", "false"); }
+        $(panel).hidden = !open;
+        $(btn).setAttribute("aria-expanded", String(open));
     };
     box.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
         try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy"; }, 1500); }
