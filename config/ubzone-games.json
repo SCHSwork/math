@@ -900,6 +900,15 @@
    "sources": [
     "matheveryday25/math@d499da713cdc25bb556bf42921dc8dc80f241ef5/ro16"
    ]
+  },
+  {
+   "id": 300093,
+   "name": "GN Craft (Minecraft server)",
+   "play": "play/gncraft/",
+   "cover": "assets/img/main/188.png",
+   "sources": [
+    "s0n-1m-cr1n3/sc13nc3@3096333fcce4d7a42ce18f59725abb62d5811116/assets/html/main/wasm18.html"
+   ]
   }
  ],
  "pins": {

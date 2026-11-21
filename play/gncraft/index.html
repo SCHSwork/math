@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GN Craft</title>
+<!--
+  GN Craft: EaglercraftX 1.8.8 (WASM) with the GN Craft server already in the
+  Multiplayer list (wss://eagler.learnresearch.org, through GN Proxy on the
+  GN 2.0 Server). The game is the same checked UBZone file as "EaglerCraft 1.8.8
+  (WASM)" (js/ubzone.js), from the exact checked commit below; only its server
+  list is changed before it starts. Opens in its own tab like other play/ pages.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #eee; font-family: Arial, sans-serif; }
+  #msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; }
+  #bar { width: min(320px, 80vw); height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+  #fill { height: 100%; width: 0; background: #4ade80; transition: width .2s; }
+  small { color: #999; }
+</style>
+</head>
+<body>
+<div id="msg">
+  <b style="font-size:22px;">GN Craft</b>
+  <div id="text">Loading Minecraft (about 15 MB)…</div>
+  <div id="bar"><div id="fill"></div></div>
+  <small>The GN Craft server will be first in Multiplayer.</small>
+</div>
+<script>
+"use strict";
+(async () => {
+  const REPO = "s0n-1m-cr1n3/sc13nc3", SHA = "3096333fcce4d7a42ce18f59725abb62d5811116";
+  const FILE = "assets/html/main/wasm18.html";
+  const SERVER = "wss://eagler.learnresearch.org";
+  const urls = [
+    `https://cdn.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
+    `https://fastly.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`,
+    `https://raw.githubusercontent.com/${REPO}/${SHA}/${FILE}`,
+    `https://gcore.jsdelivr.net/gh/${REPO}@${SHA}/${FILE}`
+  ];
+  const text = document.getElementById("text"), fill = document.getElementById("fill");
+  let html = null;
+  for (const u of urls) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      const total = Number(r.headers.get("content-length")) || 15200000;
+      const reader = r.body.getReader(), parts = [];
+      let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value); got += value.length;
+        fill.style.width = Math.min(100, got / total * 100) + "%";
+      }
+      html = await new Blob(parts).text();
+      if (html.includes("eaglercraftXOpts")) break;
+      html = null;
+    } catch {}
+  }
+  if (!html) { text.textContent = "Couldn't download the game. Check your connection and reload."; return; }
+  const servers = `servers: [
+        { addr: "${SERVER}", name: "§a§lGN Craft§r", hideAddr: false }
+    ],
+    relays`;
+  const changed = html.replace(/servers:\s*\[[\s\S]*?\]\s*,\s*relays/, servers);
+  if (changed === html) console.warn("GN Craft: couldn't add the server to the list; add " + SERVER + " in Multiplayer");
+  document.open();
+  document.write(changed);
+  document.close();
+})();
+</script>
+</body>
+</html>
