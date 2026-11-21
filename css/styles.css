@@ -514,6 +514,50 @@ summary.section-title:focus-visible { outline: 2px solid var(--primary); outline
 .shelf-small .card-badges { display: none; }
 .shelf-empty { margin: 0; padding: 1.25rem; border: 1px dashed var(--border); border-radius: 12px; color: var(--text-muted); font-size: 14px; text-align: center; }
 
+/* GN Craft spotlight (js/gncraft.js): the GN 2.0 Minecraft server */
+#gncraftSpot {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.6rem 1.25rem;
+    margin: 0 0 1.5rem;
+    padding: 1rem 3rem 1rem 1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, #4ade80 35%, var(--border));
+    background:
+        linear-gradient(110deg, color-mix(in srgb, #22c55e 14%, var(--surface)) 0%, var(--surface) 55%);
+}
+#gncraftSpot .gcs-cover { width: 112px; height: 112px; border-radius: 14px; image-rendering: pixelated; object-fit: cover; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+#gncraftSpot .gcs-kicker { display: flex; align-items: center; gap: 0.5rem; font-size: 13px; font-weight: 600; color: var(--text-muted); }
+#gncraftSpot .gcs-new { padding: 0.1rem 0.5rem; border-radius: 999px; background: #22c55e; color: #052e16; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+#gncraftSpot h2 { margin: 0.15rem 0 0.2rem; font-size: 1.5rem; line-height: 1.2; }
+#gncraftSpot .gcs-text { margin: 0 0 0.45rem; font-size: 14px; color: var(--text-muted); max-width: 46rem; }
+#gncraftSpot .gcs-status { display: flex; align-items: center; gap: 0.45rem; font-size: 13px; color: var(--text); }
+#gncraftSpot .gcs-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+#gncraftSpot .gcs-dot.on { background: #22c55e; box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 30%, transparent); }
+#gncraftSpot .gcs-dot.off { background: #f59e0b; }
+#gncraftSpot .gcs-actions { display: flex; flex-direction: column; align-items: stretch; gap: 0.45rem; }
+#gncraftSpot .gcs-play { width: auto; min-width: 0; padding: 0.7rem 1.6rem; background: #16a34a; border-color: #16a34a; color: #fff; font-weight: 700; }
+#gncraftSpot .gcs-play:hover { background: #15803d; border-color: #15803d; }
+#gncraftSpot .gcs-more { border: 0; background: transparent; color: var(--accent-text); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0.25rem; }
+#gncraftSpot .gcs-more:hover { text-decoration: underline; }
+#gncraftSpot .gcs-addrs { grid-column: 1 / -1; display: grid; gap: 0.4rem; padding: 0.75rem 0.9rem; border-radius: var(--radius); background: var(--bg-secondary); font-size: 14px; }
+#gncraftSpot .gcs-addrs[hidden] { display: none; }
+#gncraftSpot .gcs-addrs b { display: inline-block; min-width: 4.5rem; }
+#gncraftSpot .gcs-addrs code { padding: 0.1rem 0.4rem; border-radius: 6px; background: var(--surface); font-size: 13px; }
+#gncraftSpot .gcs-addrs button { margin-left: 0.35rem; padding: 0.15rem 0.6rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font-size: 12px; cursor: pointer; }
+#gncraftSpot .gcs-addrs button:hover { background: var(--surface-hover); }
+#gncraftSpot .gcs-note { font-size: 12px; color: var(--text-muted); }
+#gncraftSpot .gcs-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); font-size: 18px; cursor: pointer; }
+#gncraftSpot .gcs-close:hover { background: var(--surface-hover); color: var(--text); }
+@media (max-width: 700px) {
+    #gncraftSpot { grid-template-columns: auto 1fr; padding-right: 2.6rem; }
+    #gncraftSpot .gcs-cover { width: 72px; height: 72px; align-self: start; }
+    #gncraftSpot .gcs-actions { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
+    #gncraftSpot .gcs-play { flex: 1; }
+}
+
 /* Today's pick */
 #gotd {
     position: relative;
