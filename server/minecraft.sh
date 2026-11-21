@@ -178,5 +178,16 @@ if command -v playit >/dev/null; then
     set_status "{\"playitRunning\":$(systemctl is-active --quiet playit && echo true || echo false)}"
 fi
 
+# ── GN Proxy (Velocity) report: what AMP created, for setting it up ─────────
+echo "--- AMP instances:"; sudo -n ls /home/amp/.ampdata/instances 2>/dev/null
+for VT in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 4 -name velocity.toml 2>/dev/null); do
+    echo "--- $VT"; sudo -n grep -nE '^\s*(bind|online-mode|player-info-forwarding-mode|try|\[servers\]|[a-z0-9_-]+ = "[0-9.]+:[0-9]+")' "$VT"
+    echo "files:"; sudo -n ls "$(dirname "$VT")"
+done
+for K in $(sudo -n find /home/amp/.ampdata/instances -maxdepth 2 -iname '*.kvp' 2>/dev/null | grep -i -E 'proxy|velocity'); do
+    echo "--- $K"; sudo -n grep -iE 'port|bind|memory|servertype' "$K" | head -15
+done
+echo "---"
+
 set_status "{\"step\":\"done\",\"java\":$(ls /usr/lib/jvm 2>/dev/null | grep -q -- '-25-' && echo true || echo false),\"amp\":$(node -e 'try{const s=require(process.argv[1]);process.stdout.write(JSON.stringify(s.amp||null))}catch{process.stdout.write("null")}' "$PWD/$STATUS")}"
 say "== Minecraft setup finished"
