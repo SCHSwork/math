@@ -467,7 +467,49 @@ function findScreenButton(id, name) {
         } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
         setTimeout(() => { boo.disabled = false; }, 3000);
     };
-    wrap.append(btn, tag, boo);
+    const troll = trollPicker(name, doc => cloudDb.collection("identify").doc(id).set(doc));
+    wrap.append(btn, tag, boo, troll);
+    return wrap;
+}
+// Prank picker (js/identify.js TROLLS): pick one, type the text for a
+// message, then Send. send(doc) does the write and returns when it's done.
+function trollPicker(name, send) {
+    const wrap = document.createElement("span");
+    wrap.className = "troll-picker";
+    const pick = document.createElement("select");
+    pick.setAttribute("aria-label", `Prank for ${name}`);
+    (typeof TROLLS !== "undefined" ? TROLLS : []).forEach(([v, label, , , what]) => { const o = document.createElement("option"); o.value = v; o.textContent = label; o.title = what; pick.appendChild(o); });
+    const text = document.createElement("input");
+    text.type = "text"; text.maxLength = 140; text.className = "submit-note"; text.hidden = true;
+    text.placeholder = "Your message (they'll see your name)";
+    text.setAttribute("aria-label", `Message for ${name}`); text.setAttribute("data-lpignore", "true");
+    const go = document.createElement("button");
+    go.type = "button"; go.className = "finder-chip";
+    go.innerHTML = gnIcon("dice") + " Prank";
+    const sync = () => { text.hidden = pick.value !== "msg"; const d = TROLLS.find(x => x[0] === pick.value); go.title = d ? `${d[4]} (${name})` : ""; };
+    pick.onchange = () => { sync(); if (!text.hidden) text.focus(); };
+    sync();
+    go.onclick = async () => {
+        const t = pick.value, x = text.value.trim().slice(0, 140);
+        if (t === "msg" && !x) { notify("Type the message first.", { type: "error" }); text.focus(); return; }
+        go.disabled = true; go.dataset.busy = "1";
+        try {
+            await send({
+                k: "troll", t, ...(t === "msg" ? { x } : {}), c: "purple", n: 1,
+                until: firebase.firestore.Timestamp.fromMillis(Date.now() + 60000),
+                by: currentUsername().slice(0, 40), at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            const label = TROLLS.find(z => z[0] === t)[1];
+            notify(`${label} sent to ${name}.`, { type: "success" });
+            if (t === "msg") text.value = "";
+        } catch (e) { notify("That didn't work: " + (e.message || e), { type: "error" }); }
+        delete go.dataset.busy;
+        // An ability's button is turned back on by its cooldown timer instead
+        if (go.dataset.perkBtn) go.disabled = perkReadyAt(go.dataset.perkBtn) > Date.now();
+        else setTimeout(() => { go.disabled = false; }, 2000);
+    };
+    wrap.append(pick, text, go);
+    wrap.button = go;
     return wrap;
 }
 const BOOT_UNITS = [["m", "minutes", 60000], ["h", "hours", 3600000], ["d", "days", 86400000]];
@@ -1068,7 +1110,8 @@ function adminRow(p) {
 const PERKS = [
     ["scare", "Jumpscare", "ghost", 30, "A fake game crash, then a scary picture and a scream on someone's screen"],
     ["find", "Find screen", "eye", 5, "Lights up someone's screen with a color and number for 30 seconds"],
-    ["boot", "Boot", "ban", 60, "Removes someone from the site for up to 15 minutes"]
+    ["boot", "Boot", "ban", 60, "Removes someone from the site for up to 15 minutes"],
+    ["troll", "Pranks", "dice", 10, "Upside down, spin, earthquake, fart sound, fake update, a message and more on someone's screen"]
 ];
 const PERK_BOOT_TIMES = [[1, "1 minute"], [5, "5 minutes"], [10, "10 minutes"], [15, "15 minutes"]];
 const cooldownText = m => m === 0 ? "no wait" : m < 60 ? `${m} min` : m % 1440 === 0 ? `${m / 1440} day${m === 1440 ? "" : "s"}` : m % 60 === 0 ? `${m / 60} h` : `${Math.floor(m / 60)} h ${m % 60} min`;
@@ -1256,6 +1299,14 @@ async function renderPerkSessions() {
             }));
             notify(`Jumpscared ${name}.`, { type: "success" });
         });
+        if ("troll" in perks) {
+            const tp = trollPicker(name, async doc => {
+                await usePerk("troll", b => b.set(cloudDb.collection("identify").doc(p.id), doc));
+            });
+            tp.button.dataset.perkBtn = "troll";
+            tp.button.disabled = perkReadyAt("troll") > Date.now();
+            acts.appendChild(tp);
+        }
         let time = null;
         if ("boot" in perks) {
             time = document.createElement("select");

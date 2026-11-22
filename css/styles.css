@@ -3574,6 +3574,9 @@ body:has(#zoneViewer[style*="flex"]) > :is(header, main, footer, #owner-announce
 /* Admin Panel → Sessions: Find screen */
 .find-screen { display: inline-flex; align-items: center; gap: 6px; }
 .find-screen .finder-chip { display: inline-flex; align-items: center; gap: 5px; }
+.troll-picker { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.troll-picker .finder-chip { display: inline-flex; align-items: center; gap: 5px; }
+.troll-picker .submit-note { min-width: 200px; }
 .find-screen-tag { padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 13px; white-space: nowrap; }
 .find-screen-tag[hidden] { display: none; }
 .perks-editor { flex-basis: 100%; margin: 0.25rem 0; }

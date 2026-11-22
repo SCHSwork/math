@@ -226,7 +226,8 @@ service cloud.firestore {
     // Abilities: the owner gives someone a few admin abilities without making
     // them an admin, each with its own cooldown in minutes:
     //   perks/<uid> { name, a: { scare: 30, find: 5, boot: 60 }, by, at }
-    // scare = Jumpscare, find = Find screen, boot = Boot a session (15 min max).
+    // scare = Jumpscare, find = Find screen, boot = Boot a session (15 min max),
+    // troll = Pranks (any prank in js/identify.js TROLLS).
     match /perks/{uid} {
       allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
       allow create, update: if isOwner() && loggedAs(uid, 'set_perks')
@@ -270,13 +271,16 @@ service cloud.firestore {
       allow get: if true;
       allow create, update: if (isAdmin() || usedPerk(request.resource.data.get('k', 'find')))
         && id.matches('[A-Za-z0-9]{20}')
-        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k', 'u', 'm'])
+        && request.resource.data.keys().hasOnly(['c', 'n', 'until', 'by', 'at', 'k', 'u', 'm', 't', 'x'])
         // m: jumpscare style, 'buildup' (fake crash first) or 'instant'
         && (!('m' in request.resource.data) || request.resource.data.m in ['buildup', 'instant'])
         // u: a jumpscare picture's link (https, picked by the admin)
         && (!('u' in request.resource.data) || (request.resource.data.u is string && request.resource.data.u.size() <= 600 && request.resource.data.u.matches('https://[^ ]+')))
-        // k: 'find' (light up the screen) or 'scare' (jumpscare, just for fun)
-        && (!('k' in request.resource.data) || request.resource.data.k in ['find', 'scare'])
+        // k: 'find' (light up the screen), 'scare' (jumpscare) or 'troll' (a prank, js/identify.js TROLLS)
+        && (!('k' in request.resource.data) || request.resource.data.k in ['find', 'scare', 'troll'])
+        // t: which prank; x: the text of a message prank
+        && (!('t' in request.resource.data) || request.resource.data.t in ['flip', 'mirror', 'spin', 'shake', 'wobble', 'tiny', 'colors', 'fart', 'confetti', 'update', 'msg'])
+        && (!('x' in request.resource.data) || shortText(request.resource.data.x, 140))
         && request.resource.data.c in ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink']
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 99
         && request.resource.data.until is timestamp && request.resource.data.until > request.time
@@ -467,7 +471,8 @@ service cloud.firestore {
     }
     function perkCooldownOk(v) { return v is int && v >= 0 && v <= 10080; }
     function validPerks(a) {
-      return a is map && a.size() >= 1 && a.keys().hasOnly(['scare', 'find', 'boot'])
+      return a is map && a.size() >= 1 && a.keys().hasOnly(['scare', 'find', 'boot', 'troll'])
+        && (!('troll' in a) || perkCooldownOk(a.troll))
         && (!('scare' in a) || perkCooldownOk(a.scare))
         && (!('find' in a) || perkCooldownOk(a.find))
         && (!('boot' in a) || perkCooldownOk(a.boot));
@@ -475,7 +480,7 @@ service cloud.firestore {
     // One ability at a time, set to now, only if it's theirs and cooled down
     function perkUseOk(changed) {
       return changed.size() == 1
-        && (perkUsedNow(changed, 'scare') || perkUsedNow(changed, 'find') || perkUsedNow(changed, 'boot'));
+        && (perkUsedNow(changed, 'scare') || perkUsedNow(changed, 'find') || perkUsedNow(changed, 'boot') || perkUsedNow(changed, 'troll'));
     }
     function perkUsedNow(changed, ab) {
       return changed.hasAny([ab]) && perkReady(ab) && request.resource.data[ab] == request.time;

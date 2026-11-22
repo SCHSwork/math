@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 22, 2026 — Pranks
+
+### Added
+- **Pranks in Admin Panel → Sessions**, next to Jumpscare: Upside down, Mirror, Spin, Earthquake, Wobble, Shrink, Weird colors, Fart sound, Confetti, Fake update ("just kidding" at the end) and Message (type up to 140 letters; it shows who sent it). Each one undoes itself after a few seconds and the game keeps running. Nothing flashes, and the moving ones are skipped for people whose computer is set to reduce motion.
+- **Pranks ability.** The owner can give someone Pranks in their Abilities, with its own wait time (10 minutes to start).
+
 ## November 22, 2026 — Owner Panel in tabs
 
 ### Changed

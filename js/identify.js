@@ -339,3 +339,137 @@ function gnJumpscare(pic, mode) {
         try { if (gw && gw.__gnSetMuted) gw.__gnSetMuted(!!(window.__gnmathMuted && window.__gnmathMuted())); } catch {}
     }, SCARE_END_MS + 300);
 }
+
+// ── Pranks (just for fun; Admin Panel → Sessions, or the Pranks ability) ────
+// An admin writes identify/<session id> { k: "troll", t: which prank, x: text
+// for a message }. Everything undoes itself after a few seconds and the game
+// keeps running. Nothing flashes. Moving pranks are skipped for people who
+// asked their computer for less motion.
+// [id, button label, icon, how long (ms), what it does (shown to the admin)]
+const TROLLS = [
+    ["flip",     "Upside down", "dice",  15000, "Turns their whole screen upside down for 15 seconds"],
+    ["mirror",   "Mirror",      "eye",   20000, "Flips their screen left to right for 20 seconds"],
+    ["spin",     "Spin",        "dice",   3000, "Spins their screen around 3 times"],
+    ["shake",    "Earthquake",  "bolt",   6000, "Shakes their screen for 6 seconds"],
+    ["wobble",   "Wobble",      "ghost", 15000, "Makes their screen sway and go blurry for 15 seconds"],
+    ["tiny",     "Shrink",      "eye",   15000, "Shrinks the whole site to a tiny box for 15 seconds"],
+    ["colors",   "Weird colors","palette",20000, "Swaps every color on their screen for 20 seconds"],
+    ["fart",     "Fart sound",  "ghost",   1500, "Plays a fart sound"],
+    ["confetti", "Confetti",    "bulb",   4000, "Drops confetti on their screen"],
+    ["update",   "Fake update", "download",12000, "A fake \"installing updates\" screen for about 12 seconds, then \"just kidding\""],
+    ["msg",      "Message",     "bulb",  15000, "Pops up a message you type (140 letters max)"]
+];
+const TROLL_MOVES = ["flip", "mirror", "spin", "shake", "wobble", "tiny"];
+let trollUndo = null;
+function gnTroll(t, text, by) {
+    const def = TROLLS.find(x => x[0] === t);
+    if (!def) return;
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce && TROLL_MOVES.includes(t)) return;
+    if (trollUndo) { try { trollUndo(); } catch {} trollUndo = null; }
+    const ms = def[3];
+    if (!document.getElementById("gn-troll-css")) {
+        const st = document.createElement("style");
+        st.id = "gn-troll-css";
+        st.textContent = `
+@keyframes gnTrSpin{to{transform:rotate(1080deg)}}
+@keyframes gnTrShake{0%,100%{transform:translate(0,0)}10%{transform:translate(-14px,6px) rotate(-1deg)}20%{transform:translate(12px,-8px) rotate(1deg)}30%{transform:translate(-10px,10px)}40%{transform:translate(14px,4px) rotate(-1deg)}50%{transform:translate(-8px,-10px) rotate(1deg)}60%{transform:translate(10px,8px)}70%{transform:translate(-12px,-4px) rotate(-1deg)}80%{transform:translate(8px,10px)}90%{transform:translate(-6px,-6px)}}
+@keyframes gnTrWobble{0%,100%{transform:rotate(0) skewX(0);filter:blur(0)}25%{transform:rotate(3deg) skewX(6deg);filter:blur(2px)}50%{transform:rotate(0) skewX(0);filter:blur(1px)}75%{transform:rotate(-3deg) skewX(-6deg);filter:blur(2px)}}
+@keyframes gnTrFall{to{transform:translateY(110vh) rotate(720deg)}}
+@keyframes gnTrBar{from{width:0}to{width:100%}}
+html.gn-tr-flip{transform:rotate(180deg);transition:transform .6s}
+html.gn-tr-mirror{transform:scaleX(-1);transition:transform .6s}
+html.gn-tr-spin{animation:gnTrSpin 3s ease-in-out}
+html.gn-tr-shake{animation:gnTrShake .5s linear 12}
+html.gn-tr-wobble{animation:gnTrWobble 3s ease-in-out 5}
+html.gn-tr-tiny{transform:scale(.3);transition:transform .8s;transform-origin:50% 50%;overflow:hidden}
+html.gn-tr-colors{filter:invert(1) hue-rotate(180deg) saturate(3)}
+html.gn-tr-flip body,html.gn-tr-mirror body,html.gn-tr-spin body,html.gn-tr-shake body,html.gn-tr-wobble body,html.gn-tr-tiny body{min-height:100vh}`;
+        document.head.appendChild(st);
+    }
+    const root = document.documentElement;
+    const timers = [];
+    const layers = [];
+    const layer = css => { const el = document.createElement("div"); el.className = "gn-troll"; el.style.cssText = "position:fixed;inset:0;z-index:2147483645;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;" + css; document.body.appendChild(el); layers.push(el); return el; };
+    // A game in fullscreen is drawn above the site, so it gets the effect itself
+    let fs = null;
+    try { fs = document.fullscreenElement || document.webkitFullscreenElement; } catch {}
+    const classTarget = fs && fs !== root ? fs : root;
+    const done = () => {
+        timers.forEach(clearTimeout);
+        classTarget.classList.remove("gn-tr-" + t);
+        if (classTarget !== root) { classTarget.style.transform = ""; classTarget.style.filter = ""; classTarget.style.animation = ""; }
+        layers.forEach(el => el.remove());
+        if (trollUndo === done) trollUndo = null;
+    };
+    trollUndo = done;
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    if (["flip", "mirror", "spin", "shake", "wobble", "tiny", "colors"].includes(t)) {
+        if (classTarget === root) root.classList.add("gn-tr-" + t);
+        else {
+            // The page's CSS rules are for <html>; copy them onto the fullscreen game
+            const css = { flip: ["rotate(180deg)"], mirror: ["scaleX(-1)"], tiny: ["scale(.3)"] }[t];
+            if (css) classTarget.style.transform = css[0];
+            else if (t === "colors") classTarget.style.filter = "invert(1) hue-rotate(180deg) saturate(3)";
+            else classTarget.style.animation = { spin: "gnTrSpin 3s ease-in-out", shake: "gnTrShake .5s linear 12", wobble: "gnTrWobble 3s ease-in-out 5" }[t];
+        }
+    } else if (t === "fart") {
+        trollFart();
+    } else if (t === "confetti") {
+        const box = layer("pointer-events:none;overflow:hidden;");
+        const cols = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#22d3ee", "#3b82f6", "#a855f7", "#ec4899"];
+        let html = "";
+        for (let i = 0; i < 140; i++) {
+            const w = 6 + Math.random() * 8, d = 1.8 + Math.random() * 2, delay = Math.random() * 1.2;
+            html += `<i style="position:absolute;top:-20px;left:${Math.random() * 100}%;width:${w}px;height:${w * 0.45}px;background:${cols[i % cols.length]};border-radius:2px;animation:gnTrFall ${d}s ${delay}s linear forwards;"></i>`;
+        }
+        box.innerHTML = html;
+    } else if (t === "update") {
+        const box = layer("background:#0b5fa5;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:wait;text-align:center;");
+        box.innerHTML = `<div style="width:46px;height:46px;border:5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:gnTrSpin 9s linear infinite;"></div>
+            <div style="font-size:30px;font-weight:300;">Working on updates <span class="gn-tr-pct">0</span>%</div>
+            <div style="font-size:17px;opacity:.85;">Don't turn off your computer. This might take a while.</div>
+            <div style="width:min(420px,70vw);height:6px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden;"><div style="height:100%;background:#fff;animation:gnTrBar ${ms - 2500}ms linear forwards;"></div></div>`;
+        const pct = box.querySelector(".gn-tr-pct");
+        const start = Date.now();
+        const tick = () => { const p = Math.min(100, Math.floor((Date.now() - start) / (ms - 2500) * 100)); pct.textContent = p; if (p < 100) timers.push(setTimeout(tick, 120 + Math.random() * 400)); };
+        tick();
+        timers.push(setTimeout(() => { box.innerHTML = `<div style="font-size:64px;font-weight:900;">just kidding 😜</div><div style="font-size:17px;opacity:.85;">Nothing happened to your computer. Back to your game!</div>`; box.style.cursor = "default"; }, ms - 2500));
+    } else if (t === "msg") {
+        const words = String(text || "").trim().slice(0, 140);
+        if (!words) { done(); return; }
+        const box = layer("background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;");
+        box.innerHTML = `<div role="alertdialog" aria-live="assertive" style="max-width:min(520px,88vw);background:#111827;color:#fff;border-radius:18px;padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.6);text-align:center;">
+            <div style="font-size:13px;opacity:.7;margin-bottom:8px;">Message from ${esc(String(by || "an admin").slice(0, 40))}</div>
+            <div style="font-size:24px;font-weight:700;line-height:1.3;word-wrap:break-word;">${esc(words)}</div>
+            <button type="button" style="margin-top:18px;padding:8px 22px;border:0;border-radius:999px;background:#3b82f6;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">OK</button></div>`;
+        box.querySelector("button").onclick = done;
+    }
+    timers.push(setTimeout(done, ms));
+}
+function trollFart() {
+    try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ac = new AC();
+        if (ac.state === "suspended") ac.resume();
+        const now = ac.currentTime, len = 0.9 + Math.random() * 0.5;
+        const osc = ac.createOscillator(), lfo = ac.createOscillator(), lfoGain = ac.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(95 + Math.random() * 25, now);
+        osc.frequency.exponentialRampToValueAtTime(55, now + len);
+        lfo.frequency.setValueAtTime(18 + Math.random() * 10, now);
+        lfoGain.gain.value = 22;
+        lfo.connect(lfoGain).connect(osc.frequency);
+        const lp = ac.createBiquadFilter();
+        lp.type = "lowpass"; lp.frequency.value = 420; lp.Q.value = 4;
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.7, now + 0.05);
+        g.gain.setValueAtTime(0.7, now + len * 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + len);
+        osc.connect(lp).connect(g).connect(ac.destination);
+        osc.start(now); lfo.start(now); osc.stop(now + len + 0.05); lfo.stop(now + len + 0.05);
+        setTimeout(() => ac.close().catch(() => {}), (len + 0.5) * 1000);
+    } catch (e) { console.warn("Fart sound failed", e); }
+}
