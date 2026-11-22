@@ -27,6 +27,10 @@
             <p class="gcs-text">One survival world for everyone on GN 2.0. Play right here in your browser with your GN 2.0 account, or join from Minecraft Java or Bedrock.</p>
             <div class="gcs-status" aria-live="polite"><span class="gcs-dot"></span><span class="gcs-status-text">Checking the server…</span></div>
         </div>
+        <button type="button" class="gcs-mapbox" aria-label="Explore the live 3D map of GN Craft">
+            <span class="gcs-mapbox-label">Live map</span>
+            <span class="gcs-mapbox-cta">Explore the world</span>
+        </button>
         <div class="gcs-actions">
             <button type="button" class="settings-button gcs-play">Play in browser</button>
             <button type="button" class="gcs-more" aria-expanded="false">Join from Java or Bedrock</button>
@@ -41,6 +45,11 @@
             <div><code>/msg name text</code> private message, <code>/r text</code> to reply, <code>/list</code> to see who's on</div>
             <div><b>Protect your stuff:</b> <code>/claim</code> hands you a claim shovel: right-click two opposite corners of your land and it's protected (the shovel goes away when you're done). <code>/trust name</code> lets a friend build there.</div>
             <div class="gcs-note">Type <code>/help</code> in the game for the full list.</div>
+        </div>
+        <div class="gcs-bigmap" hidden>
+            <div class="gcs-bigmap-bar"><b>GN Craft live map</b><span>Drag to look around, scroll to zoom</span>
+                <a href="https://map.learnresearch.org" target="_blank" rel="noopener">Open full screen</a>
+                <button type="button" class="gcs-bigmap-close">Close map</button></div>
         </div>
         <div class="gcs-addrs" hidden>
             <div><b>Java</b> <code>${JAVA}</code> <button type="button" data-copy="${JAVA}">Copy</button></div>
@@ -72,6 +81,42 @@
         try { localStorage.setItem(HIDE_KEY, String(Date.now())); } catch {}
         box.remove();
     };
+
+    // ── Live map (BlueMap on GN Craft, map.learnresearch.org) ──
+    // The small preview is the real 3D map, but only loads on bigger screens and
+    // only while the spotlight is on screen (it's WebGL, which costs a laptop
+    // some battery). Clicking it opens a big, explorable map right here.
+    const MAP = "https://map.learnresearch.org";
+    const mapbox = $(".gcs-mapbox"), big = $(".gcs-bigmap");
+    let preview = null;
+    const canPreview = () => window.innerWidth >= 1000 && (navigator.hardwareConcurrency || 4) >= 4 && !(navigator.connection && navigator.connection.saveData);
+    function setPreview(on) {
+        if (on && !preview && canPreview() && big.hidden) {
+            preview = document.createElement("iframe");
+            preview.className = "gcs-mapframe"; preview.src = MAP; preview.tabIndex = -1;
+            preview.setAttribute("aria-hidden", "true"); preview.loading = "lazy";
+            mapbox.prepend(preview);
+        } else if (!on && preview) { preview.remove(); preview = null; }
+    }
+    if ("IntersectionObserver" in window) {
+        let timer = null;
+        new IntersectionObserver(([e]) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => setPreview(e.isIntersecting && !document.hidden), e.isIntersecting ? 1500 : 0);
+        }, { threshold: 0.3 }).observe(box);
+        document.addEventListener("visibilitychange", () => { if (document.hidden) setPreview(false); });
+    }
+    mapbox.onclick = () => {
+        setPreview(false);
+        if (!big.querySelector("iframe")) {
+            const f = document.createElement("iframe");
+            f.src = MAP; f.title = "GN Craft live map"; f.allow = "fullscreen";
+            big.appendChild(f);
+        }
+        big.hidden = false;
+        big.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+    $(".gcs-bigmap-close").onclick = () => { big.hidden = true; const f = big.querySelector("iframe"); if (f) f.remove(); };
 
     // Is it up, and who's on?
     async function check() {
