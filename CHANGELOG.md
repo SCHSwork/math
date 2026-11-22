@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 21, 2026 — Bendy fix
+
+### Fixed
+- **Bendy and the Ink Machine** crashed with "Unexpected identifier 'genizy'": jsDelivr refuses the repo its files come from and answers with an error message, which the game tried to run as code. Its files now always load from GitHub.
+
 ## November 21, 2026 — Bots get a different page
 
 ### Added

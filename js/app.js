@@ -365,7 +365,10 @@ async function loadGithubScriptsAndStyles(html) {
 // jsDelivr also blocks whole GitHub accounts ("User genizy is blocked"): every
 // repo of theirs gets an error. Found with Actions → Check jsDelivr repos.
 const JSD_REFUSED_OWNERS = ["genizy", "gn-math", "tty67hlt6jf6"];
-const JSD_REFUSED_REPOS = [];
+// giorgirick2-gif/game-webports-onawebsite (Bendy and the Ink Machine, #215):
+// jsDelivr answers with its "User genizy is blocked" text, which Unity then runs
+// as code ("Unexpected identifier 'genizy'"). Plays fine from GitHub.
+const JSD_REFUSED_REPOS = ["giorgirick2-gif/game-webports-onawebsite"];
 const JSD_REFUSED_RE = new RegExp(`https?:\\/\\/(?:cdn|fastly|gcore|testingcf)\\.jsdelivr\\.net\\/gh\\/(?:${[...JSD_REFUSED_REPOS.map(r => r.replace(/[.\/]/g, "\\$&")), ...JSD_REFUSED_OWNERS.map(o => o.replace(/[.]/g, "\\$&") + "\\/[\\w.-]+")].join("|")})[@\\/][^\\s"'\`<>()\\\\]*`, "gi");
 async function avoidRefusedRepos(html) {
     JSD_REFUSED_RE.lastIndex = 0;
