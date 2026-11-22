@@ -39,12 +39,14 @@
   {
    "id": 600004,
    "name": "3D Tanks",
-   "path": "games/flash/swf/3d-tanks.swf"
+   "path": "games/flash/swf/3d-tanks.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600004.png"
   },
   {
    "id": 600005,
    "name": "50 States",
-   "path": "games/flash/swf/50states.swf"
+   "path": "games/flash/swf/50states.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/50-states.png"
   },
   {
    "id": 600007,
@@ -105,7 +107,8 @@
   {
    "id": 600016,
    "name": "Antbuster",
-   "path": "games/flash/swf/antbuster.swf"
+   "path": "games/flash/swf/antbuster.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/ant-buster.png"
   },
   {
    "id": 600017,
@@ -123,12 +126,14 @@
   {
    "id": 600019,
    "name": "Armor RPG Mod",
-   "path": "games/flash/swf/armorrpg-mod.swf"
+   "path": "games/flash/swf/armorrpg-mod.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600019.png"
   },
   {
    "id": 600020,
    "name": "Army of Ages",
-   "path": "games/flash/swf/army-of-ages.swf"
+   "path": "games/flash/swf/army-of-ages.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600020.png"
   },
   {
    "id": 600021,
@@ -153,7 +158,8 @@
   {
    "id": 600024,
    "name": "Awesome Planes",
-   "path": "games/flash/swf/awesome-planes.swf"
+   "path": "games/flash/swf/awesome-planes.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600024.png"
   },
   {
    "id": 600025,
@@ -183,12 +189,14 @@
   {
    "id": 600029,
    "name": "Bear You",
-   "path": "games/flash/swf/bear-you.swf"
+   "path": "games/flash/swf/bear-you.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600029.png"
   },
   {
    "id": 600030,
    "name": "Bejeweled",
-   "path": "games/flash/swf/bejeweled-unblocked.swf"
+   "path": "games/flash/swf/bejeweled-unblocked.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/bejeweled.png"
   },
   {
    "id": 600031,
@@ -213,12 +221,14 @@
   {
    "id": 600034,
    "name": "Blastomatic",
-   "path": "games/flash/swf/blastomatic.swf"
+   "path": "games/flash/swf/blastomatic.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/blast-o-matic.png"
   },
   {
    "id": 600035,
    "name": "Blob Ink 2",
-   "path": "games/flash/swf/blobink2.swf"
+   "path": "games/flash/swf/blobink2.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/blobink-2.png"
   },
   {
    "id": 600036,
@@ -230,17 +240,20 @@
   {
    "id": 600037,
    "name": "Bloons Player Pack 2",
-   "path": "games/flash/swf/bloons-player-pack-2.swf"
+   "path": "games/flash/swf/bloons-player-pack-2.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600037.png"
   },
   {
    "id": 600038,
    "name": "Bloons Player Pack 3",
-   "path": "games/flash/swf/bloons-player-pack-3.swf"
+   "path": "games/flash/swf/bloons-player-pack-3.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600038.png"
   },
   {
    "id": 600039,
    "name": "Bloons Player Pack 4",
-   "path": "games/flash/swf/bloons-player-pack-4.swf"
+   "path": "games/flash/swf/bloons-player-pack-4.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600039.png"
   },
   {
    "id": 600040,
@@ -256,7 +269,8 @@
   {
    "id": 600042,
    "name": "Boombot 2",
-   "path": "games/flash/swf/boombot-2.swf"
+   "path": "games/flash/swf/boombot-2.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600042.png"
   },
   {
    "id": 600043,
@@ -305,7 +319,8 @@
   {
    "id": 600050,
    "name": "Bullet Time Fighting",
-   "path": "games/flash/swf/bullet-time-fighting.swf"
+   "path": "games/flash/swf/bullet-time-fighting.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600050.png"
   },
   {
    "id": 600051,
@@ -323,12 +338,14 @@
   {
    "id": 600053,
    "name": "Cargo Bridge",
-   "path": "games/flash/swf/cargo-bridge.swf"
+   "path": "games/flash/swf/cargo-bridge.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600053.png"
   },
   {
    "id": 600054,
    "name": "Causality",
-   "path": "games/flash/swf/causality.swf"
+   "path": "games/flash/swf/causality.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600054.png"
   },
   {
    "id": 600055,
@@ -339,7 +356,8 @@
   {
    "id": 600056,
    "name": "Choose Your Weapon 2",
-   "path": "games/flash/swf/chooseyourweapon2_LB.swf"
+   "path": "games/flash/swf/chooseyourweapon2_LB.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/choose-your-weapon-2.png"
   },
   {
    "id": 600057,
@@ -363,7 +381,8 @@
   {
    "id": 600060,
    "name": "Computer Bashing",
-   "path": "games/flash/swf/computer-bashing.swf"
+   "path": "games/flash/swf/computer-bashing.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600060.png"
   },
   {
    "id": 600061,
@@ -388,22 +407,26 @@
   {
    "id": 600064,
    "name": "Curveball",
-   "path": "games/flash/swf/curveball.swf"
+   "path": "games/flash/swf/curveball.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600064.png"
   },
   {
    "id": 600065,
    "name": "Dad 'n Me",
-   "path": "games/flash/swf/dadnme.swf"
+   "path": "games/flash/swf/dadnme.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/dad-n-me.png"
   },
   {
    "id": 600066,
    "name": "Dagobah Bot Arena 3",
-   "path": "games/flash/swf/dagobah-bot-arena-3.swf"
+   "path": "games/flash/swf/dagobah-bot-arena-3.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600066.png"
   },
   {
    "id": 600067,
    "name": "Boxhead: Dagobah 2Play",
-   "path": "games/flash/swf/dagobah-boxhead-2play.swf"
+   "path": "games/flash/swf/dagobah-boxhead-2play.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600067.png"
   },
   {
    "id": 600068,
@@ -414,7 +437,8 @@
   {
    "id": 600069,
    "name": "Defend Your Castle",
-   "path": "games/flash/swf/defend-your-castle.swf"
+   "path": "games/flash/swf/defend-your-castle.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600069.png"
   },
   {
    "id": 600070,
@@ -433,7 +457,8 @@
   {
    "id": 600072,
    "name": "Don't Shoot the Puppy",
-   "path": "games/flash/swf/dont-shoot-the-puppy.swf"
+   "path": "games/flash/swf/dont-shoot-the-puppy.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600072.png"
   },
   {
    "id": 600073,
@@ -459,7 +484,8 @@
   {
    "id": 600077,
    "name": "DX Hockey",
-   "path": "games/flash/swf/dxhockey.swf"
+   "path": "games/flash/swf/dxhockey.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/dx-hockey.png"
   },
   {
    "id": 600078,
@@ -470,7 +496,8 @@
   {
    "id": 600079,
    "name": "Earth Bound",
-   "path": "games/flash/swf/earth-bound.swf"
+   "path": "games/flash/swf/earth-bound.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/earthbound.png"
   },
   {
    "id": 600081,
@@ -488,7 +515,8 @@
   {
    "id": 600083,
    "name": "Elephant Quest",
-   "path": "games/flash/swf/elephant-quest.swf"
+   "path": "games/flash/swf/elephant-quest.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600083.png"
   },
   {
    "id": 600085,
@@ -500,7 +528,8 @@
   {
    "id": 600086,
    "name": "Exit Path",
-   "path": "games/flash/swf/exit-path.swf"
+   "path": "games/flash/swf/exit-path.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600086.png"
   },
   {
    "id": 600087,
@@ -519,12 +548,14 @@
   {
    "id": 600089,
    "name": "Falling Bush",
-   "path": "games/flash/swf/falling-bush.swf"
+   "path": "games/flash/swf/falling-bush.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600089.png"
   },
   {
    "id": 600090,
    "name": "Fancy Pants World 2",
-   "path": "games/flash/swf/fancy-pants-world-2.swf"
+   "path": "games/flash/swf/fancy-pants-world-2.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600090.png"
   },
   {
    "id": 600092,
@@ -555,7 +586,8 @@
   {
    "id": 600096,
    "name": "Flight",
-   "path": "games/flash/swf/flight.swf"
+   "path": "games/flash/swf/flight.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600096.png"
   },
   {
    "id": 600097,
@@ -567,7 +599,8 @@
   {
    "id": 600099,
    "name": "Free Rider 2",
-   "path": "games/flash/swf/freerider-2.swf"
+   "path": "games/flash/swf/freerider-2.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/free-rider-2.png"
   },
   {
    "id": 600100,
@@ -586,7 +619,8 @@
   {
    "id": 600102,
    "name": "Geoland RPG",
-   "path": "games/flash/swf/geoland-rpg.swf"
+   "path": "games/flash/swf/geoland-rpg.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/geo-land-rpg.png"
   },
   {
    "id": 600103,
@@ -605,7 +639,8 @@
   {
    "id": 600105,
    "name": "Gridlock",
-   "path": "games/flash/swf/Gridlock.swf"
+   "path": "games/flash/swf/Gridlock.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/grid-lock.png"
   },
   {
    "id": 600106,
@@ -630,7 +665,8 @@
   {
    "id": 600109,
    "name": "Hanger 2",
-   "path": "games/flash/swf/hanger2.swf"
+   "path": "games/flash/swf/hanger2.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600109.png"
   },
   {
    "id": 600111,
@@ -663,7 +699,8 @@
   {
    "id": 600115,
    "name": "Hot Corn",
-   "path": "games/flash/swf/hotcorn.swf"
+   "path": "games/flash/swf/hotcorn.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/hot-corn.png"
   },
   {
    "id": 600116,
@@ -683,7 +720,8 @@
    "id": 600118,
    "name": "Indestructo Tank 2",
    "by": "Tony",
-   "path": "games/flash/swf/indestructo-tank-2.swf"
+   "path": "games/flash/swf/indestructo-tank-2.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/ndestructo-tank-2.png"
   },
   {
    "id": 600119,
@@ -708,12 +746,14 @@
   {
    "id": 600122,
    "name": "Jumpix 2",
-   "path": "games/flash/swf/jumpix2.swf"
+   "path": "games/flash/swf/jumpix2.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600122.png"
   },
   {
    "id": 600123,
    "name": "Kung Fu Remix 2",
-   "path": "games/flash/swf/kungfu-remix-2.swf"
+   "path": "games/flash/swf/kungfu-remix-2.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/kung-fu-remix-2.png"
   },
   {
    "id": 600125,
@@ -725,7 +765,8 @@
   {
    "id": 600130,
    "name": "Magnet Face",
-   "path": "games/flash/swf/magnet-face.swf"
+   "path": "games/flash/swf/magnet-face.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600130.png"
   },
   {
    "id": 600131,
@@ -743,12 +784,14 @@
   {
    "id": 600133,
    "name": "Max Dirt Bike",
-   "path": "games/flash/swf/max-dirt-bike.swf"
+   "path": "games/flash/swf/max-dirt-bike.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/max-dirt-bike-1.png"
   },
   {
    "id": 600134,
    "name": "Mega Man Project X",
-   "path": "games/flash/swf/megaman-project-x.swf"
+   "path": "games/flash/swf/megaman-project-x.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600134.png"
   },
   {
    "id": 600135,
@@ -758,12 +801,14 @@
   {
    "id": 600136,
    "name": "Mini Putt",
-   "path": "games/flash/swf/miniputt.swf"
+   "path": "games/flash/swf/miniputt.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/mini-putt.png"
   },
   {
    "id": 600137,
    "name": "Mirror's Edge 2D",
-   "path": "games/flash/swf/mirrors-edge.swf"
+   "path": "games/flash/swf/mirrors-edge.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600137.png"
   },
   {
    "id": 600138,
@@ -782,7 +827,8 @@
   {
    "id": 600140,
    "name": "Multitask",
-   "path": "games/flash/swf/multitask.swf"
+   "path": "games/flash/swf/multitask.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600140.png"
   },
   {
    "id": 600141,
@@ -792,17 +838,20 @@
   {
    "id": 600142,
    "name": "Nanotube",
-   "path": "games/flash/swf/nanotube.swf"
+   "path": "games/flash/swf/nanotube.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600142.png"
   },
   {
    "id": 600143,
    "name": "Nucleus",
-   "path": "games/flash/swf/nucleus.swf"
+   "path": "games/flash/swf/nucleus.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600143.png"
   },
   {
    "id": 600144,
    "name": "Nyan Cat Lost in Space",
-   "path": "games/flash/swf/nyan-cat-lost-in-space.swf"
+   "path": "games/flash/swf/nyan-cat-lost-in-space.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600144.png"
   },
   {
    "id": 600145,
@@ -819,7 +868,8 @@
   {
    "id": 600150,
    "name": "Out of This World",
-   "path": "games/flash/swf/out-of-this-world.swf"
+   "path": "games/flash/swf/out-of-this-world.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600150.png"
   },
   {
    "id": 600151,
@@ -851,12 +901,14 @@
   {
    "id": 600156,
    "name": "Pirates",
-   "path": "games/flash/swf/pirates.swf"
+   "path": "games/flash/swf/pirates.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600156.png"
   },
   {
    "id": 600158,
    "name": "Polar Jump",
-   "path": "games/flash/swf/polar-jump.swf"
+   "path": "games/flash/swf/polar-jump.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600158.png"
   },
   {
    "id": 600159,
@@ -882,7 +934,8 @@
   {
    "id": 600163,
    "name": "Quadro Barrel Defence",
-   "path": "games/flash/swf/quadro-barrel-defence.swf"
+   "path": "games/flash/swf/quadro-barrel-defence.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600163.png"
   },
   {
    "id": 600165,
@@ -893,7 +946,8 @@
   {
    "id": 600166,
    "name": "Raze",
-   "path": "games/flash/swf/raze.swf"
+   "path": "games/flash/swf/raze.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600166.png"
   },
   {
    "id": 600167,
@@ -905,7 +959,8 @@
   {
    "id": 600168,
    "name": "Redshift",
-   "path": "games/flash/swf/redshift.swf"
+   "path": "games/flash/swf/redshift.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/red-shift.png"
   },
   {
    "id": 600169,
@@ -933,7 +988,8 @@
   {
    "id": 600177,
    "name": "Shopping Cart Hero 3",
-   "path": "games/flash/swf/shopping-cart-hero-3.swf"
+   "path": "games/flash/swf/shopping-cart-hero-3.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600177.png"
   },
   {
    "id": 600178,
@@ -998,7 +1054,8 @@
   {
    "id": 600189,
    "name": "Skywire",
-   "path": "games/flash/swf/skywire.swf"
+   "path": "games/flash/swf/skywire.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/sky-wire.png"
   },
   {
    "id": 600190,
@@ -1027,7 +1084,8 @@
   {
    "id": 600194,
    "name": "Stick RPG",
-   "path": "games/flash/swf/stcik-rpg.swf"
+   "path": "games/flash/swf/stcik-rpg.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/stick-rpg.png"
   },
   {
    "id": 600195,
@@ -1058,7 +1116,8 @@
   {
    "id": 600199,
    "name": "Strike Force Kitty Last Stand",
-   "path": "games/flash/swf/strike-force-kitty-last-stand.swf"
+   "path": "games/flash/swf/strike-force-kitty-last-stand.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600199.png"
   },
   {
    "id": 600200,
@@ -1088,13 +1147,15 @@
   {
    "id": 600204,
    "name": "Super Mario Flash 2",
-   "path": "games/flash/swf/supermarioflash2.swf"
+   "path": "games/flash/swf/supermarioflash2.swf",
+   "cover": "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/super-mario-flash-2.png"
   },
   {
    "id": 600205,
    "name": "Tactical Assassin",
    "by": "Simon Hason",
-   "path": "games/flash/swf/tactical-assassin.swf"
+   "path": "games/flash/swf/tactical-assassin.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600205.png"
   },
   {
    "id": 600206,
@@ -1113,7 +1174,8 @@
    "id": 600208,
    "name": "Tank Trouble",
    "by": "Mads Purup",
-   "path": "games/flash/swf/tank-trouble.swf"
+   "path": "games/flash/swf/tank-trouble.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600208.png"
   },
   {
    "id": 600209,
@@ -1143,7 +1205,8 @@
   {
    "id": 600213,
    "name": "Unreal Flash",
-   "path": "games/flash/swf/unreal-flash.swf"
+   "path": "games/flash/swf/unreal-flash.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600213.png"
   },
   {
    "id": 600214,
@@ -1161,7 +1224,8 @@
   {
    "id": 600216,
    "name": "Xtreme Cliff Diving",
-   "path": "games/flash/swf/xtreme-cliff-diving.swf"
+   "path": "games/flash/swf/xtreme-cliff-diving.swf",
+   "cover": "SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600216.png"
   },
   {
    "id": 600217,
