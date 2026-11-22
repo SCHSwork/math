@@ -380,10 +380,65 @@ async function avoidRefusedRepos(html) {
     // GitHub labels every file as plain text, so scripts and stylesheets are copied in
     return target === "github" ? loadGithubScriptsAndStyles(html) : html;
 }
+// A <script src> written in the game page itself loads before anything can move
+// it, so when its source fails (a school filter blocking githack, say) the game
+// breaks: Crazy Cattle 3D showed "Engine is not defined". Each one now gets a
+// backup: if it fails, the script right after it downloads the same file from
+// the other sources and runs that copy before the page goes on.
+function scriptFallbackHook(MAP, REFUSED_SRC) {
+    try {
+        var ORDER = ["jsdelivr", "fastly", "gcore", "testingcf", "githack", "home", "github"];
+        var REFUSED = new RegExp(REFUSED_SRC, "i");
+        var tell = function (u) {
+            var m = /^https?:\/\/([^\/]+)\//.exec(u || ""), h = m ? m[1] : "", n = "";
+            if (/^(cdn|fastly|gcore|testingcf)\.jsdelivr\.net$/.test(h)) n = h.split(".")[0] === "cdn" ? "jsdelivr" : h.split(".")[0];
+            else n = h === "raw.githubusercontent.com" ? "github" : /githack\.com$/.test(h) ? "githack" : h === "data.learnresearch.org" ? "home" : "";
+            try { if (n && parent && parent.gnMirrorFailed) parent.gnMirrorFailed(n); } catch (e) {}
+        };
+        window.__gnSF = function (el) { (window.__gnSFq = window.__gnSFq || []).push(el.src); };
+        window.__gnSFgo = function () {
+            var q = window.__gnSFq || []; window.__gnSFq = [];
+            q.forEach(function (u) {
+                var tried = {};
+                for (var i = 0; i < ORDER.length; i++) {
+                    var v; try { v = MAP(u, ORDER[i], ORDER); } catch (e) { v = u; }
+                    if (!v || v === u || tried[v] || REFUSED.test(v)) continue;
+                    tried[v] = 1;
+                    try {
+                        var x = new XMLHttpRequest();
+                        x.open("GET", v, false);   // has to finish before the page's next script
+                        x.send();
+                        var t = x.responseText || "";
+                        if (x.status !== 200 || /^\s*</.test(t) || /^(User|Package|Couldn't|Failed)\b/.test(t)) continue;
+                        tell(u);
+                        var b = URL.createObjectURL(new Blob([t], { type: "text/javascript" }));
+                        document.write('<script src="' + b + '"><\/script>');
+                        return;
+                    } catch (e) {}
+                }
+            });
+        };
+    } catch (e) {}
+}
+function addScriptFallbacks(html) {
+    let n = 0;
+    html = html.replace(/<script\b([^>]*)>(\s*)<\/script>/gi, (tag, attrs, gap) => {
+        if (!/\bsrc\s*=/i.test(attrs) || /\b(async|defer|onerror)\b|\btype\s*=\s*["']?module|\bsrc\s*=\s*["']?(?:blob:|data:)/i.test(attrs)) return tag;
+        n++;
+        return `<script${attrs} onerror="window.__gnSF&&__gnSF(this)">${gap}<\/script><script>window.__gnSFgo&&__gnSFgo()<\/script>`;
+    });
+    if (!n) return html;
+    JSD_REFUSED_RE.lastIndex = 0;
+    const hook = `<script>(${scriptFallbackHook.toString()})(${gnMirrorUrl.toString()},${JSON.stringify(JSD_REFUSED_RE.source)});<\/script>`;
+    if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, m => m + hook);
+    if (/<!doctype[^>]*>/i.test(html)) return html.replace(/<!doctype[^>]*>/i, m => m + hook);
+    return hook + html;
+}
 // Called on every game page before it's written into the frame
 async function adaptGameToMirrors(html) {
     if (typeof html !== "string") return html;
     html = await avoidRefusedRepos(html);
+    html = addScriptFallbacks(html);
     GAME_MIRROR_URL_RE.lastIndex = 0;
     if (!GH_MIRROR_ORDER.some(m => mirrorDown.has(m))) return html;   // every source works (as far as we know)
     const target = await bestGameMirror();

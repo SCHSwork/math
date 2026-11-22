@@ -2,9 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
-## November 21, 2026 — Bendy fix
+## November 21, 2026 — Bendy, Crazy Cattle 3D and No Humanity fixes
 
 ### Fixed
+- **Scripts a game page loads directly now have a backup.** If one fails to load (for example a school filter blocking githack), the same file is downloaded from the other sources and run before the game goes on. Crazy Cattle 3D showed "Engine is not defined" when this happened.
+- **No Humanity** crashed with "abort(135)" when its data download failed or came back incomplete: it started without its data. It now checks the download and tries the other sources, and won't start without its files (fixed in GN-originals).
 - **Bendy and the Ink Machine** crashed with "Unexpected identifier 'genizy'": jsDelivr refuses the repo its files come from and answers with an error message, which the game tried to run as code. Its files now always load from GitHub.
 
 ## November 21, 2026 — Bots get a different page
