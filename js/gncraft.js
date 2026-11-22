@@ -31,6 +31,7 @@
             <button type="button" class="settings-button gcs-play">Play in browser</button>
             <button type="button" class="gcs-more" aria-expanded="false">Join from Java or Bedrock</button>
             <button type="button" class="gcs-cmds-btn" aria-expanded="false">Commands and tips</button>
+            <a class="gcs-map" href="https://map.learnresearch.org" target="_blank" rel="noopener">Live 3D map</a>
         </div>
         <div class="gcs-cmds" hidden>
             <div><b>Easiest:</b> type <code>/menu</code> (or right-click the menu compass you start with) for buttons instead of commands</div>
