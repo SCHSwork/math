@@ -194,6 +194,7 @@ function toggleGameMenu(ev) {
         [fav ? "starFill" : "star", fav ? "Remove from favorites" : "Add to favorites", () => toggleFavorite(zone.id)],
         ["restart", "Restart game", () => openZone(zone)],
         ["info", "Game info", () => showZoneInfo()],
+        ...(typeof currentEmulatorKeys === "function" && currentEmulatorKeys() ? [["joystick", "Controls (which key is which button)", () => showGameControls()]] : []),
         ...(typeof isFitOff === "function" ? [["expand", isFitOff(zone.id) ? "Fit game to screen: off" : "Fit game to screen: on", () => { toggleFitForGame(zone.id); openZone(zone); }]] : []),
         ...(typeof openSaveBackups === "function" && !(typeof isPartnerZone === "function" && isPartnerZone(zone)) ? [["save", "Save backups…", () => openSaveBackups(zone)]] : []),
         "-",
@@ -219,7 +220,7 @@ function toggleGameMenu(ev) {
         const i = document.createElement("span"); i.className = "gm-icon"; i.innerHTML = gnIcon(icon);
         const l = document.createElement("span"); l.textContent = label;
         b.append(i, l);
-        b.onclick = (e) => { e.stopPropagation(); closeGameMenu(); fn(); };
+        b.onclick = (e) => { e.stopPropagation(); closeGameMenu(); fn(); if (typeof gnGameKeysReturn === "function") gnGameKeysReturn(); };
         menu.appendChild(b);
     }
     document.body.appendChild(menu);
@@ -229,7 +230,11 @@ function toggleGameMenu(ev) {
     menu.querySelector("button")?.focus();
 }
 document.addEventListener("click", e => { if (!e.target.closest?.("#gameMenu")) closeGameMenu(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeGameMenu(); });
+document.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || !document.getElementById("gameMenu")) return;
+    closeGameMenu();
+    if (typeof gnGameKeysReturn === "function") gnGameKeysReturn();
+});
 window.addEventListener("resize", closeGameMenu);
 // Clicking into the game (an iframe) moves focus away from the page
 window.addEventListener("blur", () => setTimeout(() => { if (document.activeElement && document.activeElement.tagName === "IFRAME") closeGameMenu(); }, 0));

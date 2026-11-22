@@ -2406,6 +2406,8 @@ function openZone(file) {
         zoneFrame.contentDocument.open();
         zoneFrame.contentDocument.write(gameLoadingScreenHtml(file));
         zoneFrame.contentDocument.close();
+        // Off the card behind the game now, so Space or Enter can't open it again
+        if (typeof gnGameKeysAfterWrite === "function") gnGameKeysAfterWrite();
         startGameScrollTidy();
         loadZoneHtml(file.url).then(html => {
             if (token !== zoneOpenToken) return; // another game was opened meanwhile
@@ -2415,6 +2417,8 @@ function openZone(file) {
             zoneFrame.contentDocument.write(html);
             zoneFrame.contentDocument.close();
             startGameScrollTidy();
+            // Keys go to the game, not the card that opened it (js/game-keys.js)
+            if (typeof gnGameKeysAfterWrite === "function") gnGameKeysAfterWrite();
         }).catch(error => {
             endGameLoad(true);
             closeZone();
@@ -2578,11 +2582,7 @@ function downloadZone() {
     });
 }
 
-// Leaving fullscreen leaves the keyboard on the page around the game: give it back
-document.addEventListener("fullscreenchange", () => {
-    if (document.fullscreenElement || !window.gnNoSaveGame || !zoneFrame) return;
-    setTimeout(() => { try { zoneFrame.focus(); zoneFrame.contentWindow.focus(); } catch {} }, 50);
-});
+// Entering or leaving fullscreen gives the keyboard back to the game: js/game-keys.js
 function fullscreenZone() {
     if (zoneFrame.requestFullscreen) {
         const p = zoneFrame.requestFullscreen();
@@ -5259,7 +5259,9 @@ function setupTabPreviewCloak() {
             handlePreviewCloakTrigger("windowmouseout");
         }
     });
-    window.addEventListener("blur", () => handlePreviewCloakTrigger("blur"));
+    // Clicking into a game moves the focus into its frame, which also blurs the
+    // site: only cover the tab when the whole tab lost focus
+    window.addEventListener("blur", () => setTimeout(() => { if (!document.hasFocus()) handlePreviewCloakTrigger("blur"); }, 0));
     window.addEventListener("focus", () => setTabPreviewCloak(false));
 
 }

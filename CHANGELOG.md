@@ -2,6 +2,19 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 21, 2026 — Game keys work right away
+
+### Fixed
+- **Games get your keys as soon as they open.** Opening a game left the keyboard on the game's card behind it, so keys did nothing until you clicked inside the game (and Space or Enter could press the card again). The game now gets the keyboard when it opens, and again a few times while it starts.
+- **Clicking a button above the game no longer steals your keys.** After clicking Random game, Mute, Like, Close or a ⋯ More item, Space and Enter pressed that button again (Space to jump could start a different random game). A mouse click on those buttons now hands the keyboard back to the game. Using Tab and Enter on them still works like before.
+- **Games inside a page inside a page** (a game page that loads the real game in its own frame) now get the keys too, not just the outer page.
+- **Emulator games (GBA, DS, NES, PS1…) only listen on their own player,** so they ignored keys unless you'd clicked them. They get the keyboard now.
+- **Leaving or entering fullscreen** gives the keyboard back to the game for every game, not just GN Craft.
+- **Hide tab preview** no longer greys out the screen when you click into a game.
+
+### Added
+- **Emulator controls.** Emulator games say "press A" for a console button, which isn't the A key (A is Z, B is X, Start is Enter by default). When an emulator game starts, a note shows which key is which button, and ⋯ More → Controls shows it again.
+
 ## November 21, 2026 — Bendy, Crazy Cattle 3D and No Humanity fixes
 
 ### Fixed
