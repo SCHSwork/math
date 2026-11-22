@@ -825,12 +825,26 @@ fs.writeFileSync("/tmp/ess-config.yml", c.toString());' 2>/tmp/ess-err.log || sa
     done
 fi
 
+# ── BlueMap (installed from AMP's Store): accept its download of Minecraft's
+# textures, and render with 1 thread so the live map never slows the game.
+# Its web page is on port 8100 (map.learnresearch.org through the Cloudflare
+# tunnel). Run "bluemap reload" in GN Craft's console after this changes.
+BC=$(sudo -n find /home/amp/.ampdata/instances -maxdepth 5 -path '*GNCraft*/plugins/BlueMap/core.conf' 2>/dev/null | head -1)
+if [ -n "$BC" ]; then
+    sudo -n cp "$BC" /tmp/bluemap-core.conf
+    sed -i -E 's/^(\s*accept-download\s*:\s*)false/\1true/; s/^(\s*render-thread-count\s*:\s*)[-0-9]+/\11/' /tmp/bluemap-core.conf
+    if ! sudo -n cmp -s /tmp/bluemap-core.conf "$BC"; then
+        sudo -n cp /tmp/bluemap-core.conf "$BC" && sudo -n chown amp:amp "$BC" && say "GN Craft: BlueMap set up (run bluemap reload)"
+    fi
+    rm -f /tmp/bluemap-core.conf
+fi
+
 # ── GN Proxy test: does Eaglercraft's WebSocket answer, locally and through Cloudflare?
 wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 20]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 21]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
