@@ -1013,6 +1013,19 @@ async function repairUsername(user) {
     }
     return false;
 }
+// Accounts from before emails own their name through their sign-in
+// (name@gnmath.local), not a usernames/ claim, so a new account could take the
+// same name. Claim it on sign-in so nobody else can.
+async function claimLegacyUsername(user) {
+    try {
+        if (!user || !isLegacyAccount(user) || !cloudDb) return;
+        const name = user.email.split("@")[0];
+        if (!USERNAME_RE.test(name)) return;
+        const ref = cloudDb.collection("usernames").doc(name);
+        if ((await ref.get()).exists) return;   // already claimed (by this account, or a duplicate admins can see)
+        await ref.set({ uid: user.uid, e: false });
+    } catch (e) { console.warn("Couldn't claim username", e); }
+}
 // Signing in with a username, for accounts that sign in with an email: the
 // username's claim (usernames/<name>, which anyone can read) holds the sign-in
 // email locked with the account's password (PBKDF2 → AES-GCM). Only the right
@@ -1965,6 +1978,7 @@ async function initCloudAccounts() {
                 cloudSyncOnSignIn();
                 // Accounts from before emails: say once that they can add one now
                 if (isLegacyAccount(user)) {
+                    claimLegacyUsername(user);
                     const k = "gnmath-email-nudge-" + user.uid;
                     let seen = "";
                     try { seen = localStorage.getItem(k) || ""; } catch {}

@@ -5,26 +5,42 @@
 // ═════════════════════════════════════════════════════════════════════════════
 let adminData = null;   // { profiles, admins:Set, bans:Map, subs:Map uid→count, stats:Map uid→{votes,reports} }
 // Usernames of accounts from before emails, saved in usernames/ so new
-// accounts can't take them. Runs once per admin device (writes one small
-// document per account that doesn't have one yet).
+// accounts can't take them. Old accounts also claim their own name when they
+// sign in (js/accounts.js claimLegacyUsername); this catches the ones that
+// haven't. Runs at most once a day per admin device, and never hands a name
+// to one of two accounts that both use it (an admin decides those).
 async function backfillUsernames() {
     const KEY = "gnmath-usernames-backfilled";
-    try { if (localStorage.getItem(KEY)) return; } catch {}
+    try { if (Date.now() - Number(localStorage.getItem(KEY) || 0) < 86400000) return; } catch {}
     if (!adminData || !isSiteAdmin()) return;
     try {
-        const have = new Set((await cloudDb.collection("usernames").get()).docs.map(d => d.id));
-        const todo = adminData.profiles.filter(p => /^[a-z0-9_]{3,20}$/.test(p.username || "") && !have.has(p.username));
+        const claims = adminData.claims;
+        const uses = new Map();
+        for (const p of adminData.profiles) if (/^[a-z0-9_]{3,20}$/.test(p.username || "")) uses.set(p.username, (uses.get(p.username) || 0) + 1);
+        const todo = adminData.profiles.filter(p => uses.get(p.username) === 1 && !claims.has(p.username));
         for (let i = 0; i < todo.length; i += 400) {
             const b = cloudDb.batch();
             todo.slice(i, i + 400).forEach(p => b.set(cloudDb.collection("usernames").doc(p.username), { uid: p.uid, e: false }));
             await b.commit();
+            todo.slice(i, i + 400).forEach(p => claims.set(p.username, p.uid));
         }
-        if (typeof fbCount === "function") fbCount(have.size + 1, todo.length);
+        if (typeof fbCount === "function") fbCount(claims.size + 1, todo.length);
         try { localStorage.setItem(KEY, String(Date.now())); } catch {}
     } catch (e) { console.warn("Couldn't save usernames", e); }
 }
+// Usernames more than one account shows (from before usernames were all
+// claimed): name → uids
+function duplicateUsernames() {
+    const by = new Map();
+    for (const p of (adminData?.profiles || [])) {
+        if (!/^[a-z0-9_]{3,20}$/.test(p.username || "")) continue;
+        if (!by.has(p.username)) by.set(p.username, []);
+        by.get(p.username).push(p.uid);
+    }
+    return new Map([...by].filter(([, uids]) => uids.length > 1));
+}
 async function loadAdminData() {
-    const [profiles, admins, mods, bans, subs, stats, feedback, perks] = await Promise.all([
+    const [profiles, admins, mods, bans, subs, stats, feedback, perks, usernames] = await Promise.all([
         cloudDb.collection("profiles").get(),
         cloudDb.collection("admins").get(),
         cloudDb.collection("mods").get().catch(() => ({ docs: [] })),
@@ -32,7 +48,8 @@ async function loadAdminData() {
         cloudDb.collection("submissions").get().catch(() => ({ docs: [] })),
         cloudDb.collection("gameStats").get().catch(() => ({ docs: [] })),
         cloudDb.collection("feedback").get().catch(() => ({ docs: [] })),
-        cloudDb.collection("perks").get().catch(() => ({ docs: [] }))
+        cloudDb.collection("perks").get().catch(() => ({ docs: [] })),
+        cloudDb.collection("usernames").get().catch(() => ({ docs: [] }))
     ]);
     // Per account: which games they liked / disliked and reported as broken
     const statMap = new Map();
@@ -58,7 +75,8 @@ async function loadAdminData() {
         perks: new Map(perks.docs.map(d => [d.id, d.data() || {}])),
         subs: subMap,
         stats: statMap,
-        feedback: fbMap
+        feedback: fbMap,
+        claims: new Map(usernames.docs.map(d => [d.id, (d.data() || {}).uid]))   // username → uid that owns it
     };
     // Admins/bans whose account has no profile yet still show up
     for (const uid of [...adminData.admins.keys(), ...adminData.mods.keys(), ...adminData.bans.keys()]) {
@@ -66,6 +84,7 @@ async function loadAdminData() {
             adminData.profiles.push({ uid, username: adminData.admins.get(uid)?.name || adminData.mods.get(uid)?.name || adminData.bans.get(uid)?.name || "(no profile yet)" });
         }
     }
+    adminData.dupes = duplicateUsernames();
     return adminData;
 }
 
@@ -109,6 +128,7 @@ async function openAdminPanel() {
                     <option value="trusted">Trusted reporters</option>
                     <option value="banned">Suspended</option>
                     <option value="recent">Seen this week</option>
+                    <option value="dupes">Duplicate names</option>
                 </select>
             </div>
             <p id="admin-summary" class="admin-summary">Loading accounts…</p>
@@ -829,6 +849,7 @@ function renderAdminList() {
         if (filter === "banned") return adminData.bans.has(p.uid);
         if (filter === "recent") return timeOf(p.lastSeen) >= weekAgo;
         if (filter === "online") return profileOnline(p);
+        if (filter === "dupes") return adminData.dupes.has(p.username);
         return true;
     });
     rows.sort((a, b) => (profileOnline(b) - profileOnline(a)) || timeOf(b.lastSeen) - timeOf(a.lastSeen) || String(a.username).localeCompare(String(b.username)));
@@ -860,6 +881,18 @@ function adminRow(p) {
         const b = document.createElement("span");
         b.className = "admin-badge " + cls;
         b.textContent = label;
+        sum.appendChild(b);
+    }
+    // Same username as another account: say which one really owns the name
+    if (adminData.dupes?.has(p.username)) {
+        const owner = adminData.claims.get(p.username);
+        const b = document.createElement("span");
+        b.className = "admin-badge dupe";
+        b.textContent = owner === p.uid ? "Owns name" : "Duplicate name";
+        b.title = owner === p.uid
+            ? "Another account shows this username too. This one owns it."
+            : owner ? "Another account owns this username. This one is a duplicate from before names were all claimed."
+            : "More than one account uses this username and none has claimed it yet.";
         sum.appendChild(b);
     }
     // Level, and online now (with the game they have open) or when last seen

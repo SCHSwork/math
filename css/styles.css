@@ -2151,6 +2151,7 @@ header button:focus-visible, header select:focus-visible { outline-color: #fff; 
 .admin-badge.guest { background: #374151; color: #fff; }
 .admin-badge.bot { background: #92400e; color: #fff; }
 .admin-badge.light { background: #a16207; color: #fff; }
+.admin-badge.dupe { background: #b45309; color: #fff; }
 .admin-session-info { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.9rem; margin: 0; font-size: 13px; }
 .admin-session-info dt { color: var(--text-muted); font-weight: 700; }
 .admin-session-info dd { margin: 0; overflow-wrap: anywhere; }

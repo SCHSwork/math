@@ -2,6 +2,14 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 22, 2026 — No more duplicate usernames
+
+### Fixed
+- **Two accounts could have the same username.** Accounts from before emails own their name through how they sign in, not a claim, so a new account could sign up with the same name. Old accounts now claim their name as soon as they sign in, and the admin backfill that claims the rest runs once a day instead of only once ever.
+
+### Added
+- **Admin Panel: "Duplicate names" filter.** Accounts that share a username get a badge: **Owns name** on the one that has it, **Duplicate name** on the other.
+
 ## November 21, 2026 — Hide page in tab previews, reworked
 
 ### Fixed
