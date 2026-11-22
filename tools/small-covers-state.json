@@ -967,6 +967,14 @@
 "size": 5532,
 "v": "053ddca9"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/50-states.png": {
+"etag": "eb2892eb349fc3e023bf07bdad4ab02d24ee23ccc15294e3fb392e1a75b303a5",
+"in": 86547,
+"out": "5235763c500ec3ff",
+"r": "400q82",
+"size": 13988,
+"v": "7169c1f8"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/achilles.png": {
 "etag": "6f9892113698367487aafbc3afc39639cf65f2ad56e591b5383aa861a0c1647b",
 "in": 443033,
@@ -1015,6 +1023,14 @@
 "size": 34850,
 "v": "9574fdf0"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/ant-buster.png": {
+"etag": "ba4a051f9261b210b331cf36fd94d278f521da3ce3e9f15e85a535938bec380b",
+"in": 469607,
+"out": "2a6ce2edf392a454",
+"r": "400q82",
+"size": 23958,
+"v": "1b476ccd"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/arkanoid.png": {
 "etag": "3a33fb19daaf92780236f96324b10114347d4d692e8c6acfefc5260bb1287d35",
 "in": 47956,
@@ -1046,6 +1062,30 @@
 "r": "400q82",
 "size": 10478,
 "v": "14479868"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/bejeweled.png": {
+"etag": "39220703e012e47ff9fd8c66502a6a319de40e83c5b283eed99eb73dd1928a5b",
+"in": 283738,
+"out": "c8dfc7d3a0674e58",
+"r": "400q82",
+"size": 31356,
+"v": "3ad83f80"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/blast-o-matic.png": {
+"etag": "dd52bae46d7a8ae499e46e24687ee8e23b9beac265980ceaf5a3f32edbe51bec",
+"in": 570091,
+"out": "70cd82632f4f5f38",
+"r": "400q82",
+"size": 11704,
+"v": "1f0e96e1"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/blobink-2.png": {
+"etag": "75509b651bc20cdcfadc40d287b4be3ea5e25e4ee05c663abc70fd0be443c9a8",
+"in": 56445,
+"out": "d473e7a80ce07847",
+"r": "400q82",
+"size": 4884,
+"v": "5ade5ad3"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/bloons.png": {
 "etag": "879e22e923c28a2c44b00dafb2e60c895725cb38ae858fd1af6abb96aa3c62e3",
@@ -1095,6 +1135,14 @@
 "size": 20976,
 "v": "48f4c005"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/choose-your-weapon-2.png": {
+"etag": "90e5abc819989a07b7f0710024e0efe7e2771827a7d777f4cfeefc67aa9ff4e5",
+"in": 681697,
+"out": "c2c0e48d83dc9ec0",
+"r": "400q82",
+"size": 17642,
+"v": "e86bd812"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/clear-vision-elite.png": {
 "etag": "d8ead832b364d49a14339f50001c18509c2195206a920fee3f0df50af8b038d0",
 "in": 258533,
@@ -1126,6 +1174,14 @@
 "r": "400q82",
 "size": 9188,
 "v": "060129e6"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/dad-n-me.png": {
+"etag": "2b679cea33e282b1efb3f4a27504e1d99a721d247640eeac165242a464e66eee",
+"in": 351179,
+"out": "1502e157cec8f526",
+"r": "400q82",
+"size": 14322,
+"v": "ce4d8fcd"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/dance-of-the-robots.png": {
 "etag": "d5a870248200a374d9a1ba3378a6d334dfdd3db60addae5f3caf0c2556c57d0c",
@@ -1174,6 +1230,22 @@
 "r": "400q82",
 "size": 4190,
 "v": "c5b3f0d1"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/dx-hockey.png": {
+"etag": "c434ba031cf69f22c43405cf9dcf26342cb1eec7ed7d0d519bcc9d6722b70955",
+"in": 322764,
+"out": "4a5f02804579f0e7",
+"r": "400q82",
+"size": 11676,
+"v": "174a68b2"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/earthbound.png": {
+"etag": "5ebf157a7e3b787efe5ece0abfcad1261fd0a98d97cd3c9185ecaae5ed2bb98a",
+"in": 216126,
+"out": "80a176f85b67faed",
+"r": "400q82",
+"size": 24718,
+"v": "a6c6338c"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/electric-man.png": {
 "etag": "0dd03cc50351e9bf2aa9f4abbce54e9e6359367b247ba9702a7e7942e3789e45",
@@ -1237,6 +1309,14 @@
 "size": 5392,
 "v": "c2202b1e"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/free-rider-2.png": {
+"etag": "e746482a0c406dfffe029efaefbc5eaba1d3034f09e7a7ea2223697ec1d0a619",
+"in": 27106,
+"out": "8537f9fc7d108f21",
+"r": "400q82",
+"size": 3558,
+"v": "97b1bc80"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/frogger.png": {
 "etag": "54c7387ec79bdf10e003ca1647e46316c6a585f9ea2b75713f61aad452eaa20c",
 "in": 35646,
@@ -1252,6 +1332,14 @@
 "r": "400q82",
 "size": 16642,
 "v": "20745ed7"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/geo-land-rpg.png": {
+"etag": "02a167e879d036e8da3b90cb00673bf79dd61617ec26e1184cdce1b551042537",
+"in": 21215,
+"out": "6f83053b6fa31352",
+"r": "400q82",
+"size": 3274,
+"v": "4f6212fd"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/geometry-dash-remastered.png": {
 "etag": "142235fb49f39b1555c3e29ab8b7d49e8beacc5bbfa643dfc0d6de9a0714dfc9",
@@ -1284,6 +1372,14 @@
 "r": "400q82",
 "size": 3538,
 "v": "b50d1ec1"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/grid-lock.png": {
+"etag": "c1820345db3af0d9701da1057716f9425171937473dab9e3773bac1f8de20a6e",
+"in": 37806,
+"out": "c40c3372464817f1",
+"r": "400q82",
+"size": 8438,
+"v": "e7a86bbc"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/grow-island.png": {
 "etag": "e708ceaa1ca9ef57c330fbfac110dc7682f77e10c28d468433696f40d3f512b8",
@@ -1341,6 +1437,14 @@
 "size": 5082,
 "v": "190a2482"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/hot-corn.png": {
+"etag": "d6059d086014fc72d7ed298b201ae71d100441fd5de7002eba6dda1fee369e72",
+"in": 148974,
+"out": "8abae23c525358cd",
+"r": "400q82",
+"size": 16076,
+"v": "aa340193"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/impossible-quiz-book.png": {
 "etag": "f53249885c6277b98f5108f74c8154d9fb345e09fdda8a55c62b14c557e70468",
 "in": 59826,
@@ -1381,6 +1485,12 @@
 "size": 3476,
 "v": "53ae7a00"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/kung-fu-remix-2.png": {
+"etag": "d263036028ccc989ac42534bfb8a20fbb67d2e9877ded15c67db57d4d3fdd695",
+"in": 11720,
+"out": null,
+"r": "400q82"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/line-rider-2.png": {
 "etag": "0862be61882de853c72a3fcfbb1aa7dbf66e4da6cac3ffc25352abbf3593bbad",
 "in": 24559,
@@ -1397,6 +1507,14 @@
 "size": 19674,
 "v": "fa064db9"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/max-dirt-bike-1.png": {
+"etag": "4845a8e9380c9f7391c5613276129103aaef57f166099f599484b14b25d00452",
+"in": 217285,
+"out": "6813653ac42d79c1",
+"r": "400q82",
+"size": 16238,
+"v": "312b81e2"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/microsoft-flight-simulator.png": {
 "etag": "35ab431ef06564b747d4d434ecb8c134eeeb082a27b666288246335b1e23fda9",
 "in": 278547,
@@ -1404,6 +1522,14 @@
 "r": "400q82",
 "size": 19190,
 "v": "73bf80c2"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/mini-putt.png": {
+"etag": "f17a929277bb39f0f3eebb36d3968b9ff73cf57baf249c09e90861649a3c9172",
+"in": 53106,
+"out": "0a3eaa0f9d1ba314",
+"r": "400q82",
+"size": 6420,
+"v": "7b0058a2"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/monopoly.png": {
 "etag": "ff25d31bd6ff856b9c101178f2d49363922df37929c3ac63128771ea26d524ce",
@@ -1418,6 +1544,14 @@
 "r": "400q82",
 "size": 7470,
 "v": "7fcc1f54"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/ndestructo-tank-2.png": {
+"etag": "dad1453521009363bd6ff9744d03a58ff24cd661d6dda97d5160475be00ea82c",
+"in": 59698,
+"out": "34b5ace92401fe8a",
+"r": "400q82",
+"size": 7178,
+"v": "697c8ef4"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/only-level.png": {
 "etag": "3b3cab3486cadbf777181d4556dae284ae96de539abe81d2a9b8d3c1a344221c",
@@ -1482,6 +1616,14 @@
 "r": "400q82",
 "size": 10210,
 "v": "f5d7c54d"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/red-shift.png": {
+"etag": "2ed18ed07e5dce638c6e1bc4c41c63ac85ef7c49481c67d48d690d9aae4ee9fd",
+"in": 459341,
+"out": "0ceb766c362f8923",
+"r": "400q82",
+"size": 13552,
+"v": "8fcb68d5"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/robot-unicorn-attack.png": {
 "etag": "48db2b628447f93525ca0bf5c62463073fc096ce4db7cc6c347da02aee994a3d",
@@ -1577,6 +1719,14 @@
 "size": 5886,
 "v": "13fc655a"
 },
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/sky-wire.png": {
+"etag": "683362f5ee2d8ed31932908f9adae2ecd59cf717c4c8383517b96ddabad3171c",
+"in": 67161,
+"out": "fc9820d90c28c524",
+"r": "400q82",
+"size": 17166,
+"v": "18c10343"
+},
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/sniper-assassin-4.png": {
 "etag": "285b88b3cb415a4cb119910b67357b53ac2b4a6e946540f5dccbf44e60a4715b",
 "in": 98587,
@@ -1600,6 +1750,14 @@
 "r": "400q82",
 "size": 12534,
 "v": "32e090a1"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/stick-rpg.png": {
+"etag": "070cd41ff48971a3a22cf1dcbcdf52e6bbc5dc04b0d077b38ce45c5f8400ea51",
+"in": 78914,
+"out": "8e71616cc4feb113",
+"r": "400q82",
+"size": 5792,
+"v": "f92778c5"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/stick-war.png": {
 "etag": "80d554d1222d7d029fd7f804232e428542cf85116747b4120ab53ec10d8c0b68",
@@ -1640,6 +1798,14 @@
 "r": "400q82",
 "size": 20904,
 "v": "4dbf1001"
+},
+"Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/super-mario-flash-2.png": {
+"etag": "78337582d19442e5091b43474e0dc0df953c05a0d82d0e47575bdbe4a648e4d4",
+"in": 177359,
+"out": "31a56920be924587",
+"r": "400q82",
+"size": 20012,
+"v": "6a0420db"
 },
 "Radon-Games/Radon-Games-Assets@b465574811f6feeca2e8a7504c3869f065b4a7d6/images/super-mario-flash.png": {
 "etag": "03edc5002619f93e56a00c485a386e4f69bbd231606802b2c74c52d47f512ba2",
@@ -1734,6 +1900,342 @@
 "r": "400q82",
 "size": 9132,
 "v": "4b5e50d3"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600004.png": {
+"etag": "69f905b57c316f4c3d296c65c7a6e51c45fa84052b9bba8aba1c56d5fcddddf3",
+"in": 216274,
+"out": "38afe4212632bfc0",
+"r": "400q82",
+"size": 13448,
+"v": "9596b0aa"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600019.png": {
+"etag": "3121890faf33532d34afa454702cc0cb9623d7f97c5c3d4ec89c39b055d15370",
+"in": 67725,
+"out": "6fcae1df0fd8893a",
+"r": "400q82",
+"size": 8192,
+"v": "72b461fb"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600020.png": {
+"etag": "922502ab973771950a3ae146f647d93cff1c7cc9b6329a200df96be4300b84f6",
+"in": 254496,
+"out": "d91dda3b20c207ca",
+"r": "400q82",
+"size": 25188,
+"v": "94b52309"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600024.png": {
+"etag": "8f5faf91dc4b8b2d2bfb903b9e5dd7cb8b9aae5d614c7364c5c7f87227c33eaa",
+"in": 29207,
+"out": "646394a711a34bde",
+"r": "400q82",
+"size": 13974,
+"v": "c77dafb4"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600029.png": {
+"etag": "9f70d3db7e11f01a1400d6b26dccee285ec728a8a0fba4a1d123f0dd8497bb8a",
+"in": 22784,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600037.png": {
+"etag": "97efd6f1dfda418d4a5988b6aac31a90fd13fcae6197c9bf2ff2362a4a3b7a9f",
+"in": 48847,
+"out": "46fe94635174be82",
+"r": "400q82",
+"size": 13124,
+"v": "9a0639d6"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600038.png": {
+"etag": "5892b46a4cd6064fb681f5abb502f42132fc6dbd81c3722c56ef0fa03fc7f45b",
+"in": 46167,
+"out": "39480eda4b0940db",
+"r": "400q82",
+"size": 12510,
+"v": "3d5e99ea"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600039.png": {
+"etag": "080bbb309d0ff35874a702fc366fe682cfa99d2c79b91938d324cea39b2cee63",
+"in": 32930,
+"out": "9b82bc8d4b009288",
+"r": "400q82",
+"size": 8360,
+"v": "4ffe664f"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600042.png": {
+"etag": "41a982ccadeaaaafc13db9e510b66d9edfc649657499ff6cc443c417e238ce6f",
+"in": 211200,
+"out": "360e8cd39cf9707e",
+"r": "400q82",
+"size": 22812,
+"v": "77e147a2"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600050.png": {
+"etag": "1a9f19195481e24ea2e0d43eae85a9c84476b3d4b22d7c363dd17d96c9003006",
+"in": 100023,
+"out": "d4cf5a1091db5681",
+"r": "400q82",
+"size": 8696,
+"v": "80770c7a"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600053.png": {
+"etag": "a0931c42e652621e72c5e5c7a9d61bcb89b2c0d1abe33ffae9d30878b9312bd4",
+"in": 28217,
+"out": "26a16109c0372ea8",
+"r": "400q82",
+"size": 11198,
+"v": "c5a86ab1"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600054.png": {
+"etag": "fcbc7e0b757602d71b55dae48bbdf512488cf5afc007cdb38aa4ab1482bf454d",
+"in": 43649,
+"out": "e3ee15fc1efda92d",
+"r": "400q82",
+"size": 9230,
+"v": "591db94d"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600060.png": {
+"etag": "e2d3f9b3d57fdf8f3733d029d7c9a71b0ab050142a753d9c4bcef0ab5d48c42c",
+"in": 34977,
+"out": "2ba00ed7f6e86976",
+"r": "400q82",
+"size": 15952,
+"v": "aa4a35f1"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600064.png": {
+"etag": "877170dab2250fbd513ac2b2664a7d16bd7ed91457b5837add1ab9e2dab6f24e",
+"in": 7430,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600066.png": {
+"etag": "2e1138407e12973b91a3173e52d3d9b00f2e14a0d974bdb300602ee060e40f0b",
+"in": 23815,
+"out": "8b9b1b31e3ab9d3c",
+"r": "400q82",
+"size": 9198,
+"v": "47678f2a"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600067.png": {
+"etag": "8dd886387ec7a4ad695ce654b9c47b8ea34e687a3f2e0b33de147808b95a85d4",
+"in": 61290,
+"out": "8eb51ffec7ed2d8f",
+"r": "400q82",
+"size": 17044,
+"v": "a1ab15ee"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600069.png": {
+"etag": "fbced39dcc56c8d54f9b97b38ec563ce2f6b07be6ccb6f22b508bf7acc96534e",
+"in": 33404,
+"out": "d39d722c83548d41",
+"r": "400q82",
+"size": 13140,
+"v": "0f300043"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600072.png": {
+"etag": "b2df193257d04a07874f0099e04d22df20660e700ebf60ad855d19226afddbb7",
+"in": 12982,
+"out": "ec1f8a482f834ca5",
+"r": "400q82",
+"size": 4410,
+"v": "f1a53b34"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600083.png": {
+"etag": "33a9e057da3608b99393c26d67c0aac7bc9075309ead08e038f765d4f838e5bd",
+"in": 76605,
+"out": "c972b02c2edc6e0d",
+"r": "400q82",
+"size": 14044,
+"v": "c98233d0"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600086.png": {
+"etag": "17d7cf588a3f6f96f68b83e1af06c71eac2eec7f01ab141d2a137c9dbc772545",
+"in": 106968,
+"out": "b9b45873a70950ae",
+"r": "400q82",
+"size": 5946,
+"v": "2333dab6"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600089.png": {
+"etag": "1f3c51d459c48db0465b32207169e5c79fbbdafad4cd98451ea8e61b631fc5b7",
+"in": 54869,
+"out": "93a919ea021b6caf",
+"r": "400q82",
+"size": 3244,
+"v": "a3ff5865"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600090.png": {
+"etag": "312c6b3240f8a3c5790aec9871e3e715f30e134858eea6dbc5e3fc1907b3e36d",
+"in": 15235,
+"out": "fb57a19ce6d7f41d",
+"r": "400q82",
+"size": 7560,
+"v": "022ecf27"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600096.png": {
+"etag": "cd1325a53116836e02d3e3c91358d16c27bbe4bea6163b112c2b19fa1f9f7156",
+"in": 196077,
+"out": "407981569e93dbab",
+"r": "400q82",
+"size": 16740,
+"v": "c6ea95e6"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600109.png": {
+"etag": "93cf8bbbdbac57009c6b8bc8a52340ab119a351777c6368fc996d7ee0c83f7c9",
+"in": 62591,
+"out": "0982157d3c7bbb9c",
+"r": "400q82",
+"size": 5264,
+"v": "5170cadd"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600122.png": {
+"etag": "081b43e4c776cd5b4d7a0013b0561d847a6eb4c61f871ff9375de485e78a0095",
+"in": 12770,
+"out": "3dd16cfa094e1103",
+"r": "400q82",
+"size": 2130,
+"v": "8ea36791"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600130.png": {
+"etag": "95e61275d4bd25d70dce797f26aba904b79954fb92a1da9585ca8c3a3d5beced",
+"in": 262272,
+"out": "33d18fbde4fe5a80",
+"r": "400q82",
+"size": 19812,
+"v": "249976a9"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600134.png": {
+"etag": "4ac3ecdb832ead35a66180de273ac5d35b73f18cc1461fbb7fb225cdda6a9373",
+"in": 176640,
+"out": "a8e46d910a96ca2c",
+"r": "400q82",
+"size": 30754,
+"v": "a2c3cc55"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600137.png": {
+"etag": "d8c108bc2e4f089593afd4f0adcc49cbcbfbf4a862a57a8ba3641fc3da612cef",
+"in": 39979,
+"out": "d50b1538de702285",
+"r": "400q82",
+"size": 11118,
+"v": "2cefb474"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600140.png": {
+"etag": "4fb9056f1d93e031fa6cbcc7844ff668fd47b33c0522daeed92f2a428387e133",
+"in": 10865,
+"out": "3113d35e001f26ab",
+"r": "400q82",
+"size": 3868,
+"v": "b050a0a6"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600142.png": {
+"etag": "018cd53a2c3b26b1401a0cec156e803242cde0ff0ddf8e3cb8b65ecf5842a3db",
+"in": 8691,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600143.png": {
+"etag": "e22984878aceee59a8aed4ee807097a2f288c30e7621b6b63585f65cf963921e",
+"in": 35317,
+"out": "731d414bd6afaa3e",
+"r": "400q82",
+"size": 11370,
+"v": "a2c3a2e9"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600144.png": {
+"etag": "c9fd47ae8049e55fc87310a69a6b39cddda84ace9deba8865f9af0b574351efe",
+"in": 10274,
+"out": null,
+"r": "400q82"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600150.png": {
+"etag": "e53843720209346135f1d442921142d9fccdfca6c90216baa8af6d747fab61dc",
+"in": 417285,
+"out": "dc7460c76c538b32",
+"r": "400q82",
+"size": 24302,
+"v": "476131cd"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600156.png": {
+"etag": "4b4d5faa04a077440c9a262a7a612efa39899c76b7accfe8716131917a146bf4",
+"in": 27868,
+"out": "3c1541e189147360",
+"r": "400q82",
+"size": 5834,
+"v": "bd5da3cb"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600158.png": {
+"etag": "580f610a6db35fc193e5873390a05d5d4b800a2e667a6b20b542b2e0b6358336",
+"in": 93696,
+"out": "9c76932f49770f4a",
+"r": "400q82",
+"size": 24496,
+"v": "86e3111f"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600163.png": {
+"etag": "f02851dbb7ae0edbba4f801269fd041f40bcd3d95963486bf92890d528811eb8",
+"in": 365617,
+"out": "9950537935a25064",
+"r": "400q82",
+"size": 31172,
+"v": "87703037"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600166.png": {
+"etag": "7095cc4a5365846d5ac96ffff6f7821837a37d1e23c2fb68aa9f82f17dcf92f1",
+"in": 221351,
+"out": "28e25f128ae88a8b",
+"r": "400q82",
+"size": 15856,
+"v": "e9950af0"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600177.png": {
+"etag": "0a40fae4c30bf0797754d17ce10319d501850b05c10d304ec331a67e8af32cf2",
+"in": 214127,
+"out": "7e06c3bce4dfd841",
+"r": "400q82",
+"size": 13534,
+"v": "b6d2fe8c"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600199.png": {
+"etag": "249935d82ada1f48baaa3240aa3c3e11c9e100626863bde05a5f97a2ae8046f7",
+"in": 60531,
+"out": "d57cf4286fa93c21",
+"r": "400q82",
+"size": 11888,
+"v": "085d8420"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600205.png": {
+"etag": "aa532543daa9003c79eb3564c0a303894e1cb8e7ca30fa216e3c9652d9d5d625",
+"in": 17522,
+"out": "f43790f83aa64fa9",
+"r": "400q82",
+"size": 5344,
+"v": "0cdda5d3"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600208.png": {
+"etag": "aadb45c7b343fec56a885918241b5fdc94c601a769d99d040de48a033bff7b1f",
+"in": 24626,
+"out": "0d48ed5fd8a3221a",
+"r": "400q82",
+"size": 8474,
+"v": "39535280"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600213.png": {
+"etag": "43b2e23b29b7e4c01c5d3400bdc3fd5cd1c3c87f33017698866467363a600359",
+"in": 103996,
+"out": "769be5bb4ce9334e",
+"r": "400q82",
+"size": 12742,
+"v": "557176b3"
+},
+"SCHSwork/GN-originals@9f29d888a5674a3b5f72da4ecd192b42a19d2c69/covers/bchs/600216.png": {
+"etag": "ef2eead09ec0c065714f8ab2578740e51753317d8aa0e7139ec13fb89ffff91a",
+"in": 99998,
+"out": "0900f294d7e97d2d",
+"r": "400q82",
+"size": 8514,
+"v": "4ca2eedb"
 },
 "SCHSwork/GN-originals@main/covers/2048.png": {
 "etag": "b78130fd85b81f5eb2d6d3b792dcc9441a17d918bf010c7aeb8718795254eef0",
