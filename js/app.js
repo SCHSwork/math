@@ -3769,6 +3769,70 @@ function renderOwnerPanel() {
     renderOwnerAccess();
     if (typeof renderOwnerSubmissions === "function") renderOwnerSubmissions();
     renderOwnerModeBar();
+    organizeOwnerPanel(popupBody);
+}
+
+// The Owner Panel's sections sorted into tabs (the last one used opens next
+// time), with a search across all of them. Sections are matched by their
+// heading; a new section nobody sorted yet lands in Setup so it never vanishes.
+const OWNER_TABS = [
+    { id: "site",   label: "Site",   icon: "eye",     sections: ["Website Status", "Announcement Banner", "Message of the Day", "Status Indicator", "New Visitor Defaults", "Custom Footer Links"] },
+    { id: "games",  label: "Games",  icon: "game",    sections: ["Game Submissions", "Broken Reports", "Trusted Reporters", "Disable Games", "Zone Cache"] },
+    { id: "server", label: "Server", icon: "bolt",    sections: ["GN 2.0 Server Maintenance", "Off-PC Save Backup", "Minecraft Server"] },
+    { id: "setup",  label: "Setup",  icon: "shield",  sections: ["GitHub Sync", "Danger Zone"] }
+];
+function organizeOwnerPanel(body) {
+    const sections = [...body.querySelectorAll(":scope > .settings-section")];
+    if (!sections.length) return;
+    const icon = n => (typeof gnIcon === "function" ? gnIcon(n) + " " : "");
+    const head = document.createElement("div");
+    head.innerHTML = `
+        <input type="search" class="set-search" id="owner-search" placeholder="Search owner settings…" aria-label="Search owner settings" data-lpignore="true" data-1p-ignore data-form-type="other">
+        <div class="admin-tabs set-tabs" role="tablist">${OWNER_TABS.map(t => `<button type="button" role="tab" data-tab="${t.id}">${icon(t.icon)}${t.label}</button>`).join("")}</div>
+        <p class="set-empty" id="owner-noresults" hidden>Nothing in the Owner Panel matches that.</p>`;
+    const panes = new Map(OWNER_TABS.map(t => { const d = document.createElement("div"); d.className = "set-pane"; d.dataset.pane = t.id; return [t.id, d]; }));
+    const titleOf = sec => (sec.querySelector("h4")?.textContent || "").trim();
+    const placed = new Set();
+    for (const t of OWNER_TABS) for (const name of t.sections) {
+        for (const sec of sections) if (!placed.has(sec) && titleOf(sec).startsWith(name)) { panes.get(t.id).appendChild(sec); placed.add(sec); }
+    }
+    sections.filter(sec => !placed.has(sec)).forEach(sec => panes.get("setup").insertBefore(sec, panes.get("setup").lastElementChild));
+    // The mode bar (and anything else above the sections) stays on top
+    const first = body.firstChild;
+    body.insertBefore(head, first);
+    panes.forEach(p => body.appendChild(p));
+    const tabs = [...head.querySelectorAll(".set-tabs button")];
+    const KEY = "gnmath-owner-tab";
+    const showTab = name => {
+        if (!panes.has(name)) name = "site";
+        tabs.forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name ? "true" : "false"));
+        panes.forEach((p, id) => { p.hidden = id !== name; });
+        try { localStorage.setItem(KEY, name); } catch {}
+    };
+    const search = head.querySelector("#owner-search");
+    const filter = q => {
+        q = q.trim().toLowerCase();
+        head.querySelector(".set-tabs").hidden = !!q;
+        sections.forEach(sec => { sec.hidden = false; });
+        if (!q) {
+            head.querySelector("#owner-noresults").hidden = true;
+            let last = "site"; try { last = localStorage.getItem(KEY) || "site"; } catch {}
+            return showTab(last);
+        }
+        let any = false;
+        panes.forEach(p => { p.hidden = false; });
+        sections.forEach(sec => {
+            // Game names in the Disable Games list don't count as a match
+            const text = [...sec.childNodes].filter(n => !(n.id === "owner-game-list" || n.querySelector?.("#owner-game-list"))).map(n => n.textContent).join(" ").toLowerCase();
+            sec.hidden = !text.includes(q);
+            any = any || !sec.hidden;
+        });
+        head.querySelector("#owner-noresults").hidden = any;
+    };
+    tabs.forEach(b => b.onclick = () => { if (search.value) search.value = ""; filter(""); showTab(b.dataset.tab); });
+    search.addEventListener("input", e => filter(e.target.value));
+    let last = "site"; try { last = localStorage.getItem(KEY) || "site"; } catch {}
+    showTab(last);
 }
 
 function timeAgo(ms) {

@@ -2,6 +2,12 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 22, 2026 — Owner Panel in tabs
+
+### Changed
+- **The Owner Panel is split into four tabs** instead of one long page: **Site** (website status, announcement, MOTD, status indicator, new visitor defaults, footer links), **Games** (submissions, broken reports, trusted reporters, disable games, zone cache), **Server** (GN 2.0 Server, off-PC backup, Minecraft) and **Setup** (GitHub sync, danger zone). It opens on the tab you used last.
+- **Search box at the top** finds a setting across every tab.
+
 ## November 22, 2026 — No more duplicate usernames
 
 ### Fixed
