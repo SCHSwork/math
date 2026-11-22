@@ -357,9 +357,15 @@ const TROLLS = [
     ["fart",     "Fart sound",  "ghost",   1500, "Plays a fart sound"],
     ["confetti", "Confetti",    "bulb",   4000, "Drops confetti on their screen"],
     ["update",   "Fake update", "download",12000, "A fake \"installing updates\" screen for about 12 seconds, then \"just kidding\""],
-    ["msg",      "Message",     "bulb",  15000, "Pops up a message you type (140 letters max)"]
+    ["msg",      "Message",     "bulb",  15000, "Pops up a message you type (140 letters max)"],
+    ["gravity",  "Gravity",     "bolt",   9000, "Everything on their screen falls down and piles up, then floats back"],
+    ["bug",      "Bug crawl",   "ghost", 16000, "A bug crawls across their screen (they can click it to squish it)"],
+    ["runaway",  "Running button","dice", 30000, "Covers the game with a \"Click to keep playing\" button that runs away from their mouse a few times"],
+    ["ghostcursor","Ghost cursor","eye",  20000, "A second, fake mouse pointer wanders around their screen for 20 seconds"],
+    ["invert",   "Inverted controls","game",25000, "Swaps left/right and up/down (arrows and WASD) in their game for 25 seconds"],
+    ["random",   "Random inputs","game",  20000, "Presses random keys and clicks in their game for 20 seconds"]
 ];
-const TROLL_MOVES = ["flip", "mirror", "spin", "shake", "wobble", "tiny"];
+const TROLL_MOVES = ["flip", "mirror", "spin", "shake", "wobble", "tiny", "gravity", "bug", "ghostcursor"];
 let trollUndo = null;
 function gnTroll(t, text, by) {
     const def = TROLLS.find(x => x[0] === t);
@@ -390,13 +396,24 @@ html.gn-tr-flip body,html.gn-tr-mirror body,html.gn-tr-spin body,html.gn-tr-shak
     const root = document.documentElement;
     const timers = [];
     const layers = [];
-    const layer = css => { const el = document.createElement("div"); el.className = "gn-troll"; el.style.cssText = "position:fixed;inset:0;z-index:2147483645;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;" + css; document.body.appendChild(el); layers.push(el); return el; };
+    const cleanups = [];
     // A game in fullscreen is drawn above the site, so it gets the effect itself
     let fs = null;
     try { fs = document.fullscreenElement || document.webkitFullscreenElement; } catch {}
     const classTarget = fs && fs !== root ? fs : root;
+    // Where overlays go: the page, or inside a fullscreen game
+    let hostDoc = document, hostEl = document.body;
+    try {
+        if (fs && fs.tagName === "IFRAME" && fs.contentDocument) { hostDoc = fs.contentDocument; hostEl = hostDoc.documentElement; }
+        else if (fs && fs !== root) hostEl = fs;
+    } catch {}
+    if (hostDoc !== document && !hostDoc.getElementById("gn-troll-css")) {
+        try { const c = hostDoc.createElement("style"); c.id = "gn-troll-css"; c.textContent = document.getElementById("gn-troll-css").textContent; (hostDoc.head || hostDoc.documentElement).appendChild(c); layers.push(c); } catch {}
+    }
+    const layer = css => { const el = hostDoc.createElement("div"); el.className = "gn-troll"; el.style.cssText = "position:fixed;inset:0;z-index:2147483645;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;" + css; hostEl.appendChild(el); layers.push(el); return el; };
     const done = () => {
         timers.forEach(clearTimeout);
+        cleanups.splice(0).forEach(f => { try { f(); } catch {} });
         classTarget.classList.remove("gn-tr-" + t);
         if (classTarget !== root) { classTarget.style.transform = ""; classTarget.style.filter = ""; classTarget.style.animation = ""; }
         layers.forEach(el => el.remove());
@@ -444,8 +461,220 @@ html.gn-tr-flip body,html.gn-tr-mirror body,html.gn-tr-spin body,html.gn-tr-shak
             <div style="font-size:24px;font-weight:700;line-height:1.3;word-wrap:break-word;">${esc(words)}</div>
             <button type="button" style="margin-top:18px;padding:8px 22px;border:0;border-radius:999px;background:#3b82f6;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">OK</button></div>`;
         box.querySelector("button").onclick = done;
+    } else if (t === "gravity") {
+        cleanups.push(trollGravity());
+    } else if (t === "bug") {
+        cleanups.push(trollBug(layer("pointer-events:none;overflow:hidden;"), ms));
+    } else if (t === "runaway") {
+        trollRunaway(layer("background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;"), done);
+    } else if (t === "ghostcursor") {
+        cleanups.push(trollGhostCursor(layer("pointer-events:none;overflow:hidden;")));
+    } else if (t === "invert" || t === "random") {
+        cleanups.push(t === "invert" ? trollInvertKeys() : trollRandomInputs());
     }
     timers.push(setTimeout(done, ms));
+}
+
+// The open game's window (same site, so its keys can be caught), if any
+function trollGameWindows() {
+    const out = [window];
+    try {
+        const f = typeof zoneFrame !== "undefined" && zoneFrame && !zoneFrame.__retiring && !(zoneFrame.dataset && zoneFrame.dataset.partner) ? zoneFrame : null;
+        const w = f && f.contentWindow;
+        if (w && w.document) out.push(w);
+    } catch {}
+    return out;
+}
+// A made-up key press the game can't tell from a real one
+const TROLL_KEYS = {
+    ArrowLeft: ["ArrowLeft", 37], ArrowRight: ["ArrowRight", 39], ArrowUp: ["ArrowUp", 38], ArrowDown: ["ArrowDown", 40],
+    KeyA: ["a", 65], KeyD: ["d", 68], KeyW: ["w", 87], KeyS: ["s", 83], Space: [" ", 32]
+};
+const trollFaked = new WeakSet();
+function trollKey(win, type, code, target) {
+    const [key, kc] = TROLL_KEYS[code];
+    let ev;
+    try { ev = new win.KeyboardEvent(type, { key, code, keyCode: kc, which: kc, bubbles: true, cancelable: true, composed: true }); }
+    catch { return; }
+    try { Object.defineProperty(ev, "keyCode", { get: () => kc }); Object.defineProperty(ev, "which", { get: () => kc }); } catch {}
+    trollFaked.add(ev);
+    try { (target || win.document.activeElement || win.document.body || win.document).dispatchEvent(ev); } catch {}
+}
+// Left ↔ right and up ↔ down, for the arrows and WASD
+function trollInvertKeys() {
+    const swap = { ArrowLeft: "ArrowRight", ArrowRight: "ArrowLeft", ArrowUp: "ArrowDown", ArrowDown: "ArrowUp", KeyA: "KeyD", KeyD: "KeyA", KeyW: "KeyS", KeyS: "KeyW" };
+    const offs = [];
+    for (const win of trollGameWindows()) {
+        const h = e => {
+            if (trollFaked.has(e) || !swap[e.code]) return;
+            // Text boxes on the site still type normally
+            const tg = e.target;
+            if (win === window && tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+            e.stopImmediatePropagation(); e.preventDefault();
+            trollKey(win, e.type, swap[e.code], tg);
+        };
+        try {
+            win.addEventListener("keydown", h, true); win.addEventListener("keyup", h, true);
+            offs.push(() => { win.removeEventListener("keydown", h, true); win.removeEventListener("keyup", h, true); });
+        } catch {}
+    }
+    return () => offs.forEach(f => f());
+}
+// Random key taps and clicks in the game (only while a game is open)
+function trollRandomInputs() {
+    const wins = trollGameWindows();
+    const win = wins[1];
+    if (!win) return () => {};
+    const codes = Object.keys(TROLL_KEYS);
+    let stop = false;
+    const held = new Set();
+    const step = () => {
+        if (stop) return;
+        try {
+            if (Math.random() < 0.75) {
+                const code = codes[Math.floor(Math.random() * codes.length)];
+                trollKey(win, "keydown", code); held.add(code);
+                setTimeout(() => { trollKey(win, "keyup", code); held.delete(code); }, 80 + Math.random() * 350);
+            } else {
+                const d = win.document, x = Math.random() * win.innerWidth, y = Math.random() * win.innerHeight;
+                const el = d.elementFromPoint(x, y) || d.body;
+                const o = { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: 1, view: win };
+                for (const ty of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
+                    const C = ty.startsWith("pointer") ? win.PointerEvent || win.MouseEvent : win.MouseEvent;
+                    el.dispatchEvent(new C(ty, ty.endsWith("up") || ty === "click" ? { ...o, buttons: 0 } : o));
+                }
+            }
+        } catch {}
+        setTimeout(step, 250 + Math.random() * 650);
+    };
+    step();
+    return () => { stop = true; held.forEach(c => trollKey(win, "keyup", c)); };
+}
+// Things on the page drop to the bottom (bouncing and tilting), then float back
+function trollGravity() {
+    const H = innerHeight, picked = [];
+    const sel = "img,button,a,h1,h2,h3,h4,p,input,select,iframe,canvas,svg,li,label,.zone-item,[class*=card]";
+    const all = [...document.body.querySelectorAll(sel)].filter(el => !el.closest(".gn-troll,.gn-identify"));
+    for (const el of all) {
+        if (picked.length >= 220) break;
+        const r = el.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8 || r.bottom < 0 || r.top > H || r.right < 0 || r.left > innerWidth) continue;
+        if (picked.some(p => p.contains(el) || el.contains(p))) continue;
+        if (getComputedStyle(el).display === "inline" && !/^(IMG|BUTTON|INPUT|SELECT|IFRAME|CANVAS|svg)$/i.test(el.tagName)) continue;
+        picked.push(el);
+    }
+    const saved = picked.map(el => [el, el.style.transition, el.style.transform]);
+    picked.forEach((el, i) => {
+        const r = el.getBoundingClientRect();
+        const drop = Math.max(0, H - r.bottom - Math.random() * 30);
+        el.style.transition = `transform ${0.9 + Math.random() * 0.6}s cubic-bezier(.5,0,.75,1.35) ${(i % 30) * 0.03 + Math.random() * 0.4}s`;
+        el.style.transform = `translateY(${drop}px) rotate(${(Math.random() - 0.5) * 50}deg)`;
+    });
+    // Float back up a little before it's over
+    const back = setTimeout(() => saved.forEach(([el]) => { el.style.transition = "transform 1.2s ease-in-out"; el.style.transform = ""; }), 7000);
+    return () => { clearTimeout(back); saved.forEach(([el, tr, tf]) => { el.style.transition = tr; el.style.transform = tf; }); };
+}
+// A bug (our own drawing) that wanders across; click it to squish it
+function trollBug(box, ms) {
+    const doc = box.ownerDocument, win = doc.defaultView || window;
+    const bug = doc.createElement("div");
+    bug.style.cssText = "position:absolute;left:0;top:0;width:54px;height:54px;pointer-events:auto;cursor:pointer;will-change:transform;";
+    bug.innerHTML = `<svg viewBox="0 0 60 60" width="54" height="54" aria-hidden="true"><g stroke="#2a1608" stroke-width="2.4" stroke-linecap="round" fill="none" class="legs">
+        <path d="M22 24 10 16M22 30 7 30M22 36 10 44M38 24 50 16M38 30 53 30M38 36 50 44"/></g>
+        <path d="M30 6c-2 0-4-4-8-5M30 6c2 0 4-4 8-5" stroke="#2a1608" stroke-width="1.6" fill="none"/>
+        <ellipse cx="30" cy="34" rx="10" ry="17" fill="#5b3214"/><ellipse cx="30" cy="34" rx="10" ry="17" fill="url(#gnbugsh)"/>
+        <circle cx="30" cy="13" r="6.5" fill="#3a1f0b"/><path d="M30 20v31" stroke="#2a1608" stroke-width="1.2"/>
+        <defs><radialGradient id="gnbugsh" cx="40%" cy="30%" r="70%"><stop offset="0" stop-color="#a2683a" stop-opacity=".7"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs></svg>`;
+    box.appendChild(bug);
+    const W = win.innerWidth, Hh = win.innerHeight;
+    // Start off one edge, wander, leave off another
+    let x = Math.random() < 0.5 ? -60 : W + 60, y = Math.random() * Hh * 0.8 + Hh * 0.1;
+    let ang = x < 0 ? 0 : Math.PI, turn = 0, alive = true, last = performance.now(), wiggle = 0;
+    const legs = bug.querySelector(".legs");
+    let raf = 0;
+    const frame = now => {
+        if (!alive) return;
+        const dt = Math.min(50, now - last); last = now;
+        turn += (Math.random() - 0.5) * 0.02; turn *= 0.97;
+        ang += turn;
+        // Steer back toward the middle when it nears an edge
+        const cx = W / 2 - x, cy = Hh / 2 - y;
+        if (x > 40 && x < W - 40 && (y < 40 || y > Hh - 40)) ang += Math.sign(Math.sin(Math.atan2(cy, cx) - ang)) * 0.04;
+        const sp = 0.12 + (Math.sin(now / 400) + 1) * 0.06;
+        x += Math.cos(ang) * sp * dt; y += Math.sin(ang) * sp * dt;
+        wiggle += dt;
+        legs.setAttribute("transform", `rotate(${Math.sin(wiggle / 45) * 6} 30 30)`);
+        bug.style.transform = `translate(${x - 27}px,${y - 27}px) rotate(${ang * 180 / Math.PI + 90}deg)`;
+        raf = win.requestAnimationFrame(frame);
+    };
+    raf = win.requestAnimationFrame(frame);
+    bug.addEventListener("pointerdown", e => {
+        e.preventDefault(); e.stopPropagation();
+        alive = false;
+        bug.style.cursor = "default";
+        bug.innerHTML = `<svg viewBox="0 0 60 60" width="54" height="54" aria-hidden="true"><path d="M30 14c6 0 9 6 15 5s7 9 2 13 2 10-4 12-8 7-13 4-10 2-12-4-9-6-6-11-3-10 3-14 9-5 16-5Z" fill="#4a2a10"/><path d="M14 20l-6-5M46 18l7-4M10 40l-7 3M50 42l7 4" stroke="#2a1608" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+        setTimeout(() => { bug.style.transition = "opacity 1.2s"; bug.style.opacity = "0"; }, 900);
+    });
+    return () => { alive = false; try { win.cancelAnimationFrame(raf); } catch {} };
+}
+// "Click to keep playing", but the button dodges the mouse a few times
+function trollRunaway(box, done) {
+    const doc = box.ownerDocument, win = doc.defaultView || window;
+    box.style.display = "block";
+    const card = doc.createElement("div");
+    card.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#111827;color:#fff;border-radius:18px;padding:20px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:20px;font-weight:700;transition:left .18s ease-out,top .18s ease-out;";
+    card.innerHTML = `<div style="margin-bottom:14px;">Game paused</div><button type="button" style="padding:10px 26px;border:0;border-radius:999px;background:#22c55e;color:#06260f;font-size:17px;font-weight:800;cursor:pointer;">Click to keep playing</button>`;
+    box.appendChild(card);
+    let dodges = 4 + Math.floor(Math.random() * 4), lastMove = 0;
+    const btn = card.querySelector("button");
+    const move = () => {
+        const W = win.innerWidth, H = win.innerHeight, r = card.getBoundingClientRect();
+        const nx = r.width / 2 + 20 + Math.random() * Math.max(1, W - r.width - 40), ny = r.height / 2 + 20 + Math.random() * Math.max(1, H - r.height - 40);
+        card.style.left = nx + "px"; card.style.top = ny + "px";
+        lastMove = Date.now();
+    };
+    const near = e => {
+        if (dodges <= 0 || Date.now() - lastMove < 220) return false;
+        const r = btn.getBoundingClientRect();
+        const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
+        return Math.hypot(dx, dy) < 70;
+    };
+    box.addEventListener("pointermove", e => { if (near(e)) { dodges--; move(); } });
+    btn.addEventListener("pointerdown", e => { if (dodges > 0) { e.preventDefault(); dodges--; move(); } });
+    btn.addEventListener("click", () => {
+        if (dodges > 0) return;
+        card.innerHTML = `<div style="font-size:26px;">gotcha 😜</div>`;
+        setTimeout(done, 900);
+    });
+}
+// A second mouse pointer that drifts around and "clicks" now and then
+function trollGhostCursor(box) {
+    const doc = box.ownerDocument, win = doc.defaultView || window;
+    const cur = doc.createElement("div");
+    cur.style.cssText = "position:absolute;left:0;top:0;width:22px;height:32px;will-change:transform;";
+    cur.innerHTML = `<svg viewBox="0 0 22 32" width="22" height="32" aria-hidden="true"><path d="M2 2v24l6-6 4 10 4-2-4-10h8Z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+    box.appendChild(cur);
+    let x = win.innerWidth * Math.random(), y = win.innerHeight * Math.random(), tx = x, ty = y, raf = 0, alive = true, next = 0;
+    const frame = now => {
+        if (!alive) return;
+        if (now > next) {
+            tx = 30 + Math.random() * (win.innerWidth - 60); ty = 30 + Math.random() * (win.innerHeight - 60);
+            next = now + 700 + Math.random() * 1800;
+            // A little click ring where it was
+            if (Math.random() < 0.5) {
+                const ring = doc.createElement("div");
+                ring.style.cssText = `position:absolute;left:${x - 10}px;top:${y - 10}px;width:20px;height:20px;border:2px solid rgba(255,255,255,.9);border-radius:50%;transition:transform .4s ease-out,opacity .4s;`;
+                box.appendChild(ring);
+                win.requestAnimationFrame(() => { ring.style.transform = "scale(2.2)"; ring.style.opacity = "0"; });
+                setTimeout(() => ring.remove(), 450);
+            }
+        }
+        x += (tx - x) * 0.06 + (Math.random() - 0.5) * 1.5; y += (ty - y) * 0.06 + (Math.random() - 0.5) * 1.5;
+        cur.style.transform = `translate(${x}px,${y}px)`;
+        raf = win.requestAnimationFrame(frame);
+    };
+    raf = win.requestAnimationFrame(frame);
+    return () => { alive = false; try { win.cancelAnimationFrame(raf); } catch {} };
 }
 function trollFart() {
     try {

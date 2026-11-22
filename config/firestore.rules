@@ -279,7 +279,7 @@ service cloud.firestore {
         // k: 'find' (light up the screen), 'scare' (jumpscare) or 'troll' (a prank, js/identify.js TROLLS)
         && (!('k' in request.resource.data) || request.resource.data.k in ['find', 'scare', 'troll'])
         // t: which prank; x: the text of a message prank
-        && (!('t' in request.resource.data) || request.resource.data.t in ['flip', 'mirror', 'spin', 'shake', 'wobble', 'tiny', 'colors', 'fart', 'confetti', 'update', 'msg'])
+        && (!('t' in request.resource.data) || request.resource.data.t in ['flip', 'mirror', 'spin', 'shake', 'wobble', 'tiny', 'colors', 'fart', 'confetti', 'update', 'msg', 'gravity', 'bug', 'runaway', 'ghostcursor', 'invert', 'random'])
         && (!('x' in request.resource.data) || shortText(request.resource.data.x, 140))
         && request.resource.data.c in ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'pink']
         && request.resource.data.n is int && request.resource.data.n >= 1 && request.resource.data.n <= 99
