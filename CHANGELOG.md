@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 21, 2026 — Hide page in tab previews, reworked
+
+### Fixed
+- **The cover came on over the game and stayed there.** Moving the mouse onto a game counted as leaving the page (a game is a page inside the page), and so did clicking into one, so the screen went grey while you played and only came back if the mouse left the game. Now only really leaving counts: the window losing focus, or the mouse going off the edge of the window.
+- **The cover comes off as soon as you're back**: moving the mouse over the page or the game, clicking or pressing a key. Before, moving over the game did nothing.
+- **Fullscreen games get covered too.** A fullscreen game is drawn above the site, so the cover never showed over it.
+
+### Changed
+- **The cover is a plain white page** (like a page that's still loading) instead of grey, and sits above everything.
+- **"How strongly" is now "When to hide it"**, with three choices that say what they do: when you switch tabs or windows; also when the mouse goes up to the tabs (recommended); also when the mouse leaves the page or you hold Ctrl or Alt (Ctrl+Tab and Alt+Tab never reach the page, so holding the key is the only warning). Holding Ctrl while pressing another key (sprinting in GN Craft, Ctrl+C) doesn't count. "Low-medium" becomes the first choice.
+
 ## November 21, 2026 — Game keys work right away
 
 ### Fixed

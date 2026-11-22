@@ -83,7 +83,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 
 **Privacy tools**
 - **Panic button** (⚠ in the header, or the <kbd>`</kbd> key) jumps to a safe site. The site and key can be changed in Settings.
-- Tab cloak presets (Canvas, Classroom, Drive) and a tab-preview cloak
+- Tab cloak presets (Canvas, Classroom, Drive) and **Hide page in tab previews**: a blank white cover when you're about to leave the tab (switching tabs or windows, the mouse heading to the tab bar, or, on the strongest setting, any edge or holding Ctrl/Alt), gone as soon as you move the mouse or press a key, fullscreen games included
 - `/` jumps to the search bar
 
 **Settings**

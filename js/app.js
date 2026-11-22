@@ -5166,104 +5166,160 @@ function applyBehaviorSettings() {
     document.body.classList.toggle("reduced-motion", getReducedMotionEnabled());
 }
 
+// ── Hide page in tab previews ────────────────────────────────────────────────
+// Chrome's tab hover previews, the Chromebook window switcher (Alt+Tab, the
+// overview key) and the taskbar show a picture of the page. When you're about
+// to leave, the page is covered with a plain white screen (what a page that's
+// still loading looks like), so the picture shows that instead of a game.
+// It comes off the moment you're back: the mouse moves over the page or the
+// game, a key is pressed, or the tab gets focus again.
+//
+// When it covers (each level adds to the one before):
+//   low    — the tab is hidden or the window loses focus (Alt+Tab, clicking
+//            another window, opening the overview)
+//   medium — also when the mouse leaves through the top of the window, toward
+//            the tabs and address bar (recommended: covers before a tab hover
+//            preview is taken)
+//   high   — also when the mouse leaves through any edge, and while Ctrl or Alt
+//            is held on its own (Ctrl+Tab, Alt+Tab)
+// Things that used to go wrong: moving the mouse onto a game counted as leaving
+// the page (the game is a page of its own), so the cover came on over the game
+// and stayed; clicking into a game counted as the window losing focus; moving
+// over the game never took the cover off; it didn't cover a fullscreen game.
+const PREVIEW_CLOAK_LEVELS = ["low", "medium", "high"];
+
 function getPreviewCloakEnabled() {
     return localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled) === "true";
 }
 
 function setPreviewCloakEnabled(isEnabled) {
     localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.enabled, isEnabled ? "true" : "false");
-    if (!isEnabled) {
-        setTabPreviewCloak(false);
-    }
+    if (!isEnabled) setTabPreviewCloak(false);
 }
 
 function getPreviewCloakSensitivity() {
-    const sensitivity = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "medium";
-    if (!["low", "lowMed", "medium", "high"].includes(sensitivity)) {
-        return "medium";
-    }
-    return sensitivity;
+    const s = localStorage.getItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity) || "medium";
+    if (s === "lowMed") return "low";                 // old setting: "Low-medium" was "when the window loses focus"
+    return PREVIEW_CLOAK_LEVELS.includes(s) ? s : "medium";
 }
 
 function setPreviewCloakSensitivity(sensitivity) {
-    const safeSensitivity = ["low", "lowMed", "medium", "high"].includes(sensitivity) ? sensitivity : "medium";
-    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, safeSensitivity);
+    localStorage.setItem(PREVIEW_CLOAK_STORAGE_KEYS.sensitivity, PREVIEW_CLOAK_LEVELS.includes(sensitivity) ? sensitivity : "medium");
 }
+
+const TAB_PREVIEW_COVER_CSS = "position:fixed;inset:0;background:#fff;z-index:2147483647;pointer-events:none;display:block;";
+let tabPreviewCovered = false;
 
 function ensureTabPreviewOverlay() {
     let overlay = document.getElementById("tab-preview-cloak-overlay");
-    if (overlay) {
-        return overlay;
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "tab-preview-cloak-overlay";
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.appendChild(overlay);
     }
-
-    overlay = document.createElement("div");
-    overlay.id = "tab-preview-cloak-overlay";
-    document.body.appendChild(overlay);
     return overlay;
 }
 
-function setTabPreviewCloak(enabled) {
-    const overlay = ensureTabPreviewOverlay();
-    const shouldShow = enabled && getPreviewCloakEnabled();
-    overlay.style.display = shouldShow ? "block" : "none";
+// The game's own page, if it's one of ours (not a partner site)
+function tabPreviewGameDoc() {
+    try {
+        const f = typeof zoneFrame !== "undefined" ? zoneFrame : null;
+        return f && f.isConnected && f.contentDocument && f.contentDocument.documentElement ? f.contentDocument : null;
+    } catch (e) { return null; }
 }
 
+function setTabPreviewCloak(enabled) {
+    const show = !!enabled && getPreviewCloakEnabled();
+    tabPreviewCovered = show;
+    ensureTabPreviewOverlay().style.display = show ? "block" : "none";
+    // A fullscreen game is drawn above everything on the site, so it gets its own cover
+    const doc = tabPreviewGameDoc();
+    if (!doc) return;
+    let c = doc.getElementById("gn-tab-preview-cover");
+    if (show && document.fullscreenElement) {
+        if (!c) {
+            c = doc.createElement("div");
+            c.id = "gn-tab-preview-cover";
+            c.style.cssText = TAB_PREVIEW_COVER_CSS;
+            (doc.body || doc.documentElement).appendChild(c);
+        }
+    } else if (c) c.remove();
+}
+
+// Kept for older callers: covers if this kind of leaving counts at the chosen level
 function handlePreviewCloakTrigger(reason) {
-    if (!getPreviewCloakEnabled()) {
-        setTabPreviewCloak(false);
-        return;
-    }
-
-    const sensitivity = getPreviewCloakSensitivity();
-
-    if (document.hidden) {
-        setTabPreviewCloak(true);
-        return;
-    }
-
-    if (reason === "blur" && ["lowMed", "medium", "high"].includes(sensitivity)) {
-        setTabPreviewCloak(true);
-        return;
-    }
-
-    if (reason === "mouseleave" && ["medium", "high"].includes(sensitivity)) {
-        setTabPreviewCloak(true);
-        return;
-    }
-
-    if (reason === "windowmouseout" && sensitivity === "high") {
-        setTabPreviewCloak(true);
-    }
+    if (!getPreviewCloakEnabled()) return setTabPreviewCloak(false);
+    const level = PREVIEW_CLOAK_LEVELS.indexOf(getPreviewCloakSensitivity());
+    const needs = { hidden: 0, blur: 0, top: 1, edge: 2, modifier: 2 }[reason];
+    if (needs !== undefined && level >= needs) setTabPreviewCloak(true);
 }
 
 function setupTabPreviewCloak() {
     ensureTabPreviewOverlay();
+    const uncover = () => { if (tabPreviewCovered && !document.hidden) setTabPreviewCloak(false); };
 
+    // Leaving the tab or the window
     document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            setTabPreviewCloak(true);
-        } else {
-            setTabPreviewCloak(false);
-        }
+        if (document.hidden) handlePreviewCloakTrigger("hidden");
+        else if (document.hasFocus()) uncover();
     });
+    // The site loses focus when you click into a game too: only the whole
+    // window losing focus counts (checked once the focus has landed)
+    const checkBlur = () => setTimeout(() => { if (!document.hasFocus()) handlePreviewCloakTrigger("blur"); }, 0);
+    window.addEventListener("blur", checkBlur);
 
-    document.addEventListener("mouseleave", () => handlePreviewCloakTrigger("mouseleave"));
-    document.addEventListener("mouseenter", () => {
-        if (!document.hidden && document.hasFocus()) {
-            setTabPreviewCloak(false);
+    // The mouse leaving the window. Moving onto the game also looks like
+    // leaving (it's a page inside the page), so check where the mouse went.
+    const onLeave = e => {
+        if (e.relatedTarget) return;
+        const x = e.clientX, y = e.clientY, w = window.innerWidth, h = window.innerHeight;
+        if (y <= 0) handlePreviewCloakTrigger("top");
+        else if (x <= 0 || x >= w - 1 || y >= h - 1) handlePreviewCloakTrigger("edge");
+    };
+    document.documentElement.addEventListener("mouseleave", onLeave);
+
+    // Holding Ctrl or Alt on its own (Ctrl+Tab and Alt+Tab never reach the page)
+    let modTimer = null;
+    const onKeyDown = e => {
+        clearTimeout(modTimer);
+        if ((e.key === "Control" || e.key === "Alt") && !e.repeat && getPreviewCloakSensitivity() === "high") {
+            modTimer = setTimeout(() => handlePreviewCloakTrigger("modifier"), 150);
+            return;
         }
-    });
+        uncover();
+    };
+    const onKeyUp = e => {
+        clearTimeout(modTimer);
+        if ((e.key === "Control" || e.key === "Alt") && document.hasFocus()) uncover();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
 
-    window.addEventListener("mouseout", event => {
-        if (!event.relatedTarget && !event.toElement) {
-            handlePreviewCloakTrigger("windowmouseout");
-        }
-    });
-    // Clicking into a game moves the focus into its frame, which also blurs the
-    // site: only cover the tab when the whole tab lost focus
-    window.addEventListener("blur", () => setTimeout(() => { if (!document.hasFocus()) handlePreviewCloakTrigger("blur"); }, 0));
-    window.addEventListener("focus", () => setTabPreviewCloak(false));
+    // Back on the page
+    window.addEventListener("focus", uncover);
+    window.addEventListener("pointermove", uncover, { passive: true });
+    window.addEventListener("pointerdown", uncover, { passive: true });
 
+    // The same inside the game's page (it gets the mouse and keys while you play)
+    const hookGame = () => {
+        const doc = tabPreviewGameDoc();
+        if (!doc || doc.__gnTabPreview) return;
+        doc.__gnTabPreview = true;
+        const w = doc.defaultView;
+        try {
+            w.addEventListener("pointermove", uncover, { passive: true });
+            w.addEventListener("pointerdown", uncover, { passive: true });
+            w.addEventListener("focus", uncover);
+            w.addEventListener("blur", checkBlur);
+            w.addEventListener("keydown", onKeyDown, true);
+            w.addEventListener("keyup", onKeyUp, true);
+            // A fullscreen game: its edges are the screen's edges
+            doc.documentElement.addEventListener("mouseleave", e => { if (document.fullscreenElement) onLeave(e); });
+        } catch (e) {}
+    };
+    setInterval(hookGame, 1000);
+    document.addEventListener("fullscreenchange", () => { hookGame(); if (tabPreviewCovered) setTabPreviewCloak(true); });
 }
 
 function cloakIcon(url, { persist = true } = {}) {
@@ -5558,8 +5614,8 @@ function openSettingsPanel() {
         </div>
         <div class="settings-section">
             <h4>Cloaking</h4>
-            ${row("Hide page in tab previews", "Covers the page when you switch tabs", toggle(previewCloakEnabled, "setPreviewCloakEnabled(this.checked)", "preview-cloak-enabled"))}
-            ${row("How strongly", "", select(previewCloakSensitivity, "setPreviewCloakSensitivity(this.value)", [["low", "Low"], ["lowMed", "Low-medium"], ["medium", "Medium (recommended)"], ["high", "High"]], "preview-cloak-sensitivity"))}
+            ${row("Hide page in tab previews", "Shows a blank page in tab previews and the window switcher instead of your game", toggle(previewCloakEnabled, "setPreviewCloakEnabled(this.checked)", "preview-cloak-enabled"))}
+            ${row("When to hide it", "It comes back as soon as you move the mouse or press a key", select(previewCloakSensitivity, "setPreviewCloakSensitivity(this.value)", [["low", "When I switch tabs or windows"], ["medium", "Also when my mouse goes up to the tabs (recommended)"], ["high", "Also when my mouse leaves the page or I hold Ctrl/Alt"]], "preview-cloak-sensitivity"))}
             ${row("Tab name & icon", "Make the tab look like another site", `<button class="theme-button set-mini" onclick="tabCloak()">Set up</button>`)}
             ${row("Warn before leaving", "Asks before the tab closes, so you don't lose a game", toggle(warnBeforeUnload, "setWarnBeforeUnloadEnabled(this.checked)", "warn-before-unload"))}
         </div>

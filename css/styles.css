@@ -302,8 +302,8 @@ header {
 #tab-preview-cloak-overlay {
     position: fixed;
     inset: 0;
-    background: #8a8a8a;
-    z-index: 999999;
+    background: #fff;
+    z-index: 2147483647;
     display: none;
     pointer-events: none;
 }

@@ -11,6 +11,7 @@
 //  - Games that are a page inside a page, Flash games (Ruffle) and emulator
 //    games (EmulatorJS) only listen on their own player, not the whole page.
 //  - Leaving fullscreen put the keyboard back on the site.
+// (Hiding the page in tab previews while you play is in js/app.js.)
 // Emulator games also say "press A" for a console button. Which key that is
 // (Z, by default) is shown once when the emulator starts, and in ⋯ More.
 // ═════════════════════════════════════════════════════════════════════════════
@@ -97,7 +98,6 @@
         f.addEventListener("load", () => {
             if (f !== zoneFrame) return;
             settleFocus();
-            watchFrameBlur(f);
             watchEmulator(f);
         });
     };
@@ -141,22 +141,6 @@
         if (!viewerOpen()) return;
         setTimeout(() => { if (!siteNeedsKeyboard()) focusGame(); }, 60);
     });
-
-    // The "hide the tab preview" cover used to come on when you clicked into a
-    // game (the site loses focus to the game). Only cover it when the whole
-    // tab lost focus, whether from the site or from the game.
-    function watchFrameBlur(f) {
-        let w;
-        try { w = f.contentWindow; w.document; } catch (e) { return; }
-        if (!w || w.__gnBlurWatch) return;                          // the window outlives the pages written into it
-        w.__gnBlurWatch = true;
-        w.addEventListener("blur", () => {
-            setTimeout(() => {
-                if (typeof handlePreviewCloakTrigger === "function" && !document.hasFocus()) handlePreviewCloakTrigger("blur");
-            }, 0);
-        });
-        w.addEventListener("focus", () => { if (typeof setTabPreviewCloak === "function") setTabPreviewCloak(false); });
-    }
 
     // ── Emulator controls ──────────────────────────────────────────────────
     // EmulatorJS buttons (RetroPad numbers) and what each console calls them
