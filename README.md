@@ -18,6 +18,7 @@ Most games come from the community-run gn-math library on jsDelivr. GN Originals
 - **Partner games switch** above All games hides the html5games.com games everywhere
 - **Random game** button (hold it for options: genre, source, unplayed only, favorites, skip broken)
 - **Keyboard shortcuts** (press **?**) and full keyboard / screen-reader support
+- **Keys go to the game**: the game gets the keyboard as soon as it opens and after you click a button above it (`js/game-keys.js`); emulator games show which key is which console button
 - **My Stats** (Settings): total play time, games tried, % of the library explored and your most-played games
 - **Loading bar** with real progress, size and time left for big games
 - Fullscreen, **mute** (🔊, or Alt+M), rate and close from the game's top bar; a **⋯ More** menu holds favorite, restart, game info, **save backups**, **copy link to this game**, open in new tab, download, report broken and **clear this game's data** (only that game's saves are removed; other games aren't touched)
