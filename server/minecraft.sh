@@ -569,6 +569,26 @@ public class Browser extends JavaPlugin implements Listener {
     }
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(PlayerLoginEvent e) { exempt(e.getPlayer()); }
+    // Join/leave messages go to players directly instead of through the console:
+    // Minecraft 26.3 logs them as "System chat: lsp joined the game", which AMP
+    // counts as a second player called "System chat: lsp"
+    private static void tellAll(Component msg) { for (Player o : Bukkit.getOnlinePlayers()) o.sendMessage(msg); }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onJoinMessage(PlayerJoinEvent e) {
+        if (e.joinMessage() == null) return;
+        Component msg = e.joinMessage();
+        e.joinMessage(null);
+        tellAll(msg);
+    }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onQuitMessage(PlayerQuitEvent e) {
+        if (e.quitMessage() == null) return;
+        Component msg = e.quitMessage();
+        e.quitMessage(null);
+        Player gone = e.getPlayer();
+        for (Player o : Bukkit.getOnlinePlayers()) if (!o.equals(gone)) o.sendMessage(msg);
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent e) {
         exempt(e.getPlayer());
@@ -732,7 +752,7 @@ public class Browser extends JavaPlugin implements Listener {
     }
 }
 JAVAEOF
-        printf 'name: GNCraftBrowser\nversion: "1.4"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n  gnadmin:\n    description: Owner controls\n    aliases: [admin]\n    permission: gncraft.admin\npermissions:\n  gncraft.admin:\n    default: op\n' > "$B/out/plugin.yml"
+        printf 'name: GNCraftBrowser\nversion: "1.5"\nmain: gn.craft.Browser\napi-version: "1.21"\ndescription: GN Craft menu, and GN 2.0 browser players skip Grim\nsoftdepend: [GrimAC]\ncommands:\n  menu:\n    description: Open the GN Craft Menu\n    aliases: [gn, gncraft]\n  gnadmin:\n    description: Owner controls\n    aliases: [admin]\n    permission: gncraft.admin\npermissions:\n  gncraft.admin:\n    default: op\n' > "$B/out/plugin.yml"
         SRCHASH=$(cat "$B/src/gn/craft/Browser.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
         if [ "$SRCHASH" != "$(cat state/gncraftbrowser-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftBrowser.jar"; then
             # The Paper API needs its own libraries (Adventure etc.) on the classpath too
@@ -810,7 +830,7 @@ wstest() {   # label url
     local R
     R=$(curl -s -m 8 -o /dev/null -w '%{http_code}' --http1.1 -H "Connection: Upgrade" -H "Upgrade: websocket" \
         -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" -H "Origin: https://schswork.github.io" "$2")
-    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 19]"
+    say "GN Proxy test: $1 answered HTTP ${R:-nothing} (101 = WebSocket OK) [run 20]"
 }
 wstest "localhost:25566" "http://127.0.0.1:25566/"
 wstest "eagler.learnresearch.org" "https://eagler.learnresearch.org/"
