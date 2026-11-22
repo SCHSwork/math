@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 22, 2026 — Sessions show the right account
+
+### Fixed
+- **Admin Panel → Sessions could show the wrong account.** An account remembers the last browser it was used on, so after switching accounts on a browser the old one could still claim that session. Now the account seen most recently wins, an account that hasn't checked in from that browser for 15 minutes doesn't count, and signing out clears the link. Your own session says "(you)".
+
 ## November 22, 2026 — Pranks
 
 ### Added

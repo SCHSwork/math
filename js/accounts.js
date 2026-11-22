@@ -1346,6 +1346,12 @@ async function cloudSignOut() {
         // Wait for an autosave that's already running, then save
         for (let i = 0; i < 20 && cloudBusy; i++) await new Promise(r => setTimeout(r, 250));
         await Promise.race([uploadCloudSave(), new Promise(r => setTimeout(r, 10000))]);
+        // This browser isn't this account's any more (Admin Panel → Sessions)
+        try {
+            if (cloudUser && cloudDb) await Promise.race([
+                cloudDb.collection("profiles").doc(cloudUser.uid).update({ sid: firebase.firestore.FieldValue.delete() }),
+                new Promise(r => setTimeout(r, 3000))]);
+        } catch {}
         await cloudAuth.signOut();
     } catch (e) {
         console.error(e);

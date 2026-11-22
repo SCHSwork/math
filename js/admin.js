@@ -302,6 +302,24 @@ async function homeServerJson(path) {
     if (!res.ok) throw new Error("HTTP " + res.status);
     return res.json();
 }
+// Which account each session is signed in to. An account remembers the last
+// browser it was used on (profiles/<uid>.sid), so after switching accounts or
+// signing out, an old account can still point at a session. The one seen
+// most recently wins, and one that hasn't checked in while the session kept
+// going (15 min) doesn't count: that browser has moved on from it.
+function accountsBySession(profiles, live) {
+    const t = v => v && v.toMillis ? v.toMillis() : Number(v) || 0;
+    const activeAt = new Map((live || []).map(p => [p.id, t(p.t)]));
+    const out = new Map();
+    for (const p of profiles) {
+        if (!p.sid) continue;
+        const seen = t(p.lastSeen), act = activeAt.get(p.sid);
+        if (act && seen && act - seen > 15 * 60000) continue;
+        const cur = out.get(p.sid);
+        if (!cur || seen > t(cur.lastSeen)) out.set(p.sid, p);
+    }
+    return out;
+}
 async function onlineSessions() {
     try {
         const j = await homeServerJson("/api/presence");
@@ -540,11 +558,11 @@ async function renderSessions() {
     }
     if (typeof fbCount === "function") fbCount(live.length + details.size + boots.docs.length + 2, 0);
     const bootMap = new Map(boots.docs.map(d => [d.id, d.data() || {}]));
-    const bySid = new Map((adminData?.profiles || []).filter(p => p.sid).map(p => [p.sid, p]));
+    const bySid = accountsBySession(adminData?.profiles || [], live);
     const mine = typeof window.gnSessionId === "function" ? window.gnSessionId() : "";
     const ms = v => v && v.toMillis ? v.toMillis() : Number(v) || 0;
     const fmtTime = v => { const t = ms(v); return t ? new Date(t).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "–"; };
-    const label = (id, acct) => acct ? acct.username : `Guest session ${id.slice(0, 6)}`;
+    const label = (id, acct) => (acct ? acct.username : `Guest session ${id.slice(0, 6)}`) + (id === mine ? " (you)" : "");
 
     box.innerHTML = `
         <div class="admin-toolbar"><button type="button" class="finder-chip" id="sessions-refresh">Refresh</button></div>
@@ -1234,7 +1252,7 @@ async function renderPerkSessions() {
         live = (await onlineSessions()).filter(p => p.s !== "light");
         for (let i = 0; i < live.length; i += 30) {
             const snap = await cloudDb.collection("profiles").where("sid", "in", live.slice(i, i + 30).map(x => x.id)).get();
-            snap.docs.forEach(d => bySid.set((d.data() || {}).sid, { uid: d.id, ...(d.data() || {}) }));
+            bySid = new Map([...bySid, ...accountsBySession([...bySid.values(), ...snap.docs.map(d => ({ uid: d.id, ...(d.data() || {}) }))], live)]);
         }
         if (typeof fbCount === "function") fbCount(live.length + bySid.size + 1, 0);
     } catch (e) {
