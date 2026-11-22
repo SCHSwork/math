@@ -72,7 +72,8 @@
   {
    "id": 600010,
    "name": "Action Turnip",
-   "path": "games/flash/swf/action-turnip.swf"
+   "path": "games/flash/swf/action-turnip.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600010.png"
   },
   {
    "id": 600011,
@@ -102,7 +103,8 @@
   {
    "id": 600015,
    "name": "Animal Jam Dress Up",
-   "path": "games/flash/swf/animaljam-dressup.swf"
+   "path": "games/flash/swf/animaljam-dressup.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600015.png"
   },
   {
    "id": 600016,
@@ -258,7 +260,8 @@
   {
    "id": 600040,
    "name": "Bloons Player Pack 5",
-   "path": "games/flash/swf/bloons-player-pack-5.swf"
+   "path": "games/flash/swf/bloons-player-pack-5.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600040.png"
   },
   {
    "id": 600041,
@@ -574,7 +577,8 @@
   {
    "id": 600094,
    "name": "Flash Flight Simulator",
-   "path": "games/flash/swf/flash-flight-simulator.swf"
+   "path": "games/flash/swf/flash-flight-simulator.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600094.png"
   },
   {
    "id": 600095,
@@ -833,7 +837,8 @@
   {
    "id": 600141,
    "name": "My Angel",
-   "path": "games/flash/swf/my-angel.swf"
+   "path": "games/flash/swf/my-angel.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600141.png"
   },
   {
    "id": 600142,
@@ -1072,7 +1077,8 @@
   {
    "id": 600192,
    "name": "Sports Heads Racing",
-   "path": "games/flash/swf/sports-heads-racing.swf"
+   "path": "games/flash/swf/sports-heads-racing.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600192.png"
   },
   {
    "id": 600193,
@@ -1230,7 +1236,8 @@
   {
    "id": 600217,
    "name": "Year of the Snake",
-   "path": "games/flash/swf/year-of-the-snake.swf"
+   "path": "games/flash/swf/year-of-the-snake.swf",
+   "cover": "SCHSwork/GN-originals@189d6eb8239ea5e48a89dfab308da1bd9751ad57/covers/bchs/600217.png"
   },
   {
    "id": 600218,
