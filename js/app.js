@@ -92,7 +92,7 @@ const MIRRORS = {
     fastly:   (o, r, ref, p) => `https://fastly.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
     gcore:    (o, r, ref, p) => `https://gcore.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
     testingcf:(o, r, ref, p) => `https://testingcf.jsdelivr.net/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`,
-    // the owner's home server (js/home-server.js), last resort: home upload is only ~20 Mbps
+    // The owner's home server (js/home-server.js), last resort: home upload is only ~20 Mbps
     home:     (o, r, ref, p) => `${HOME_SERVER}/gh/${o}/${r}@${ref === "HEAD" ? "latest" : ref}/${p}`
 };
 const PRIMARY_MIRRORS = ["jsdelivr", "github", "githack"];

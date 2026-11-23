@@ -1,7 +1,7 @@
 #!/bin/bash
 # Minecraft hosting on the GN 2.0 server VM, installed once by update.sh:
 #   - Java 21 (for Minecraft 1.21+)
-#   - AMP by CubeCoders (the owner's licence), web panel on port 8081 (8080 is the GN 2.0 Server)
+#   - AMP by CubeCoders (owner's licence), web panel on port 8081 (8080 is the GN 2.0 Server)
 #   - playit.gg agent: lets Java (TCP 25565) and Bedrock (UDP 19132, Geyser) players in
 #     without port forwarding and without showing the home IP
 # The AMP login and the playit claim link are written to state/minecraft.json,

@@ -981,8 +981,8 @@ function currentUsername() {
 }
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 // The account's username is kept in its display name. Linking Google (and
-// sometimes signing in with it) replaces that with the Google name ("owner
-// name"), which made the site treat the account as having no username: its
+// sometimes signing in with it) replaces that with the Google name (their real
+// name), which made the site treat the account as having no username: its
 // profile stopped updating and it showed as offline. This puts it back, from
 // this browser's memory of the account or its profile, checked against the
 // username claim (usernames/<name>).
