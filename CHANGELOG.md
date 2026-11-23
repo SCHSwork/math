@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 23, 2026 — FNAF 4 clicks
+
+### Fixed
+- **You couldn't click in FNAF 4.** "Fit game to screen" scaled Clickteam games, and in some of them (FNAF 4) clicks stopped working once the game was scaled. Clickteam games are now only centered, never scaled, like games we can't identify.
+
 ## November 22, 2026 — Sessions show the right account
 
 ### Fixed

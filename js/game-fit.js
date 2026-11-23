@@ -119,7 +119,7 @@ function gameFitHook() {
             if (w.Phaser || w.PIXI || w.pc || w.cc || w.BABYLON || w.PlayCanvas || w.Laya || w.createjs) return true;   // Phaser, PixiJS, PlayCanvas, Cocos, Babylon…
             if (w.cr_createRuntime || w.C3 || w.cr || w.c2_callFunction) return true;                              // Construct
             if (w.GameMaker_Init || w.g_pBuiltIn || w.GML_Init || (el.id === "canvas" && w.yyGetInt32)) return true;  // GameMaker
-            if (w.MMFRuntime || el.id === "MMFCanvas") return true;                                                 // Clickteam Fusion
+            // Clickteam Fusion (MMFRuntime) is left out on purpose: some builds, like FNAF 4, ignore clicks once the canvas is scaled
             if (w.Ruffle || w.RufflePlayer) return true;
             if (/unity|webgl-content|gameContainer/i.test((el.parentElement && el.parentElement.id) || "")) return true;
         } catch (e) {}
