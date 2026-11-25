@@ -609,6 +609,7 @@ async function fetchCloudMeta() {
 // • Autosave asks the open game to write what it keeps in memory first (Unity).
 // • Saves when the tab is hidden too (switching tabs, closing the Chromebook).
 let cloudQueue = null, cloudRetryTimer = null, cloudRetryDelay = 0, cloudFailRetryable = false;
+let cloudConflictWarned = "";
 let cloudConflictNoted = "";
 function uploadCloudSave(opts = {}) {
     if (!cloudUser) return Promise.resolve(false);
@@ -724,13 +725,19 @@ async function uploadCloudSaveNow({ force = false, background = false } = {}) {
         if (meta && meta.gen !== localGen && !force) {
             // Someone saved from another device since this device last synced.
             noteSaveState("conflict"); setCloudStatus("Another device saved newer progress — open Account to choose which to keep.");
-            // Don't switch saves from here: loading a cloud save reloads the page, and an
-            // autosave can run any time, so the site used to reload by itself a few seconds
-            // after opening something. Say so once instead; the switch happens the next
-            // time the site opens (cloudSyncOnSignIn), or from Account.
-            if (cloudConflictNoted !== meta.gen) {
-                cloudConflictNoted = meta.gen;
-                notify("Your account was saved from another device. Reload the site (or open Account) when you want to switch to that progress.", { duration: 12000 });
+            // Sort it out the same way as on sign-in (cloudSyncOnSignIn): load the
+            // cloud save without asking unless this device has more progress. Not
+            // in the middle of a game, since loading reloads the page: closing the
+            // game saves again and lands back here.
+            if (cloudConflictWarned !== meta.gen) {
+                const inGame = typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex";
+                if (!inGame) {
+                    cloudConflictWarned = meta.gen;
+                    setTimeout(cloudSyncOnSignIn, 0);   // after cloudBusy is cleared below
+                } else if (cloudConflictNoted !== meta.gen) {
+                    cloudConflictNoted = meta.gen;
+                    notify("Your account was saved from another device. When you close this game, the site switches to that progress (or asks, if this device has more).", { duration: 12000 });
+                }
             }
             return false;
         }
@@ -839,7 +846,34 @@ async function keepDeviceCopyNow() {
         await saveDocRef().set({ kept }, { merge: true });
     } catch (e) { console.warn("Couldn't keep a copy of this device's progress", e); }
 }
-async function downloadCloudSave({ previous = "" } = {}) {
+// Resolves true when a reload wouldn't bother anyone: the tab is in the background, or
+// there has been no click, key, scroll or touch for 45 s with no game open. Resolves false
+// if a game gets opened first (its progress would be replaced).
+function waitForQuietMoment() {
+    return new Promise(resolve => {
+        const inGame = () => typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex";
+        if (inGame()) return resolve(false);
+        let last = Date.now();
+        const bump = () => { last = Date.now(); };
+        const events = ["pointerdown", "keydown", "wheel", "touchstart", "mousemove"];
+        let timer;
+        const finish = ok => {
+            clearInterval(timer);
+            events.forEach(e => removeEventListener(e, bump, true));
+            document.removeEventListener("visibilitychange", check);
+            resolve(ok);
+        };
+        const check = () => {
+            if (inGame()) return finish(false);
+            if (document.hidden || Date.now() - last > 45000) finish(true);
+        };
+        events.forEach(e => addEventListener(e, bump, { capture: true, passive: true }));
+        document.addEventListener("visibilitychange", check);
+        timer = setInterval(check, 2000);
+        check();
+    });
+}
+async function downloadCloudSave({ previous = "", whenIdle = false } = {}) {
     if (!cloudUser || cloudBusy) return false;
     cloudBusy = true;
     try {
@@ -871,6 +905,11 @@ async function downloadCloudSave({ previous = "" } = {}) {
             const mins = Math.max(1, Math.round((Date.now() - (backup.at || Date.now())) / 60000));
             try { sessionStorage.setItem("gnmath-cloud-backup-note", `The GN 2.0 Server is down, so your save from ${mins} minute${mins === 1 ? "" : "s"} earlier was loaded. Your newest save is kept in Account → Earlier cloud saves.`); } catch {}
         }
+        // Automatic loads (not a button the player pressed) download quietly first, then
+        // wait for a moment nobody would notice a reload: the tab is hidden, or nothing has
+        // been touched for a while. If they open a game meanwhile, give up: closing it saves
+        // again, finds the newer cloud save again and starts over.
+        if (whenIdle && !(await waitForQuietMoment())) { cloudConflictWarned = ""; setCloudStatus("Another device saved newer progress. It loads the next time the site is quiet."); return true; }
         if (typeof zoneViewer !== "undefined" && zoneViewer.style.display === "flex") closeZone();
         await applyCloudBundle(bundle);
         if (previous || usedBackup) {
@@ -918,7 +957,7 @@ async function cloudSyncOnSignIn() {
         // progress. This device's progress is kept for a week first (keepDeviceCopy),
         // so it can still be brought back from Account → Earlier cloud saves.
         if (!cloudLess) {
-            if (!(await downloadCloudSave())) cloudSyncRetry(new Error("Couldn't load your cloud save (slow or no connection)."));
+            if (!(await downloadCloudSave({ whenIdle: true }))) cloudSyncRetry(new Error("Couldn't load your cloud save (slow or no connection)."));
             return;
         }
         const choice = await askChoice(
