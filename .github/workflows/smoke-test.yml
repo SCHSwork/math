@@ -1,0 +1,40 @@
+# Opens the site in a real browser after every change to it and checks the basics
+# (tools/smoke_test.mjs). A red run means something players use is broken.
+name: Smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - sw.js
+      - "js/**"
+      - "css/**"
+      - tools/smoke_test.mjs
+      - tools/test_browser.mjs
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: smoke-test-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install the test browser
+        run: |
+          npm init -y >/dev/null
+          npm i --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Serve the site
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 >/dev/null 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/index.html >/dev/null && break; sleep 1; done
+      - name: Test the site
+        run: node tools/smoke_test.mjs

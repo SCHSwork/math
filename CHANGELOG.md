@@ -2,6 +2,17 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 25, 2026 — Game check fixed, lighter page, tests
+
+### Fixed
+- **The nightly game check had stopped working.** Since the bot check was added, the test browser got the math practice page instead of the site, so every run crashed at the start while GitHub still showed it as passed. Before that, a game that froze the test browser could take the whole run down after a few games. The check now gets past the bot check, gives each worker its own browser and restarts it when a game freezes it, checks the new batch before retrying old failures, and shows as failed if it crashes. It also no longer talks to the GN 2.0 Server.
+
+### Changed
+- **The page downloads about 12% less script.** The Owner Panel, the report and ideas forms, the submit form and the Find screen, jumpscare and prank code now download the first time they're needed (`js/lazy.js`).
+
+### Added
+- **A quick test on every change** (`tools/smoke_test.mjs`, "Smoke test" in Actions): the site loads, search works, a game opens, and the parts loaded on demand run without errors.
+
 ## November 25, 2026 — nitro.car
 
 ### Added
