@@ -1,4 +1,4 @@
-express@4
-firebase-admin@13
-jose@5
-yaml@2
+express@4.22.3
+firebase-admin@13.10.0
+jose@5.10.0
+yaml@2.9.1
