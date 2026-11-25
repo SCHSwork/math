@@ -196,14 +196,15 @@ function notifyNewLibraryGames() {
 let adminPanelLoad = null;
 function loadAdminPanel() {
     if (!adminPanelLoad) {
-        adminPanelLoad = new Promise((resolve, reject) => {
+        // The panel also uses the report, submission and prank files (js/lazy.js)
+        adminPanelLoad = Promise.all(["feedback", "submit", "identify"].map(gnLoad)).then(() => new Promise((resolve, reject) => {
             const s = document.createElement("script");
             const meta = document.querySelector('meta[name="gn-admin-js"]');
             s.src = (meta && meta.dataset.src) || "js/admin.js";   // versioned by tools/stamp_versions.py
             s.onload = resolve;
             s.onerror = () => { adminPanelLoad = null; reject(new Error("couldn't load the Admin Panel")); };
             document.body.appendChild(s);
-        });
+        })).catch(e => { adminPanelLoad = null; throw e; });
     }
     return adminPanelLoad;
 }

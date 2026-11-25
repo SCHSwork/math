@@ -134,6 +134,9 @@ js/
   app.js               game list, search, cards, player, ad/tracker removal,
                        backup sources, settings, owner panel, panic button, tab cloak
   accounts.js          accounts and cloud saves (Firebase)
+  lazy.js              loads owner.js, feedback.js, submit.js and identify.js
+                       the first time they're needed
+  owner.js             the Owner Panel
   library.js           favorites, recent, play time, stats, Today's pick,
                        ratings and reports, keyboard shortcuts
   filters.js           Genre / Source / Show filters
@@ -156,6 +159,7 @@ config/
   game-info.json       genres, description and keywords for every game (used by filters and the finder)
   partner-games.json   the html5games.com partner games (may contain ads)
 tools/
+  smoke_test.mjs       quick browser test of the site, run on every push
   stamp_versions.py    run after editing css/ or js/ (including css/skins/) so browsers load the new version
 ```
 
