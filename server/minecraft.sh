@@ -770,6 +770,104 @@ JAVAEOF
     elif [ -z "$PAPI" ]; then say "GN Craft: no Paper API jar found in libraries/"; fi
 fi
 
+# ── GNCraftDiamonds: add diamonds to chunks that already exist ──────────────
+# The gn_diamonds datapack above only affects chunks generated after it loads,
+# and GN Craft is pre-generated. This small plugin does the same job for existing
+# chunks: the first time one loads, it adds diamond veins between Y 1 and 40 (where
+# browser players can dig), once per chunk (remembered in the chunk's own data).
+if [ -n "$MD" ]; then
+    PAPI=$(sudo -n find "$MD/libraries" -name 'paper-api-*.jar' 2>/dev/null | sort | tail -1)
+    if [ -n "$PAPI" ] && command -v javac >/dev/null; then
+        B=/tmp/gncraftdiamonds; rm -rf "$B"; mkdir -p "$B/src/gn/craft" "$B/out"
+        cat > "$B/src/gn/craft/Diamonds.java" <<'JAVAEOF'
+package gn.craft;
+
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class Diamonds extends JavaPlugin implements Listener {
+    private static final int MIN_Y = 1, MAX_Y = 40, TRIES = 7, VEIN = 4;
+    private static final Set<Material> HOST = EnumSet.of(Material.STONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE, Material.TUFF);
+    private NamespacedKey key;
+
+    @Override
+    public void onEnable() {
+        key = new NamespacedKey(this, "diamonds_v1");
+        Bukkit.getPluginManager().registerEvents(this, this);
+        // Chunks that were loaded before this plugin started (spawn area)
+        Bukkit.getScheduler().runTask(this, () -> {
+            for (World w : Bukkit.getWorlds()) for (Chunk c : w.getLoadedChunks()) process(c);
+        });
+    }
+
+    @EventHandler
+    public void onLoad(ChunkLoadEvent e) {
+        if (e.isNewChunk()) return;   // new chunks get the gn_diamonds datapack instead
+        Chunk c = e.getChunk();
+        Bukkit.getScheduler().runTask(this, () -> process(c));
+    }
+
+    private void process(Chunk c) {
+        if (!c.isLoaded() || c.getWorld().getEnvironment() != World.Environment.NORMAL) return;
+        var pdc = c.getPersistentDataContainer();
+        if (pdc.has(key, PersistentDataType.BYTE)) return;
+        pdc.set(key, PersistentDataType.BYTE, (byte) 1);
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        for (int t = 0; t < TRIES; t++) {
+            int x = r.nextInt(16), z = r.nextInt(16), y = MIN_Y + r.nextInt(MAX_Y - MIN_Y + 1);
+            for (int i = 0; i < VEIN; i++) {
+                Block b = c.getBlock(x, y, z);
+                if (HOST.contains(b.getType()) && !(exposed(c, x, y, z) && r.nextBoolean())) b.setType(Material.DIAMOND_ORE, false);
+                switch (r.nextInt(3)) {
+                    case 0: x = Math.max(0, Math.min(15, x + (r.nextBoolean() ? 1 : -1))); break;
+                    case 1: z = Math.max(0, Math.min(15, z + (r.nextBoolean() ? 1 : -1))); break;
+                    default: y = Math.max(MIN_Y, Math.min(MAX_Y, y + (r.nextBoolean() ? 1 : -1)));
+                }
+            }
+        }
+    }
+
+    // Like vanilla, veins touching open air are often skipped. Only looks inside the chunk.
+    private boolean exposed(Chunk c, int x, int y, int z) {
+        int[][] d = {{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
+        for (int[] o : d) {
+            int nx = x + o[0], ny = y + o[1], nz = z + o[2];
+            if (nx < 0 || nx > 15 || nz < 0 || nz > 15) continue;
+            if (c.getBlock(nx, ny, nz).getType().isAir()) return true;
+        }
+        return false;
+    }
+}
+JAVAEOF
+        printf 'name: GNCraftDiamonds\nversion: "1.0"\nmain: gn.craft.Diamonds\napi-version: "1.21"\ndescription: Adds diamonds at Y 1-40 to existing chunks (for browser players)\n' > "$B/out/plugin.yml"
+        SRCHASH=$(cat "$B/src/gn/craft/Diamonds.java" "$B/out/plugin.yml" | sha1sum | cut -c1-12)
+        if [ "$SRCHASH" != "$(cat state/gncraftdiamonds-built 2>/dev/null)" ] || ! sudo -n test -f "$MD/plugins/GNCraftDiamonds.jar"; then
+            CP=$(sudo -n find "$MD/libraries" -name '*.jar' 2>/dev/null | paste -sd: -)
+            if sudo -n javac --release 21 -nowarn -cp "$CP" -d "$B/out" "$B/src/gn/craft/Diamonds.java" > "$B/javac.log" 2>&1 \
+               && sudo -n chown -R "$(id -u):$(id -g)" "$B/out" \
+               && (cd "$B/out" && jar cf "$B/GNCraftDiamonds.jar" .); then
+                sudo -n cp "$B/GNCraftDiamonds.jar" "$MD/plugins/GNCraftDiamonds.jar" && sudo -n chown amp:amp "$MD/plugins/GNCraftDiamonds.jar" \
+                    && echo "$SRCHASH" > state/gncraftdiamonds-built && say "GN Craft: built the diamonds plugin (restart GN Craft in AMP)"
+            else
+                say "GN Craft: couldn't build the diamonds plugin: $(grep -m2 -E 'error' "$B/javac.log" | tr '\n' ' ' | cut -c1-200)"
+            fi
+        fi
+        rm -rf "$B"
+    fi
+fi
+
 # ── What players see: a welcome with the useful commands, and a short /help ──
 # Essentials shows motd.txt on join and help.txt for /help (instead of its huge
 # list of every command). Run "essentials reload" in GN Craft's console (or
