@@ -941,18 +941,19 @@ const n=(p&&typeof p==="object")?(p.data_major??p.data??p.major):p;process.stdou
             T=/tmp/gn-diamonds; rm -rf "$T"; F="$T/data/minecraft/worldgen/placed_feature"; mkdir -p "$F"
             if [ "$PF" -ge 82 ] 2>/dev/null; then META="\"min_format\": $PF, \"max_format\": $PF"; else META="\"pack_format\": $PF"; fi
             echo "{\"pack\": {$META, \"description\": \"GN Craft: more diamonds at Y 1-40 for browser players\"}}" > "$T/pack.mcmeta"
-            mkfeat() {   # name count rarity_or_empty
-                local R=""; [ -n "$3" ] && R="{\"type\": \"minecraft:rarity_filter\", \"chance\": $3},"
+            mkfeat() {   # placed-feature-name configured-feature-name count rarity_or_empty
+                local R=""; [ -n "$4" ] && R="{\"type\": \"minecraft:rarity_filter\", \"chance\": $4},"
                 cat > "$F/$1.json" <<JSONEOF
-{"feature": "minecraft:$1",
- "placement": [$R {"type": "minecraft:count", "count": $2}, {"type": "minecraft:in_square"},
+{"feature": "minecraft:$2",
+ "placement": [$R {"type": "minecraft:count", "count": $3}, {"type": "minecraft:in_square"},
   {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform", "min_inclusive": {"absolute": 1}, "max_inclusive": {"absolute": 40}}},
   {"type": "minecraft:biome"}]}
 JSONEOF
             }
-            mkfeat ore_diamond 7
-            mkfeat ore_diamond_buried 4
-            mkfeat ore_diamond_large 1 9
+            # Vanilla's placed "ore_diamond" uses the configured feature "ore_diamond_small"
+            mkfeat ore_diamond ore_diamond_small 7
+            mkfeat ore_diamond_buried ore_diamond_buried 4
+            mkfeat ore_diamond_large ore_diamond_large 1 9
             CH=$(cd "$T" && find . -type f | sort | xargs cat | md5sum | cut -c1-12)
             if [ "$(sudo -n cat "$DPD/.hash" 2>/dev/null)" != "$CH" ]; then
                 echo "$CH" > "$T/.hash"
