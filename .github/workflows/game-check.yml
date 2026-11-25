@@ -46,6 +46,7 @@ jobs:
           python3 -m http.server 8080 --bind 127.0.0.1 >/dev/null 2>&1 &
           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8080/index.html >/dev/null && break; sleep 1; done
       - name: Check games
+        id: check
         # Ends well before the job's limit so the results are always saved below
         timeout-minutes: 160
         continue-on-error: true
@@ -69,3 +70,7 @@ jobs:
           git diff --cached --quiet && { echo "No changes"; exit 0; }
           git commit -m "chore: nightly game check"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
+      # Results are saved first; then a crashed check shows as a failed run
+      - name: Fail if the check crashed
+        if: always() && steps.check.outcome == 'failure'
+        run: exit 1

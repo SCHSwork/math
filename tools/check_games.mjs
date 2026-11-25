@@ -18,9 +18,9 @@
 //
 // Needs: npm i playwright && npx playwright install --with-deps chromium,
 // and the site served at SITE_URL (default http://127.0.0.1:8080/).
-import { chromium } from "playwright";
 import fs from "fs";
 import { reportedGames } from "./reported_games.mjs";
+import { BLOCK, launchBrowser, newContext } from "./test_browser.mjs";
 
 const SITE = process.env.SITE_URL || "http://127.0.0.1:8080/";
 const OUT = new URL("../config/game-health.json", import.meta.url);
@@ -45,13 +45,7 @@ sizes.kb ||= {};
 // shows its loading bar long before its 100 MB of files are in)
 const QUIET_MS = 3000, SIZE_WAIT_MS = 90000;
 
-// Things a test browser shouldn't touch: the site's database (online count,
-// error reports, accounts) and trackers
-const BLOCK = /(^|\.)(firestore\.googleapis\.com|firebase\w*\.googleapis\.com|identitytoolkit\.googleapis\.com|securetoken\.googleapis\.com|firebaseinstallations\.googleapis\.com|google-analytics\.com|googletagmanager\.com)$/;
 const NOISE = /firestore|favicon|sha\.txt|api\.github|googletagmanager|google-analytics|data\.jsdelivr|^Failed to load resource|gameanalytics|fonts\.(googleapis|gstatic)|google\.com\/jsapi/i;
-
-// Software WebGL, so 3D games can draw without a graphics card
-const browser = await chromium.launch({ ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}), args: ["--autoplay-policy=no-user-gesture-required", "--mute-audio", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
 // jsDelivr often refuses the test server (GitHub's machines): HTTP 403 or a
 // dropped connection, for files players download fine. When that happens, get
@@ -69,11 +63,34 @@ function countBytes(st, req, n) {
     try { if (!st.counting || !n || req.frame() === req.frame().page().mainFrame() && !/^(fetch|xhr)$/.test(req.resourceType())) return; } catch (e) { return; }
     st.bytes += n;
 }
+// Every relayed file passes through this script's memory. Huge games ask for a
+// hundred big pieces at once (Cuphead), which ran it out of memory, so only a
+// few are relayed at a time and each download is let go as soon as it's sent.
+const RELAY_AT_ONCE = 4;
+let relaying = 0;
+const relayQueue = [];
 async function viaGitHub(route, st) {
+    if (relaying >= RELAY_AT_ONCE) await new Promise(go => relayQueue.push(go));
+    else relaying++;
+    let res = null;
+    try {
+        // The game may have been closed while this file waited its turn
+        let closed = false;
+        try { closed = route.request().frame().isDetached(); } catch (e) {}   // no frame: a service worker's request
+        if (closed) await route.abort();
+        else await relay(route, st, r => (res = r));
+    } catch (e) {
+        await route.abort().catch(() => {});
+    } finally {
+        if (res) await res.dispose().catch(() => {});
+        if (relayQueue.length) relayQueue.shift()(); else relaying--;
+    }
+}
+async function relay(route, st, keep) {
     const url = route.request().url();
     routedRequests.add(route.request());
     let res = null;
-    try { res = await route.fetch({ timeout: 30000 }); } catch (e) {}
+    try { res = keep(await route.fetch({ timeout: 30000 })); } catch (e) {}
     // jsDelivr refusing a repo (it's too big for it) breaks the game for every
     // player whose jsDelivr works; here it would quietly come from GitHub instead
     if (res && res.status() >= 400 && res.status() !== 404) {
@@ -102,9 +119,8 @@ async function viaGitHub(route, st) {
 }
 const cdnRefused = new Set();
 
-async function makePage() {
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
-    await ctx.route(url => BLOCK.test(new URL(url).hostname), r => r.abort());
+async function makePage(browser) {
+    const ctx = await newContext(browser);
     const st = { errors: [], bytes: 0, counting: false, inflight: new Set(), lastNet: 0 };
     await ctx.route(JSD_GH, route => viaGitHub(route, st));
     const page = await ctx.newPage();
@@ -123,7 +139,7 @@ async function makePage() {
     page.on("requestfailed", rq => { const u = rq.url(); if (!NOISE.test(u) && !BLOCK.test(new URL(u).hostname)) st.errors.push(`Failed ${u.slice(0, 160)}`); });
     // Quiet the first-visit extras (tips, celebrations) so they don't get in the way
     await page.addInitScript(() => { try { localStorage.setItem("gnmath-playnext-off", "1"); localStorage.setItem("gnmath-achievements", JSON.stringify({ v: 1, init: 1, days: [], tried: {}, gotd: [], weekendDays: [], unlocked: {}, level: 99 })); } catch (e) {} });
-    await page.goto(SITE, { timeout: 90000 });
+    await page.goto(SITE, { timeout: 90000, waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => typeof zones !== "undefined" && zones.length > 500, null, { timeout: 120000 });
     await page.waitForTimeout(2000);
     return { ctx, page, st };
@@ -231,12 +247,30 @@ const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, rej) => se
 const closeCtx = ctx => withTimeout(ctx.close(), 15000, "close").catch(() => {});
 const GAME_LIMIT_MS = { [WAIT_MS]: 75000, [CONFIRM_WAIT_MS]: 110000 + LOADING_EXTRA_MS };
 
-const w0 = await makePage();
+// A frozen or crashing game can take its whole browser down with it, so every
+// worker has its own browser and starts a new one when that happens.
+const closeBrowser = b => b ? withTimeout(b.close(), 20000, "close").catch(() => {}) : null;
+async function openSite(old) {
+    if (old) await closeCtx(old.ctx);
+    let browser = old && old.browser;
+    for (let tries = 1; ; tries++) {
+        try {
+            if (!browser || !browser.isConnected()) browser = await launchBrowser();
+            return { browser, ...await withTimeout(makePage(browser), 240000, "open the site") };
+        } catch (e) {
+            await closeBrowser(browser); browser = null;
+            if (tries >= 3) throw e;
+            console.log(`Couldn't open the site (${String(e.message).split("\n")[0]}); trying again with a new browser`);
+        }
+    }
+}
+
+const w0 = await openSite();
 const all = await w0.page.evaluate(() => zones
     .filter(z => Number(z.id) >= 0 && z.url && !(typeof isPartnerZone === "function" && isPartnerZone(z)) && !String(z.url).startsWith("http") && !z.newTab)
     .map(z => ({ id: String(z.id), name: z.name })));
 all.sort((a, b) => Number(a.id) - Number(b.id));
-await closeCtx(w0.ctx);
+await closeBrowser(w0.browser);
 
 let list;
 // Tonight's batch, and how far into it the run has got. "next" (where tomorrow's
@@ -269,7 +303,7 @@ if (process.argv.includes("--reported")) {
     // Plus everything that failed last time
     const failed = all.filter(z => health.games[z.id] && health.games[z.id].s !== "ok" && !batch.includes(z));
     const rep = all.filter(z => reportedIds.has(z.id) && !batch.includes(z) && !failed.includes(z));
-    list = [...rep, ...failed, ...batch];
+    list = [...rep, ...batch, ...failed];
 }
 console.log(`Checking ${list.length} of ${all.length} games`);
 
@@ -291,8 +325,8 @@ function saveHealth(final) {
 const queue = [...list];
 const today = new Date().toISOString().slice(0, 10);
 async function worker() {
-    let w = await makePage(), n = 0;
-    const fresh = async () => { await closeCtx(w.ctx); w = await makePage(); n = 0; };
+    let w = await openSite(), n = 0;
+    const fresh = async () => { w = await openSite(w); n = 0; };
     const run = async (z, waitMs) => {
         try { return await withTimeout(check(w, z, waitMs), GAME_LIMIT_MS[waitMs], "stuck"); }
         catch (e) {
@@ -305,8 +339,8 @@ async function worker() {
         let r = await run(z, WAIT_MS);
         // Double-check failures with more time and a fresh page before calling them broken
         // (a game that froze the browser isn't tried again: it would just freeze it again)
-        if (r.stuck) await fresh();
-        else if (r.s !== "ok") { await fresh(); r = await run(z, CONFIRM_WAIT_MS); if (r.stuck) await fresh(); }
+        if (!r.stuck && r.s !== "ok") { await fresh(); r = await run(z, CONFIRM_WAIT_MS); }
+        const restart = r.stuck;
         delete r.stuck;
         // Only a game that worked was measured properly; a cut-off measurement (0) isn't kept
         if (r.s === "ok" && r.sizeKb > 0) sizes.kb[z.id] = r.sizeKb;
@@ -318,12 +352,13 @@ async function worker() {
         checkedIds.add(z.id);
         if (batch.length) advanceNext();
         saveHealth(false);
-        if (++n % 8 === 0) await fresh();
+        // A new browser after a frozen game (the result is already saved above)
+        if (restart) { await closeBrowser(w.browser); w.browser = null; }
+        if (restart || ++n % 8 === 0) await fresh();
     }
-    await closeCtx(w.ctx);
+    await closeBrowser(w.browser);
 }
 // Stop by the time limit even if a worker is stuck somewhere unexpected
 await Promise.race([Promise.all(Array.from({ length: WORKERS }, worker)), new Promise(r => setTimeout(r, (MAX_MINUTES + 10) * 60000 - (Date.now() - started)))]);
 console.log("Done:", JSON.stringify(saveHealth(true)));
-await withTimeout(browser.close(), 20000, "close").catch(() => {});
 process.exit(0);
