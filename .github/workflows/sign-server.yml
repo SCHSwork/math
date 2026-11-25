@@ -1,0 +1,49 @@
+# Signs the files the home server installs by itself (server/update.sh, server.js,
+# minecraft.sh, deps.txt). The server only installs a file if its hash is in
+# server/MANIFEST and that manifest carries a valid signature from the key whose
+# public half is built into update.sh. The private half lives only in the repo
+# secret GN_UPDATE_SIGNING_KEY, so changing those files by pushing to GitHub is
+# not enough to make the server run them: this workflow has to sign them too.
+name: Sign server files
+on:
+  push:
+    branches: [main]
+    paths:
+      - server/update.sh
+      - server/server.js
+      - server/minecraft.sh
+      - server/deps.txt
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: sign-server
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign the manifest
+        env:
+          KEY: ${{ secrets.GN_UPDATE_SIGNING_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then echo "::error::The repo secret GN_UPDATE_SIGNING_KEY isn't set, so the server files can't be signed"; exit 1; fi
+          git fetch -q origin main && git reset -q --hard origin/main
+          cd server
+          sha256sum update.sh server.js minecraft.sh deps.txt > MANIFEST
+          kf="$RUNNER_TEMP/gn-update-key"
+          ( umask 077; printf '%s\n' "$KEY" > "$kf" )
+          rm -f MANIFEST.sig
+          ssh-keygen -Y sign -f "$kf" -n gn-update MANIFEST
+          rm -f "$kf"
+          # Check the signature the same way the server will, against the public key in the repo
+          echo "gn-update $(cut -d' ' -f1,2 update-key.pub)" > "$RUNNER_TEMP/allowed"
+          ssh-keygen -Y verify -f "$RUNNER_TEMP/allowed" -I gn-update -n gn-update -s MANIFEST.sig < MANIFEST
+      - name: Save the signed manifest
+        run: |
+          git add server/MANIFEST server/MANIFEST.sig
+          if git diff --cached --quiet; then echo "Already signed"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898888+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sign server files"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
