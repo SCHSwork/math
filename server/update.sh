@@ -15,6 +15,29 @@ else URL="https://raw.githubusercontent.com/SCHSwork/math/main/server"; fi
 
 stamp() { date "+%F %T"; }
 
+# --- signed updates (begin) --------------------------------------------------
+# Nothing downloaded from GitHub is installed unless server/MANIFEST (the hash of each
+# file) carries a valid signature from the key below. The matching private key exists only
+# as the GitHub repo secret GN_UPDATE_SIGNING_KEY, used by .github/workflows/sign-server.yml.
+# So pushing a change to GitHub isn't enough for this server to run it: it has to be signed.
+SIGNER_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK3E8uvMw6udHW/zASkPgv1hnGy3p8OT7Rd7Y/EHyTyt"
+verify_manifest() {
+    rm -f manifest.new manifest.sig.new manifest.allowed
+    curl -fsSL "$URL/MANIFEST?$(date +%s)" -o manifest.new 2>/dev/null && curl -fsSL "$URL/MANIFEST.sig?$(date +%s)" -o manifest.sig.new 2>/dev/null || { echo "$(stamp) couldn't download the signed manifest"; return 1; }
+    echo "gn-update $SIGNER_PUB" > manifest.allowed
+    ssh-keygen -Y verify -f manifest.allowed -I gn-update -n gn-update -s manifest.sig.new < manifest.new >/dev/null 2>&1 || { echo "$(stamp) the manifest's signature is not valid, nothing installed"; return 1; }
+}
+# fetch <name> <outfile>: downloads server/<name>, keeps it only if its hash is in the signed manifest
+fetch() {
+    local want got
+    want=$(awk -v f="$1" '$2==f{print $1}' manifest.new)
+    [ -n "$want" ] || { echo "$(stamp) $1 isn't in the signed manifest"; return 1; }
+    curl -fsSL "$URL/$1?$(date +%s)" -o "$2" 2>/dev/null || return 1
+    got=$(sha256sum "$2" | cut -d' ' -f1)
+    [ "$got" = "$want" ] || { echo "$(stamp) $1 doesn't match the signed manifest (likely still being signed), not installed"; rm -f "$2"; return 1; }
+}
+# --- signed updates (end) ----------------------------------------------------
+
 # Keep the VM's clock right (VirtualBox clocks drift, and a wrong clock makes
 # Firebase sign-ins look like they're from the future). If the clock isn't
 # being synced, install chrony (a time-sync service) and step the clock now.
@@ -71,13 +94,22 @@ if [[ "$ROOTSRC" == /dev/mapper/* ]] && [ ! -f state/grow-tried-$(date +%F-%H) ]
     fi
 fi
 
+
+# Everything below downloads and installs code, so first check the signed manifest.
+if ! command -v ssh-keygen >/dev/null && [ ! -f state/openssh-tried-$(date +%F) ]; then
+    touch state/openssh-tried-$(date +%F)
+    sudo -n apt-get install -y --no-install-recommends openssh-client >/dev/null 2>&1 && echo "$(stamp) installed openssh-client (checks update signatures)"
+fi
+command -v ssh-keygen >/dev/null || { echo "$(stamp) ssh-keygen is missing, can't check update signatures, nothing installed"; exit 0; }
+verify_manifest || { rm -f manifest.new manifest.sig.new manifest.allowed; exit 0; }
+
 # The updater updates itself too (takes effect next run)
-curl -fsSL "$URL/update.sh?$(date +%s)" -o update.new.sh 2>/dev/null && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
+fetch update.sh update.new.sh && bash -n update.new.sh && ! cmp -s update.new.sh update.sh && { chmod +x update.new.sh; mv update.new.sh update.sh; echo "$(stamp) updater updated"; }
 rm -f update.new.sh
 
 # Minecraft hosting (AMP + Java + playit, see minecraft.sh): runs once, and again
 # whenever minecraft.sh changes. In the background, so the updater isn't held up.
-curl -fsSL "$URL/minecraft.sh?$(date +%s)" -o minecraft.new.sh 2>/dev/null
+fetch minecraft.sh minecraft.new.sh
 if [ -s minecraft.new.sh ] && bash -n minecraft.new.sh; then
     NEW=$(sha1sum minecraft.new.sh | cut -c1-12)
     if [ "$NEW" != "$(cat state/minecraft-ran 2>/dev/null)" ] && ! pgrep -f "gn-data/minecraft.sh" >/dev/null; then
@@ -88,14 +120,14 @@ if [ -s minecraft.new.sh ] && bash -n minecraft.new.sh; then
 fi
 rm -f minecraft.new.sh
 
-curl -fsSL "$URL/deps.txt?$(date +%s)" -o deps.new.txt 2>/dev/null
+fetch deps.txt deps.new.txt
 if [ -s deps.new.txt ] && ! cmp -s deps.new.txt deps.txt; then
     echo "$(stamp) installing $(tr '\n' ' ' < deps.new.txt)"
-    npm install $(cat deps.new.txt) --no-fund --no-audit --loglevel=error && mv deps.new.txt deps.txt
+    npm install $(cat deps.new.txt) --ignore-scripts --no-fund --no-audit --loglevel=error && mv deps.new.txt deps.txt
 fi
 rm -f deps.new.txt
 
-curl -fsSL "$URL/server.js?$(date +%s)" -o server.new.js || { echo "$(stamp) couldn't reach GitHub"; exit 0; }
+fetch server.js server.new.js || { echo "$(stamp) server.js not updated (couldn't download it, or it isn't signed yet)"; exit 0; }
 if cmp -s server.new.js server.js; then rm -f server.new.js; exit 0; fi
 if ! node --check server.new.js; then echo "$(stamp) new version has a syntax error, not installed"; rm -f server.new.js; exit 1; fi
 cp server.js server.js.bak
