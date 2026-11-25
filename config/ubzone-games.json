@@ -917,6 +917,7 @@
    "id": 300094,
    "name": "nitro.car",
    "play": "play/nitrocar/",
+   "cover": "SCHSwork/math@0031c6214d307ecd33584119ac536bedacb29c35/play/nitrocar/cover.png",
    "sources": [
     "nitrocargit/files@f379ae2eca99a8b7e0278a91e05dee8438dfafbe"
    ],
