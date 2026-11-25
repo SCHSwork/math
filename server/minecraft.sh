@@ -825,6 +825,48 @@ fs.writeFileSync("/tmp/ess-config.yml", c.toString());' 2>/tmp/ess-err.log || sa
     done
 fi
 
+# ── More diamonds where browser players can dig ─────────────────────────────
+# Browser (Eaglercraft 1.8.8) players can only see Y 0 and up, but modern worlds
+# keep nearly all diamonds deep, around Y -58 to -64. This datapack overrides the
+# three diamond features so they also generate between Y 1 and 40 (the deep ones
+# stay normal for everyone else). It only affects chunks generated AFTER GN Craft
+# restarts with it; chunks that already exist keep their old ores.
+if [ -n "$MD" ] && [ -n "$MC" ]; then
+    LVL=$(sudo -n grep -E '^level-name=' "$MC" | head -1 | cut -d= -f2-); LVL=${LVL:-world}
+    DPD="$MD/$LVL/datapacks/gn_diamonds"
+    if sudo -n test -d "$MD/$LVL"; then
+        MJ=$(sudo -n find "$MD/cache" -maxdepth 1 -name 'mojang_*.jar' 2>/dev/null | sort | tail -1)
+        PF=$( [ -n "$MJ" ] && sudo -n unzip -p "$MJ" version.json 2>/dev/null | node -e '
+let t="";process.stdin.on("data",d=>t+=d).on("end",()=>{try{const v=JSON.parse(t),p=v.pack_version;
+const n=(p&&typeof p==="object")?(p.data_major??p.data??p.major):p;process.stdout.write(String(n||""))}catch{}})' )
+        if [ -n "$PF" ]; then
+            T=/tmp/gn-diamonds; rm -rf "$T"; F="$T/data/minecraft/worldgen/placed_feature"; mkdir -p "$F"
+            if [ "$PF" -ge 82 ] 2>/dev/null; then META="\"min_format\": $PF, \"max_format\": $PF"; else META="\"pack_format\": $PF"; fi
+            echo "{\"pack\": {$META, \"description\": \"GN Craft: more diamonds at Y 1-40 for browser players\"}}" > "$T/pack.mcmeta"
+            mkfeat() {   # name count rarity_or_empty
+                local R=""; [ -n "$3" ] && R="{\"type\": \"minecraft:rarity_filter\", \"chance\": $3},"
+                cat > "$F/$1.json" <<JSONEOF
+{"feature": "minecraft:$1",
+ "placement": [$R {"type": "minecraft:count", "count": $2}, {"type": "minecraft:in_square"},
+  {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform", "min_inclusive": {"absolute": 1}, "max_inclusive": {"absolute": 40}}},
+  {"type": "minecraft:biome"}]}
+JSONEOF
+            }
+            mkfeat ore_diamond 7
+            mkfeat ore_diamond_buried 4
+            mkfeat ore_diamond_large 1 9
+            CH=$(cd "$T" && find . -type f | sort | xargs cat | md5sum | cut -c1-12)
+            if [ "$(sudo -n cat "$DPD/.hash" 2>/dev/null)" != "$CH" ]; then
+                echo "$CH" > "$T/.hash"
+                sudo -n rm -rf "$DPD" && sudo -n mkdir -p "$(dirname "$DPD")" && sudo -n cp -r "$T" "$DPD" \
+                    && sudo -n chown -R amp:amp "$MD/$LVL/datapacks" \
+                    && say "GN Craft: more diamonds at Y 1-40 (datapack gn_diamonds, format $PF) - restart GN Craft in AMP; only new chunks get them"
+            fi
+            rm -rf "$T"
+        else say "GN Craft: couldn't read the datapack format, skipped the diamond datapack"; fi
+    fi
+fi
+
 # ── BlueMap (installed from AMP's Store): accept its download of Minecraft's
 # textures, and render with 1 thread so the live map never slows the game.
 # Its web page is on port 8100 (map.learnresearch.org through the Cloudflare
