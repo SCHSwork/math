@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nitro.car</title>
+<!--
+  nitro.car (car soccer, by Thinking Games Inc., https://nitro.car).
+  The game is NOT copied into this site: its files are proprietary and not licensed
+  for copying. This page only loads the game's own official release from
+  jsDelivr (nitrocargit/files, the embed address nitro.car's repo lists) when
+  someone opens it, the same way their embed page does. It loads one checked
+  commit, never a branch, so a change on their side can't reach players until
+  it has been looked at; to move to a newer release, check it and change SHA.
+  Only the Google ad script is removed from the page before it starts.
+  Multiplayer runs on nitro.car's own servers (api.nitro.car), so nothing about
+  it is saved here.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: #0a1730; color: #f3f7ff; font-family: Arial, sans-serif; }
+  #msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; }
+  #bar { width: min(320px, 80vw); height: 8px; background: #25344f; border-radius: 4px; overflow: hidden; }
+  #fill { height: 100%; width: 0; background: #4ade80; transition: width .2s; }
+  small { color: #9fb0cc; }
+</style>
+</head>
+<body>
+<div id="msg">
+  <b style="font-size:22px;">nitro.car</b>
+  <div id="text">Loading the game…</div>
+  <div id="bar"><div id="fill"></div></div>
+  <small id="sub"></small>
+</div>
+<script>
+(async function () {
+  const REPO = "nitrocargit/files";
+  const SHA = "f379ae2eca99a8b7e0278a91e05dee8438dfafbe";   // checked release (2026-11-25)
+  const hosts = ["https://cdn.jsdelivr.net/gh/", "https://fastly.jsdelivr.net/gh/", "https://gcore.jsdelivr.net/gh/"];
+  const text = document.getElementById("text"), fill = document.getElementById("fill"), sub = document.getElementById("sub");
+  let html = null, base = "";
+  for (const h of hosts) {
+    try {
+      const r = await fetch(h + REPO + "@" + SHA + "/index.html", { signal: AbortSignal.timeout(20000) });
+      if (!r.ok) continue;
+      const total = Number(r.headers.get("content-length")) || 51234;
+      const reader = r.body.getReader(), parts = [];
+      let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value); got += value.length;
+        fill.style.width = Math.min(100, got / total * 100) + "%";
+      }
+      const t = await new Blob(parts).text();
+      if (!t.includes("nitro.car")) continue;
+      html = t; base = h + REPO + "@" + SHA + "/";
+      break;
+    } catch (e) {}
+  }
+  if (!html) {
+    text.textContent = "Couldn't load nitro.car. Check your connection and reload.";
+    sub.textContent = "If it keeps failing, jsDelivr may be blocked on this network.";
+    return;
+  }
+  // No ads: remove Google's ad script
+  html = html.replace(/<script\b[^>]*googlesyndication[^>]*>\s*<\/script>/gi, "");
+  html = html.replace(/<head\b[^>]*>/i, m => m + '<base href="' + base + '">');
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
+</body>
+</html>

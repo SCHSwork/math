@@ -912,6 +912,17 @@
    "inPlayer": true,
    "noSaves": true,
    "by": "GN 2.0"
+  },
+  {
+   "id": 300094,
+   "name": "nitro.car",
+   "play": "play/nitrocar/",
+   "sources": [
+    "nitrocargit/files@f379ae2eca99a8b7e0278a91e05dee8438dfafbe"
+   ],
+   "inPlayer": true,
+   "noSaves": true,
+   "by": "nitro.car"
   }
  ],
  "pins": {

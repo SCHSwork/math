@@ -2,6 +2,11 @@
 
 All the changes to GN 2.0, newest first.
 
+## November 25, 2026 — nitro.car
+
+### Added
+- **nitro.car**, a multiplayer car soccer game (requested). Its files are proprietary, so they aren't copied here: `play/nitrocar/` loads the game's own release from jsDelivr when you open it, from one checked commit, with Google's ad script removed. Play runs on nitro.car's own servers, so nothing is saved on GN 2.0, and it has no cover picture yet.
+
 ## November 23, 2026 — FNAF 4 clicks
 
 ### Fixed
