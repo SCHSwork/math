@@ -57,13 +57,13 @@
   },
   "11": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:21:22.331Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:00:02.039Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
-    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/",
     "HTTP 404 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
-    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js"
+    "Failed https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/prebid4.12.0.js",
+    "HTTP 403 https://cdn.jsdelivr.net/gh/taskmaster773/google-class@cd06df26d3c4d9f73c8151fc13f7b2dc27f3adda/stickman-hook/"
    ],
    "since": "2026-11-10"
   },
@@ -734,8 +734,8 @@
   },
   "164": {
    "s": "ok",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:10:13.489Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:05:20.246Z"
   },
   "165": {
    "s": "ok",
@@ -744,8 +744,8 @@
   },
   "166": {
    "s": "ok",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:10:11.611Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:05:24.092Z"
   },
   "167": {
    "s": "ok",
@@ -984,8 +984,8 @@
   },
   "216": {
    "s": "ok",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:10:28.010Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:05:33.867Z"
   },
   "217": {
    "s": "ok",
@@ -2154,12 +2154,12 @@
   },
   "456": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:22:05.494Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:00:05.395Z",
    "why": "The test server couldn't download this game's files (it usually works for players)",
    "errors": [
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/undertale-yellow/index.js",
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/undertale-yellow/runner.js"
+    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/undertale-yellow/runner.js",
+    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/undertale-yellow/index.js"
    ],
    "since": "2026-11-25"
   },
@@ -2174,14 +2174,9 @@
    "t": "2026-11-25T23:42:58.170Z"
   },
   "459": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:22:35.923Z",
-   "why": "The test server couldn't download this game's files (it usually works for players)",
-   "errors": [
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/the-man-in-the-window/Build/build.framework."
-   ],
-   "since": "2026-11-25"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:01:17.481Z"
   },
   "460": {
    "s": "ok",
@@ -2210,9 +2205,12 @@
   },
   "465": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:23:20.500Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:01:20.401Z",
    "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Script error: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data"
+   ],
    "since": "2026-11-25"
   },
   "466": {
@@ -2232,8 +2230,8 @@
   },
   "469": {
    "s": "broken",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:11:51.495Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:02:28.089Z",
    "why": "Script error: Invalid or unexpected token",
    "errors": [
     "Script error: Invalid or unexpected token"
@@ -2257,8 +2255,8 @@
   },
   "473": {
    "s": "broken",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:13:13.856Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:02:41.080Z",
    "why": "Script error: Cannot read properties of null (reading 'innerHTML')",
    "errors": [
     "Script error: Cannot read properties of null (reading 'innerHTML')"
@@ -2307,14 +2305,14 @@
   },
   "482": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:14:31.956Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:03:40.308Z",
    "why": "The test server couldn't download this game's files (it usually works for players)",
    "errors": [
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/libs/pixi.js",
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/rmmz_windows.js",
+    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/rmmz_managers.j",
     "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/rmmz_objects.js",
-    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/libs/effekseer."
+    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/libs/localforag",
+    "Failed https://raw.githubusercontent.com/giorgirick2-gif/game-webports-onawebsite/b3042ae7a56b2ede39ea4b4371b1d0ab3af8828a/human-expenditure-program/js/plugins.js"
    ],
    "since": "2026-11-26"
   },
@@ -2345,15 +2343,15 @@
   },
   "488": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:15:58.957Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:03:56.083Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
   "489": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:16:04.300Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:04:55.312Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/489-fix.html"
@@ -2407,12 +2405,9 @@
   },
   "499": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:18:55.157Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:05:14.887Z",
    "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/499-fix.html"
-   ],
    "since": "2026-11-26"
   },
   "500": {
@@ -2542,12 +2537,9 @@
   },
   "525": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:24:31.444Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:06:16.625Z",
    "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "HTTP 404 https://raw.githubusercontent.com/s0n-1m-cr1n3/sc13nc3/3096333fcce4d7a42ce18f59725abb62d5811116/assets/img/main/minus3remastred.png"
-   ],
    "since": "2026-11-26"
   },
   "526": {
@@ -2657,21 +2649,21 @@
   },
   "547": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:28:55.922Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:06:34.548Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Failed https://hb-vntsm-com.global.ssl.fastly.net/v4/srv/g.txt",
     "Script error: Failed to fetch",
-    "Failed https://hb.vntsm.com/v4/live/srv/g.txt",
-    "HTTP 403 https://hb.vntsm.io/content.html"
+    "HTTP 403 https://hb.vntsm.io/content.html",
+    "Failed https://hb.vntsm.com/v4/live/srv/g.txt"
    ],
    "since": "2026-11-26"
   },
   "548": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:29:06.416Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:07:35.653Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Failed https://hb-vntsm-com.global.ssl.fastly.net/v4/srv/g.txt",
@@ -2743,8 +2735,8 @@
   },
   "561": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:32:14.495Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:07:55.794Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "HTTP 404 https://cdn.jsdelivr.net/gh/bubblfan/cg-rip@151f9126d2ccb6b81dc0f93155e305900d423d5c/bit-gun-io/Build/9beab804395830ecf57a828380aefc6a.wasm.part5",
@@ -2864,8 +2856,8 @@
   },
   "585": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:37:40.352Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:08:55.825Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
@@ -2921,8 +2913,8 @@
   },
   "597": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:39:48.502Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:09:13.932Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Failed https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@9cf433220236bb0471ab3a68ec8fe3e0a2799e36/gardenless/assets/resources/native/9e/9e729194-4320-4443-ab5c-be7fc22542e"
@@ -2930,41 +2922,26 @@
    "since": "2026-11-26"
   },
   "598": {
-   "s": "broken",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:39:49.796Z",
-   "why": "Script error: Cannot read properties of undefined (reading 'dk')",
-   "errors": [
-    "Script error: Cannot read properties of undefined (reading 'dk')"
-   ],
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:09:13.193Z"
   },
   "599": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:41:04.805Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:10:28.238Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
   "600": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:41:07.793Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "HTTP 404 https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/hypno-v2/flixel/fonts/nokiafc22.woff",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/hypno-v2/flixel/fonts/nokiafc22.woff",
-    "HTTP 404 https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/hypno-v2/flixel/fonts/monsterrat.woff",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/hypno-v2/flixel/fonts/monsterrat.woff"
-   ],
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:10:21.689Z"
   },
   "601": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:42:24.030Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:11:15.160Z"
   },
   "602": {
    "s": "ok",
@@ -2973,12 +2950,12 @@
   },
   "603": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:42:43.902Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:11:47.876Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Script error: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data",
-    "Failed blob:http://127.0.0.1:8080/ee3a6504-a242-4509-b71f-1ad87368c6b0",
+    "Failed blob:http://127.0.0.1:8080/948dd0fc-4d93-4506-ab3f-b22131130e08",
     "Script error: Failed to load because no supported source was found."
    ],
    "since": "2026-11-26"
@@ -3005,8 +2982,8 @@
   },
   "608": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:44:27.235Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:12:30.164Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
@@ -3046,22 +3023,14 @@
    "t": "2026-11-26T19:45:33.069Z"
   },
   "616": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:46:40.482Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "HTTP 404 https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/sk.min.js?010723",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/sk.min.js?010723",
-    "HTTP 404 https://fastly.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/sk.min.js?010723",
-    "HTTP 404 https://gcore.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/sk.min.js?010723"
-   ],
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:13:01.010Z"
   },
   "617": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:46:48.077Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:13:51.009Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
@@ -3091,11 +3060,9 @@
    "t": "2026-11-26T19:48:06.235Z"
   },
   "623": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:49:18.305Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:13:55.923Z"
   },
   "624": {
    "s": "ok",
@@ -3143,17 +3110,9 @@
    "t": "2026-11-26T19:50:07.413Z"
   },
   "633": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:51:22.417Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "errors": [
-    "Failed https://cdn.jsdelivr.net/assets/css.css",
-    "Failed https://cdn.jsdelivr.net/assets/js.js",
-    "HTTP 404 https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/alternated/flixel/fonts/nokiafc22.woff",
-    "Failed https://cdn.jsdelivr.net/gh/bubbls/fnf-mods@073b2f4f1e5bf5ad0b7ef794498f7fd025729694/alternated/flixel/fonts/nokiafc22.woff"
-   ],
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:14:32.645Z"
   },
   "634": {
    "s": "ok",
@@ -3226,11 +3185,9 @@
    "t": "2026-11-26T19:54:49.534Z"
   },
   "648": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:56:04.538Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:15:39.059Z"
   },
   "649": {
    "s": "ok",
@@ -3244,17 +3201,15 @@
   },
   "651": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:57:07.687Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:15:47.652Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
   "653": {
-   "s": "broken",
-   "at": "2026-11-26",
-   "t": "2026-11-26T19:57:18.516Z",
-   "why": "Blank page",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:15:47.887Z"
   },
   "654": {
    "s": "ok",
@@ -3488,8 +3443,8 @@
   },
   "700": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:07:53.116Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:17:02.890Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
@@ -3505,15 +3460,18 @@
   },
   "703": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:09:17.867Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:17:05.844Z",
    "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/703-fix.html"
+   ],
    "since": "2026-11-26"
   },
   "704": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:09:22.577Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:18:22.754Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-26"
   },
@@ -3588,11 +3546,9 @@
    "t": "2026-11-26T20:12:05.522Z"
   },
   "719": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:13:20.526Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:17:51.746Z"
   },
   "720": {
    "s": "ok",
@@ -3705,11 +3661,9 @@
    "t": "2026-11-26T20:19:41.785Z"
   },
   "742": {
-   "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:20:02.267Z",
-   "why": "The game froze the test browser (it may still work for players)",
-   "since": "2026-11-26"
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:19:06.479Z"
   },
   "743": {
    "s": "ok",
@@ -3721,1210 +3675,1456 @@
    "at": "2026-11-26",
    "t": "2026-11-26T20:20:21.860Z"
   },
-  "779": {
+  "745": {
    "s": "ok",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:26:18.631Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:05:47.367Z"
+  },
+  "746": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:05:48.873Z"
+  },
+  "747": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:16.897Z"
+  },
+  "748": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:13.381Z"
+  },
+  "749": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:28.453Z"
+  },
+  "750": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:44.686Z"
+  },
+  "751": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:44.718Z"
+  },
+  "752": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:06.387Z"
+  },
+  "753": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:49.900Z"
+  },
+  "754": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:06:58.008Z"
+  },
+  "755": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:18.230Z"
+  },
+  "756": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:20.232Z"
+  },
+  "757": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:35.447Z"
+  },
+  "758": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:31.461Z"
+  },
+  "759": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:07:47.952Z"
+  },
+  "760": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:12.886Z"
+  },
+  "761": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:07.908Z"
+  },
+  "762": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:09:06.579Z"
+  },
+  "763": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:27.636Z"
+  },
+  "764": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:40.336Z"
+  },
+  "765": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:45.939Z"
+  },
+  "766": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:08:52.646Z"
+  },
+  "767": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:09:03.194Z"
+  },
+  "768": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:09:20.554Z"
+  },
+  "769": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:09:22.435Z"
+  },
+  "770": {
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:10:35.564Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
+  },
+  "771": {
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:10:37.438Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://cdp.cloud.unity3d.com/v1/events",
+    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/771-fix2.html"
+   ],
+   "since": "2026-11-27"
+  },
+  "772": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:11:12.575Z"
+  },
+  "773": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:10:59.163Z"
+  },
+  "774": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:11:06.319Z"
+  },
+  "775": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:11:30.184Z"
+  },
+  "776": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:11:24.608Z"
+  },
+  "777": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:12:06.292Z"
+  },
+  "778": {
+   "s": "ok",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:11:56.843Z"
+  },
+  "779": {
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:13:11.846Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "780": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:29:47.730Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:12:27.319Z"
   },
   "781": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:29:45.923Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:12:48.400Z"
   },
   "782": {
-   "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:12.606Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:03.408Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "783": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:29:52.988Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:13:28.090Z"
   },
   "784": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:29:56.137Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:19.578Z"
   },
   "785": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:24.866Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:17.762Z"
   },
   "786": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:24.972Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:36.913Z"
   },
   "787": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:27.823Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:43.972Z"
   },
   "788": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:46.317Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:15:28.645Z"
   },
   "789": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:31.995Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:14:52.845Z"
   },
   "790": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:34.946Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:15:15.910Z"
   },
   "791": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:42.989Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:15:42.481Z"
   },
   "792": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:14.050Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:15:50.551Z"
   },
   "793": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:30:50.600Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:15:59.126Z"
   },
   "794": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:09.322Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:16:46.086Z"
   },
   "795": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:12.271Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:16:33.204Z"
   },
   "796": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:29:26.451Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:01.866Z"
   },
   "797": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:20.131Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:00.761Z"
   },
   "798": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:23.267Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:22.159Z"
   },
   "799": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:26.219Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:16.381Z"
   },
   "800": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:30.224Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:35.664Z"
   },
   "801": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:34.328Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:46.467Z"
   },
   "802": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:54.150Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:17:57.600Z"
   },
   "803": {
-   "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:31:57.199Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:19:01.477Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/803-fix2.html"
+   ],
+   "since": "2026-11-27"
   },
   "804": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:32:09.830Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:18:12.158Z"
   },
   "805": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:32:19.157Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:18:33.195Z"
   },
   "806": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:29:25.122Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:19:32.505Z"
   },
   "807": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:32:32.979Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:19:26.326Z"
   },
   "808": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:32:38.683Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:19:52.468Z"
   },
   "809": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:33:04.489Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:19:44.292Z"
   },
   "810": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:33:26.422Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:00.023Z"
   },
   "811": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:33:49.514Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:03.970Z"
   },
   "812": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:33:59.136Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:14.420Z"
   },
   "813": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:09.860Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:25.097Z"
   },
   "814": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:02.136Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:34.772Z"
   },
   "815": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:07.004Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:01.045Z"
   },
   "816": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:53:48.395Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:20:50.473Z"
   },
   "817": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:17.133Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:07.744Z"
   },
   "818": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:22.992Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:12.961Z"
   },
   "819": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:24.915Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:26.557Z"
   },
   "820": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:53.746Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:35.943Z"
   },
   "821": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:34:46.249Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:49.033Z"
   },
   "822": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:35:06.911Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:21:56.460Z"
   },
   "823": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:35:18.167Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:22:08.208Z"
   },
   "824": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:35:30.375Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:22:21.031Z"
   },
   "825": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:35:25.657Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:22:50.960Z"
   },
   "826": {
    "s": "ok",
-   "at": "2026-10-31",
-   "t": "2026-10-31T15:36:39.511Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:22:37.408Z"
   },
   "827": {
    "s": "ok",
-   "at": "2026-11-04",
-   "t": "2026-11-04T17:24:20.234Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:25:31.535Z"
   },
   "828": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:29:53.542Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:23:33.735Z"
   },
   "829": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:29:56.555Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:23:41.763Z"
   },
   "830": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:29:59.494Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:23:47.818Z"
   },
   "831": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:02.434Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:23:53.869Z"
   },
   "832": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:05.366Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:24:00.530Z"
   },
   "833": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:08.318Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:24:49.649Z"
   },
   "834": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:14.987Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:24:57.408Z"
   },
   "835": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:21.056Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:25:16.445Z"
   },
   "836": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:24.182Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:31.449Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "HTTP 404 https://raw.githubusercontent.com/bubbls/fnf-mods/073b2f4f1e5bf5ad0b7ef794498f7fd025729694/shucks-v2/assets/fonts/vcr.woff",
+    "Failed https://raw.githubusercontent.com/bubbls/fnf-mods/073b2f4f1e5bf5ad0b7ef794498f7fd025729694/shucks-v2/assets/fonts/vcr.woff",
+    "HTTP 404 https://raw.githubusercontent.com/bubbls/fnf-mods/073b2f4f1e5bf5ad0b7ef794498f7fd025729694/shucks-v2/assets/fonts/pixel.woff",
+    "Failed https://raw.githubusercontent.com/bubbls/fnf-mods/073b2f4f1e5bf5ad0b7ef794498f7fd025729694/shucks-v2/assets/fonts/pixel.woff"
+   ],
+   "since": "2026-11-27"
   },
   "837": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:27.318Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:07.286Z"
   },
   "838": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:30.256Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:13.799Z"
   },
   "839": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:33.243Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:32.362Z"
   },
   "840": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:36.183Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:42.376Z"
   },
   "841": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:48.686Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:57.999Z"
   },
   "842": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:39.133Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:26:53.578Z"
   },
   "843": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:46.080Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:27:13.215Z"
   },
   "844": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:49.042Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:27:19.748Z"
   },
   "845": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:53.295Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:27:25.896Z"
   },
   "846": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:52.008Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:28:34.756Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "847": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:54.959Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:28:45.059Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "848": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:56.240Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:29:52.979Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "HTTP 404 https://cdn.jsdelivr.net/gh/wasmdotrip/Clustertruck-Port@93b8ff3bad28fd3ae203734eaeaa16850bb6acf5/Build/ClusterTruckWEB.data.part7"
+   ],
+   "since": "2026-11-27"
   },
   "849": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:30:57.895Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:28:57.249Z"
   },
   "850": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:31:19.587Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:30:07.099Z"
   },
   "851": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:31:00.828Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:31:15.616Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "852": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:31:09.224Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:30:37.464Z"
   },
   "853": {
    "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:31:22.582Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:30:48.938Z"
   },
   "854": {
-   "s": "ok",
-   "at": "2026-11-05",
-   "t": "2026-11-05T17:31:22.841Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:32:03.944Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Script error: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data"
+   ],
+   "since": "2026-11-27"
   },
   "855": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:50:53.157Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:32:03.403Z"
   },
   "856": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:07.683Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:32:13.696Z"
   },
   "857": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:10.731Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:33:23.634Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "858": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:16.380Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:32:21.267Z"
   },
   "859": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:37.887Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:33:35.136Z"
   },
   "860": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:40.820Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:33:41.951Z"
   },
   "861": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:47.912Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:34:50.141Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "862": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:51.286Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:34:56.955Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/freebuisness/html@48c0631289237dd2e9e202fde532edfae4ed2acf/862.html"
+   ],
+   "since": "2026-11-27"
   },
   "863": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:56.361Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:35:56.440Z"
   },
   "864": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:59.900Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:35:25.789Z"
   },
   "865": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:51:59.314Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:36:40.795Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "HTTP 404 https://raw.githubusercontent.com/s0n-1m-cr1n3/sc13nc3/3096333fcce4d7a42ce18f59725abb62d5811116/assets/img/main/minus3remastred.png"
+   ],
+   "since": "2026-11-27"
   },
   "866": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:02.258Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:37:11.450Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "867": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:03.062Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:37:17.091Z"
   },
   "868": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:05.315Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:37:25.011Z"
   },
   "869": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:10.018Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:38:32.099Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/fnaf-into-the-pit@df6e074be181d4d2fb419241a25138bb8acbb928/progress-bar-empty-dark.png",
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/fnaf-into-the-pit@df6e074be181d4d2fb419241a25138bb8acbb928/unity-logo-dark.png",
+    "HTTP 404 https://cdn.jsdelivr.net/gh/web-ports/fnaf-into-the-pit@df6e074be181d4d2fb419241a25138bb8acbb928/progress-bar-full-dark.png"
+   ],
+   "since": "2026-11-27"
   },
   "870": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:12.933Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:37:57.327Z"
   },
   "871": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:18.377Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:39:12.331Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "872": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:18.373Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:39:49.274Z"
   },
   "873": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:21.394Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:40:15.724Z"
   },
   "874": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:21.324Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:40:03.478Z"
   },
   "875": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:34.843Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:40:30.056Z"
   },
   "876": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:53.596Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:38.112Z"
   },
   "877": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:37.797Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:40:59.376Z"
   },
   "878": {
    "s": "ok",
-   "at": "2026-11-07",
-   "t": "2026-11-07T06:08:31.751Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:05.395Z"
   },
   "879": {
    "s": "ok",
-   "at": "2026-11-07",
-   "t": "2026-11-07T06:08:31.892Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:09.877Z"
   },
   "880": {
    "s": "ok",
-   "at": "2026-11-07",
-   "t": "2026-11-07T17:27:33.766Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:13.852Z"
   },
   "881": {
    "s": "ok",
-   "at": "2026-11-07",
-   "t": "2026-11-07T17:27:59.877Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:45.546Z"
   },
   "882": {
    "s": "ok",
-   "at": "2026-11-07",
-   "t": "2026-11-07T17:27:43.667Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:47.519Z"
   },
   "100002": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:43.330Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:41:59.086Z"
   },
   "100003": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:52.941Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:01.676Z"
   },
   "100004": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:56.054Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:05.675Z"
   },
   "100005": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:52:59.045Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:07.730Z"
   },
   "100006": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:01.986Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:12.423Z"
   },
   "100007": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:04.923Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:15.221Z"
   },
   "100008": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:07.875Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:28.928Z"
   },
   "100009": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:10.822Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:20.204Z"
   },
   "100010": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:32.151Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:40.731Z"
   },
   "100011": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:56.540Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:52.462Z"
   },
   "100012": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:53:57.090Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:42:57.775Z"
   },
   "100013": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:02.014Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:03.484Z"
   },
   "100014": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:00.477Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:12.834Z"
   },
   "100015": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:03.414Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:21.903Z"
   },
   "100016": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:22.468Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:33.364Z"
   },
   "100017": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:23.868Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:45.052Z"
   },
   "100018": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:42.925Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:43:56.470Z"
   },
   "100019": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:44.343Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:08.066Z"
   },
   "100020": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:48.373Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:02.692Z"
   },
   "100021": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:47.563Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:37.571Z"
   },
   "100022": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:53.027Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:33.595Z"
   },
   "100023": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:51.325Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:38.615Z"
   },
   "100024": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:54.270Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:44.568Z"
   },
   "100025": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:57.211Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:45:03.140Z"
   },
   "100026": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:54:59.917Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:44:50.382Z"
   },
   "100027": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:20.394Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:45:10.875Z"
   },
   "100028": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:06.535Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:45:17.158Z"
   },
   "100029": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:09.796Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:45:26.866Z"
   },
   "100030": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:30.275Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:26.957Z"
   },
   "100031": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:24.198Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:45:50.898Z"
   },
   "100032": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:27.152Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:05.512Z"
   },
   "100033": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:32.751Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:50.550Z"
   },
   "100034": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:33.227Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:32.664Z"
   },
   "100035": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:35.689Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:38.170Z"
   },
   "100036": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:45.989Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:45.162Z"
   },
   "100037": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:46.051Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:54.443Z"
   },
   "100038": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:49.504Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:46:57.040Z"
   },
   "100039": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:51.593Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:04.444Z"
   },
   "100040": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:52.698Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:04.533Z"
   },
   "100041": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:55:55.664Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:08.934Z"
   },
   "100042": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:17.565Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:25.573Z"
   },
   "100043": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:05.267Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:31.448Z"
   },
   "100044": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:08.738Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:40.209Z"
   },
   "100045": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:17.947Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:47:51.638Z"
   },
   "100046": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:23.428Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:48:02.288Z"
   },
   "100047": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:23.604Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:49:06.650Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "errors": [
+    "Failed https://cdn.jsdelivr.net/gh/SCHSwork/GN-originals@main/games/i-spy-a-ghost/index.html",
+    "Failed https://rawcdn.githack.com/SCHSwork/GN-originals/main/games/i-spy-a-ghost/src/Assets/fonts/patagonia-webfont.woff2",
+    "Failed https://rawcdn.githack.com/SCHSwork/GN-originals/main/games/i-spy-a-ghost/src/Assets/fonts/patagonia-webfont.woff",
+    "Failed https://rawcdn.githack.com/SCHSwork/GN-originals/main/games/i-spy-a-ghost/src/Assets/fonts/patagonia-webfont.ttf"
+   ],
+   "since": "2026-11-27"
   },
   "100048": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:43.886Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:48:22.872Z"
   },
   "100049": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:45.674Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:48:49.632Z"
   },
   "100050": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:49.323Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:49:34.471Z"
   },
   "100051": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:53.843Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:49:29.640Z"
   },
   "100052": {
-   "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:52.270Z"
+   "s": "slow",
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:50:44.648Z",
+   "why": "The game froze the test browser (it may still work for players)",
+   "since": "2026-11-27"
   },
   "100053": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:55.448Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:50:13.155Z"
   },
   "100054": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:59.440Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:50:25.358Z"
   },
   "100055": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:56:59.983Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:50:41.038Z"
   },
   "100056": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:12.398Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:50:54.462Z"
   },
   "100057": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:05.425Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:51:06.372Z"
   },
   "100058": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:14.676Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:51:24.484Z"
   },
   "100059": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:20.407Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:51:49.076Z"
   },
   "100060": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:22.090Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:26.099Z"
   },
   "100061": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:23.350Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:00.280Z"
   },
   "100062": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:25.035Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:08.804Z"
   },
   "100063": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:26.288Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:18.826Z"
   },
   "100064": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:27.977Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:31.352Z"
   },
   "100065": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:29.240Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:36.155Z"
   },
   "100066": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:33.879Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:52.492Z"
   },
   "100067": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:32.598Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:42.140Z"
   },
   "100069": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:35.937Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:54.985Z"
   },
   "100070": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:36.825Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:52:56.976Z"
   },
   "100071": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:38.879Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:00.182Z"
   },
   "100072": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:57.282Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:17.547Z"
   },
   "100073": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:46.201Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:05.674Z"
   },
   "100074": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:51.372Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:16.599Z"
   },
   "100075": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:56.385Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:30.112Z"
   },
   "100076": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:57:59.325Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:31.654Z"
   },
   "100077": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:00.224Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:41.111Z"
   },
   "100078": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:02.275Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:42.941Z"
   },
   "100079": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:03.306Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:49.077Z"
   },
   "100080": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:06.221Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:50.079Z"
   },
   "100081": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:09.168Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:54.566Z"
   },
   "100082": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:10.581Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:53:54.090Z"
   },
   "100083": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:12.120Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:01.121Z"
   },
   "100084": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:31.352Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:18.278Z"
   },
   "100085": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:19.603Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:05.375Z"
   },
   "100086": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:22.557Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:11.949Z"
   },
   "100087": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:25.499Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:16.440Z"
   },
   "100088": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:28.481Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:25.553Z"
   },
   "100089": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:31.427Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:31.803Z"
   },
   "100090": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:34.622Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:36.050Z"
   },
   "100091": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:34.864Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:37.072Z"
   },
   "100092": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:55.197Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:59.052Z"
   },
   "100093": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:37.799Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:43.060Z"
   },
   "100094": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:40.734Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:48.032Z"
   },
   "100095": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:58:48.867Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:54:52.512Z"
   },
   "100096": {
    "s": "ok",
-   "at": "2026-11-12",
-   "t": "2026-11-12T19:11:35.904Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:15.092Z"
   },
   "100097": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:15.671Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:19.557Z"
   },
   "100098": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:18.621Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:21.124Z"
   },
   "100099": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:21.698Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:29.231Z"
   },
   "100100": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:24.645Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:31.149Z"
   },
   "100101": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:31.593Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:51.324Z"
   },
   "100102": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:34.537Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:47.872Z"
   },
   "100103": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:37.718Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:56.588Z"
   },
   "100104": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:40.706Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:55:55.310Z"
   },
   "100106": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:43.896Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:02.099Z"
   },
   "100107": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:46.832Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:08.747Z"
   },
   "100108": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:49.970Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:12.460Z"
   },
   "100109": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T16:59:55.498Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:15.011Z"
   },
   "100111": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:03.560Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:23.759Z"
   },
   "100112": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:20.092Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:36.871Z"
   },
   "100113": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:25.020Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:46.678Z"
   },
   "100114": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:23.862Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:41.346Z"
   },
   "100115": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:29.594Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:46.122Z"
   },
   "100116": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:27.972Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:50.616Z"
   },
   "100117": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:30.923Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:51.172Z"
   },
   "100118": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:37.799Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:59.606Z"
   },
   "100121": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:33.865Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:56:56.161Z"
   },
   "100122": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:36.805Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:11.025Z"
   },
   "100123": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:39.747Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:07.111Z"
   },
   "100124": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:40.751Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:20.296Z"
   },
   "100125": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:43.754Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:16.776Z"
   },
   "100126": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:08.618Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:38.403Z"
   },
   "100127": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:46.701Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:27.931Z"
   },
   "100128": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:49.649Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:44.941Z"
   },
   "100129": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:00:57.246Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:44.277Z"
   },
   "100130": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:00.186Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:57:50.749Z"
   },
   "100131": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:20.652Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:05.443Z"
   },
   "100132": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:11.557Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:00.723Z"
   },
   "100133": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:16.997Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:07.721Z"
   },
   "100134": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:20.171Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:11.454Z"
   },
   "100135": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:23.116Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:15.738Z"
   },
   "100136": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:23.604Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:20.619Z"
   },
   "100137": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:26.112Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:28.633Z"
   },
   "100138": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:26.572Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:29.268Z"
   },
   "100139": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:38.606Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:39.966Z"
   },
   "100141": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:29.511Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:34.759Z"
   },
   "100142": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:32.466Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:46.966Z"
   },
   "100143": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:35.405Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:47.030Z"
   },
   "100144": {
    "s": "ok",
-   "at": "2026-11-06",
-   "t": "2026-11-06T17:01:41.542Z"
+   "at": "2026-11-27",
+   "t": "2026-11-27T19:58:52.658Z"
   },
   "100145": {
    "s": "ok",
@@ -6683,8 +6883,8 @@
   },
   "100540": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:24:45.077Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:19:41.052Z",
    "why": "The game froze the test browser (it may still work for players)",
    "errors": [
     "Script error: exit is not defined"
@@ -9443,8 +9643,8 @@
   },
   "990183": {
    "s": "slow",
-   "at": "2026-11-26",
-   "t": "2026-11-26T20:26:03.762Z",
+   "at": "2026-11-27",
+   "t": "2026-11-27T20:20:21.487Z",
    "why": "The game froze the test browser (it may still work for players)",
    "since": "2026-11-10"
   },
@@ -9509,12 +9709,12 @@
    "t": "2026-11-10T19:04:00.334Z"
   }
  },
- "next": 715,
- "updated": "2026-11-26T20:26:18.873Z",
+ "next": 990,
+ "updated": "2026-11-27T20:20:24.420Z",
  "total": 2331,
  "counts": {
-  "ok": 1835,
-  "slow": 32,
-  "broken": 4
+  "ok": 1860,
+  "slow": 43,
+  "broken": 2
  }
 }
